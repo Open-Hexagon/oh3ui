@@ -1,0 +1,23 @@
+{
+    "runtime.special": {
+        "love.filesystem.load": "loadfile"
+    },
+    "workspace.library": [
+        "/home/oliver/.config/nvim",
+        "/home/oliver/.vim/plugged/vim-clang-format",
+        "/home/oliver/.vim/plugged/nvim-lspconfig",
+        "/etc/xdg/nvim",
+        "/home/oliver/.local/share/nvim/site",
+        "/usr/share/nvim/runtime",
+        "/usr/lib/nvim",
+        "/usr/share/vim/vimfiles",
+        "${3rd}/love2d/library",
+        "${3rd}/lfs/library",
+        "${3rd}/luv/library"
+    ],
+    "diagnostics.globals": [
+        "vim",
+        "lfs"
+    ],
+    "completion.autoRequire": false
+}
