@@ -1,4 +1,5 @@
 local events = require("ui.event_queue")
+local state = require("ui.state")
 local area = require("ui.area")
 
 local grab = {}
@@ -18,7 +19,9 @@ end
 ---@param scroll_state table
 function grab.update(scroll_state)
     local data = area.get_extra_data()
-    local x, y = love.graphics.inverseTransformPoint(love.mouse.getPosition())
+
+    local screen_x, screen_y = love.mouse.getPosition()
+    local x, y = love.graphics.inverseTransformPoint(screen_x, screen_y)
 
     -- show the scrollbar when hovering or grabbing it
     if is_in_scrollbar(scroll_state, x, y) or scroll_state.scrollbar_grabbed_at then
@@ -28,8 +31,8 @@ function grab.update(scroll_state)
     -- handle events
     for event in events.iterate("mouse.*") do
         local name = event[1]
-        -- grab scrollbar when pressing down onto it and if no other scrollbar has been grabbed in this frame
-        if name == "mousepressed" and is_in_scrollbar(scroll_state, x, y) and not grabbed_a_scrollbar_already_this_frame then
+        -- grab scrollbar when pressing down onto it while it is visible and if no other scrollbar has been grabbed in this frame
+        if name == "mousepressed" and is_in_scrollbar(scroll_state, x, y) and not grabbed_a_scrollbar_already_this_frame and state.is_position_interactable(screen_x, screen_y) then
             -- save the relative position on the scrollbar to set scroll position later
             if data.direction == "vertical" then
                 scroll_state.scrollbar_grabbed_at = y - scroll_state.scrollbar.top

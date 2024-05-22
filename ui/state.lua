@@ -31,6 +31,28 @@ end
 
 state.reset()
 
+---check if a screen space position is currently inside an interactive area
+---@param x number
+---@param y number
+---@return boolean
+function state.is_position_interactable(x, y)
+    for i = 1, state.current_area_index do
+        local area = state.areas[i]
+        if area.extra_data.state and area.extra_data.state.cutout and area.extra_data.state.cutout.left then
+            -- is scroll area
+            if
+                x < area.extra_data.state.cutout.left
+                or x > area.extra_data.state.cutout.right
+                or y < area.extra_data.state.cutout.top
+                or y > area.extra_data.state.cutout.bottom
+            then
+                return false
+            end
+        end
+    end
+    return true
+end
+
 ---update element's position, hover state and clicked state
 function state.update()
     if state.allow_automatic_resizing then
@@ -63,22 +85,7 @@ function state.update()
     end
 
     -- limit interaction area if scroll areas are on the area stack
-    for i = 1, state.current_area_index do
-        local area = state.areas[i]
-        if area.extra_data.state and area.extra_data.state.cutout then
-            -- is scroll area
-            if
-                mouse_x < area.extra_data.state.cutout.left
-                or mouse_x > area.extra_data.state.cutout.right
-                or mouse_y < area.extra_data.state.cutout.top
-                or mouse_y > area.extra_data.state.cutout.bottom
-            then
-                outside_interactable_area = true
-            end
-        end
-    end
-
-    if outside_interactable_area then
+    if not state.is_position_interactable(mouse_x, mouse_y) then
         state.hovering = false
         state.clicked = false
         return

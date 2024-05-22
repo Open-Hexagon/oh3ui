@@ -25,7 +25,7 @@ end
 function scroll.start(scroll_state, scroll_direction, max_length)
     scroll_state.position = scroll_state.position or 0
     -- only persist to not recreate table every time
-    scroll_state.cutout = scroll_state.cutout or { left = 0, right = 0, top = 0, bottom = 0 }
+    scroll_state.cutout = scroll_state.cutout or {}
 
     area.start()
 
@@ -111,14 +111,17 @@ function scroll.done()
         -- no need to scroll, just draw normally
         area.done()
         area.draw()
+        -- don't limit interaction
+        scroll_state.cutout.left = nil
+        scroll_state.cutout.top = nil
+        scroll_state.cutout.right = nil
+        scroll_state.cutout.bottom = nil
     else -- overflow > 0
         -- getting box dimensions of scroll area
         local w, h = swap_if_vertical(direction, max_length, thickness)
         -- adjust bounds to account for space not taken thanks to scroll
         bounds.right = bounds.left + w
         bounds.bottom = bounds.top + h
-        -- update position
-        scroll_interaction.update()
         -- determine cutout area in screen space
         local x1, y1 = love.graphics.transformPoint(bounds.left, bounds.top)
         local x2, y2 = love.graphics.transformPoint(bounds.right, bounds.bottom)
@@ -127,6 +130,8 @@ function scroll.done()
         scroll_state.cutout.top = y1
         scroll_state.cutout.right = x2
         scroll_state.cutout.bottom = y2
+        -- update position
+        scroll_interaction.update()
         -- remove area from stack to prepare drawing
         area.done()
         -- cut out part of the area that is supposed to be visible

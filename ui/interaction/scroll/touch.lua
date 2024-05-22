@@ -1,4 +1,5 @@
 local events = require("ui.event_queue")
+local state = require("ui.state")
 local area = require("ui.area")
 
 ---give control over the scrolling to a finger
@@ -56,7 +57,7 @@ return function(scroll_state)
         -- only the latest finger is used for scrolling
         if name == "touchpressed" then
             local x, y = event[3], event[4]
-            if area.is_position_inside(x, y, true) then
+            if area.is_position_inside(x, y, true) and state.is_position_interactable(x, y) then
                 give_scroll_control(scroll_state, event[2])
                 scroll_state.fingers[#scroll_state.fingers + 1] = scroll_state.current_finger
             end
@@ -71,7 +72,6 @@ return function(scroll_state)
             -- no fingers are pressed anymore
             scroll_state.area_grabbed_at = nil
             scroll_state.current_finger = nil
-            -- TODO: velocity multiplied by pressure
             scroll_state.finger_pressure = scroll_state.finger_pressure or 1
             local new_pos = scroll_state.position + scroll_state.last_delta * 40 * scroll_state.finger_pressure
             require("ui.interaction.scroll").go_to(new_pos, 0.3, "out_sine")
