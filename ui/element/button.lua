@@ -4,13 +4,15 @@ local rectangle = require("ui.element.rectangle")
 local label = require("ui.element.label")
 local area = require("ui.area")
 local hover_interaction = require("ui.interaction.hover")
+local draw_queue = require("ui.draw_queue")
 
 -- don't recreate the table every time
 local rectangle_color_overwrite = {}
 
 ---make a box sized based on text content that is highlighted when hovered
 return function(button_state, text)
-    -- process label, which updates area size (area not drawn yet)
+    -- draw background later
+    draw_queue.placeholder()
     area.start()
     label(text)
     area.set_state_to_bounds()
@@ -32,8 +34,9 @@ return function(button_state, text)
     end
     rectangle_color_overwrite[4] = 1
 
-    -- draw rectangle with custom color
+    -- draw rectangle with custom color in placeholder
     theme.rectangle_color = rectangle_color_overwrite
+    draw_queue.put_next_in_last_placeholder()
     rectangle("fill")
     theme.rectangle_color = nil
 
@@ -42,7 +45,4 @@ return function(button_state, text)
 
     -- update hover timer
     hover_interaction.timer(button_state, love.timer.getDelta() * 10)
-
-    -- draw the area containing the label
-    area.draw()
 end

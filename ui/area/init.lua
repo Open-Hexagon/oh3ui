@@ -8,18 +8,7 @@ function area.start()
     local new_area = state.areas[state.current_area_index] or {}
     state.areas[state.current_area_index] = new_area
 
-    -- only create a new table and canvas if there is none to reuse
-    if
-        not new_area.canvas
-        or new_area.canvas:getWidth() ~= love.graphics.getWidth()
-        or new_area.canvas:getHeight() ~= love.graphics.getHeight()
-    then
-        if new_area.canvas then
-            -- already has a canvas, prevent memory leak
-            new_area.canvas:release()
-        end
-        new_area.canvas = love.graphics.newCanvas(love.graphics.getWidth(), love.graphics.getHeight(), { msaa = 4 })
-    end
+    -- only create a new table if there is none to reuse
     new_area.bounds = new_area.bounds or {}
 
     -- reset bounds (they are updated in state update)
@@ -33,10 +22,6 @@ function area.start()
     for key in pairs(new_area.extra_data) do
         new_area.extra_data[key] = nil
     end
-
-    -- set and clear canvas
-    love.graphics.setCanvas(new_area.canvas)
-    love.graphics.clear()
 end
 
 ---get an extra data table about the current area (for internal use)
@@ -83,7 +68,7 @@ function area.is_mouse_inside()
     return area.is_position_inside(x, y, true)
 end
 
----finish the area started last (this will not draw it yet)
+---finish the area started last
 function area.done()
     local this_area = state.areas[state.current_area_index]
     state.current_area_index = state.current_area_index - 1
@@ -98,18 +83,6 @@ function area.done()
     else
         love.graphics.setCanvas()
     end
-end
-
----draw the last finished area onto the current one
-function area.draw()
-    -- undo scale as canvas contents are already scaled
-    love.graphics.push()
-    love.graphics.origin()
-    love.graphics.setBlendMode("alpha", "premultiplied")
-    love.graphics.setColor(1, 1, 1, 1)
-    love.graphics.draw(state.areas[state.current_area_index + 1].canvas)
-    love.graphics.setBlendMode("alpha", "alphamultiply")
-    love.graphics.pop()
 end
 
 return area

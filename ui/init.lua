@@ -1,6 +1,8 @@
 local state = require("ui.state")
 local event_queue = require("ui.event_queue")
 local scroll_interaction = require("ui.interaction.scroll")
+local draw_queue = require("ui.draw_queue")
+
 local ui = {
     scale = 1,
 }
@@ -33,6 +35,7 @@ end
 function ui.done()
     event_queue.clear()
     love.graphics.pop()
+    draw_queue.draw()
 end
 
 ---get the width of the ui adjusted for scale

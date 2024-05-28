@@ -1,6 +1,7 @@
 local scroll_interaction = require("ui.interaction.scroll")
 local theme = require("ui.theme")
 local area = require("ui.area")
+local draw_queue = require("ui.draw_queue")
 
 local scroll = {}
 
@@ -34,6 +35,9 @@ function scroll.start(scroll_state, scroll_direction, max_length)
     data.state = scroll_state
     data.direction = scroll_direction
     data.max_length = max_length
+
+    -- put scissor here later once bounds are known
+    draw_queue.placeholder()
 
     -- translate all elements in the area based on scroll position
     love.graphics.translate(swap_if_vertical(scroll_direction, -scroll_state.position, 0))
@@ -82,6 +86,9 @@ local function calculate_scrollbar_position()
     end
 end
 
+-- don't create a new table every time
+local scrollbar_color = {}
+
 ---draw the scroll area
 function scroll.done()
     -- width and height of total content
@@ -108,9 +115,10 @@ function scroll.done()
 
     -- drawing
     if data.overflow == 0 then
-        -- no need to scroll, just draw normally
         area.done()
-        area.draw()
+        -- no need to scroll, insert nothing instead of scissor
+        draw_queue.put_next_in_last_placeholder()
+        draw_queue.nothing()
         -- don't limit interaction
         scroll_state.cutout.left = nil
         scroll_state.cutout.top = nil
@@ -134,26 +142,25 @@ function scroll.done()
         scroll_interaction.update()
         -- remove area from stack to prepare drawing
         area.done()
-        -- cut out part of the area that is supposed to be visible
-        -- (elements were already translated based on scroll position while drawn into the area, so no need to do it here again)
-        love.graphics.setScissor(x1, y1, x2 - x1, y2 - y1)
-        area.draw()
-        love.graphics.setScissor()
+
+        -- insert scissor into placeholder
+        draw_queue.put_next_in_last_placeholder()
+        draw_queue.push_scissor(bounds.left, bounds.top, bounds.right, bounds.bottom)
+        -- undo scissor here
+        draw_queue.pop_scissor()
 
         -- draw scrollbar
         local bar = scroll_state.scrollbar
         -- set scrollbar color based on grabbed state
         if scroll_state.scrollbar_grabbed_at then
-            love.graphics.setColor(theme.grabbed_scrollbar_color)
+            draw_queue.rectangle("fill", bar.left, bar.top, bar.right, bar.bottom, theme.grabbed_scrollbar_color)
         else
-            love.graphics.setColor(
-                theme.scrollbar_color[1],
-                theme.scrollbar_color[2],
-                theme.scrollbar_color[3],
-                scroll_state.scrollbar_alpha
-            )
+            scrollbar_color[1] = theme.scrollbar_color[1]
+            scrollbar_color[2] = theme.scrollbar_color[2]
+            scrollbar_color[3] = theme.scrollbar_color[3]
+            scrollbar_color[4] = scroll_state.scrollbar_alpha
+            draw_queue.rectangle("fill", bar.left, bar.top, bar.right, bar.bottom, scrollbar_color)
         end
-        love.graphics.rectangle("fill", bar.left, bar.top, bar.right - bar.left, bar.bottom - bar.top)
     end
 end
 
