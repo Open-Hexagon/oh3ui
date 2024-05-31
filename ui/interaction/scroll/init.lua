@@ -23,15 +23,21 @@ end
 
 ---update the current scroll area
 function scroll.update()
+    local data = area.get_extra_data()
+    local scroll_state = data.state
+
+    -- decrease scroll velocity over time (increased and used in touch scroll)
+    scroll_state.velocity = scroll_state.velocity or 0
+    if scroll_state.velocity < 0 then
+        scroll_state.velocity = math.min(0, scroll_state.velocity + love.timer.getDelta() * 500)
+    else
+        scroll_state.velocity = math.max(0, scroll_state.velocity - love.timer.getDelta() * 500)
+    end
+
     -- user can only interact with one scroll area at the same time
     if has_scrolled_this_frame then
         return
     end
-
-    local data = area.get_extra_data()
-    local scroll_state = data.state
-
-    local last_scroll_position = scroll_state.position
 
     -- make sure that the default is always in the past
     scroll_state.last_interaction_time = scroll_state.last_interaction_time or -2
@@ -78,9 +84,6 @@ function scroll.update()
         factor = math.sin(factor * math.pi / 2)
         scroll_state.position = scroll_state.start_position * (1 - factor)  + scroll_state.target_position * factor
     end
-
-    -- used to calculate scroll velocity when releasing touch
-    scroll_state.last_delta = scroll_state.position - last_scroll_position
 end
 
 return scroll

@@ -78,22 +78,21 @@ return function(scroll_state)
             scroll_state.area_grabbed_at = nil
             scroll_state.current_finger = nil
             scroll_state.finger_pressure = scroll_state.finger_pressure or 1
-            local new_pos = scroll_state.position + scroll_state.last_delta * 40 * scroll_state.finger_pressure
+            local new_pos = scroll_state.position + scroll_state.velocity * 40 * scroll_state.finger_pressure
             require("ui.interaction.scroll").go_to(new_pos, 0.3, "out_sine")
         else
             -- other finger/s are still held down
-            -- TODO: short scroll velocity that is stopped by other finger
             give_scroll_control(scroll_state, scroll_state.fingers[finger_count])
         end
     end
 
     if scroll_state.area_grabbed_at and scroll_state.current_finger then
         -- store pressure for later use in velocity calculation
-        scroll_state.finger_pressure = love.touch.getPressure(scroll_state.current_finger)
         local x, y = love.touch.getPosition(scroll_state.current_finger)
+        scroll_state.finger_pressure = love.touch.getPressure(scroll_state.current_finger)
 
-        local scroll_position = 0
         local data = area.get_extra_data()
+        local scroll_position = 0
 
         -- calculating scroll position like so:
         -- (subtracting delta as moving finger down (positive delta) should result in moving scroll up (negative delta))
@@ -107,6 +106,10 @@ return function(scroll_state)
         else -- data.direction == "horizontal"
             scroll_position = scroll_state.area_grabbed_at - x
         end
+
+        -- increase scroll velocity by scrolling speed
+        local delta = scroll_position - scroll_state.position
+        scroll_state.velocity = scroll_state.velocity + delta
 
         require("ui.interaction.scroll").go_to(scroll_position, 0, "none")
     end

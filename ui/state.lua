@@ -73,7 +73,6 @@ function state.update()
     state.bottom = state.y + (1 - state.anchor.y) * state.height
 
     local mouse_x, mouse_y = love.mouse.getPosition()
-    local outside_interactable_area = false
 
     -- update area bounds
     if state.areas[state.current_area_index] then
