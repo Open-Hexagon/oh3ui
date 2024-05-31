@@ -46,6 +46,11 @@ end
 ---handle touch scroll interaction
 ---@param scroll_state table
 return function(scroll_state)
+    -- don't process touch scroll if scrollbar is grabbed
+    if scroll_state.scrollbar_grabbed_at then
+        return
+    end
+
     -- finger ids sorted by scrolling priority (latest touch is more important)
     scroll_state.fingers = scroll_state.fingers or {}
 
