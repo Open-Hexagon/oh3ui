@@ -44,6 +44,7 @@ function scroll.start(scroll_state, scroll_direction, max_length)
 end
 
 local SCROLLBAR_THICKNESS = 10
+local MIN_SCROLLBAR_LENGTH = 40
 
 ---calculates the scrollbar position and changes the current scroll state accordingly
 local function calculate_scrollbar_position()
@@ -57,7 +58,7 @@ local function calculate_scrollbar_position()
     -- scrollbar to container size ratio = container to content size ratio
     -- scrollbar_length / container_length = container_length / content_length
     -- => scrollbar_length = container_length ^ 2 / content_length
-    local length = data.area_length ^ 2 / (data.area_length + data.overflow)
+    local length = math.max(data.area_length ^ 2 / (data.area_length + data.overflow), MIN_SCROLLBAR_LENGTH)
 
     -- normalized scrollbar position = normalized scroll position
     -- scrollbar_position / (container_length - scrollbar_length) = scroll_position / (content_length - container_length)

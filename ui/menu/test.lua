@@ -11,6 +11,7 @@ local scroll = require("ui.area.scroll")
 local button_state = {}
 local scroll_state1 = {}
 local scroll_state2 = {}
+local scroll_state3 = {}
 
 -- small menu for testing
 return function()
@@ -63,7 +64,7 @@ return function()
     end
 
     -- make scrollable
-    scroll.start(scroll_state1, "vertical", 50)
+    scroll.start(scroll_state1, "vertical", 100)
 
     -- centered rectangle
     state.x = ui.get_width() / 2
@@ -89,11 +90,51 @@ return function()
     scroll.start(scroll_state2, "horizontal", 200)
     state.y = state.y + state.height + 10
     for _ = 1, 5 do
-        rectangle("fill")
+        rectangle()
         state.x = state.x + state.width + 4
     end
     scroll.done()
 
+    state.y = state.y + state.height + 10
+    state.height = 90
+
+    scroll.done()
+
+    -- infinite scroll
+    state.x = ui.get_width() / 3 * 2
+    state.y = ui.get_height() / 3
+    local height = 500
+    local box_height = 100
+    state.allow_automatic_resizing = false  -- gets reset at start of next frame
+    state.height = box_height - 10 -- 10 padding
+    state.anchor.x = 0
+    state.anchor.y = 0
+    scroll.start(scroll_state3, "vertical", height)
+    -- first one always has to be there
+    rectangle()
+    label("0")
+    if state.clicked then
+        print("clicked on 0 rectangle!!!")
+    end
+    local start = math.max(math.floor(scroll_state3.position / box_height), 1)
+    local stop = start + height / box_height + 1
+    state.y = state.y + start * box_height
+    scroll_state3.highest = scroll_state3.highest or 0
+    for i = start, stop do
+        rectangle()
+        label(tostring(i))
+        state.y = state.y + box_height
+        scroll_state3.highest = math.max(i, scroll_state3.highest)
+        if state.clicked then
+            print("clicked on " .. i .. " rectangle!!!")
+        end
+    end
+    if stop < scroll_state3.highest then
+        -- need to keep highest element around for scroll back to work correctly with grab scroll
+        state.y = state.y + scroll_state3.highest * box_height - stop * box_height
+        rectangle()
+        label(tostring(scroll_state3.highest))
+    end
     scroll.done()
 
     -- rectangle with width of 1/3 screen minus 20 padding (10 on each side)
