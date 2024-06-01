@@ -8,10 +8,11 @@ local button = require("ui.element.button")
 local theme = require("ui.theme")
 local scroll = require("ui.area.scroll")
 
+local infinite_scroll_example = require("ui.menu.infinite_scroll_example")
+
 local button_state = {}
 local scroll_state1 = {}
 local scroll_state2 = {}
-local scroll_state3 = {}
 
 -- small menu for testing
 return function()
@@ -100,15 +101,15 @@ return function()
 
     scroll.done()
 
-    -- infinite scroll
+
     state.x = ui.get_width() / 3 * 2
     state.y = ui.get_height() / 3
-    local height = 500
-    local box_height = 100
-    state.allow_automatic_resizing = false  -- gets reset at start of next frame
-    state.height = box_height - 10 -- 10 padding
     state.anchor.x = 0
     state.anchor.y = 0
+    infinite_scroll_example()
+    --[[local height = 500
+    state.allow_automatic_resizing = false  -- gets reset at start of next frame
+    state.height = box_height - 10 -- 10 padding
     scroll.start(scroll_state3, "vertical", height)
     -- first one always has to be there
     rectangle()
@@ -119,7 +120,7 @@ return function()
     local start = math.max(math.floor(scroll_state3.position / box_height), 1)
     local stop = start + height / box_height + 1
     state.y = state.y + start * box_height
-    scroll_state3.highest = scroll_state3.highest or 0
+    scroll_state3.highest = scroll_state3.highest or 10000000
     for i = start, stop do
         rectangle()
         label(tostring(i))
@@ -135,7 +136,7 @@ return function()
         rectangle()
         label(tostring(scroll_state3.highest))
     end
-    scroll.done()
+    scroll.done()]]
 
     -- rectangle with width of 1/3 screen minus 20 padding (10 on each side)
     state.x = 10
