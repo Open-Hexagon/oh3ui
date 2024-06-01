@@ -166,110 +166,35 @@ function scroll.done()
     end
 end
 
-local processed_indices = {}
-function scroll.elements_in_view(amount)
+---iterate over all element indices that are required to be processed or in view
+---(only works when every element has the same size)
+---@param element_size number
+---@param amount number?
+---@return fun():number
+function scroll.elements_in_view(element_size, amount)
     return coroutine.wrap(function()
-        for k in pairs(processed_indices) do
-            processed_indices[k] = false
-        end
-        -- first one always has to be there for sizing reasons
-        coroutine.yield(1)
-
         local data = area.get_extra_data()
         local scroll_state = data.state
-        local direction = data.direction
-
-        -- length of the first element in scroll direction
-        local element_length = swap_if_vertical(direction, state.width, state.height)
-        local area_start = swap_if_vertical(direction, state.left, state.top)
-
-        local scroll_window_start = area_start + scroll_state.position
-        local scroll_window_stop = area_start + scroll_state.position + data.max_length
-
-        -- find the first element that is in view
-        local start_index
-        if scroll_state.position <= element_length then
-            -- first one is already in view
-            start_index = 1
-        else
-            local lengths = 0
-            -- possible range
-            local lower = 2
-            local upper = amount
-
-            local iterations = 0
-            local current_index = 1
-
-            while start_index == nil do
-                local element_start = swap_if_vertical(direction, state.left, state.top)
-                local element_stop = swap_if_vertical(direction, state.right, state.bottom)
-
-                if (element_start < scroll_window_start and element_stop > scroll_window_stop) or (element_stop >= scroll_window_start and element_start <= scroll_window_stop) then
-                    start_index = current_index
-                    break
-                end
-
-                if element_start < scroll_window_start then
-                    lower = current_index + 1
-                else
-                    upper = current_index - 1
-                end
-
-                iterations = iterations + 1
-
-                lengths = lengths + element_stop - element_start
-                local average_length = lengths / iterations
-
-                local distance
-                if scroll_window_start > element_stop then
-                    distance = scroll_window_start - element_stop
-                else
-                    distance = scroll_window_stop - element_start
-                end
-
-                local estimated_change = math.floor(distance / average_length + 0.5)
-                if math.abs(estimated_change) < 1 then
-                    estimated_change = distance / math.abs(distance)
-                end
-                current_index = current_index + estimated_change
-
-                if current_index > upper then
-                    current_index = upper
-                elseif current_index < lower then
-                    current_index = lower
-                end
-
-                processed_indices[current_index] = true
-                coroutine.yield(current_index)
+        -- no element limit, save the highest index for sizing reasons (see below)
+        if not amount then
+            scroll_state.last_element_index = scroll_state.last_element_index or 1
+        end
+        -- first one always has to be processed for sizing reasons
+        coroutine.yield(1)
+        -- limit start to be 2 or higher to prevent doubled occurence of 1
+        local start = math.max(math.floor(scroll_state.position / element_size) + 1, 2)
+        local stop = start + math.floor(data.max_length / element_size) + 1
+        for i = start, stop do
+            coroutine.yield(i)
+            if amount == nil and i > scroll_state.last_element_index then
+                scroll_state.last_element_index = i
             end
         end
-
-        -- process any element before the first one in view (which was processed earlier)
-        for i = start_index - 1, 2, -1 do
-            if not processed_indices[i] then
-                coroutine.yield(i)
-                local position = swap_if_vertical(direction, state.right, state.bottom)
-                -- abort if no longer in view
-                if position < scroll_window_start then
-                    break
-                end
-            end
+        -- process last index if it hasn't been already (for sizing reasons)
+        local last_index = amount or scroll_state.last_element_index
+        if last_index > stop then
+            coroutine.yield(last_index)
         end
-
-        -- process any element after the first one in view (which was processed earlier)
-        for i = start_index + 1, amount - 1 do
-            if not processed_indices[i] then
-                coroutine.yield(i)
-                local position = swap_if_vertical(direction, state.left, state.top)
-                -- abort if no longer in view
-                if position > scroll_window_stop then
-                    break
-                end
-            end
-        end
-
-        -- last one always has to be there for sizing reasons
-        coroutine.yield(amount)
     end)
 end
 

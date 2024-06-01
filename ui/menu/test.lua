@@ -107,36 +107,7 @@ return function()
     state.anchor.x = 0
     state.anchor.y = 0
     infinite_scroll_example()
-    --[[local height = 500
-    state.allow_automatic_resizing = false  -- gets reset at start of next frame
-    state.height = box_height - 10 -- 10 padding
-    scroll.start(scroll_state3, "vertical", height)
-    -- first one always has to be there
-    rectangle()
-    label("0")
-    if state.clicked then
-        print("clicked on 0 rectangle!!!")
-    end
-    local start = math.max(math.floor(scroll_state3.position / box_height), 1)
-    local stop = start + height / box_height + 1
-    state.y = state.y + start * box_height
-    scroll_state3.highest = scroll_state3.highest or 10000000
-    for i = start, stop do
-        rectangle()
-        label(tostring(i))
-        state.y = state.y + box_height
-        scroll_state3.highest = math.max(i, scroll_state3.highest)
-        if state.clicked then
-            print("clicked on " .. i .. " rectangle!!!")
-        end
-    end
-    if stop < scroll_state3.highest then
-        -- need to keep highest element around for scroll back to work correctly with grab scroll
-        state.y = state.y + scroll_state3.highest * box_height - stop * box_height
-        rectangle()
-        label(tostring(scroll_state3.highest))
-    end
-    scroll.done()]]
+
 
     -- rectangle with width of 1/3 screen minus 20 padding (10 on each side)
     state.x = 10
