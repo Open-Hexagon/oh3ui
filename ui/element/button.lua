@@ -10,11 +10,15 @@ local draw_queue = require("ui.draw_queue")
 local rectangle_color_overwrite = {}
 
 ---make a box sized based on text content that is highlighted when hovered
-return function(button_state, text)
+---@param button_state table
+---@param text string
+---@param wraplimit number?
+---@param align love.AlignMode?
+return function(button_state, text, wraplimit, align)
     -- draw background later
     draw_queue.placeholder()
     area.start()
-    label(text)
+    label(text, wraplimit, align)
     area.set_state_to_bounds()
     area.done()
 

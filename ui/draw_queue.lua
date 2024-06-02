@@ -83,15 +83,29 @@ function draw_queue.polygon(mode, vertices, color)
     add_item(op_ids.polygon, mode, unpack(polygon_data, 1, #vertices + 4))
 end
 
+---get size of text before rendering
+---@param text string
+---@param font love.Font
+---@param wraplimit number?
+---@param align love.AlignMode?
+---@return number
+---@return number
+function draw_queue.get_text_size(text, font, wraplimit, align)
+    local text_object = text_cache.get(font, text, wraplimit or math.huge, align or "left")
+    return text_object:getDimensions()
+end
+
 ---add text to the queue
 ---@param text string
 ---@param font love.Font
 ---@param x number
 ---@param y number
 ---@param color table
-function draw_queue.text(text, font, x, y, color)
+---@param wraplimit number?
+---@param align love.AlignMode?
+function draw_queue.text(text, font, x, y, color, wraplimit, align)
     x, y = love.graphics.transformPoint(x, y)
-    local text_object = text_cache.get(text, font)
+    local text_object = text_cache.get(font, text, wraplimit or math.huge, align or "left")
     add_item(op_ids.text, text_object, x, y, unpack(color))
 end
 

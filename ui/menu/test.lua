@@ -80,9 +80,9 @@ return function()
     -- (label sets dimensions which makes centering in the rectangle easier)
     label("Hello")
 
-    state.y = state.y + 54
+    state.y = state.y + 104
     state.height = 50
-    button(button_state, "Press me!")
+    button(button_state, "Press me! with wrap!", 200)
     if state.clicked then
         print("I was pressed!")
     end
@@ -111,6 +111,7 @@ return function()
 
     -- rectangle with width of 1/3 screen minus 20 padding (10 on each side)
     state.x = 10
+    state.y = ui.get_height() / 2
     state.anchor.x = 0
     state.width = ui.get_width() / 3 - 20
     rectangle()
