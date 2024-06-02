@@ -1,4 +1,5 @@
 local scissor_stack = require("ui.scissor_stack")
+local text_cache = require("ui.text_cache")
 local draw_queue = {}
 
 local queue = {}
@@ -90,7 +91,8 @@ end
 ---@param color table
 function draw_queue.text(text, font, x, y, color)
     x, y = love.graphics.transformPoint(x, y)
-    add_item(op_ids.text, text, font, x, y, unpack(color))
+    local text_object = text_cache.get(text, font)
+    add_item(op_ids.text, text_object, x, y, unpack(color))
 end
 
 ---queue pushing a scissor rectangle onto the scissor stack
@@ -128,9 +130,9 @@ function draw_queue.draw()
                 love.graphics.polygon(item[2], unpack(item, 3, len - 4))
 
             elseif id == op_ids.text then
-                local text, font, x, y, r, g, b, a = unpack(item, 2)
+                local text_object, x, y, r, g, b, a = unpack(item, 2)
                 love.graphics.setColor(r, g, b, a)
-                love.graphics.print(text, font, x, y)
+                love.graphics.draw(text_object, x, y)
 
             elseif id == op_ids.push_scissor then
                 local x1, y1, x2, y2 = unpack(item, 2)
