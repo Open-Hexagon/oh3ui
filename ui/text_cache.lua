@@ -41,7 +41,7 @@ local function update()
 end
 
 local last_update = love.timer.getTime()
-local update_interval = 10  -- seconds
+local update_interval = 0.5  -- seconds
 
 ---get a text object with the correct font, text, wraplimit and align mode
 ---@param font love.Font

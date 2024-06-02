@@ -15,6 +15,6 @@ return function(text, wraplimit, align)
     -- undo scale to render text with full resolution
     love.graphics.push()
     love.graphics.scale(1 / ui.scale, 1 / ui.scale)
-    draw_queue.text(text, state.get_font(true), state.left * ui.scale, state.top * ui.scale, theme.label_color, wraplimit, align)
+    draw_queue.text(text, state.get_font(true), state.left * ui.scale, state.top * ui.scale, theme.label_color, (wraplimit or math.huge) * ui.scale, align)
     love.graphics.pop()
 end
