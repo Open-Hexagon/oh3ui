@@ -8,6 +8,7 @@ local area = require("ui.area")
 local button = require("ui.element.button")
 local theme = require("ui.theme")
 local scroll = require("ui.area.scroll")
+local collapse = require("ui.area.collapse")
 
 local infinite_scroll_example = require("ui.menu.infinite_scroll_example")
 
@@ -110,6 +111,7 @@ return function()
     state.anchor.y = 0
     infinite_scroll_example()
 
+    collapse.start()
 
     -- rectangle with width of 1/3 screen minus 20 padding (10 on each side)
     state.x = 10
@@ -118,10 +120,14 @@ return function()
     state.width = ui.get_width() / 3 - 20
     rectangle()
 
+    local rectangle_width = state.width
+
     -- draw icon in center
     state.x = state.x + state.width / 2
     state.y = state.y + state.height / 2
     state.anchor.x = 0.5
     state.anchor.y = 0.5
     icon("emoji-smile")
+
+    collapse.done((math.sin(love.timer.getTime() * 5) + 1) * 0.5 * rectangle_width)
 end
