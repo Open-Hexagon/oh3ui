@@ -80,9 +80,10 @@ return function()
     -- (label sets dimensions which makes centering in the rectangle easier)
     label("Hello")
 
-    state.y = state.y + 104
+    state.y = state.y + 79
     state.height = 50
-    button(button_state, "Press me! with wrap!", 200)
+    state.text_wraplimit = 200
+    button(button_state, "Press me! with wrap!")
     if state.clicked then
         print("I was pressed!")
     end

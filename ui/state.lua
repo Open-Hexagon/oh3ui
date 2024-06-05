@@ -15,6 +15,8 @@ function state.reset()
     state.anchor = { x = 0, y = 0 }
     state.font = "assets/OpenSquare.ttf"
     state.font_size = 32
+    state.text_wraplimit = math.huge
+    state.text_align = "left"
     -- allow increasing element size automatically if too small
     state.allow_automatic_resizing = true
 

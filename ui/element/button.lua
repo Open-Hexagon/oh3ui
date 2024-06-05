@@ -12,13 +12,11 @@ local rectangle_color_overwrite = {}
 ---make a box sized based on text content that is highlighted when hovered
 ---@param button_state table
 ---@param text string
----@param wraplimit number?
----@param align love.AlignMode?
-return function(button_state, text, wraplimit, align)
+return function(button_state, text)
     -- draw background later
     draw_queue.placeholder()
     area.start()
-    label(text, wraplimit, align)
+    label(text)
     area.set_state_to_bounds()
     area.done()
 
