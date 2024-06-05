@@ -2,6 +2,7 @@ local ui = require("ui")
 local state = require("ui.state")
 local rectangle = require("ui.element.rectangle")
 local label = require("ui.element.label")
+local icon = require("ui.element.icon")
 local background_area = require("ui.area.background")
 local area = require("ui.area")
 local button = require("ui.element.button")
@@ -116,4 +117,11 @@ return function()
     state.anchor.x = 0
     state.width = ui.get_width() / 3 - 20
     rectangle()
+
+    -- draw icon in center
+    state.x = state.x + state.width / 2
+    state.y = state.y + state.height / 2
+    state.anchor.x = 0.5
+    state.anchor.y = 0.5
+    icon("emoji-smile")
 end

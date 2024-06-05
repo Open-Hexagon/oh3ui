@@ -11,7 +11,8 @@ function love.run()
             ui.process_event(name, a, b, c, d, e, f)
         end
         love.graphics.setCanvas()
-        --ui.scale = (math.sin(love.timer.getTime()) + 1) * 0.2 + 0.8
+        --ui.scale = (math.sin(love.timer.getTime() * 10) + 1) * 0.2 + 0.8
+        --ui.scale = math.floor(ui.scale * 10) / 10
         if love.graphics.isActive() then
             love.graphics.origin()
             love.graphics.clear(0, 0, 0, 1)

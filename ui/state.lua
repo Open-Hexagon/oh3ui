@@ -1,5 +1,6 @@
 local hover_interaction = require("ui.interaction.hover")
 local click_interaction = require("ui.interaction.click")
+local json = require("extlibs.json.json")
 
 local state = {}
 
@@ -120,6 +121,26 @@ function state.get_font(scale_adjusted)
         fonts[file][size] = font
     end
     return font
+end
+
+local icon_font_ids = {}
+
+---get a table of icon id keys with the actual string values for the icons in the current font
+---@return unknown
+function state.get_icon_font_ids()
+    local file = state.font:gsub("(.*)%..+", "%1.json")
+    local ids = icon_font_ids[file]
+    if not ids then
+        if not love.filesystem.exists(file) then
+            return
+        end
+        ids = json.decode(love.filesystem.read(file))
+        for key, value in pairs(ids) do
+            ids[key] = love.data.decode("string", "hex", value)
+        end
+        icon_font_ids[file] = ids
+    end
+    return ids
 end
 
 return state
