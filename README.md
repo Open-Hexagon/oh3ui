@@ -509,3 +509,25 @@ area.done()
 draw_queue.put_next_in_last_placeholder()
 draw_queue.rectangle("fill", bounds.left, bounds.top, bounds.right, bounds.bottom, theme.rectangle_color)
 ```
+
+## Layering
+To layer multiple elements on top of each other one could naively just put one there after the other one. The problem is that interaction will still be processed for both elements, with the bottom one being first. This is why a layering system is required.
+
+To use it first replace the
+```lua
+ui.start()
+mymenu()
+ui.done()
+```
+in your draw code with
+```lua
+local layers = require("ui.layers")
+...
+ui.start()
+layers.run()
+ui.done()
+```
+
+Then to actually draw a menu, you call `layers.push` with the function that draws the menu on startup. The interesting part now is that you can call `layers.push` in your menu as well for example if a button is clicked. It does not replace the menu (call `layers.pop` and then `layers.push` if this is desired) but draws the new one on top of the old one which is then no longer interactable.
+
+To close the overlay you can call `layers.pop` which will then go back to the last menu.
