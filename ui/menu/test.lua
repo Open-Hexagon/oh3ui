@@ -9,6 +9,8 @@ local button = require("ui.element.button")
 local theme = require("ui.theme")
 local scroll = require("ui.area.scroll")
 local collapse = require("ui.area.collapse")
+local layers = require("ui.layers")
+local test_overlay = require("ui.menu.test_overlay")
 
 local infinite_scroll_example = require("ui.menu.infinite_scroll_example")
 
@@ -33,6 +35,7 @@ return function()
     rectangle()
     if state.clicked then
         print("clicked top left rectangle")
+        layers.push(test_overlay)
     end
 
     -- rectangle to the right of the last one with 10 padding

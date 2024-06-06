@@ -1,6 +1,7 @@
 local hover_interaction = require("ui.interaction.hover")
 local click_interaction = require("ui.interaction.click")
 local json = require("extlibs.json.json")
+local layers = require("ui.layers")
 
 local state = {}
 
@@ -75,8 +76,6 @@ function state.update()
     state.right = state.x + (1 - state.anchor.x) * state.width
     state.bottom = state.y + (1 - state.anchor.y) * state.height
 
-    local mouse_x, mouse_y = love.mouse.getPosition()
-
     -- update area bounds
     if state.areas[state.current_area_index] then
         local bounds = state.areas[state.current_area_index].bounds
@@ -86,8 +85,10 @@ function state.update()
         bounds.bottom = bounds.bottom == nil and state.bottom or math.max(bounds.bottom, state.bottom)
     end
 
-    -- limit interaction area if scroll areas are on the area stack
-    if not state.is_position_interactable(mouse_x, mouse_y) then
+    local mouse_x, mouse_y = love.mouse.getPosition()
+
+    -- stop interaction if another layer is on top of this one or limit interaction area if scroll areas are on the area stack
+    if not layers.allow_interaction or not state.is_position_interactable(mouse_x, mouse_y) then
         state.hovering = false
         state.clicked = false
         return

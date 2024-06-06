@@ -1,4 +1,5 @@
 local area = require("ui.area")
+local layers = require("ui.layers")
 local wheel_interaction = require("ui.interaction.scroll.wheel")
 local grab_interaction = require("ui.interaction.scroll.grab")
 local touch_interaction = require("ui.interaction.scroll.touch")
@@ -47,9 +48,12 @@ function scroll.update()
     scroll_state.interpolation_duration = scroll_state.interpolation_duration or 1
 
     -- actually process the different types of scroll interaction
-    wheel_interaction(scroll_state)
-    grab_interaction.update(scroll_state)
-    touch_interaction(scroll_state)
+    -- but only if interaction isn't disabled by a layer on top of this one
+    if layers.allow_interaction then
+        wheel_interaction(scroll_state)
+        grab_interaction.update(scroll_state)
+        touch_interaction(scroll_state)
+    end
 
     -- limit target position to area bounds
     if scroll_state.target_position > data.overflow then
