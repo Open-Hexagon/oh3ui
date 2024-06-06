@@ -156,6 +156,7 @@ for _ = 1, 10 do
 end
 ```
 Now all further steps happen for each iteration
+
 3. Draw the rectangle with a red color and update its interaction state. Setting `theme.rectangle_color` to nil is just going to reset it to default rectangle color (red is defined above the function as to not allocate a new table every frame.)
 ```lua
 theme.rectangle_color = red
@@ -192,19 +193,29 @@ With this demonstration you can tell that even complex layouts can be achieved w
 The anchor is set using `state.anchor.x` and `state.anchor.y` it is initialized at 0 0 every frame.
 These values are factors from 0 to 1. (could set it outside the range but that doesn't really make any sense.)
 They determine how far the element is moved from the position where it would be if x and y correspond to the top left corner.
+
 So an anchor of 1 and 1 would move it left and up exactly by its own width and height which causes the x and y position to correspond to the bottom right corner.
 Similarly 1 and 0 would correspond to the top right corner and 0 and 1 to the bottom left one.
+
 Now the interesting part is that you can also use values between 0 and 1 e.g. 0.5.
 A value of 0.5 would move it by half its width/height, so an anchor of 0.5 and 0.5 would result in x and y corresponding to the center of the element.
 ### Text
-Löve has its own options for text, these are exposed through `state.text_wraplimit` and `state.text_align`. Wraplimit does what you'd expect, it wraps the text if its width becomes greater than the specified amount. Text align is either "left", "center" or "right" and aligns the text (including wrapped lines) to the width given by `state.width` this means that it may have unexpected results if used together with anchor or auto resizing.
+Löve has its own options for text, these are exposed through `state.text_wraplimit` and `state.text_align`.
+
+Wraplimit does what you'd expect, it wraps the text if its width becomes greater than the specified amount.
+
+Text align is either "left", "center" or "right" and aligns the text (including wrapped lines) to the width given by `state.width` this means that it may have unexpected results if used together with anchor or auto resizing.
+
 Auto resizing is something that certain elements e.g. labels do to set `state.width` and `state.height` to their own values, which is useful for e.g. drawing a rectangular border around text. However this is sometimes not wanted so it can be disabled by setting `state.allow_automatic_resizing` to false
 
 ## State
 All previous examples have been fully stateless. However any sufficiently advanced GUI has to have state to e.g. store for how long the user has been hovering a button for an animation or where the current scroll position is etc.
+
 In C many imguis do this by passing a reference to an often local static variable (In c one can define a variable inside a function that keeps its value across function calls using the static keyword).
+
 Now lua does not allow us to get the reference of any variable. However we have a very versatile type that is always passed by reference: the table.
-So now to actually make the inital button example functional we pass a table where the button can store its state
+
+So to actually make the inital button example functional we pass a table where the button can store its state
 (specifically it stores information about hover time to animate a color change as the user is hovering the button)
 ```lua
 local button = require("ui.element.button")
@@ -251,10 +262,11 @@ end
 ```
 It does exactly the same thing as before, but now the table returned from `require("ui.id_table")()` automatically initializes any keys that it doesn't have yet with an empty table.
 So instead of typing `Id("mybuttonid")` we can type `id_table.mybuttonid`.
+
 The initialization with an empty table happens in the `__index` function of the metatable which is only called if the key doesn't exist in the original table, so the negligible performance overhead is gone as well as subsequent accesses will no longer call the function.
 
 ## Custom elements
-One thing I have not yet touched on is how easy it is to define a new element in an imgui like this:
+One thing I have not yet touched on is how easy it is to define a new element in an imgui like this.
 This is the code for the rectangle element.
 ```lua
 local state = require("ui.state")
@@ -365,6 +377,7 @@ return function()
 end
 ```
 The `scroll_area.start` function takes a table for persisted scroll state as first parameter where it'll store things like the current scroll position. The next one takes either "vertical" or "horizontal" which determines which direction it is scrollable in. (nest two scroll areas to allow scrolling in both directions.) The last parameter determines the length (in width/height depending on scroll direction) after which the area is supposed to become scrollable.
+
 Note that elements are still absolutely positioned even if they are cut off by the scroll area, so any subsequent elements like the last rectangle in this example will still position themselves as if the scroll area didn't exist but only its contents.
 
 If this is not desired the position of the next element could be based off of the area bounds like so:
