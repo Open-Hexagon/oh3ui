@@ -38,18 +38,33 @@ return function()
     end
 end
 ```
-The returned function may be called in your draw function like so:
+The ui may draw and update the menu using the function like so:
 ```lua
-local ui = require("ui")
 local mymenu = require("mymenu")
+local ui = require("ui")
 
-function love.draw()
-    ui.start()
-    mymenu()
-    ui.done()
+function love.run()
+    return function()
+        love.event.pump()
+        for name, a, b, c, d, e, f in love.event.poll() do
+            if name == "quit" then
+                return 0
+            end
+            ui.process_event(name, a, b, c, d, e, f)
+        end
+        if love.graphics.isActive() then
+            love.graphics.origin()
+            love.graphics.clear(0, 0, 0, 1)
+            ui.start()
+            mymenu()
+            ui.done()
+            love.graphics.present()
+        end
+        love.timer.step()
+    end
 end
 ```
-Of course there are different ways to put call this e.g. using love.run instead, but however it is done, all future examples will assume that they are called like this.
+All following examples will assume that this kind of mainloop calling the menu is already in place.
 
 Now let's take that apart:
 1. `state.width` and `state.height` are set. These values determine the width and height of any element placed on the screen. They may be changed between calls to allow for differently sized elements. (Note that `state.x` and `state.y` does the same for the position, however it is initialized as 0 0 by default so I am not setting it here)
