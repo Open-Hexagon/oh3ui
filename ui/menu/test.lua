@@ -120,8 +120,6 @@ return function()
     state.width = ui.get_width() / 3 - 20
     rectangle()
 
-    local rectangle_width = state.width
-
     -- draw icon in center
     state.x = state.x + state.width / 2
     state.y = state.y + state.height / 2
@@ -129,5 +127,5 @@ return function()
     state.anchor.y = 0.5
     icon("emoji-smile")
 
-    collapse.done((math.sin(love.timer.getTime() * 5) + 1) * 0.5 * rectangle_width)
+    collapse.done((math.sin(love.timer.getTime() * 5) + 1) * 0.5)
 end

@@ -10,14 +10,21 @@ function collapse.start()
 end
 
 ---finish the collapse area
----@param max_width number?
----@param max_height number?
-function collapse.done(max_width, max_height)
+---@param width_factor number?
+---@param height_factor number?
+function collapse.done(width_factor, height_factor)
     local bounds = area.get_bounds()
 
-    -- nil as max means max is as large as it can possibly be
-    max_width = max_width or math.huge
-    max_height = max_height or math.huge
+    -- no cutoff by default
+    local max_width, max_height = math.huge, math.huge
+
+    -- set max if factor is not nil
+    if width_factor then
+        max_width = (bounds.right - bounds.left) * width_factor
+    end
+    if height_factor then
+        max_height = (bounds.bottom - bounds.top) * height_factor
+    end
 
     -- modify bounds to limit width/height
     if bounds.right - bounds.left > max_width then
