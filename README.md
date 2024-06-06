@@ -531,3 +531,5 @@ ui.done()
 Then to actually draw a menu, you call `layers.push` with the function that draws the menu on startup. The interesting part now is that you can call `layers.push` in your menu as well for example if a button is clicked. It does not replace the menu (call `layers.pop` and then `layers.push` if this is desired) but draws the new one on top of the old one which is then no longer interactable.
 
 To close the overlay you can call `layers.pop` which will then go back to the last menu.
+
+This kind of design may not really fit in with the imgui kind of philosophy but after some quick playing around I found this to be the simplest solution both in usage and implementation.
