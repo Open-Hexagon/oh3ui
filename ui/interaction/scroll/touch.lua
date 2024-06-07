@@ -78,7 +78,7 @@ return function(scroll_state)
             scroll_state.area_grabbed_at = nil
             scroll_state.current_finger = nil
             scroll_state.finger_pressure = scroll_state.finger_pressure or 1
-            local new_pos = scroll_state.position + scroll_state.velocity * 40 * scroll_state.finger_pressure
+            local new_pos = scroll_state.position - scroll_state.velocity * 40 * scroll_state.finger_pressure
             require("ui.interaction.scroll").go_to(new_pos, 0.3, "out_sine")
         else
             -- other finger/s are still held down
@@ -106,10 +106,6 @@ return function(scroll_state)
         else -- data.direction == "horizontal"
             scroll_position = scroll_state.area_grabbed_at - x
         end
-
-        -- increase scroll velocity by scrolling speed
-        local delta = scroll_position - scroll_state.position
-        scroll_state.velocity = scroll_state.velocity + delta
 
         require("ui.interaction.scroll").go_to(scroll_position, 0, "none")
     end

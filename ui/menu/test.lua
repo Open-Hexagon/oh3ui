@@ -11,6 +11,7 @@ local scroll = require("ui.area.scroll")
 local collapse = require("ui.area.collapse")
 local layers = require("ui.layers")
 local test_overlay = require("ui.menu.test_overlay")
+local toggle = require("ui.element.toggle")
 
 local infinite_scroll_example = require("ui.menu.infinite_scroll_example")
 
@@ -131,4 +132,13 @@ return function()
     icon("emoji-smile")
 
     collapse.done((math.sin(love.timer.getTime() * 5) + 1) * 0.5)
+
+
+    state.x = ui.get_width()
+    state.y = ui.get_height() / 2
+    state.anchor.x = 1
+    state.anchor.y = 0.5
+    state.width = 100
+    state.height = 50
+    toggle()
 end

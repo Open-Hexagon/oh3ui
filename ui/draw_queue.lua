@@ -7,6 +7,7 @@ local index = 0
 
 local op_ids = {
     rectangle = "r",
+    circle = "c",
     polygon = "p",
     push_scissor = "su",
     pop_scissor = "so",
@@ -55,16 +56,30 @@ function draw_queue.nothing()
 end
 
 ---add a rectangle to the queue
----@param mode string
+---@param mode love.DrawMode
 ---@param left number
 ---@param top number
 ---@param right number
 ---@param bottom number
 ---@param color table
-function draw_queue.rectangle(mode, left, top, right, bottom, color)
+---@param rx number?
+---@param ry number?
+function draw_queue.rectangle(mode, left, top, right, bottom, color, rx, ry)
     local x1, y1 = love.graphics.transformPoint(left, top)
     local x2, y2 = love.graphics.transformPoint(right, bottom)
-    add_item(op_ids.rectangle, mode, x1, y1, x2, y2, unpack(color))
+    add_item(op_ids.rectangle, mode, x1, y1, x2, y2, rx or 0, ry or 0, unpack(color))
+end
+
+---add a circle to the queue
+---@param mode love.DrawMode
+---@param x number
+---@param y number
+---@param radius number
+---@param color table
+function draw_queue.circle(mode, x, y, radius, color)
+    local ui = require("ui")
+    x, y = love.graphics.transformPoint(x, y)
+    add_item(op_ids.circle, mode, x, y, radius * ui.scale, unpack(color))
 end
 
 local polygon_data = {}
@@ -134,9 +149,14 @@ function draw_queue.draw()
         if id then
 
             if id == op_ids.rectangle then
-                local mode, x1, y1, x2, y2, r, g, b, a = unpack(item, 2)
+                local mode, x1, y1, x2, y2, rx, ry, r, g, b, a = unpack(item, 2)
                 love.graphics.setColor(r, g, b, a)
-                love.graphics.rectangle(mode, x1, y1, x2 - x1, y2 - y1)
+                love.graphics.rectangle(mode, x1, y1, x2 - x1, y2 - y1, rx, ry)
+
+            elseif id == op_ids.circle then
+                local mode, x, y, radius, r, g, b, a = unpack(item, 2)
+                love.graphics.setColor(r, g, b, a)
+		love.graphics.circle(mode, x, y, radius)
 
             elseif id == op_ids.polygon then
                 local len = #item

@@ -27,12 +27,12 @@ function scroll.update()
     local data = area.get_extra_data()
     local scroll_state = data.state
 
-    -- decrease scroll velocity over time (increased and used in touch scroll)
+    -- decrease scroll velocity over time (used in touch scroll)
     scroll_state.velocity = scroll_state.velocity or 0
     if scroll_state.velocity < 0 then
-        scroll_state.velocity = math.min(0, scroll_state.velocity + love.timer.getDelta() * 500)
+        scroll_state.velocity = math.min(0, scroll_state.velocity + love.timer.getDelta() * 1000)
     else
-        scroll_state.velocity = math.max(0, scroll_state.velocity - love.timer.getDelta() * 500)
+        scroll_state.velocity = math.max(0, scroll_state.velocity - love.timer.getDelta() * 1000)
     end
 
     -- user can only interact with one scroll area at the same time
@@ -78,6 +78,8 @@ function scroll.update()
         end
     end
 
+    local old_position = scroll_state.position
+
     -- move towards target position
     local factor = math.min((love.timer.getTime() - scroll_state.interpolation_start_time) / scroll_state.interpolation_duration, 1)
     if scroll_state.interpolation == "none" then
@@ -88,6 +90,10 @@ function scroll.update()
         factor = math.sin(factor * math.pi / 2)
         scroll_state.position = scroll_state.start_position * (1 - factor)  + scroll_state.target_position * factor
     end
+
+    -- increase scroll velocity by scrolling speed (used in touch scroll)
+    local delta = old_position - scroll_state.position
+    scroll_state.velocity = scroll_state.velocity + delta
 end
 
 return scroll
