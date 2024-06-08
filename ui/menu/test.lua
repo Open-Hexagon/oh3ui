@@ -18,6 +18,7 @@ local infinite_scroll_example = require("ui.menu.infinite_scroll_example")
 local button_state = {}
 local scroll_state1 = {}
 local scroll_state2 = {}
+local toggle_state = {}
 
 -- small menu for testing
 return function()
@@ -140,5 +141,5 @@ return function()
     state.anchor.y = 0.5
     state.width = 100
     state.height = 50
-    toggle()
+    toggle(toggle_state)
 end
