@@ -154,7 +154,7 @@ function scroll.done()
         -- draw scrollbar
         local bar = scroll_state.scrollbar
         -- set scrollbar color based on grabbed state
-        if scroll_state.scrollbar_grabbed_at then
+        if scroll_state.grabbed_at_x and scroll_state.grabbed_at_y then
             draw_queue.rectangle("fill", bar.left, bar.top, bar.right, bar.bottom, theme.grabbed_scrollbar_color)
         else
             scrollbar_color[1] = theme.scrollbar_color[1]

@@ -1,16 +1,16 @@
-local events = require("ui.event_queue")
-local state = require("ui.state")
 local area = require("ui.area")
+local drag = require("ui.interaction.drag")
 
 local grab = {}
 
 local function is_in_scrollbar(scroll_state, x, y)
     local scrollbar = scroll_state.scrollbar
-    return x >= scrollbar.left and x <= scrollbar.right and y >= scrollbar.top and y <= scrollbar.bottom
+    return drag.is_pos_in_bounds(x, y, scrollbar.left, scrollbar.top, scrollbar.right, scrollbar.bottom)
 end
 
 local grabbed_a_scrollbar_already_this_frame = false
 
+---reset interaction state
 function grab.reset()
     grabbed_a_scrollbar_already_this_frame = false
 end
@@ -28,27 +28,12 @@ function grab.update(scroll_state)
         scroll_state.last_interaction_time = love.timer.getTime()
     end
 
-    -- handle events
-    for event in events.iterate("mouse.*") do
-        local name = event[1]
-        -- grab scrollbar when pressing down onto it while it is visible and if no other scrollbar has been grabbed in this frame
-        if name == "mousepressed" and is_in_scrollbar(scroll_state, x, y) and not grabbed_a_scrollbar_already_this_frame and state.is_position_interactable(screen_x, screen_y) then
-            -- save the relative position on the scrollbar to set scroll position later
-            if data.direction == "vertical" then
-                scroll_state.scrollbar_grabbed_at = y - scroll_state.scrollbar.top
-            else -- data.direction == "horizontal"
-                scroll_state.scrollbar_grabbed_at = x - scroll_state.scrollbar.left
-            end
-            grabbed_a_scrollbar_already_this_frame = true
-        end
-        -- stop grabbing when releasing no matter the cursor position
-        if name == "mousereleased" then
-            scroll_state.scrollbar_grabbed_at = nil
-        end
-    end
+    -- do actual drag interaction
+    local scrollbar = scroll_state.scrollbar
+    local left, top, _, _, grabbed = drag.update(scroll_state, scrollbar.left, scrollbar.top, scrollbar.right, scrollbar.bottom, not grabbed_a_scrollbar_already_this_frame)
+    grabbed_a_scrollbar_already_this_frame = grabbed
 
-    if scroll_state.scrollbar_grabbed_at then
-        local scrollbar = scroll_state.scrollbar
+    if grabbed then
         local scroll_position = 0
         local bounds = area.get_bounds()
 
@@ -58,7 +43,7 @@ function grab.update(scroll_state)
             local max_scrollbar_position = data.area_length - (scrollbar.bottom - scrollbar.top)
             -- new scrollbar top according to current mouse position
             -- offset by bounds.top so 0 is at the start of area, not of screen
-            local new_top = y - scroll_state.scrollbar_grabbed_at - bounds.top
+            local new_top = top - bounds.top
             -- scroll percentage = new_top / max_scrollbar_position
             -- max scroll = data.overflow
             scroll_position = new_top * data.overflow / max_scrollbar_position
@@ -68,7 +53,7 @@ function grab.update(scroll_state)
             local max_scrollbar_position = data.area_length - (scrollbar.right - scrollbar.left)
             -- new scrollbar left position according to current mouse position
             -- offset by bounds.left so 0 is at the start of area, not of screen
-            local new_left = x - scroll_state.scrollbar_grabbed_at - bounds.left
+            local new_left = left - bounds.left
             -- scroll percentage = new_left / max_scrollbar_position
             -- max scroll = data.overflow
             scroll_position = new_left * data.overflow / max_scrollbar_position
