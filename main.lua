@@ -4,6 +4,7 @@ local ui = require("ui")
 
 function love.run()
     layers.push(test_menu)
+
     return function()
         love.event.pump()
         for name, a, b, c, d, e, f in love.event.poll() do
@@ -18,9 +19,11 @@ function love.run()
         if love.graphics.isActive() then
             love.graphics.origin()
             love.graphics.clear(0, 0, 0, 1)
+
             ui.start()
             layers.run()
             ui.done()
+
             love.graphics.setColor(1, 1, 1, 1)
             love.graphics.print(math.floor(love.timer.getFPS()) .. " fps")
             love.graphics.present()
