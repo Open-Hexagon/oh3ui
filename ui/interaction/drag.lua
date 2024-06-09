@@ -28,6 +28,9 @@ end
 ---@return number
 ---@return boolean
 function drag.update(drag_state, left, top, right, bottom, extra_grabbing_condition)
+    if extra_grabbing_condition == nil then
+        extra_grabbing_condition = true
+    end
     local screen_x, screen_y = love.mouse.getPosition()
     local x, y = love.graphics.inverseTransformPoint(screen_x, screen_y)
 

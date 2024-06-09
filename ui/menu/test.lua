@@ -12,6 +12,7 @@ local collapse = require("ui.area.collapse")
 local layers = require("ui.layers")
 local test_overlay = require("ui.menu.test_overlay")
 local toggle = require("ui.element.toggle")
+local slider = require("ui.element.slider")
 
 local infinite_scroll_example = require("ui.menu.infinite_scroll_example")
 
@@ -19,6 +20,7 @@ local button_state = {}
 local scroll_state1 = {}
 local scroll_state2 = {}
 local toggle_state = {}
+local slider_state = {}
 
 -- small menu for testing
 return function()
@@ -142,4 +144,11 @@ return function()
     state.width = 100
     state.height = 50
     toggle(toggle_state)
+
+    state.y = state.y + state.height + 10
+    state.height = 25
+    slider(slider_state, 1, 10, 2)
+
+    state.y = state.y + state.height + 4
+    label("Slider: " .. slider_state.value)
 end
