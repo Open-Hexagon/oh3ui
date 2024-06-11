@@ -1,4 +1,4 @@
-local events = require("ui.event_queue")
+local events = require("ui.events")
 local state = require("ui.state")
 local area = require("ui.area")
 

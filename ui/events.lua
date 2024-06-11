@@ -1,10 +1,10 @@
-local event_queue = {}
+local events = {}
 local queue = {}
 local length = 0
 
 ---add an event to the queue for interactions to use
 ---@param ... unknown
-function event_queue.add(...)
+function events.add(...)
     length = length + 1
     local event = queue[length]
     if event then
@@ -17,7 +17,7 @@ function event_queue.add(...)
 end
 
 ---clear the event queue
-function event_queue.clear()
+function events.clear()
     -- refill table without removing prior content
     -- reduces memory allocation
     length = 0
@@ -27,7 +27,7 @@ end
 -- (processed events are not removed so they can be processed in different places!)
 ---@param filter string?
 ---@return fun():table
-function event_queue.iterate(filter)
+function events.iterate(filter)
     if filter then
         return coroutine.wrap(function()
             for i = 1, length do
@@ -46,4 +46,4 @@ function event_queue.iterate(filter)
     end
 end
 
-return event_queue
+return events

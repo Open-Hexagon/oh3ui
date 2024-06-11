@@ -2,7 +2,7 @@ local state = require("ui.state")
 local theme = require("ui.theme")
 local draw_queue = require("ui.draw_queue")
 local drag = require("ui.interaction.drag")
-local events = require("ui.event_queue")
+local events = require("ui.events")
 
 ---slider element
 ---@param slider_state table

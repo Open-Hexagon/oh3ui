@@ -1,4 +1,4 @@
-local event_queue = require("ui.event_queue")
+local events = require("ui.events")
 
 local click = {}
 
@@ -18,7 +18,7 @@ local move_threshold = 10
 ---update clicking state
 function click.update()
     click.clicking = false
-    for event in event_queue.iterate("mouse.*") do
+    for event in events.iterate("mouse.*") do
         local name, x, y = unpack(event)
         if name == "mousepressed" then
             is_down = true
