@@ -112,7 +112,6 @@ return function()
 
     scroll.done()
 
-
     state.x = ui.get_width() / 3 * 2
     state.y = ui.get_height() / 3
     state.anchor.x = 0
@@ -137,7 +136,6 @@ return function()
     icon("emoji-smile")
 
     collapse.done()
-
 
     state.x = ui.get_width()
     state.y = ui.get_height() / 2

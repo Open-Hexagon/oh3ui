@@ -134,30 +134,24 @@ function draw_queue.draw()
         local id = item[1]
         -- id may be nil if a placeholder was left in / nothing was appended
         if id then
-
             if id == op_ids.rectangle then
                 local mode, x1, y1, x2, y2, rx, ry, r, g, b, a = unpack(item, 2)
                 love.graphics.setColor(r, g, b, a)
                 love.graphics.rectangle(mode, x1, y1, x2 - x1, y2 - y1, rx, ry)
-
             elseif id == op_ids.polygon then
                 local len = #item
                 love.graphics.setColor(unpack(item, len - 3, len))
                 love.graphics.polygon(item[2], unpack(item, 3, len - 4))
-
             elseif id == op_ids.text then
                 local text_object, x, y, r, g, b, a = unpack(item, 2)
                 love.graphics.setColor(r, g, b, a)
                 love.graphics.draw(text_object, x, y)
-
             elseif id == op_ids.push_scissor then
                 local x1, y1, x2, y2 = unpack(item, 2)
                 scissor_stack.push(x1, y1, x2 - x1, y2 - y1)
-
             elseif id == op_ids.pop_scissor then
                 scissor_stack.pop()
             else
-
                 error("unkown queue command id: " .. id)
             end
         end

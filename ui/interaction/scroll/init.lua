@@ -81,14 +81,17 @@ function scroll.update()
     local old_position = scroll_state.position
 
     -- move towards target position
-    local factor = math.min((love.timer.getTime() - scroll_state.interpolation_start_time) / scroll_state.interpolation_duration, 1)
+    local factor = math.min(
+        (love.timer.getTime() - scroll_state.interpolation_start_time) / scroll_state.interpolation_duration,
+        1
+    )
     if scroll_state.interpolation == "none" then
         scroll_state.position = scroll_state.target_position
     elseif scroll_state.interpolation == "linear" then
-        scroll_state.position = scroll_state.start_position * (1 - factor)  + scroll_state.target_position * factor
+        scroll_state.position = scroll_state.start_position * (1 - factor) + scroll_state.target_position * factor
     elseif scroll_state.interpolation == "out_sine" then
         factor = math.sin(factor * math.pi / 2)
-        scroll_state.position = scroll_state.start_position * (1 - factor)  + scroll_state.target_position * factor
+        scroll_state.position = scroll_state.start_position * (1 - factor) + scroll_state.target_position * factor
     end
 
     -- increase scroll velocity by scrolling speed (used in touch scroll)

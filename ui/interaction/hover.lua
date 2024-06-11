@@ -6,10 +6,7 @@ local hover = {}
 ---@return boolean
 function hover.check(mouse_x, mouse_y)
     local state = require("ui.state")
-    return mouse_x >= state.left
-        and mouse_x <= state.right
-        and mouse_y >= state.top
-        and mouse_y <= state.bottom
+    return mouse_x >= state.left and mouse_x <= state.right and mouse_y >= state.top and mouse_y <= state.bottom
 end
 
 ---increment or decrement a timer based on whether the element is hovered (clamped at 0 and 1)

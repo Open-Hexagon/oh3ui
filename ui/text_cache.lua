@@ -41,7 +41,7 @@ local function update()
 end
 
 local last_update = love.timer.getTime()
-local update_interval = 0.5  -- seconds
+local update_interval = 0.5 -- seconds
 
 ---get a text object with the correct font, text, wraplimit and align mode
 ---@param font love.Font
@@ -57,10 +57,12 @@ function text_cache.get(font, text, wraplimit, align)
         update()
     end
     -- check if text object is cached
-    if text_objects[font] == nil or
-            text_objects[font][text] == nil or
-            text_objects[font][text][wraplimit] == nil or
-            text_objects[font][text][wraplimit][align] == nil then
+    if
+        text_objects[font] == nil
+        or text_objects[font][text] == nil
+        or text_objects[font][text][wraplimit] == nil
+        or text_objects[font][text][wraplimit][align] == nil
+    then
         -- it is not cached, check if an unused one can be used
         local cached_object = unused_text_objects[#unused_text_objects]
         if cached_object then

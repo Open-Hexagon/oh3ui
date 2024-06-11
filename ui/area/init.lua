@@ -55,10 +55,7 @@ function area.is_position_inside(x, y, is_screen_space)
         x, y = love.graphics.inverseTransformPoint(x, y)
     end
     local bounds = area.get_bounds()
-    return x >= bounds.left
-        and x <= bounds.right
-        and y >= bounds.top
-        and y <= bounds.bottom
+    return x >= bounds.left and x <= bounds.right and y >= bounds.top and y <= bounds.bottom
 end
 
 ---check if mouse is inside the current area

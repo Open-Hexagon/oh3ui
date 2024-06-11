@@ -77,7 +77,6 @@ local function calculate_scrollbar_position()
         -- position on the right side of the area
         scrollbar.right = bounds.right
         scrollbar.left = bounds.right - SCROLLBAR_THICKNESS
-
     else -- data.direction == "horizontal"
         scrollbar.left = bounds.left + position
         scrollbar.right = scrollbar.left + length

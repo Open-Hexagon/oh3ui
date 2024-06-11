@@ -20,7 +20,7 @@ return function(icon_id, icon_font)
     if not str then
         error("Invalid icon id " .. str)
     end
-    label(str)  -- an icon with an icon font is just text, so a label
+    label(str) -- an icon with an icon font is just text, so a label
 
     -- revert to old font
     state.font = old_font
