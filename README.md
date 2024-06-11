@@ -442,11 +442,13 @@ local ids = require("ui.id_table")()
 local state = require("ui.state")
 local area = require("ui.area")
 
+local collapse_state = {}
+
 return function()
     state.width = 100
     state.height = 50
 
-    collapse_area.start()
+    collapse_area.start(collapse_state)
 
     rectangle()
     
@@ -455,14 +457,14 @@ return function()
 
     local bounds = area.get_bounds()
 
-    local animation_factor = (math.sin(love.timer.getTime() * 5) + 1) * 0.5
-    collapse_area.done(animation_factor)
+    collapse_state.width_factor = (math.sin(love.timer.getTime() * 5) + 1) * 0.5
+    collapse_area.done()
 
     state.x = state.x + 10
     rectangle()
 end
 ```
-The only really interesting part here is `collapse_area.done` it receives 2 parameters, a width- and height factor. It is a value from 0 to 1 where 0 shows nothing and 1 shows everything and in between the contents are cut off. As we only pass something to the width factor here, the contents are only cut off in width.
+The only really interesting part here are the members of `collapse_state` you can set. It has a width- and height factor (`collapse_state.width_factor` and `collapse_state.height_factor`). It is a value from 0 to 1 where 0 shows nothing and 1 shows everything and in between the contents are cut off. As we only pass something to the width factor here, the contents are only cut off in width.
 
 ### Custom areas
 Again I want to show that even the implementation part of this framework is very simple. Even an area like this is quite trivial to implement yourself.

@@ -21,6 +21,7 @@ local scroll_state1 = {}
 local scroll_state2 = {}
 local toggle_state = {}
 local slider_state = {}
+local collapse_state = {}
 
 -- small menu for testing
 return function()
@@ -118,7 +119,8 @@ return function()
     state.anchor.y = 0
     infinite_scroll_example()
 
-    collapse.start()
+    collapse_state.width_factor = (math.sin(love.timer.getTime() * 5) + 1) * 0.5
+    collapse.start(collapse_state)
 
     -- rectangle with width of 1/3 screen minus 20 padding (10 on each side)
     state.x = 10
@@ -134,7 +136,7 @@ return function()
     state.anchor.y = 0.5
     icon("emoji-smile")
 
-    collapse.done((math.sin(love.timer.getTime() * 5) + 1) * 0.5)
+    collapse.done()
 
 
     state.x = ui.get_width()

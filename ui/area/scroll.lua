@@ -26,7 +26,7 @@ end
 ---@param max_length number  the size (in scroll direction) after which scrolling should start
 function scroll.start(scroll_state, scroll_direction, max_length)
     scroll_state.position = scroll_state.position or 0
-    -- only persist to not recreate table every time
+    -- has to be persisted as it is always used in a delayed manner
     scroll_state.cutout = scroll_state.cutout or {}
 
     area.start()
