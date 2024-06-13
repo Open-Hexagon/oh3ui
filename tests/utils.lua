@@ -1,3 +1,5 @@
+local label = require("ui.element.label")
+local state = require("ui.state")
 local draw_queue = require("ui.draw_queue")
 local utils = {}
 
@@ -34,6 +36,33 @@ function utils.fake_mouse_cursor()
         cursor_radius,
         cursor_radius
     )
+end
+
+local log = {}
+log.__index = log
+utils.log = log
+
+function log.new()
+    return setmetatable({}, log)
+end
+
+function log:add(...)
+    local str = ""
+    for i = 1, select("#", ...) do
+        if i > 1 then
+            str = str .. " " .. select(i, ...)
+        else
+            str = str .. select(i, ...)
+        end
+    end
+    self[#self + 1] = str
+end
+
+function log:draw()
+    for i = 1, #self do
+        label(self[i])
+        state.y = state.y + state.height
+    end
 end
 
 return utils

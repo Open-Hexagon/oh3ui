@@ -194,11 +194,15 @@ return function()
                 -- finished (potentially partial) execution with error
                 current_test.failure = err
                 current_test.success = false
-                current_test.teardown()
+                if current_test.teardown then
+                    current_test.teardown()
+                end
             elseif coroutine.status(current_test.sequence) == "dead" then
                 -- finished whole execution (coroutine dead) without error
                 current_test.success = true
-                current_test.teardown()
+                if current_test.teardown then
+                    current_test.teardown()
+                end
             end
         end
     end
