@@ -1,8 +1,10 @@
-local test_menu = require("ui.menu.test")
+local test_menu = require("tests.menu")
 local layers = require("ui.layers")
 local ui = require("ui")
 
 function love.run()
+    local target_delta = 1 / 240
+    local last_time = 0
     layers.push(test_menu)
     return function()
         love.event.pump()
@@ -26,5 +28,7 @@ function love.run()
             love.graphics.present()
         end
         love.timer.step()
+        love.timer.sleep(target_delta - (love.timer.getTime() - last_time))
+        last_time = last_time + target_delta
     end
 end
