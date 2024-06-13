@@ -1,3 +1,6 @@
+if os.getenv("COVERAGE") then
+    require("luacov")
+end
 local ui = require("ui")
 local state = require("ui.state")
 local rectangle = require("ui.element.rectangle")

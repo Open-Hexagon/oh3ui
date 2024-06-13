@@ -1,0 +1,5 @@
+exclude = {
+    "extlibs/",
+    "5.1/",
+    "tests/",
+}
