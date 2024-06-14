@@ -1,20 +1,38 @@
 local label = require("ui.element.label")
 local state = require("ui.state")
 local draw_queue = require("ui.draw_queue")
+local monkeypatch = require("tests.monkeypatch")
 local utils = {}
 
-utils.in_test = false
 utils.mouse_x = 0
 utils.mouse_y = 0
 
-local old_get_pos = love.mouse.getPosition
+function utils.start_mouse_control()
+	love.mouse.getPosition = monkeypatch.replace(love.mouse.getPosition, function()
+		return utils.mouse_x, utils.mouse_y
+	end)
+end
 
-function love.mouse.getPosition()
-    if utils.in_test then
-        return utils.mouse_x, utils.mouse_y
-    else
-        return old_get_pos()
-    end
+function utils.stop_mouse_control()
+	love.mouse.getPosition = monkeypatch.get_original(love.mouse.getPosition)
+end
+
+local graphic_functions = { "rectangle", "polygon", "draw" }
+
+function utils.add_graphics_callback(fun)
+	for i = 1, #graphic_functions do
+		local name = graphic_functions[i]
+		love.graphics[name] = monkeypatch.add(love.graphics[name], function(...)
+			fun(name, ...)
+		end)
+	end
+end
+
+function utils.remove_graphics_callback()
+	for i = 1, #graphic_functions do
+		local name = graphic_functions[i]
+		love.graphics[name] = monkeypatch.get_original(love.graphics[name])
+	end
 end
 
 function utils.click()
@@ -49,10 +67,11 @@ end
 function log:add(...)
     local str = ""
     for i = 1, select("#", ...) do
+	local value = tostring(select(i, ...))
         if i > 1 then
-            str = str .. " " .. select(i, ...)
+            str = str .. " " .. value
         else
-            str = str .. select(i, ...)
+            str = str .. value
         end
     end
     self[#self + 1] = str

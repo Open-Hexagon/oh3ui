@@ -152,7 +152,7 @@ local function test_selection()
 
         -- all items in the list (test items or test list titles) are the same size
         state.allow_automatic_resizing = false
-        state.width = 200
+        state.width = 250
         state.height = 50
 
         if item_type == "string" then

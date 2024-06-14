@@ -17,12 +17,12 @@ function test.layout()
 end
 
 function test.teardown()
-    utils.in_test = false
+    utils.stop_mouse_control()
 end
 
 -- clicking is tested extensively in rectangle test already, so this one just checks hover animation (text is checked in label test)
 test.sequence = coroutine.create(function()
-    utils.in_test = true
+    utils.start_mouse_control()
     assert(button_state.hover_timer == 0, "hover timer not 0 before doing anything")
     utils.mouse_x = btn_x
     utils.mouse_y = btn_y
