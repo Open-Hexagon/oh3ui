@@ -16,12 +16,12 @@ function test.layout()
 end
 
 function test.teardown()
-	utils.stop_mouse_control()
+    utils.stop_mouse_control()
 end
 
 -- This test clicks inside and around the rectangle to determine the correctness of the shape.
 test.sequence = coroutine.create(function()
-	utils.start_mouse_control()
+    utils.start_mouse_control()
     -- check most inside positions
     for x = rect_x, rect_x + rect_w, 10 do
         for y = rect_y, rect_y + rect_h, 10 do
