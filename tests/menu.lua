@@ -43,6 +43,7 @@ end
 build_test_tree("tests/unit")
 
 local current_test
+local current_test_name
 
 local red = { 1, 0, 0, 1 }
 local green = { 0, 1, 0, 1 }
@@ -54,6 +55,7 @@ local function test_item(item)
     -- select first test by default
     if current_test == nil then
         current_test = content
+        current_test_name = name
     end
     if content == current_test then
         -- this test is selected
@@ -75,6 +77,7 @@ local function test_item(item)
     -- select this test if it was clicked
     if state.clicked then
         current_test = content
+        current_test_name = name
     end
     -- test name
     label(name)
@@ -197,6 +200,7 @@ local function run_next_test()
                 love.event.push("quit")
             end
         end
+        current_test_name = test_only_list[current_index][1]
         current_test = test_only_list[current_index][2]
     end
 end
@@ -225,6 +229,7 @@ return function()
             if not success then
                 -- finished (potentially partial) execution with error
                 current_test.failure = err
+                print(string.format("Failed %s: %s", current_test_name, err))
                 current_test.success = false
                 if current_test.teardown then
                     current_test.teardown()
@@ -232,6 +237,7 @@ return function()
                 run_next_test()
             elseif coroutine.status(current_test.sequence) == "dead" then
                 -- finished whole execution (coroutine dead) without error
+                print(current_test_name .. " succeeded")
                 current_test.success = true
                 if current_test.teardown then
                     current_test.teardown()
