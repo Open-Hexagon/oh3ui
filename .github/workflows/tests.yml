@@ -1,4 +1,4 @@
-name: Build and package for linux
+name: Run tests
 
 on:
   push:
