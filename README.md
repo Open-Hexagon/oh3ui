@@ -2,6 +2,13 @@
 This GUI Framework is made with simplicity in both usage and implementation in mind.
 It is also made to work well with games.
 To achieve these goals I chose to make an immediade mode GUI.
+# Testing
+There is a graphical test ui made with this framework. Just run the project normally (`<path/to/love12> .`) to see it. Then just click on tests to execute them.
+
+To run tests automatically you can launch the application with `AUTOTEST=1`. To close after all tests have been run that way you can also specify `AUTOCLOSE=1`.
+
+To generate coverage statistics you need luacov installed. Then run it with `COVERAGE=1`. This will produce a `luacov.stats.out` file which by running `luacov` in the current directory is used to generate a `luacov.report.out` file which contains the statistics in a nicer readable form.
+# Explanations
 ## Basic Example
 The difference of an immediade mode GUI to a normal retained mode GUI is easy to understand.
 Look at this bit of html and javascript that creates a button that prints something when pressed.
