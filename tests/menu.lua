@@ -212,8 +212,9 @@ return function()
     -- draw error message at the bottom of test window if it failed
     if current_test.failure then
         state.y = ui.get_height()
+        state.x = width + 10
         state.anchor.y = 1
-        state.text_wraplimit = ui.get_width() - width
+        state.text_wraplimit = ui.get_width() - width - 10
         state.allow_automatic_resizing = true
         label("Test Failed: \n" .. current_test.failure)
     end

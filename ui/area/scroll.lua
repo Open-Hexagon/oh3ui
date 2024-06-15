@@ -2,7 +2,6 @@ local scroll_interaction = require("ui.interaction.scroll")
 local theme = require("ui.theme")
 local area = require("ui.area")
 local draw_queue = require("ui.draw_queue")
-local state = require("ui.state")
 
 local scroll = {}
 
