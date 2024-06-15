@@ -1,7 +1,6 @@
 local utils = require("tests.utils")
 local text_cache = require("ui.text_cache")
 local draw_queue = require("ui.draw_queue")
-local id_table = require("ui.id_table")()
 local state = require("ui.state")
 local ui = require("ui")
 local test = {}
@@ -82,6 +81,7 @@ test.sequence = coroutine.create(function()
     end
     do
         local graphics_fun, text_object, x, y = unpack(draw_calls[3])
+        assert(graphics_fun == "draw", "third entry is not draw")
         assert(text_object == check_text_object, "text object does not match same one gotten from cache")
         assert(x == width - 200, "x position is wrong")
         assert(y == 100, "y position is wrong")
