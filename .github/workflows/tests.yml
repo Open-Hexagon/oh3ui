@@ -11,15 +11,15 @@ env:
   LOVE_ARTIFACT_URL: "https://api.github.com/repos/love2d/love/actions/artifacts/1580582511/zip"
 
 jobs:
-  build:
+  test:
     runs-on: ubuntu-24.04
 
     steps:
     - uses: actions/checkout@v4.1.1
 
-    - name: Install luacov
+    - name: Install dependencies
       run: |
-        sudo apt install luarocks
+        sudo apt install luarocks fuse
         sudo luarocks --lua-version 5.1 install luacov
 
     - name: Get love
