@@ -17,6 +17,8 @@ local signal = require("tests.signal")
 -- the list is flat despite the directory being hierarchial in order to allow for quick iteration
 -- this is done by inserting a title for a directory -1 when it is going up again
 local test_list = {}
+local test_only_list = {} -- only contains real tests and not test list headings etc
+
 local function build_test_tree(path)
     local directory_contents = love.filesystem.getDirectoryItems(path)
     for i = 1, #directory_contents do
@@ -30,7 +32,9 @@ local function build_test_tree(path)
         else
             local require_path = full_path:gsub("/", "%."):gsub("%.lua", "")
             local contents = require(require_path)
-            test_list[#test_list + 1] = { file:gsub("%.lua", ""), contents }
+            local test = { file:gsub("%.lua", ""), contents }
+            test_list[#test_list + 1] = test
+            test_only_list[#test_only_list + 1] = test
         end
     end
 end
@@ -56,6 +60,14 @@ local function test_item(item)
         theme.rectangle_color = theme.active_color
         rectangle()
         theme.rectangle_color = nil
+        -- force collapse open if test is active and in collapse
+        local data = area.get_extra_data()
+        if data.state and data.state.height_signal then
+            -- we are in one of our customized collapse areas!
+            if data.state.height_factor ~= 1 then
+                data.state.height_signal:keyframe(0.1, 1)
+            end
+        end
     else
         -- this test is not selected
         rectangle()
@@ -172,6 +184,23 @@ local function test_selection()
     return max_x
 end
 
+local automatic_exit = os.getenv("AUTOCLOSE") and true or false
+local automatic_execution = os.getenv("AUTOTEST") and true or false
+local current_index = 1 -- always starting at the beginning
+
+local function run_next_test()
+    if automatic_execution then
+        current_index = current_index + 1
+        if current_index > #test_only_list then
+            current_index = #test_only_list
+            if automatic_exit then
+                love.event.push("quit")
+            end
+        end
+        current_test = test_only_list[current_index][2]
+    end
+end
+
 return function()
     -- signals are not included by default, update here
     signal.update(love.timer.getDelta())
@@ -200,12 +229,14 @@ return function()
                 if current_test.teardown then
                     current_test.teardown()
                 end
+                run_next_test()
             elseif coroutine.status(current_test.sequence) == "dead" then
                 -- finished whole execution (coroutine dead) without error
                 current_test.success = true
                 if current_test.teardown then
                     current_test.teardown()
                 end
+                run_next_test()
             end
         end
     end
