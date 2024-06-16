@@ -182,6 +182,16 @@ function scroll.elements_in_view(element_size, amount)
         -- limit start to be 2 or higher to prevent doubled occurence of 1
         local start = math.max(math.floor(scroll_state.position / element_size) + 1, 2)
         local stop = start + math.floor(data.max_length / element_size) + 1
+        -- don't show more than specified
+        if amount then
+            if start > amount then
+                start = amount
+            end
+            if stop > amount then
+                stop = amount
+            end
+        end
+        -- show each element in view
         for i = start, stop do
             coroutine.yield(i)
             if amount == nil and i > scroll_state.last_element_index then
