@@ -48,6 +48,8 @@ local current_test_name
 local red = { 1, 0, 0, 1 }
 local green = { 0, 1, 0, 1 }
 
+local automatic_execution = os.getenv("AUTOTEST") and true or false
+
 ---draw a test item
 ---@param item table
 local function test_item(item)
@@ -62,12 +64,14 @@ local function test_item(item)
         theme.rectangle_color = theme.active_color
         rectangle()
         theme.rectangle_color = nil
-        -- force collapse open if test is active and in collapse
-        local data = area.get_extra_data()
-        if data.state and data.state.height_signal then
-            -- we are in one of our customized collapse areas!
-            if data.state.height_factor ~= 1 then
-                data.state.height_signal:keyframe(0.1, 1)
+        -- force collapse open if test is active and in collapse and if execution is automatic
+        if automatic_execution then
+            local data = area.get_extra_data()
+            if data.state and data.state.height_signal then
+                -- we are in one of our customized collapse areas!
+                if data.state.height_factor ~= 1 then
+                    data.state.height_signal:keyframe(0.1, 1)
+                end
             end
         end
     else
@@ -188,7 +192,6 @@ local function test_selection()
 end
 
 local automatic_exit = os.getenv("AUTOCLOSE") and true or false
-local automatic_execution = os.getenv("AUTOTEST") and true or false
 local current_index = 1 -- always starting at the beginning
 
 local function run_next_test()
