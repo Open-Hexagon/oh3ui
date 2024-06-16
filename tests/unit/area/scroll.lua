@@ -13,6 +13,7 @@ local length = 0
 local num_of_rects = 1
 local area_bounds = {}
 local disable_interaction = true
+local actually_drawn_rect_count = 0
 
 function test.layout()
     -- disable interaction if required
@@ -25,6 +26,7 @@ function test.layout()
     state.width = 100
     state.height = 100
     local start = scroll_direction == "vertical" and state.y or state.x
+    actually_drawn_rect_count = 0
     for i in scroll.elements_in_view(110, num_of_rects) do
         if scroll_direction == "vertical" then
             state.y = start + 110 * (i - 1)
@@ -32,8 +34,13 @@ function test.layout()
             state.x = start + 110 * (i - 1)
         end
         rectangle()
+        actually_drawn_rect_count = actually_drawn_rect_count + 1
     end
-    length = num_of_rects * 110 - 10
+    if num_of_rects then
+        length = num_of_rects * 110 - 10
+    else
+        length = math.huge
+    end
     local bounds = area.get_bounds()
     scroll.done()
     -- copy bounds in case a new area gets onto the same position on the stack later
@@ -99,6 +106,21 @@ test.sequence = coroutine.create(function()
         disable_interaction = false
         -- check scrollbar position
         assert(scroll_state.scrollbar.left == left_when_0 + scroll_state.position * (max_length - scrollbar_size) / overflow, "scrollbar position does not match scroll position")
+    end
+
+    -- infinite scroll
+    num_of_rects = nil
+    -- scroll a lot
+    for i = 0, 240 do
+        scroll_state.position = i * 10
+        coroutine.yield()
+        assert(actually_drawn_rect_count <= 4, "More rects drawn than could possibly be needed to fit view")
+    end
+    -- go back
+    for i = 240, 0, -1 do
+        scroll_state.position = i * 10
+        coroutine.yield()
+        assert(actually_drawn_rect_count <= 4, "More rects drawn than could possibly be needed to fit view")
     end
 end)
 
