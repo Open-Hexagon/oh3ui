@@ -24,17 +24,16 @@ function test.layout()
     scroll.start(scroll_state, scroll_direction, max_length)
     state.width = 100
     state.height = 100
-    length = 0
-    for _ = 1, num_of_rects do
-        rectangle()
+    local start = scroll_direction == "vertical" and state.y or state.x
+    for i in scroll.elements_in_view(110, num_of_rects) do
         if scroll_direction == "vertical" then
-            state.y = state.bottom + 10
+            state.y = start + 110 * (i - 1)
         elseif scroll_direction == "horizontal" then
-            state.x = state.right + 10
+            state.x = start + 110 * (i - 1)
         end
-        length = length + 100 + 10
+        rectangle()
     end
-    length = length - 10
+    length = num_of_rects * 110 - 10
     local bounds = area.get_bounds()
     scroll.done()
     -- copy bounds in case a new area gets onto the same position on the stack later
