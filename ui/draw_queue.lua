@@ -151,8 +151,6 @@ function draw_queue.draw()
                 scissor_stack.push(x1, y1, x2 - x1, y2 - y1)
             elseif id == op_ids.pop_scissor then
                 scissor_stack.pop()
-            else
-                error("unkown queue command id: " .. id)
             end
         end
     end

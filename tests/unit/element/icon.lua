@@ -50,6 +50,14 @@ test.sequence = coroutine.create(function()
 
     -- reset font
     state.font = "assets/OpenSquare.ttf"
+
+    -- check some error conditions
+    xpcall(icon, function(err)
+        assert(err == "Could not find icon id table for font!", "Wrong error message")
+    end, "", "invalid_icon_font")
+    xpcall(icon, function(err)
+        assert(err == "Invalid icon id invalid-icon-id", "Wrong error message")
+    end, "invalid-icon-id")
 end)
 
 return test
