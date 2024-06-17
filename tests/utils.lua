@@ -40,6 +40,20 @@ function utils.click()
     love.event.push("mousereleased", utils.mouse_x, utils.mouse_y, 1, false, 1)
 end
 
+function utils.check_color_at(x, y, check_color)
+    local color = {}
+    love.graphics.captureScreenshot(function(img_data)
+        color[1], color[2], color[3], color[4] = img_data:getPixel(love.graphics.transformPoint(x, y))
+    end)
+    coroutine.yield() -- wait a frame for screenshot to be taken
+    for i = 1, 4 do
+        if color[i] ~= check_color[i] then
+            return false
+        end
+    end
+    return true
+end
+
 local cursor_color = { 1, 0.5, 0.5, 0.5 }
 local cursor_radius = 3
 
