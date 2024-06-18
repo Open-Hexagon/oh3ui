@@ -40,6 +40,21 @@ function utils.click()
     love.event.push("mousereleased", utils.mouse_x, utils.mouse_y, 1, false, 1)
 end
 
+function utils.drag(dx, dy, steps)
+    love.event.push("mousepressed", utils.mouse_x, utils.mouse_y, 1, false, 1)
+    coroutine.yield()
+    for i = 1, steps do
+        utils.mouse_x = utils.mouse_x + dx / steps
+        utils.mouse_y = utils.mouse_y + dy / steps
+	coroutine.yield()
+    end
+    love.event.push("mousereleased", utils.mouse_x, utils.mouse_y, 1, false, 1)
+end
+
+function utils.wheel(change)
+    love.event.push("wheelmoved", 0, change)
+end
+
 function utils.check_color_at(x, y, check_color)
     local color = {}
     love.graphics.captureScreenshot(function(img_data)

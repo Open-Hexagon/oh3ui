@@ -8,13 +8,11 @@ local toggle_state = {}
 local toggle_x, toggle_y
 
 function test.layout()
-    state.allow_automatic_resizing = true
     state.width = 150
     state.height = 50
     -- center pos
     toggle_x, toggle_y = state.x + 75, state.y + 25
     toggle(toggle_state)
-    state.allow_automatic_resizing = false
     utils.fake_mouse_cursor()
 end
 
