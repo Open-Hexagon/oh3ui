@@ -69,7 +69,8 @@ local function test_item(item)
             local data = area.get_extra_data()
             if data.state and data.state.height_signal then
                 -- we are in one of our customized collapse areas!
-                if data.state.height_factor ~= 1 then
+                if data.state.height_target ~= 1 then
+                    data.state.height_target = 1
                     data.state.height_signal:keyframe(0.1, 1)
                 end
             end
