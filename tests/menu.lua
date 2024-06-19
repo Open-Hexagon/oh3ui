@@ -218,6 +218,11 @@ return function()
     -- draw scrollable test selection
     scroll.start(id_table.test_selection_scroll, "vertical", ui.get_height())
     local width = test_selection()
+
+    -- add 10 at the top so scroll still spans whole height despite the 10 padding
+    local bounds = area.get_bounds()
+    bounds.top = bounds.top - 10
+
     scroll.done()
     -- go to the top of the window and to the right of the test selection which is where tests expect to start
     state.x = width + 10
