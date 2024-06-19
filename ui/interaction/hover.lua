@@ -15,6 +15,7 @@ end
 ---@return number
 function hover.timer(hover_state, increment)
     local state = require("ui.state")
+    hover_state.hover_timer = hover_state.hover_timer or 0
     if state.hovering then
         hover_state.hover_timer = hover_state.hover_timer + increment
         if hover_state.hover_timer > 1 then
