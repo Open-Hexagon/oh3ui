@@ -1,4 +1,7 @@
+-- luacov: disable
+-- can't possibly cover line when luacov hasn't been included yet, so don't mark as miss
 local test_menu = require("tests.menu")
+-- luacov: enable
 local layers = require("ui.layers")
 local ui = require("ui")
 
