@@ -28,11 +28,23 @@ jobs:
         7z x love12.zip
         chmod +x love-*.AppImage
 
+    - name: Start xvfb
+      run: |
+        echo "Starting XVFB on $DISPLAY"
+        Xvfb $DISPLAY -screen 0, 360x240x24 &
+        echo "XVFBPID=$!" >> $GITHUB_ENV
+
     - name: Run tests
       run: |
-        SCALE=2 AUTOTEST=1 AUTOCLOSE=1 xvfb-run ./love-*.AppImage .
-        SCALE=0.5 AUTOTEST=1 AUTOCLOSE=1 xvfb-run ./love-*.AppImage .
-        COVERAGE=1 AUTOTEST=1 AUTOCLOSE=1 xvfb-run ./love-*.AppImage .
+        SCALE=2 AUTOTEST=1 AUTOCLOSE=1 ./love-*.AppImage .
+        SCALE=0.5 AUTOTEST=1 AUTOCLOSE=1 ./love-*.AppImage .
+        COVERAGE=1 AUTOTEST=1 AUTOCLOSE=1 ./love-*.AppImage .
+
+    - name: Stop xvfb and openbox
+      # should always stop xvfb even if other steps failed
+      if: always()
+      run: |
+        kill $XVFBPID
 
     - name: Coverage
       run: |
