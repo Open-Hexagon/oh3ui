@@ -5,6 +5,8 @@ local test_menu = require("tests.menu")
 local layers = require("ui.layers")
 local ui = require("ui")
 
+ui.scale = os.getenv("SCALE") or 1
+
 function love.run()
     local target_delta = 1 / 240
     local last_time = 0

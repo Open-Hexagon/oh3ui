@@ -23,25 +23,26 @@ end
 -- check state and color change on click
 test.sequence = coroutine.create(function()
     utils.start_mouse_control()
+    local screen_x, screen_y = love.graphics.transformPoint(toggle_x, toggle_y)
     assert(not toggle_state.state, "toggle state not initialized as false")
     -- click next to, not on the thing, shouldn't do anything
     utils.mouse_x = toggle_x - 76
     utils.mouse_y = toggle_y
     utils.click()
     coroutine.yield()
-    assert(utils.check_color_at(toggle_x, toggle_y, theme.rectangle_color), "color should match rectangle color")
+    assert(utils.check_color_at(screen_x, screen_y, theme.rectangle_color), "color should match rectangle color")
     assert(not toggle_state.state, "toggle state should not have changed")
     -- now click on it
     utils.mouse_x = toggle_x
     utils.mouse_y = toggle_y
     utils.click()
     coroutine.yield()
-    assert(utils.check_color_at(toggle_x, toggle_y, theme.active_color), "color should match active color")
+    assert(utils.check_color_at(screen_x, screen_y, theme.active_color), "color should match active color")
     assert(toggle_state.state, "toggle should be on now")
     -- disable again
     utils.click()
     coroutine.yield()
-    assert(utils.check_color_at(toggle_x, toggle_y, theme.rectangle_color), "color should match rectangle color")
+    assert(utils.check_color_at(screen_x, screen_y, theme.rectangle_color), "color should match rectangle color")
     assert(not toggle_state.state, "toggle state should not have changed")
 
     -- check error condition

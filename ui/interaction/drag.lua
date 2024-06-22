@@ -37,7 +37,7 @@ function drag.update(drag_state, left, top, right, bottom, extra_grabbing_condit
     -- handle events
     for event in events.iterate("mouse.*") do
         local name = event[1]
-        -- grab scrollbar when pressing down onto it while it is visible and if no other scrollbar has been grabbed in this frame
+        -- grab when pressing down onto it while it is visible
         if
             name == "mousepressed"
             and drag.is_pos_in_bounds(x, y, left, top, right, bottom)

@@ -2,6 +2,7 @@ local label = require("ui.element.label")
 local state = require("ui.state")
 local draw_queue = require("ui.draw_queue")
 local monkeypatch = require("tests.monkeypatch")
+local ui = require("ui")
 local utils = {}
 
 utils.mouse_x = 0
@@ -9,7 +10,7 @@ utils.mouse_y = 0
 
 function utils.start_mouse_control()
     love.mouse.getPosition = monkeypatch.replace(love.mouse.getPosition, function()
-        return love.graphics.transformPoint(utils.mouse_x, utils.mouse_y)
+        return utils.mouse_x * ui.scale, utils.mouse_y * ui.scale
     end)
 end
 
@@ -48,6 +49,10 @@ function utils.create_touch()
     return touch
 end
 
+function utils.touchpressed(touch)
+    love.event.push("touchpressed", touch.id, touch.x * ui.scale, touch.y * ui.scale, 0, 0, touch.pressure)
+end
+
 function utils.delete_touch(t)
     for i = 1, #touches do
         if touches[i] == t then
@@ -77,7 +82,7 @@ function utils.start_touch_control()
     end)
     love.touch.getPosition = monkeypatch.replace(love.touch.getPosition, function(id)
         local touch = get_touch(id)
-        return touch.x, touch.y
+        return touch.x * ui.scale, touch.y * ui.scale
     end)
     love.touch.getPressure = monkeypatch.replace(love.touch.getPressure, function(id)
         return get_touch(id).pressure
@@ -134,22 +139,20 @@ function utils.wait(seconds)
 end
 
 function utils.click()
-    local mouse_x, mouse_y = love.graphics.transformPoint(utils.mouse_x, utils.mouse_y)
+    local mouse_x, mouse_y = utils.mouse_x * ui.scale, utils.mouse_y * ui.scale
     love.event.push("mousepressed", mouse_x, mouse_y, 1, false, 1)
     love.event.push("mousereleased", mouse_x, mouse_y, 1, false, 1)
 end
 
 function utils.drag(dx, dy, steps)
-    local mouse_x, mouse_y = love.graphics.transformPoint(utils.mouse_x, utils.mouse_y)
-    love.event.push("mousepressed", mouse_x, mouse_y, 1, false, 1)
+    love.event.push("mousepressed", utils.mouse_x * ui.scale, utils.mouse_y * ui.scale, 1, false, 1)
     coroutine.yield()
     for _ = 1, steps do
         utils.mouse_x = utils.mouse_x + dx / steps
         utils.mouse_y = utils.mouse_y + dy / steps
         coroutine.yield()
     end
-    mouse_x, mouse_y = love.graphics.transformPoint(utils.mouse_x, utils.mouse_y)
-    love.event.push("mousereleased", mouse_x, mouse_y, 1, false, 1)
+    love.event.push("mousereleased", utils.mouse_x * ui.scale, utils.mouse_y * ui.scale, 1, false, 1)
 end
 
 function utils.wheel(change)

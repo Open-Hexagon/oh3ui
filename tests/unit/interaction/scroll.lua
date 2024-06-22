@@ -3,6 +3,7 @@ local rectangle = require("ui.element.rectangle")
 local state = require("ui.state")
 local utils = require("tests.utils")
 local area = require("ui.area")
+local ui = require("ui")
 
 local scroll_state_outer = {}
 local scroll_state_inner = {}
@@ -97,19 +98,19 @@ test.sequence = coroutine.create(function()
     local touch1 = utils.create_touch()
     touch1.x = x + 10
     touch1.y = y + 100
-    love.event.push("touchpressed", touch1.id, touch1.x, touch1.y, 0, 0, touch1.pressure)
+    utils.touchpressed(touch1)
     coroutine.yield()
     for _ = 1, 9 do
         touch1.y = touch1.y - 10
         coroutine.yield()
-        assert(scroll_state_outer.position == y + 100 - touch1.y, "position does not match touch position")
+        assert(scroll_state_outer.position == (y + 100 - touch1.y) * ui.scale, "position does not match touch position")
     end
 
     -- second touch takes over control
     local touch2 = utils.create_touch()
     touch2.x = x + 10
     touch2.y = y + 100
-    love.event.push("touchpressed", touch2.id, touch2.x, touch2.y, 0, 0, touch2.pressure)
+    utils.touchpressed(touch2)
     coroutine.yield()
 
     -- position should no longer change with old finger
@@ -123,7 +124,7 @@ test.sequence = coroutine.create(function()
     for _ = 1, 9 do
         touch2.y = touch2.y - 1
         coroutine.yield()
-        assert(scroll_state_outer.position == y + 100 - touch2.y + start_pos, "position does not match touch position")
+        assert(scroll_state_outer.position == (y + 100 - touch2.y) * ui.scale + start_pos, "position does not match touch position")
     end
     -- give back control to touch1
     utils.delete_touch(touch2)
@@ -158,11 +159,11 @@ test.sequence = coroutine.create(function()
     local touch = utils.create_touch()
     touch.x = x + 400
     touch.y = y
-    love.event.push("touchpressed", touch.id, touch.x, touch.y, 0, 0, touch.pressure)
+    utils.touchpressed(touch)
     -- love always creates a mousepressed event on touch presses as well
     utils.mouse_x = touch.x
     utils.mouse_y = touch.y
-    love.event.push("mousepressed", touch.x, touch.y, 1, true, 1)
+    love.event.push("mousepressed", touch.x * ui.scale, touch.y * ui.scale, 1, true, 1)
     coroutine.yield()
     for _ = 1, 100 do
         touch.y = touch.y + 3
