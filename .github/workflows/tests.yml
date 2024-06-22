@@ -40,7 +40,7 @@ jobs:
         SCALE=0.5 AUTOTEST=1 AUTOCLOSE=1 ./love-*.AppImage .
         COVERAGE=1 AUTOTEST=1 AUTOCLOSE=1 ./love-*.AppImage .
 
-    - name: Stop xvfb and openbox
+    - name: Stop xvfb
       # should always stop xvfb even if other steps failed
       if: always()
       run: |
