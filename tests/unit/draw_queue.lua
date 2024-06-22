@@ -65,8 +65,8 @@ test.sequence = coroutine.create(function()
         assert(y == 10, "y position is wrong")
         assert(rect_width == 90, "width is wrong")
         assert(rect_height == 40, "height is wrong")
-        assert(rx == 10, "x radius is wrong")
-        assert(ry == 20, "y radius is wrong")
+        assert(rx == 10 * ui.scale, "x radius is wrong")
+        assert(ry == 20 * ui.scale, "y radius is wrong")
     end
     do
         local graphics_fun, mode, x1, y1, x2, y2, x3, y3 = unpack(draw_calls[2])

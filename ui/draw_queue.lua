@@ -66,7 +66,8 @@ end
 function draw_queue.rectangle(mode, left, top, right, bottom, color, rx, ry)
     local x1, y1 = love.graphics.transformPoint(left, top)
     local x2, y2 = love.graphics.transformPoint(right, bottom)
-    add_item(op_ids.rectangle, mode, x1, y1, x2, y2, rx or 0, ry or 0, unpack(color))
+    rx, ry = love.graphics.transformPoint(rx or 0, ry or 0)
+    add_item(op_ids.rectangle, mode, x1, y1, x2, y2, rx, ry, unpack(color))
 end
 
 local polygon_data = {}
