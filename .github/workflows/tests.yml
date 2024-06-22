@@ -1,0 +1,52 @@
+name: Run tests
+
+on:
+  push:
+    branches: [ "imgui" ]
+  pull_request:
+    branches: [ "imgui" ]
+  workflow_dispatch:
+
+env:
+  LOVE_ARTIFACT_URL: "https://api.github.com/repos/love2d/love/actions/artifacts/1580582511/zip"
+
+jobs:
+  test:
+    runs-on: ubuntu-24.04
+
+    steps:
+    - uses: actions/checkout@v4.1.1
+
+    - name: Install dependencies
+      run: |
+        sudo apt install luarocks fuse
+        sudo luarocks --lua-version 5.1 install luacov
+
+    - name: Get love
+      run: |
+        curl -L -H "Accept: application/vnd.github+json" -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" --output love12.zip --url "${{ env.LOVE_ARTIFACT_URL }}"
+        7z x love12.zip
+        chmod +x love-*.AppImage
+
+    - name: Start xvfb
+      run: |
+        echo "Starting XVFB on $DISPLAY"
+        Xvfb $DISPLAY -screen 0, 360x240x24 &
+        echo "XVFBPID=$!" >> $GITHUB_ENV
+
+    - name: Run tests
+      run: |
+        SCALE=2 AUTOTEST=1 AUTOCLOSE=1 ./love-*.AppImage .
+        SCALE=0.5 AUTOTEST=1 AUTOCLOSE=1 ./love-*.AppImage .
+        COVERAGE=1 AUTOTEST=1 AUTOCLOSE=1 ./love-*.AppImage .
+
+    - name: Stop xvfb
+      # should always stop xvfb even if other steps failed
+      if: always()
+      run: |
+        kill $XVFBPID
+
+    - name: Coverage
+      run: |
+        luacov
+        cat luacov.report.out

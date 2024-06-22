@@ -3,27 +3,34 @@ local draw_queue = require("ui.draw_queue")
 local collapse = {}
 
 ---start a collapse area
-function collapse.start()
+---@param collapse_state table
+function collapse.start(collapse_state)
     area.start()
     -- put scissor here once bounds are known
     draw_queue.placeholder()
+
+    -- has to be persisted as it is always used in a delayed manner
+    collapse_state.cutout = collapse_state.cutout or {}
+
+    local data = area.get_extra_data()
+    data.state = collapse_state
 end
 
 ---finish the collapse area
----@param width_factor number?
----@param height_factor number?
-function collapse.done(width_factor, height_factor)
+function collapse.done()
     local bounds = area.get_bounds()
+    local data = area.get_extra_data()
+    local collapse_state = data.state
 
     -- no cutoff by default
     local max_width, max_height = math.huge, math.huge
 
     -- set max if factor is not nil
-    if width_factor then
-        max_width = (bounds.right - bounds.left) * width_factor
+    if collapse_state.width_factor then
+        max_width = (bounds.right - bounds.left) * collapse_state.width_factor
     end
-    if height_factor then
-        max_height = (bounds.bottom - bounds.top) * height_factor
+    if collapse_state.height_factor then
+        max_height = (bounds.bottom - bounds.top) * collapse_state.height_factor
     end
 
     -- modify bounds to limit width/height
@@ -33,6 +40,14 @@ function collapse.done(width_factor, height_factor)
     if bounds.bottom - bounds.top > max_height then
         bounds.bottom = bounds.top + max_height
     end
+
+    -- modify cutout to prevent interaction of invisible elements (in screen space)
+    local x1, y1 = love.graphics.transformPoint(bounds.left, bounds.top)
+    local x2, y2 = love.graphics.transformPoint(bounds.right, bounds.bottom)
+    collapse_state.cutout.left = x1
+    collapse_state.cutout.top = y1
+    collapse_state.cutout.right = x2
+    collapse_state.cutout.bottom = y2
 
     -- finish area with modified bounds
     area.done()

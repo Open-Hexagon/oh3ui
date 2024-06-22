@@ -13,6 +13,9 @@ local rectangle_color_overwrite = {}
 ---@param button_state table
 ---@param text string
 return function(button_state, text)
+    -- move to fit padding later
+    state.x = state.x + 4
+    state.y = state.y + 4
     -- draw background later
     draw_queue.placeholder()
     area.start()

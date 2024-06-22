@@ -30,7 +30,14 @@ function grab.update(scroll_state)
 
     -- do actual drag interaction
     local scrollbar = scroll_state.scrollbar
-    local left, top, _, _, grabbed = drag.update(scroll_state, scrollbar.left, scrollbar.top, scrollbar.right, scrollbar.bottom, not grabbed_a_scrollbar_already_this_frame)
+    local left, top, _, _, grabbed = drag.update(
+        scroll_state,
+        scrollbar.left,
+        scrollbar.top,
+        scrollbar.right,
+        scrollbar.bottom,
+        not grabbed_a_scrollbar_already_this_frame
+    )
     grabbed_a_scrollbar_already_this_frame = grabbed
 
     if grabbed then
@@ -47,7 +54,6 @@ function grab.update(scroll_state)
             -- scroll percentage = new_top / max_scrollbar_position
             -- max scroll = data.overflow
             scroll_position = new_top * data.overflow / max_scrollbar_position
-
         else -- data.direction == "horizontal"
             -- area length - scrollbar length
             local max_scrollbar_position = data.area_length - (scrollbar.right - scrollbar.left)

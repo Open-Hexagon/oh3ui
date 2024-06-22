@@ -1,8 +1,15 @@
-local test_menu = require("ui.menu.test")
+-- luacov: disable
+-- can't possibly cover line when luacov hasn't been included yet, so don't mark as miss
+local test_menu = require("tests.menu")
+-- luacov: enable
 local layers = require("ui.layers")
 local ui = require("ui")
 
+ui.scale = os.getenv("SCALE") or 1
+
 function love.run()
+    local target_delta = 1 / 240
+    local last_time = 0
     layers.push(test_menu)
 
     return function()
@@ -29,5 +36,7 @@ function love.run()
             love.graphics.present()
         end
         love.timer.step()
+        love.timer.sleep(target_delta - (love.timer.getTime() - last_time))
+        last_time = last_time + target_delta
     end
 end

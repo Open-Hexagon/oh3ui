@@ -1,3 +1,5 @@
 love.AppImage
 launch.sh
+luacov.report.out
+luacov.stats.out
 .vscode/

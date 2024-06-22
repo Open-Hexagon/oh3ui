@@ -2,7 +2,7 @@ local state = require("ui.state")
 local theme = require("ui.theme")
 local draw_queue = require("ui.draw_queue")
 local drag = require("ui.interaction.drag")
-local events = require("ui.event_queue")
+local events = require("ui.events")
 
 ---slider element
 ---@param slider_state table
@@ -20,7 +20,16 @@ return function(slider_state, min, max, step)
     local half_radius = radius / 2
 
     -- base shape bar which has half of the knob radius
-    draw_queue.rectangle("fill", state.left + half_radius, state.top + half_radius, state.right - half_radius, state.bottom - half_radius, theme.rectangle_color, half_radius, half_radius)
+    draw_queue.rectangle(
+        "fill",
+        state.left + half_radius,
+        state.top + half_radius,
+        state.right - half_radius,
+        state.bottom - half_radius,
+        theme.rectangle_color,
+        half_radius,
+        half_radius
+    )
 
     -- knob interaction
     slider_state.position = slider_state.position or 0

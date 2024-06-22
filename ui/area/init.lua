@@ -55,10 +55,7 @@ function area.is_position_inside(x, y, is_screen_space)
         x, y = love.graphics.inverseTransformPoint(x, y)
     end
     local bounds = area.get_bounds()
-    return x >= bounds.left
-        and x <= bounds.right
-        and y >= bounds.top
-        and y <= bounds.bottom
+    return x >= bounds.left and x <= bounds.right and y >= bounds.top and y <= bounds.bottom
 end
 
 ---check if mouse is inside the current area
@@ -76,10 +73,10 @@ function area.done()
     if last_area then
         love.graphics.setCanvas(last_area.canvas)
         -- update bounds of lower area
-        last_area.bounds.left = math.min(last_area.bounds.left, this_area.bounds.left)
-        last_area.bounds.right = math.max(last_area.bounds.right, this_area.bounds.right)
-        last_area.bounds.top = math.min(last_area.bounds.top, this_area.bounds.top)
-        last_area.bounds.bottom = math.max(last_area.bounds.bottom, this_area.bounds.bottom)
+        last_area.bounds.left = last_area.bounds.left == nil and this_area.bounds.left or math.min(last_area.bounds.left, this_area.bounds.left)
+        last_area.bounds.right = last_area.bounds.right == nil and this_area.bounds.right or math.max(last_area.bounds.right, this_area.bounds.right)
+        last_area.bounds.top = last_area.bounds.top == nil and this_area.bounds.top or math.min(last_area.bounds.top, this_area.bounds.top)
+        last_area.bounds.bottom = last_area.bounds.bottom == nil and this_area.bounds.bottom or math.max(last_area.bounds.bottom, this_area.bounds.bottom)
     else
         love.graphics.setCanvas()
     end

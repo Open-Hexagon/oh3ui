@@ -2,7 +2,6 @@ local scroll_interaction = require("ui.interaction.scroll")
 local theme = require("ui.theme")
 local area = require("ui.area")
 local draw_queue = require("ui.draw_queue")
-local state = require("ui.state")
 
 local scroll = {}
 
@@ -26,7 +25,7 @@ end
 ---@param max_length number  the size (in scroll direction) after which scrolling should start
 function scroll.start(scroll_state, scroll_direction, max_length)
     scroll_state.position = scroll_state.position or 0
-    -- only persist to not recreate table every time
+    -- has to be persisted as it is always used in a delayed manner
     scroll_state.cutout = scroll_state.cutout or {}
 
     area.start()
@@ -77,7 +76,6 @@ local function calculate_scrollbar_position()
         -- position on the right side of the area
         scrollbar.right = bounds.right
         scrollbar.left = bounds.right - SCROLLBAR_THICKNESS
-
     else -- data.direction == "horizontal"
         scrollbar.left = bounds.left + position
         scrollbar.right = scrollbar.left + length
@@ -184,6 +182,16 @@ function scroll.elements_in_view(element_size, amount)
         -- limit start to be 2 or higher to prevent doubled occurence of 1
         local start = math.max(math.floor(scroll_state.position / element_size) + 1, 2)
         local stop = start + math.floor(data.max_length / element_size) + 1
+        -- don't show more than specified
+        if amount then
+            if start > amount then
+                start = amount
+            end
+            if stop > amount then
+                stop = amount
+            end
+        end
+        -- show each element in view
         for i = start, stop do
             coroutine.yield(i)
             if amount == nil and i > scroll_state.last_element_index then

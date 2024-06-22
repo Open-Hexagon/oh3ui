@@ -43,7 +43,7 @@ function state.is_position_interactable(x, y)
     for i = 1, state.current_area_index do
         local area = state.areas[i]
         if area.extra_data.state and area.extra_data.state.cutout and area.extra_data.state.cutout.left then
-            -- is scroll area
+            -- area limits interaction area
             if
                 x < area.extra_data.state.cutout.left
                 or x > area.extra_data.state.cutout.right

@@ -1,5 +1,5 @@
 local state = require("ui.state")
-local event_queue = require("ui.event_queue")
+local events = require("ui.events")
 local scroll_interaction = require("ui.interaction.scroll")
 local draw_queue = require("ui.draw_queue")
 
@@ -28,12 +28,12 @@ end
 ---@param name string
 ---@param ... unknown
 function ui.process_event(name, ...)
-    event_queue.add(name, ...)
+    events.add(name, ...)
 end
 
 ---undo transformations
 function ui.done()
-    event_queue.clear()
+    events.clear()
     love.graphics.pop()
     draw_queue.draw()
 end

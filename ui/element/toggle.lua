@@ -13,7 +13,7 @@ return function(toggle_state)
 
     -- interaction
     if state.clicked then
-        toggle_state.state = not toggle_state.state  -- not nil = true
+        toggle_state.state = not toggle_state.state -- not nil = true
     end
 
     -- base shape
