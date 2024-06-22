@@ -30,6 +30,8 @@ jobs:
 
     - name: Run tests
       run: |
+        SCALE=2 AUTOTEST=1 AUTOCLOSE=1 xvfb-run ./love-*.AppImage .
+        SCALE=0.5 AUTOTEST=1 AUTOCLOSE=1 xvfb-run ./love-*.AppImage .
         COVERAGE=1 AUTOTEST=1 AUTOCLOSE=1 xvfb-run ./love-*.AppImage .
 
     - name: Coverage
