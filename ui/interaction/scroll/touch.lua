@@ -47,7 +47,7 @@ end
 ---@param scroll_state table
 return function(scroll_state)
     -- don't process touch scroll if scrollbar is grabbed
-    if scroll_state.scrollbar_grabbed_at then
+    if scroll_state.grabbed_at_x or scroll_state.grabbed_at_y then
         return
     end
 
