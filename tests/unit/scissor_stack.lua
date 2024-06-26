@@ -1,11 +1,14 @@
 local scissor_stack = require("ui.scissor_stack")
+local state = require("ui.state")
 local utils = require("tests.utils")
 
 local log = utils.log.new()
 local test = {}
 
 function test.layout()
+    state.allow_automatic_resizing = true
     log:draw()
+    state.allow_automatic_resizing = false
 end
 
 test.sequence = coroutine.create(function()

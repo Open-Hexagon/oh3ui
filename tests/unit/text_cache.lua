@@ -1,11 +1,14 @@
 local text_cache = require("ui.text_cache")
+local state = require("ui.state")
 local utils = require("tests.utils")
 
 local log = utils.log.new()
 local test = {}
 
 function test.layout()
+    state.allow_automatic_resizing = true
     log:draw()
+    state.allow_automatic_resizing = false
 end
 
 -- most of the text_cache functionality is already tested, the main thing to check here is the deletion of unused text objects after too many have been cached already
