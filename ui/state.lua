@@ -14,7 +14,9 @@ function state.reset()
     state.height = 0
     -- x=0..1  0: left, 1: right
     -- y=0..1  0: top, 1: bottom
-    state.anchor = { x = 0, y = 0 }
+    state.anchor = state.anchor or {}
+    state.anchor.x = 0
+    state.anchor.y = 0
     state.font = "assets/OpenSquare.ttf"
     state.font_size = 32
     state.text_wraplimit = math.huge
