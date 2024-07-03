@@ -2,6 +2,7 @@ local state = require("ui.state")
 local events = require("ui.events")
 local scroll_interaction = require("ui.interaction.scroll")
 local draw_queue = require("ui.draw_queue")
+local text_interaction = require("ui.interaction.text")
 
 local ui = {
     scale = 1,
@@ -22,6 +23,8 @@ function ui.start()
         interactions[i].update()
     end
     scroll_interaction.reset()
+    love.keyboard.setKeyRepeat(text_interaction.is_interacting_with_text)
+    text_interaction.reset()
 end
 
 ---make the ui process an event
