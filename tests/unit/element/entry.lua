@@ -82,6 +82,11 @@ test.sequence = coroutine.create(function()
     love.event.push("keypressed", "delete")
     coroutine.yield()
     assert(entry_state.text == "", "text is wrong")
+    -- should not move in empty text
+    assert(entry_state.cursor_pos == 0, "cursor pos is wrong")
+    love.event.push("keypressed", "right")
+    coroutine.yield()
+    assert(entry_state.cursor_pos == 0, "cursor pos is wrong")
     utils.mouse_x = x - 1
     utils.mouse_y = y
     utils.click()
