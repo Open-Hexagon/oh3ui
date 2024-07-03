@@ -24,6 +24,7 @@ function ui.start()
     end
     scroll_interaction.reset()
     love.keyboard.setKeyRepeat(text_interaction.is_interacting_with_text)
+    love.keyboard.setTextInput(text_interaction.is_interacting_with_text)
     text_interaction.reset()
 end
 
