@@ -115,6 +115,8 @@ function scroll.done()
 
     -- drawing
     if data.overflow == 0 then
+        scroll_interaction.go_to(0, 0, "none")
+        scroll_state.position = 0
         area.done()
         -- no need to scroll, insert nothing instead of scissor
         draw_queue.put_next_in_last_placeholder()
