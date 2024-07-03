@@ -77,6 +77,7 @@ test.sequence = coroutine.create(function()
     for i = 0, length - max_length do
         -- set directly, interaction should be tested elsewhere
         scroll_state.position = i
+        scroll_state.target_position = i
         -- disable interaction temporarily, otherwise user could scroll away and fail test
         disable_interaction = true
         coroutine.yield()
@@ -100,6 +101,7 @@ test.sequence = coroutine.create(function()
     for i = 0, length - max_length do
         -- set directly, interaction should be tested elsewhere
         scroll_state.position = i
+        scroll_state.target_position = i
         -- disable interaction temporarily, otherwise user could scroll away and fail test
         disable_interaction = true
         coroutine.yield()
