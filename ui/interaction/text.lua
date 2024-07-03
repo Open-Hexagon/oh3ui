@@ -67,7 +67,7 @@ function text_interaction.update(entry_state)
             if entry_state.text_pos ~= text_pos then
                 -- text pos still differs
                 -- calculate pixel pos
-                entry_state.cursor_pos = draw_queue.get_text_size(utf8_sub(text, 1, text_pos), state.get_font(), state.text_wraplimit, state.text_align)
+                entry_state.cursor_pos = state.get_font():getWidth(utf8_sub(text, 1, text_pos))
                 -- scroll cursor into view
                 local scroll_padding = 10
                 local min_scroll_pos = entry_state.cursor_pos - state.width + scroll_padding

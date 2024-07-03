@@ -32,11 +32,23 @@ return function(entry_state)
 
     -- text
     text_interaction.update(entry_state)
+
+    -- make sure no weird things (wrap, align, resize) happen
+    local wraplimit = state.text_wraplimit
+    state.text_wraplimit = math.huge
+    local align = state.text_align
+    state.text_align = "left"
+    local allow_automatic_resizing = state.allow_automatic_resizing
+    state.allow_automatic_resizing = false
+
+    -- respect spaces in width
+    state.width = state.get_font():getWidth(entry_state.text)
     label(entry_state.text)
 
-    -- adjust bounds of area to match height
-    local bounds = area.get_bounds()
-    bounds.bottom = bounds.top + height
+    -- reset state
+    state.text_wraplimit = wraplimit
+    state.text_align = align
+    state.allow_automatic_resizing = allow_automatic_resizing
 
     scroll.done()
 end
