@@ -582,6 +582,7 @@ return function()
 end
 ```
 The rectangles are arranged in a grid both visually and in the keyboard navigation table. They are colored when selected now.
+
 Now the really interesting part is that an element does not have to be a single cell in the keyboard navigation grid, but can actually span multiple cells.
 This allows for having two elements where pressing in a certain direction on them results in them jumping to the same element while still jumping back to the one they came from if the other direction is pressed.
 
