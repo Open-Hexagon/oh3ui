@@ -29,7 +29,7 @@ end
 
 local id_counter = 0
 local cur_x, cur_y
-local selected = -1
+local selected = 0
 local first_position = {}
 
 ---reset all initialized values in the grid to 0
@@ -87,9 +87,11 @@ local function move_or_initialize(dx, dy)
         end
     else
         -- initialize, may still be 0 if nothing filled the grid
-        cur_x = first_position.x or 1
-        cur_y = first_position.y or 1
-        selected = get_grid_cell(cur_x, cur_y)
+        cur_x = first_position.x
+        cur_y = first_position.y
+        if cur_x and cur_y then
+            selected = get_grid_cell(cur_x, cur_y)
+        end
     end
 end
 
