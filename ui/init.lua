@@ -3,6 +3,7 @@ local events = require("ui.events")
 local scroll_interaction = require("ui.interaction.scroll")
 local draw_queue = require("ui.draw_queue")
 local text_interaction = require("ui.interaction.text")
+local keyboard_navigation = require("ui.keyboard_navigation")
 
 local ui = {
     scale = 1,
@@ -26,6 +27,7 @@ function ui.start()
     love.keyboard.setKeyRepeat(text_interaction.is_interacting_with_text)
     love.keyboard.setTextInput(text_interaction.is_interacting_with_text)
     text_interaction.reset()
+    keyboard_navigation.reset()
 end
 
 ---make the ui process an event
@@ -37,6 +39,7 @@ end
 
 ---undo transformations
 function ui.done()
+    keyboard_navigation.run()
     events.clear()
     love.graphics.pop()
     draw_queue.draw()
