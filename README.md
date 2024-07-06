@@ -542,3 +542,80 @@ Then to actually draw a menu, you call `layers.push` with the function that draw
 To close the overlay you can call `layers.pop` which will then go back to the last menu.
 
 This kind of design may not really fit in with the imgui kind of philosophy but after some quick playing around I found this to be the simplest solution both in usage and implementation.
+
+## Keyboard Navigation
+To allow the user to navigate the GUI with a keyboard a seperate construct is used. Nothing is inferred from the layout, this is a fully manual way of specifying it. The keyboard navigation layout is a grid where the cursor moves until it is on another element. It is like everything else rebuilt every frame to allow for quick dynamic changes.
+
+Here is a very basic example:
+```lua
+local rectangle = require("ui.element.rectangle")
+local state = require("ui.state")
+local keyboard_navigation = require("ui.keyboard_navigation")
+
+local select_color = { 0.4, 0.4, 1, 1 }
+
+local function color_rect(colored)
+    if colored then
+        theme.rectangle_color = select_color
+    end
+    rectangle()
+    theme.rectangle_color = nil
+end
+
+return function()
+    state.width = 100
+    state.height = 50
+    state.y = 10
+    state.x = 10
+
+    color_rect(keyboard_navigation.check(1, 1))
+
+    state.x = state.right + 10
+    color_rect(keyboard_navigation.check(2, 1))
+
+    state.y = state.bottom + 10
+    state.x = 10
+    color_rect(keyboard_navigation.check(1, 2))
+
+    state.x = state.right + 10
+    color_rect(keyboard_navigation.check(2, 2))
+end
+```
+The rectangles are arranged in a grid both visually and in the keyboard navigation table. They are colored when selected now.
+Now the really interesting part is that an element does not have to be a single cell in the keyboard navigation grid, but can actually span multiple cells.
+This allows for having two elements where pressing in a certain direction on them results in them jumping to the same element while still jumping back to the one they came from if the other direction is pressed.
+
+Here is an example:
+```lua
+local rectangle = require("ui.element.rectangle")
+local state = require("ui.state")
+local keyboard_navigation = require("ui.keyboard_navigation")
+
+local select_color = { 0.4, 0.4, 1, 1 }
+
+local function color_rect(colored)
+    if colored then
+        theme.rectangle_color = select_color
+    end
+    rectangle()
+    theme.rectangle_color = nil
+end
+
+return function()
+    state.width = 100
+    state.height = 50
+    state.y = 10
+    state.x = 10
+
+    color_rect(keyboard_navigation.check(1, 1))
+
+    state.x = state.right + 10
+    color_rect(keyboard_navigation.check(2, 1))
+
+    state.y = state.bottom + 10
+    state.x = 10
+    state.width = 210
+    color_rect(keyboard_navigation.check(1, 2, 2, 2))
+end
+```
+The last rectangle now occupies the range from (1, 2) to (2, 2) in the grid.
