@@ -3,6 +3,18 @@ local click_interaction = require("ui.interaction.click")
 local json = require("extlibs.json.json")
 local layers = require("ui.layers")
 
+-- Enum for anchor points
+-- TODO: I don't know where this should go yet
+local anchor = {
+    TOP = 0,
+    LEFT = 0,
+    BOTTOM = 1,
+    RIGHT = 1,
+    CENTER = 0.5,
+}
+
+-- The state table.
+-- ui element properties can be set here manually before calling update
 local state = {}
 
 ---reset manual state to default values
@@ -33,6 +45,7 @@ function state.reset()
     state.clicked = false
 end
 
+-- first state setup
 state.reset()
 
 ---check if a screen space position is currently inside an interactive area

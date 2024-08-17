@@ -7,7 +7,15 @@ local ui = {
     scale = 1,
 }
 
--- interactions that need an update at the beginning of the frame
+---Push a love event to the event sequence.
+---This is done at the very beginning of a frame
+---@param name string
+---@param ... unknown
+function ui.push_event(name, ...)
+    events.add(name, ...)
+end
+
+-- Interactions that need an update at the beginning of the frame
 -- (this is only required for non-element specific interactions)
 local interactions = {
     require("ui.interaction.click"),
@@ -18,17 +26,11 @@ function ui.start()
     state.reset()
     love.graphics.push()
     love.graphics.scale(ui.scale, ui.scale)
+
     for i = 1, #interactions do
         interactions[i].update()
     end
     scroll_interaction.reset()
-end
-
----make the ui process an event
----@param name string
----@param ... unknown
-function ui.process_event(name, ...)
-    events.add(name, ...)
 end
 
 ---undo transformations

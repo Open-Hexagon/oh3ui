@@ -1,23 +1,25 @@
+-- Handles a stack of layers
 local layers = {}
 
 layers.allow_interaction = true
 
+-- Higher index layers will show up on top of lower index layers
 local index = 0
 local stack = {}
 
----put a layer on top of the stack
+---Put a layer on top of the stack
 ---@param layer function
 function layers.push(layer)
     index = index + 1
     stack[index] = layer
 end
 
----remove the topmost layer from the stack
+---Remove the topmost layer from the stack
 function layers.pop()
     index = index - 1
 end
 
----run the functions for all the layers
+---Run the functions for all the layers
 function layers.run()
     local state = require("ui.state")
     layers.allow_interaction = false
@@ -25,6 +27,8 @@ function layers.run()
         stack[i]()
         state.reset()
     end
+
+    -- We only want the topmost layer to be interactable
     layers.allow_interaction = true
     stack[index]()
 end

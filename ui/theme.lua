@@ -1,3 +1,4 @@
+-- default theme colors
 local theme = {
     rectangle_color = { 0.2, 0.2, 0.2, 1 },
     label_color = { 1, 1, 1, 1 },
