@@ -13,6 +13,7 @@ local layers = require("ui.layers")
 local test_overlay = require("ui.menu.test_overlay")
 local toggle = require("ui.element.toggle")
 local slider = require("ui.element.slider")
+local keyboard_navigation = require("ui.keyboard_navigation")
 
 local infinite_scroll_example = require("ui.menu.infinite_scroll_example")
 
@@ -22,6 +23,17 @@ local scroll_state2 = {}
 local toggle_state = {}
 local slider_state = {}
 local collapse_state = {}
+
+local function colored_rectangle_on_select(x1, y1, x2, y2)
+    local selected = keyboard_navigation.check(x1, y1, x2, y2)
+    if selected then
+        theme.rectangle_color[3] = 1
+    end
+    rectangle()
+    if selected then
+        theme.rectangle_color[3] = 0.2
+    end
+end
 
 -- small menu for testing
 return function()
@@ -37,7 +49,7 @@ return function()
     state.height = 50
 
     -- rectangle in top left corner
-    rectangle()
+    colored_rectangle_on_select(1, 1)
     if state.clicked then
         print("clicked top left rectangle")
         layers.push(test_overlay)
@@ -45,7 +57,7 @@ return function()
 
     -- rectangle to the right of the last one with 10 padding
     state.x = state.x + state.width + 10
-    rectangle()
+    colored_rectangle_on_select(2, 1)
     if state.clicked then
         print("clicked 2nd rectangle from top left")
     end
@@ -53,7 +65,7 @@ return function()
     -- rectangle to the bottom of the first one with 10 padding
     state.x = 10
     state.y = state.y + state.height + 10
-    rectangle()
+    colored_rectangle_on_select(1, 2, 2, 2)
 
     -- add some padding around the area before drawing
     local bounds = area.get_bounds()

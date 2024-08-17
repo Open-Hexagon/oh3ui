@@ -28,6 +28,7 @@ test.sequence = coroutine.create(function()
         coroutine.yield()
         assert(hover_state.hover_timer > 0, "hover timer 0 after hovering")
     end
+    coroutine.yield()
     assert(hover_state.hover_timer == 1, "hover timer not 1 after hovering for a second")
     utils.mouse_x = x - 1
     start_time = love.timer.getTime()
@@ -35,6 +36,7 @@ test.sequence = coroutine.create(function()
         coroutine.yield()
         assert(hover_state.hover_timer < 1, "hover timer 1 after stopping hovering")
     end
+    coroutine.yield()
     assert(hover_state.hover_timer == 0, "hover timer not 0 after not hovering for a second")
 end)
 
