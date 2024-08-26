@@ -10,7 +10,7 @@ local ui = {
 }
 
 ---Push a love event to the event sequence.
----This is done at the very beginning of a frame
+---This is done at the very beginning of a frame.
 ---@param name string
 ---@param ... unknown
 function ui.push_event(name, ...)

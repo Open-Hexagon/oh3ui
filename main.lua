@@ -10,9 +10,11 @@ local ui = require("ui")
 ui.scale = os.getenv("SCALE") or 1
 
 function love.run()
+    -- Target duration of each tick in seconds
     local target_delta = 1 / 240
     local last_time = 0
 
+    -- * testing menu
     layers.push(example_menu)
 
     return function()
@@ -23,10 +25,13 @@ function love.run()
             end
             ui.push_event(name, a, b, c, d, e, f)
         end
-        love.graphics.setCanvas()
+
         --ui.scale = (math.sin(love.timer.getTime() * 10) + 1) * 0.2 + 0.8
         --ui.scale = math.floor(ui.scale * 10) / 10
+
         if love.graphics.isActive() then
+            -- reset everything
+            love.graphics.setCanvas()
             love.graphics.origin()
             love.graphics.clear(0, 0, 0, 1)
 
@@ -34,10 +39,13 @@ function love.run()
             layers.run()
             ui.done()
 
+            -- draw the fps
             love.graphics.setColor(1, 1, 1, 1)
             love.graphics.print(math.floor(love.timer.getFPS()) .. " fps")
             love.graphics.present()
         end
+
+        -- Ensure tick rate is kept steady
         love.timer.step()
         love.timer.sleep(target_delta - (love.timer.getTime() - last_time))
         last_time = last_time + target_delta
