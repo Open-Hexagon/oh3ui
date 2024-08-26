@@ -1,15 +1,10 @@
+-- The scissor_stack is stack of rectangular areas.
+-- Draw operations will only act upon the intersection of all areas
+
 local scissor_stack = {}
 
-local data = {}
+local snapshot = {}
 local index = 0
-
----set current scissor by intersecting all areas on the stack
-local function update()
-    love.graphics.setScissor()
-    for i = 1, index do
-        love.graphics.intersectScissor(unpack(data[i]))
-    end
-end
 
 ---push an area on the stack
 ---@param x number
@@ -17,19 +12,25 @@ end
 ---@param width number
 ---@param height number
 function scissor_stack.push(x, y, width, height)
+    love.graphics.intersectScissor(x, y, width, height)
+
+    -- save a snapshot of what the scissor is like now
     index = index + 1
-    data[index] = data[index] or {}
-    data[index][1] = x
-    data[index][2] = y
-    data[index][3] = width
-    data[index][4] = height
-    update()
+    if not snapshot[index] then
+        snapshot[index] = { love.graphics.getScissor() }
+    else
+        snapshot[index][1], snapshot[index][2], snapshot[index][3], snapshot[index][4] = love.graphics.getScissor()
+    end
 end
 
 ---pop an area from the stack
 function scissor_stack.pop()
     index = index - 1
-    update()
+    if index == 0 then
+        love.graphics.setScissor()
+    else
+        love.graphics.setScissor(unpack(snapshot[index]))
+    end
 end
 
 return scissor_stack
