@@ -17,11 +17,11 @@ return function(button_state, text)
     state.x = state.x + 4
     state.y = state.y + 4
     -- draw background later
-    draw_queue.placeholder()
+    draw_queue.reserve()
     area.start()
     label(text)
     area.set_state_to_bounds()
-    area.done()
+    area.finish()
 
     -- add a padding of 4 on each side
     state.x = state.x + 4 * (2 * state.anchor.x - 1)
@@ -41,7 +41,7 @@ return function(button_state, text)
 
     -- draw rectangle with custom color in placeholder
     theme.rectangle_color = rectangle_color_overwrite
-    draw_queue.put_next_in_last_placeholder()
+    draw_queue.take_last_reservation()
     rectangle("fill")
     theme.rectangle_color = nil
 

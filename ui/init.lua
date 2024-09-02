@@ -10,7 +10,7 @@ local ui = {
 }
 
 ---Push a love event to the event sequence.
----This is done at the very beginning of a frame.
+---All love events should be pushed at the very beginning of a frame.
 ---@param name string
 ---@param ... unknown
 function ui.push_event(name, ...)
@@ -39,8 +39,8 @@ function ui.start()
     keyboard_navigation.reset()
 end
 
----undo transformations
-function ui.done()
+---Do ui finalization and cleanup
+function ui.finish()
     keyboard_navigation.run()
     events.clear()
     love.graphics.pop()

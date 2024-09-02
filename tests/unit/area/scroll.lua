@@ -42,7 +42,7 @@ function test.layout()
         length = math.huge
     end
     local bounds = area.get_bounds()
-    scroll.done()
+    scroll.finish()
     -- copy bounds in case a new area gets onto the same position on the stack later
     area_bounds.left = bounds.left
     area_bounds.top = bounds.top

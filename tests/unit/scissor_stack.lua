@@ -1,4 +1,4 @@
-local scissor_stack = require("ui.scissor_stack")
+local scissor_stack = require("ui.draw_queue.scissor_stack")
 local state = require("ui.state")
 local utils = require("tests.utils")
 

@@ -7,14 +7,14 @@ local background = {}
 function background.start()
     area.start()
     -- put background draw here once bounds are known
-    draw_queue.placeholder()
+    draw_queue.reserve()
 end
 
 ---draw the area background and the contents on top
-function background.done()
+function background.finish()
     local bounds = area.get_bounds()
-    area.done()
-    draw_queue.put_next_in_last_placeholder()
+    area.finish()
+    draw_queue.take_last_reservation()
     draw_queue.rectangle("fill", bounds.left, bounds.top, bounds.right, bounds.bottom, theme.rectangle_color)
 end
 

@@ -50,5 +50,5 @@ return function(entry_state)
     state.text_align = align
     state.allow_automatic_resizing = allow_automatic_resizing
 
-    scroll.done()
+    scroll.finish()
 end

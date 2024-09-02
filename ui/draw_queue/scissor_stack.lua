@@ -3,10 +3,11 @@
 
 local scissor_stack = {}
 
+-- A stack of scissor snapshots
 local snapshot = {}
 local index = 0
 
----push an area on the stack
+---Push an area on the stack
 ---@param x number
 ---@param y number
 ---@param width number
@@ -23,13 +24,21 @@ function scissor_stack.push(x, y, width, height)
     end
 end
 
----pop an area from the stack
+---Pop an area from the stack
 function scissor_stack.pop()
     index = index - 1
     if index == 0 then
         love.graphics.setScissor()
     else
         love.graphics.setScissor(unpack(snapshot[index]))
+    end
+end
+
+---Outputs a warning and clears the stack if it was not empty. 
+function scissor_stack.finish()
+    if index ~= 0 then
+        print("warning: scissor stack was not empty when the draw queue was finished")
+        index = 0
     end
 end
 

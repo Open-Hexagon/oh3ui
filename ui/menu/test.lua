@@ -75,7 +75,7 @@ return function()
     bounds.bottom = bounds.bottom + 4
 
     theme.rectangle_color[1] = 1
-    background_area.done()
+    background_area.finish()
     theme.rectangle_color[1] = 0.2
 
     -- rectangle in the bottom left corner with adjusted anchor
@@ -117,12 +117,12 @@ return function()
         rectangle()
         state.x = state.x + state.width + 4
     end
-    scroll.done()
+    scroll.finish()
 
     state.y = state.y + state.height + 10
     state.height = 90
 
-    scroll.done()
+    scroll.finish()
 
     state.x = ui.get_width() / 3 * 2
     state.y = ui.get_height() / 3
@@ -147,7 +147,7 @@ return function()
     state.anchor.y = 0.5
     icon("emoji-smile")
 
-    collapse.done()
+    collapse.finish()
 
     state.x = ui.get_width()
     state.y = ui.get_height() / 2

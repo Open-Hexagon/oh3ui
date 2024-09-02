@@ -66,7 +66,7 @@ function area.is_mouse_inside()
 end
 
 ---finish the area started last
-function area.done()
+function area.finish()
     local this_area = state.areas[state.current_area_index]
     state.current_area_index = state.current_area_index - 1
     local last_area = state.areas[state.current_area_index]

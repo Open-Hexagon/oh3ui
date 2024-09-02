@@ -158,7 +158,7 @@ end
 local function end_test_list()
     local bounds = area.get_bounds()
     bounds.bottom = bounds.bottom + 10
-    collapse.done()
+    collapse.finish()
     state.y = bounds.bottom
 end
 
@@ -223,7 +223,7 @@ return function()
     local bounds = area.get_bounds()
     bounds.top = bounds.top - 10
 
-    scroll.done()
+    scroll.finish()
     -- go to the top of the window and to the right of the test selection which is where tests expect to start
     state.x = width + 10
     state.y = 10

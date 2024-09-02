@@ -7,7 +7,7 @@ local collapse = {}
 function collapse.start(collapse_state)
     area.start()
     -- put scissor here once bounds are known
-    draw_queue.placeholder()
+    draw_queue.reserve()
 
     -- has to be persisted as it is always used in a delayed manner
     collapse_state.cutout = collapse_state.cutout or {}
@@ -17,7 +17,7 @@ function collapse.start(collapse_state)
 end
 
 ---finish the collapse area
-function collapse.done()
+function collapse.finish()
     local bounds = area.get_bounds()
     local data = area.get_extra_data()
     local collapse_state = data.state
@@ -50,10 +50,10 @@ function collapse.done()
     collapse_state.cutout.bottom = y2
 
     -- finish area with modified bounds
-    area.done()
+    area.finish()
 
     -- set scissor to cut elements off
-    draw_queue.put_next_in_last_placeholder()
+    draw_queue.take_last_reservation()
     draw_queue.push_scissor(bounds.left, bounds.top, bounds.right, bounds.bottom)
     -- remove it once area is done
     draw_queue.pop_scissor()

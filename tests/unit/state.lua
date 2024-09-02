@@ -45,7 +45,7 @@ test.sequence = coroutine.create(function()
     data.state.cutout.top = 0
     data.state.cutout.bottom = 0
     assert(not state.is_position_interactable(10, 10), "position should not be interactable")
-    area.done()
+    area.finish()
 end)
 
 return test

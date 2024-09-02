@@ -37,7 +37,7 @@ function scroll.start(scroll_state, scroll_direction, max_length)
     data.max_length = max_length
 
     -- put scissor here later once bounds are known
-    draw_queue.placeholder()
+    draw_queue.reserve()
 
     -- translate all elements in the area based on scroll position
     love.graphics.translate(swap_if_vertical(scroll_direction, -scroll_state.position, 0))
@@ -90,7 +90,7 @@ end
 local scrollbar_color = {}
 
 ---draw the scroll area
-function scroll.done()
+function scroll.finish()
     -- width and height of total content
     local bounds = area.get_bounds()
     local width = bounds.right - bounds.left
@@ -117,10 +117,10 @@ function scroll.done()
     if data.overflow == 0 then
         scroll_interaction.go_to(0, 0, "none")
         scroll_state.position = 0
-        area.done()
+        area.finish()
         -- no need to scroll, insert nothing instead of scissor
-        draw_queue.put_next_in_last_placeholder()
-        draw_queue.nothing()
+        draw_queue.take_last_reservation()
+        draw_queue.nop()
         -- don't limit interaction
         scroll_state.cutout.left = nil
         scroll_state.cutout.top = nil
@@ -143,10 +143,10 @@ function scroll.done()
         -- update position
         scroll_interaction.update()
         -- remove area from stack to prepare drawing
-        area.done()
+        area.finish()
 
         -- insert scissor into placeholder
-        draw_queue.put_next_in_last_placeholder()
+        draw_queue.take_last_reservation()
         draw_queue.push_scissor(bounds.left, bounds.top, bounds.right, bounds.bottom)
         -- undo scissor here
         draw_queue.pop_scissor()

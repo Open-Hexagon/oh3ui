@@ -15,7 +15,7 @@ function test.layout()
     rect_bounds.left, rect_bounds.top = love.graphics.transformPoint(state.left, state.top)
     rect_bounds.right, rect_bounds.bottom = love.graphics.transformPoint(state.right, state.bottom)
     theme.rectangle_color = test_color
-    background.done()
+    background.finish()
     theme.rectangle_color = nil
 end
 

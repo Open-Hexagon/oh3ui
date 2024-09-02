@@ -16,7 +16,7 @@ function test.layout()
     state.height = 100
     rectangle()
     local bounds = area.get_bounds()
-    collapse.done()
+    collapse.finish()
     -- copy bounds in case a new area gets onto the same position on the stack later, also convert to screen space
     area_bounds.left, area_bounds.top = love.graphics.transformPoint(bounds.left, bounds.top)
     area_bounds.right, area_bounds.bottom = love.graphics.transformPoint(bounds.right, bounds.bottom)

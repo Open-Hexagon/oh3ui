@@ -27,11 +27,11 @@ function test.layout()
 
     -- overflow is only defined after .done
     local data = area.get_extra_data()
-    scroll.done()
+    scroll.finish()
     overflow_inner = data.overflow
 
     data = area.get_extra_data()
-    scroll.done()
+    scroll.finish()
     overflow_outer = data.overflow
 
     utils.fake_mouse_cursor()

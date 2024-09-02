@@ -37,7 +37,7 @@ function love.run()
 
             ui.start()
             layers.run()
-            ui.done()
+            ui.finish()
 
             -- draw the fps
             love.graphics.setColor(1, 1, 1, 1)

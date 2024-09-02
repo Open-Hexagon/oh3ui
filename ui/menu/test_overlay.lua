@@ -39,6 +39,6 @@ return function()
     bounds.bottom = bounds.bottom + 4
 
     theme.rectangle_color = background_color
-    background_area.done()
+    background_area.finish()
     theme.rectangle_color = nil
 end

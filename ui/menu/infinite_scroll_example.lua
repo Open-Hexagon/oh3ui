@@ -16,5 +16,5 @@ return function()
         label(tostring(i))
     end
     state.allow_automatic_resizing = true
-    scroll.done()
+    scroll.finish()
 end
