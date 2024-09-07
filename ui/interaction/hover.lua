@@ -1,3 +1,4 @@
+local state = require("ui.state")
 local hover = {}
 
 ---check hover based on mouse position (in element space)
@@ -5,7 +6,6 @@ local hover = {}
 ---@param mouse_y number
 ---@return boolean
 function hover.check(mouse_x, mouse_y)
-    local state = require("ui.state")
     return mouse_x >= state.left and mouse_x <= state.right and mouse_y >= state.top and mouse_y <= state.bottom
 end
 
@@ -14,7 +14,6 @@ end
 ---@param increment number
 ---@return number
 function hover.timer(hover_state, increment)
-    local state = require("ui.state")
     hover_state.hover_timer = hover_state.hover_timer or 0
     if state.hovering then
         hover_state.hover_timer = hover_state.hover_timer + increment

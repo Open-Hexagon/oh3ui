@@ -212,7 +212,7 @@ With this demonstration you can tell that even complex layouts can be achieved w
 
 ## Alignement
 ### Anchor
-The anchor is set using `state.anchor.x` and `state.anchor.y` it is initialized at 0 0 every frame.
+The anchor is set using `state.anchor_x` and `state.anchor_y` it is initialized at 0 0 every frame.
 These values are factors from 0 to 1. (could set it outside the range but that doesn't really make any sense.)
 They determine how far the element is moved from the position where it would be if x and y correspond to the top left corner.
 

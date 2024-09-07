@@ -1,4 +1,4 @@
--- Enum for anchor points for the anchor module
+-- Enum for anchor points for the cursor module
 
 local anchor = {
     TOP = 0,

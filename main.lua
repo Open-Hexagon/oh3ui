@@ -18,6 +18,7 @@ function love.run()
     layers.push(example_menu)
 
     return function()
+        -- Process events
         love.event.pump()
         for name, a, b, c, d, e, f in love.event.poll() do
             if name == "quit" then

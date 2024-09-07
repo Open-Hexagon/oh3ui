@@ -20,12 +20,12 @@ return function(button_state, text)
     draw_queue.reserve()
     area.start()
     label(text)
-    area.set_state_to_bounds()
+    area.put_cursor()
     area.finish()
 
     -- add a padding of 4 on each side
-    state.x = state.x + 4 * (2 * state.anchor.x - 1)
-    state.y = state.y + 4 * (2 * state.anchor.y - 1)
+    state.x = state.x + 4 * (2 * state.anchor_x - 1)
+    state.y = state.y + 4 * (2 * state.anchor_y - 1)
     state.width = state.width + 8
     state.height = state.height + 8
 

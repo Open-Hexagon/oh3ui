@@ -92,7 +92,7 @@ local function test_item(item)
         -- store width and height since auto resizing overwrites it
         local old_width, old_height = state.width, state.height
         state.allow_automatic_resizing = true
-        state.anchor.x = 1
+        state.anchor_x = 1
         -- draw the icon
         if content.failure then
             theme.label_color = red
@@ -103,7 +103,7 @@ local function test_item(item)
         end
         -- reset state to continue normally
         theme.label_color = nil
-        state.anchor.x = 0
+        state.anchor_x = 0
         state.allow_automatic_resizing = false
         state.width, state.height = old_width, old_height
         state.x = state.x - state.width
@@ -132,7 +132,7 @@ local function start_test_list(title)
 
     -- draw icon on the right and store width/height as auto resizing overwrites it
     state.x = state.x + state.width
-    state.anchor.x = 1
+    state.anchor_x = 1
     state.allow_automatic_resizing = true
     local last_width = state.width
     local last_height = state.height
@@ -146,7 +146,7 @@ local function start_test_list(title)
     state.width = last_width
     state.height = last_height
     state.allow_automatic_resizing = false
-    state.anchor.x = 0
+    state.anchor_x = 0
     state.x = state.x - state.width
 
     -- start the collapse for all further test items
@@ -259,7 +259,7 @@ return function()
     if current_test.failure then
         state.y = ui.get_height()
         state.x = width + 10
-        state.anchor.y = 1
+        state.anchor_y = 1
         state.text_wraplimit = ui.get_width() - width - 10
         state.allow_automatic_resizing = true
         label("Test Failed: \n" .. current_test.failure)

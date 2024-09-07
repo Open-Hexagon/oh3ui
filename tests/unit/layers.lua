@@ -10,21 +10,21 @@ local allows_interaction = {}
 
 local function layer3()
 	state.x = ui.get_width()
-	state.anchor.x = 1
+	state.anchor_x = 1
 	label("Layer 3")
 	allows_interaction[4] = layers.allow_interaction
 end
 
 local function layer2()
 	state.x = ui.get_width()
-	state.anchor.x = 1
+	state.anchor_x = 1
 	label("Layer 2")
 	allows_interaction[3] = layers.allow_interaction
 end
 
 local function layer1()
 	state.x = ui.get_width()
-	state.anchor.x = 1
+	state.anchor_x = 1
 	label("Layer 1")
 	allows_interaction[2] = layers.allow_interaction
 end

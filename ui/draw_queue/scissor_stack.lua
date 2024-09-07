@@ -17,10 +17,10 @@ function scissor_stack.push(x, y, width, height)
 
     -- save a snapshot of what the scissor is like now
     index = index + 1
-    if not snapshot[index] then
-        snapshot[index] = { love.graphics.getScissor() }
-    else
+    if snapshot[index] then
         snapshot[index][1], snapshot[index][2], snapshot[index][3], snapshot[index][4] = love.graphics.getScissor()
+    else
+        snapshot[index] = { love.graphics.getScissor() }
     end
 end
 
@@ -34,10 +34,10 @@ function scissor_stack.pop()
     end
 end
 
----Outputs a warning and clears the stack if it was not empty. 
+---Outputs a warning and clears the stack if it was not empty.
 function scissor_stack.finish()
     if index ~= 0 then
-        print("warning: scissor stack was not empty when the draw queue was finished")
+        print("warning: scissor stack was not empty")
         index = 0
     end
 end

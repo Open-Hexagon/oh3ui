@@ -80,7 +80,7 @@ return function()
 
     -- rectangle in the bottom left corner with adjusted anchor
     state.y = ui.get_height() - 10
-    state.anchor.y = 1
+    state.anchor_y = 1
     rectangle()
     if state.clicked then
         print("clicked bottom left rectangle")
@@ -92,8 +92,8 @@ return function()
     -- centered rectangle
     state.x = ui.get_width() / 2
     state.y = ui.get_height() / 2
-    state.anchor.x = 0.5
-    state.anchor.y = 0.5
+    state.anchor_x = 0.5
+    state.anchor_y = 0.5
     rectangle("line") -- just border, not filled
     if state.clicked then
         print("clicked on center rectangle")
@@ -126,8 +126,8 @@ return function()
 
     state.x = ui.get_width() / 3 * 2
     state.y = ui.get_height() / 3
-    state.anchor.x = 0
-    state.anchor.y = 0
+    state.anchor_x = 0
+    state.anchor_y = 0
     infinite_scroll_example()
 
     collapse_state.width_factor = (math.sin(love.timer.getTime() * 5) + 1) * 0.5
@@ -136,23 +136,23 @@ return function()
     -- rectangle with width of 1/3 screen minus 20 padding (10 on each side)
     state.x = 10
     state.y = ui.get_height() / 2
-    state.anchor.x = 0
+    state.anchor_x = 0
     state.width = ui.get_width() / 3 - 20
     rectangle()
 
     -- draw icon in center
     state.x = state.x + state.width / 2
     state.y = state.y + state.height / 2
-    state.anchor.x = 0.5
-    state.anchor.y = 0.5
+    state.anchor_x = 0.5
+    state.anchor_y = 0.5
     icon("emoji-smile")
 
     collapse.finish()
 
     state.x = ui.get_width()
     state.y = ui.get_height() / 2
-    state.anchor.x = 1
-    state.anchor.y = 0.5
+    state.anchor_x = 1
+    state.anchor_y = 0.5
     state.width = 100
     state.height = 50
     toggle(toggle_state)

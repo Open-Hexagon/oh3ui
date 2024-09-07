@@ -21,11 +21,11 @@ end
 
 ---Run the functions for all the layers
 function layers.run()
-    local state = require("ui.state")
+    local cursor = require("ui.cursor")
     layers.allow_interaction = false
     for i = 1, index - 1 do
         stack[i]()
-        state.reset()
+        cursor.reset()
     end
 
     -- We only want the topmost layer to be interactable

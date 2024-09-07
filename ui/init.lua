@@ -1,9 +1,9 @@
-local state = require("ui.state")
+local cursor = require("ui.cursor")
 local events = require("ui.events")
-local scroll_interaction = require("ui.interaction.scroll")
 local draw_queue = require("ui.draw_queue")
-local text_interaction = require("ui.interaction.text")
-local keyboard_navigation = require("ui.keyboard_navigation")
+-- local scroll_interaction = require("ui.interaction.scroll")
+-- local text_interaction = require("ui.interaction.text")
+-- local keyboard_navigation = require("ui.keyboard_navigation")
 
 local ui = {
     scale = 1,
@@ -19,29 +19,31 @@ end
 
 -- Interactions that need an update at the beginning of the frame
 -- (this is only required for non-element specific interactions)
-local interactions = {
+---Broadcasters are modules that need to be updated at the beginning of each frame.
+---They remain 
+local broadcasters = {
     require("ui.interaction.click"),
 }
 
 ---reset ui state and set scale
 function ui.start()
-    state.reset()
+    cursor.reset()
     love.graphics.push()
     love.graphics.scale(ui.scale, ui.scale)
 
-    for i = 1, #interactions do
-        interactions[i].update()
-    end
-    scroll_interaction.reset()
-    love.keyboard.setKeyRepeat(text_interaction.is_interacting_with_text)
-    love.keyboard.setTextInput(text_interaction.is_interacting_with_text)
-    text_interaction.reset()
-    keyboard_navigation.reset()
+    -- for i = 1, #interactions do
+    --     interactions[i].update()
+    -- end
+    -- scroll_interaction.reset()
+    -- love.keyboard.setKeyRepeat(text_interaction.is_interacting_with_text)
+    -- love.keyboard.setTextInput(text_interaction.is_interacting_with_text)
+    -- text_interaction.reset()
+    -- keyboard_navigation.reset()
 end
 
 ---Do ui finalization and cleanup
 function ui.finish()
-    keyboard_navigation.run()
+    -- keyboard_navigation.run()
     events.clear()
     love.graphics.pop()
     draw_queue.draw()

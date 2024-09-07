@@ -27,8 +27,8 @@ function state.reset()
     -- x=0..1  0: left, 1: right
     -- y=0..1  0: top, 1: bottom
     state.anchor = state.anchor or {}
-    state.anchor.x = 0
-    state.anchor.y = 0
+    state.anchor_x = 0
+    state.anchor_y = 0
     state.font = "assets/OpenSquare.ttf"
     state.font_size = 32
     state.text_wraplimit = math.huge
@@ -86,10 +86,10 @@ function state.update()
     state.auto_height = nil
 
     -- get edges
-    state.left = state.x - state.anchor.x * state.width
-    state.top = state.y - state.anchor.y * state.height
-    state.right = state.x + (1 - state.anchor.x) * state.width
-    state.bottom = state.y + (1 - state.anchor.y) * state.height
+    state.left = state.x - state.anchor_x * state.width
+    state.top = state.y - state.anchor_y * state.height
+    state.right = state.x + (1 - state.anchor_x) * state.width
+    state.bottom = state.y + (1 - state.anchor_y) * state.height
 
     -- update area bounds
     if state.areas[state.current_area_index] then
