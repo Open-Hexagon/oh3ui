@@ -89,10 +89,11 @@ function area.is_mouse_inside()
     return area.is_position_inside(x, y, true)
 end
 
----Finish the last started area started.
+---Finish the last started area.
 function area.finish()
     -- Put the current area into the cursor
     area.put_cursor()
+
     -- The area that's about to be dropped
     local this_area = area_stack[area_index]
     area_index = area_index - 1
@@ -100,11 +101,6 @@ function area.finish()
     local last_area = area_stack[area_index]
 
     if last_area then
-        -- There is an area below
-
-        -- ? Why is this here?
-        love.graphics.setCanvas(last_area.canvas)
-
         -- Expand the area below to surround the area that's about to be dropped
         last_area.bounds.left = last_area.bounds.left == nil and this_area.bounds.left
             or math.min(last_area.bounds.left, this_area.bounds.left)
@@ -114,10 +110,6 @@ function area.finish()
             or math.min(last_area.bounds.top, this_area.bounds.top)
         last_area.bounds.bottom = last_area.bounds.bottom == nil and this_area.bounds.bottom
             or math.max(last_area.bounds.bottom, this_area.bounds.bottom)
-    else
-        -- There is no area below (this was the last area in the area stack)
-        -- ? Why is this here?
-        love.graphics.setCanvas()
     end
 end
 

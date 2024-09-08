@@ -132,22 +132,35 @@ function cursor.commit()
     output.bottom = cursor.y + (1 - cursor.anchor_y) * cursor.height
 
     -- Expand the current area
-    local area = require("ui.area")
-    area.expand(output.left, output.top, output.right, output.bottom)
+    do
+        local area = require("ui.area")
+        area.expand(output.left, output.top, output.right, output.bottom)
+    end
 
-    local mouse_x, mouse_y = love.mouse.getPosition()
-    mouse_x, mouse_y = love.graphics.inverseTransformPoint(mouse_x, mouse_y)
-    local hovering = mouse_x >= output.left
-        and mouse_x <= output.right
-        and mouse_y >= output.top
-        and mouse_y <= output.bottom
+    -- Calculate mouse events
+    do
+        local mouse = require("ui.interaction.mouse")
+        local mouse_output = require("ui.interaction.mouse.output")
 
-    output.hovering = hovering
-    -- if hovering then
-    -- end
+        local hovering_before = mouse.prev_x >= output.left
+            and mouse.prev_x <= output.right
+            and mouse.prev_y >= output.top
+            and mouse.prev_y <= output.bottom
 
-    output.pressed = false
-    output.released = false
+        local hovering_now = mouse.x >= output.left
+            and mouse.x <= output.right
+            and mouse.y >= output.top
+            and mouse.y <= output.bottom
+
+        if hovering_now then
+            output.mouse = mouse_output.active
+        else
+            output.mouse = mouse_output.blank
+        end
+
+        output.mouse.enter = hovering_now and not hovering_before
+        output.mouse.exit = not hovering_now and hovering_before
+    end
 end
 
 return cursor

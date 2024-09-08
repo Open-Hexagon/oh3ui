@@ -37,13 +37,33 @@ return function()
         background.start()
         for x2, y2 in cursor.grid(3, 3, 10) do
             rectangle()
+            if output.mouse.enter then
+                print("enter", x1, y1, x2, y2)
+            end
+            -- if output.mouse.hovering then
+            --     print("hovering", x1, y1, x2, y2)
+            -- end
+            if output.mouse.exit then
+                print("exit", x1, y1, x2, y2)
+            end
+
+            for _, v in pairs({ "left", "right", "middle", "back", "forward" }) do
+            -- for v = 1, 5 do
+                if output.mouse[v].down then
+                    print(v .. " down", output.mouse[v].times)
+                end
+                -- if output.mouse[v].pressed then
+                --     print(v .. " pressed", output.mouse[v].times)
+                -- end
+                if output.mouse[v].up then
+                    print(v .. " up", output.mouse[v].times)
+                end
+            end
+
             cursor.inset(0.5)
             theme.rectangle_color = { 1, 1, 1, 1 }
             rectangle("line")
             theme.rectangle_color = nil
-            -- if output.left.up then
-            --     print(x1, y1, x2, y2)
-            -- end
         end
         theme.rectangle_color = { 1, 0, 0, 1 }
         background.finish()

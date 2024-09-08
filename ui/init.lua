@@ -20,9 +20,10 @@ end
 -- Interactions that need an update at the beginning of the frame
 -- (this is only required for non-element specific interactions)
 ---Broadcasters are modules that need to be updated at the beginning of each frame.
----They remain 
+---Their outputs should remain constant during a single frame.
 local broadcasters = {
-    require("ui.interaction.click"),
+    -- require("ui.interaction.click"),
+    require("ui.interaction.mouse"),
 }
 
 ---reset ui state and set scale
@@ -31,9 +32,9 @@ function ui.start()
     love.graphics.push()
     love.graphics.scale(ui.scale, ui.scale)
 
-    -- for i = 1, #interactions do
-    --     interactions[i].update()
-    -- end
+    for i = 1, #broadcasters do
+        broadcasters[i].update()
+    end
     -- scroll_interaction.reset()
     -- love.keyboard.setKeyRepeat(text_interaction.is_interacting_with_text)
     -- love.keyboard.setTextInput(text_interaction.is_interacting_with_text)
