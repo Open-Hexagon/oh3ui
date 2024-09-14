@@ -1,3 +1,7 @@
+---Caches text objects so there's no need to repeatedly call love.graphics.print
+---Also enables geting the width and height of text while respecting the wrap option before drawing
+---(required for labels to support wrapping)
+
 local text_cache = {}
 
 local text_objects = {}
