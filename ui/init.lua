@@ -17,8 +17,6 @@ function ui.push_event(name, ...)
     events.add(name, ...)
 end
 
--- Interactions that need an update at the beginning of the frame
--- (this is only required for non-element specific interactions)
 ---Broadcasters are modules that need to be updated at the beginning of each frame.
 ---Their outputs should remain constant during a single frame.
 local broadcasters = {

@@ -1,5 +1,7 @@
 ---The cursor represents a rectangular area on screen and is used as
----a tool for absolutely positioning and aligning ui elements.
+---a tool for positioning and aligning ui elements.
+---Also checks for mouse intersection.
+---For checking mouse buttons, see mouse.lua
 
 -- Cursor snapshots
 local snapshots = {}
@@ -19,11 +21,11 @@ local cursor = {
     -- output tables
     edge = {},
     mouse = {},
-    clicked = {},
 }
 
 local anchor = cursor.anchor
 local edge = cursor.edge
+local mouse = cursor.mouse
 
 ---Reset manual cursor to default values
 function cursor.reset()
@@ -46,12 +48,15 @@ function cursor.reset()
     -- * do not write to the following fields manually
 
     -- edges
-    cursor.edge.left = 0
-    cursor.edge.top = 0
-    cursor.edge.right = 0
-    cursor.edge.bottom = 0
+    edge.left = 0
+    edge.top = 0
+    edge.right = 0
+    edge.bottom = 0
 
-    -- mouse
+    -- mouse intersection
+    mouse.enter = false
+    mouse.exit = false
+    mouse.hovering = false
 
     -- mouse clicks
     cursor.clicked.right = false
@@ -165,7 +170,7 @@ function cursor.place()
 end
 
 ---Check and update whether the mouse is intersecting the cursor (i.e. the mouse is hovering the cursor).
----Also detects if the mouse just entered the cursor area, or exited the cursor area.
+---Also detects if the mouse just entered or exited the cursor area.
 function cursor.update_mouse_intersect()
     local mouse = require("ui.interaction.mouse")
 
@@ -179,9 +184,9 @@ function cursor.update_mouse_intersect()
         and mouse.y >= edge.top
         and mouse.y <= edge.bottom
 
-    cursor.mouse.hovering = hovering_now
-    cursor.mouse.enter = hovering_now and not hovering_before
-    cursor.mouse.exit = not hovering_now and hovering_before
+    mouse.hovering = hovering_now
+    mouse.enter = hovering_now and not hovering_before
+    mouse.exit = not hovering_now and hovering_before
 end
 
 ---Cache of fonts based on file used and size

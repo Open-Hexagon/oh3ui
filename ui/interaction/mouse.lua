@@ -1,3 +1,6 @@
+---A broadcasting module that updates mouse position and button states.
+---For checking mouse intersection, see cursor.lua
+
 local events = require("ui.events")
 
 -- Table of mouse button names
@@ -16,6 +19,8 @@ local mouse = {
     y = -1,
     prev_x = -1,
     prev_y = -1,
+
+    BUTTON_COUNT = #button_names
 }
 
 -- Set up output tables
@@ -31,7 +36,7 @@ function mouse.update()
     mouse.x, mouse.y = love.graphics.inverseTransformPoint(love.mouse.getPosition())
 
     -- Clear the up/down fields
-    for i = 1, button_names.length do
+    for i = 1, mouse.BUTTON_COUNT do
         mouse[i].up = false
         mouse[i].down = false
     end
@@ -41,7 +46,7 @@ function mouse.update()
         local name, x, y, a, b, c = unpack(event)
         if name == "mousemoved" then
             local dx, dy, istouch = a, b, c
-            -- todo: check
+            -- todo
         else
             local button, istouch, presses = a, b, c
             button = mouse[button]
