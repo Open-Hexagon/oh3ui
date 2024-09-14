@@ -95,14 +95,14 @@ local function test_item(item)
         state.anchor_x = 1
         -- draw the icon
         if content.failure then
-            theme.label_color = red
+            theme.label_text = red
             icon("x-lg")
         elseif content.success then
-            theme.label_color = green
+            theme.label_text = green
             icon("check")
         end
         -- reset state to continue normally
-        theme.label_color = nil
+        theme.label_text = nil
         state.anchor_x = 0
         state.allow_automatic_resizing = false
         state.width, state.height = old_width, old_height

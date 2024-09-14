@@ -96,7 +96,8 @@ function draw_queue.polygon(mode, vertices, color)
     push_operation(op_ids.polygon, mode, unpack(polygon_data, 1, #vertices + 4))
 end
 
----get size of text before rendering
+---Get size of text. Not a draw operation!
+---? There maybe could be a better place for this
 ---@param text string
 ---@param font love.Font
 ---@param wraplimit number?

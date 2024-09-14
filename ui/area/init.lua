@@ -54,7 +54,7 @@ function area.put_cursor()
     cursor.y = bounds.top + cursor.anchor_y * cursor.height
 end
 
----Expand the topmost layer. Should only be called by `cursor.commit()`.
+---Expand the topmost layer. Should only be called by `cursor.place()`.
 ---@param left number
 ---@param top number
 ---@param right number

@@ -1,6 +1,15 @@
 local events = require("ui.events")
-local button_names = require("ui.interaction.mouse.button_names")
-local output = require("ui.interaction.mouse.output").active -- we only care about updating the active table
+
+-- Table of mouse button names
+local button_names = {
+    "left",
+    "right",
+    "middle",
+    "back",
+    "forward",
+}
+
+button_names.length = #button_names
 
 local mouse = {
     x = -1,
@@ -9,29 +18,41 @@ local mouse = {
     prev_y = -1,
 }
 
+-- Set up output tables
+for i, name in pairs(button_names) do
+    mouse[i] = { up = false, down = false, pressed = false, times = 0 }
+    mouse[name] = mouse[i]
+end
+
 ---Update mouse output
 function mouse.update()
     -- Get mouse position and set previous position
     mouse.prev_x, mouse.prev_y = mouse.x, mouse.y
     mouse.x, mouse.y = love.graphics.inverseTransformPoint(love.mouse.getPosition())
 
-    -- Clear the output table
+    -- Clear the up/down fields
     for i = 1, button_names.length do
-        output[i].up = false
-        output[i].down = false
+        mouse[i].up = false
+        mouse[i].down = false
     end
 
     -- Search for press and release events and update the output
-    for event in events.iterate("mouse[pr]") do
-        local name, x, y, button, istouch, presses = unpack(event)
-        button = output[button]
-        button.times = presses
-        if name == "mousepressed" then
-            button.down = true
-            button.pressed = true
-        elseif name == "mousereleased" then
-            button.up = true
-            button.pressed = false
+    for event in events.iterate("mouse[prm]") do
+        local name, x, y, a, b, c = unpack(event)
+        if name == "mousemoved" then
+            local dx, dy, istouch = a, b, c
+            -- todo: check
+        else
+            local button, istouch, presses = a, b, c
+            button = mouse[button]
+            button.times = presses
+            if name == "mousepressed" then
+                button.down = true
+                button.pressed = true
+            elseif name == "mousereleased" then
+                button.up = true
+                button.pressed = false
+            end
         end
     end
 end

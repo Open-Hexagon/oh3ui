@@ -19,7 +19,7 @@ return function(text)
         state.get_font(true),
         state.left * ui.scale,
         state.top * ui.scale,
-        theme.label_color,
+        theme.label_text,
         (state.text_wraplimit or math.huge) * ui.scale,
         state.text_align
     )

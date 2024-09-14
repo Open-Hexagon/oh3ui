@@ -1,33 +1,36 @@
-local state = require("ui.state")
+local cursor = require("ui.cursor")
+local edge = cursor.edge
 local theme = require("ui.theme")
 local draw_queue = require("ui.draw_queue")
 
----toggle element
+---Toggle switch element. This element ignores the cursor width and height.
 ---@param toggle_state table
 return function(toggle_state)
-    if state.width < state.height then
-        error("Toggle element requires more width than height!")
-    end
+    cursor.push()
 
-    state.update()
+    cursor.width = 40
+    cursor.height = 20
+    cursor.place()
 
-    -- interaction
-    if state.clicked then
-        toggle_state.state = not toggle_state.state -- not nil = true
-    end
+    -- TODO: interaction
+    -- if edge.mouse.left.up then
+    --     toggle_state.on = not toggle_state.on -- not nil = true
+    -- end
 
     -- base shape
-    local radius = state.height / 2
-    local color = toggle_state.state and theme.active_color or theme.rectangle_color
-    draw_queue.rectangle("fill", state.left, state.top, state.right, state.bottom, color, radius, radius)
+    local radius = cursor.height / 2
+    local color = toggle_state.on and theme.active_color or theme.rectangle_color
+    draw_queue.rectangle("fill", edge.left, edge.top, edge.right, edge.bottom, color, radius, radius)
 
     -- circle on current state
     toggle_state.position = toggle_state.position or 0
-    if toggle_state.state then
-        toggle_state.position = math.min(state.width - radius, toggle_state.position + love.timer.getDelta() * 500)
+    if toggle_state.on then
+        toggle_state.position = math.min(cursor.width - radius, toggle_state.position + love.timer.getDelta() * 500)
     else
         toggle_state.position = math.max(radius, toggle_state.position - love.timer.getDelta() * 500)
     end
-    local x = state.left + toggle_state.position
-    draw_queue.rectangle("fill", x - radius, state.top, x + radius, state.bottom, theme.knob_color, radius, radius)
+    local x = edge.left + toggle_state.position
+    draw_queue.rectangle("fill", x - radius, edge.top, x + radius, edge.bottom, theme.knob_color, radius, radius)
+
+    cursor.pop()
 end

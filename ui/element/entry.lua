@@ -27,7 +27,7 @@ return function(entry_state)
     if entry_state.selected then
         entry_state.cursor_pos = entry_state.cursor_pos or 0
         local x = state.left + entry_state.cursor_pos
-        draw_queue.rectangle("fill", x - 1, state.top + 2, x + 1, state.bottom - 2, theme.label_color)
+        draw_queue.rectangle("fill", x - 1, state.top + 2, x + 1, state.bottom - 2, theme.label_text)
     end
 
     -- text

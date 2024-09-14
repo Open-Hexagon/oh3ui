@@ -16,8 +16,10 @@ return function(button_state, text)
     -- move to fit padding later
     state.x = state.x + 4
     state.y = state.y + 4
+
     -- draw background later
     draw_queue.reserve()
+
     area.start()
     label(text)
     area.put_cursor()

@@ -1,15 +1,29 @@
----The cursor represents a rectangular area on screen and is
----used as a tool for positioning and aligning ui elements.
-
-local anchor = require("ui.cursor.anchor")
-local output = require("ui.cursor.output")
+---The cursor represents a rectangular area on screen and is used as
+---a tool for absolutely positioning and aligning ui elements.
 
 -- Cursor snapshots
 local snapshots = {}
 local index = 0
 
--- Parameters of the cursor are set by the user.
-local cursor = {}
+-- Note: parameters that are contained within tables are not saved in snapshots
+local cursor = {
+    -- anchor constants
+    anchor = {
+        TOP = 0,
+        LEFT = 0,
+        BOTTOM = 1,
+        RIGHT = 1,
+        CENTER = 0.5,
+    },
+
+    -- output tables
+    edge = {},
+    mouse = {},
+    clicked = {},
+}
+
+local anchor = cursor.anchor
+local edge = cursor.edge
 
 ---Reset manual cursor to default values
 function cursor.reset()
@@ -28,6 +42,21 @@ function cursor.reset()
     cursor.text_align = "left"
     -- allow increasing element size automatically if too small
     cursor.allow_automatic_resizing = true
+
+    -- * do not write to the following fields manually
+
+    -- edges
+    cursor.edge.left = 0
+    cursor.edge.top = 0
+    cursor.edge.right = 0
+    cursor.edge.bottom = 0
+
+    -- mouse
+
+    -- mouse clicks
+    cursor.clicked.right = false
+    cursor.clicked.left = false
+    cursor.clicked.middle = false
 end
 
 -- first cursor setup
@@ -121,46 +150,60 @@ function cursor.grid(nx, ny, padding, flip_horizontal, flip_vertical)
     end)
 end
 
----Commit the current cursor location as something meaningful.
----This will update the cursor output as well as expand areas.
----All elements should implicitly commit the cursor.
-function cursor.commit()
-    -- Get edges
-    output.left = cursor.x - cursor.anchor_x * cursor.width
-    output.top = cursor.y - cursor.anchor_y * cursor.height
-    output.right = cursor.x + (1 - cursor.anchor_x) * cursor.width
-    output.bottom = cursor.y + (1 - cursor.anchor_y) * cursor.height
+---Places the current cursor down. This will update the cursor edges output table (left, top, right, bottom) as well as expand areas.
+---All elements should implicitly place the cursor.
+function cursor.place()
+    -- Update edges
+    edge.left = cursor.x - cursor.anchor_x * cursor.width
+    edge.top = cursor.y - cursor.anchor_y * cursor.height
+    edge.right = cursor.x + (1 - cursor.anchor_x) * cursor.width
+    edge.bottom = cursor.y + (1 - cursor.anchor_y) * cursor.height
 
     -- Expand the current area
-    do
-        local area = require("ui.area")
-        area.expand(output.left, output.top, output.right, output.bottom)
+    local area = require("ui.area")
+    area.expand(edge.left, edge.top, edge.right, edge.bottom)
+end
+
+---Check and update whether the mouse is intersecting the cursor (i.e. the mouse is hovering the cursor).
+---Also detects if the mouse just entered the cursor area, or exited the cursor area.
+function cursor.update_mouse_intersect()
+    local mouse = require("ui.interaction.mouse")
+
+    local hovering_before = mouse.prev_x >= edge.left
+        and mouse.prev_x <= edge.right
+        and mouse.prev_y >= edge.top
+        and mouse.prev_y <= edge.bottom
+
+    local hovering_now = mouse.x >= edge.left
+        and mouse.x <= edge.right
+        and mouse.y >= edge.top
+        and mouse.y <= edge.bottom
+
+    cursor.mouse.hovering = hovering_now
+    cursor.mouse.enter = hovering_now and not hovering_before
+    cursor.mouse.exit = not hovering_now and hovering_before
+end
+
+---Cache of fonts based on file used and size
+local font_cache = {}
+
+---get the currently used font object
+---@param scale_adjusted boolean?
+---@return love.Font
+function cursor.get_font(scale_adjusted)
+    local file = cursor.font
+    local size = cursor.font_size
+    if scale_adjusted then
+        size = size * math.floor(require("ui").scale * 100) / 100
     end
-
-    -- Calculate mouse events
-    do
-        local mouse = require("ui.interaction.mouse")
-        local mouse_output = require("ui.interaction.mouse.output")
-
-        local hovering_before = mouse.prev_x >= output.left
-            and mouse.prev_x <= output.right
-            and mouse.prev_y >= output.top
-            and mouse.prev_y <= output.bottom
-
-        local hovering_now = mouse.x >= output.left
-            and mouse.x <= output.right
-            and mouse.y >= output.top
-            and mouse.y <= output.bottom
-
-        if hovering_now then
-            output.mouse = mouse_output.active
-        else
-            output.mouse = mouse_output.blank
-        end
-
-        output.mouse.enter = hovering_now and not hovering_before
-        output.mouse.exit = not hovering_now and hovering_before
+    font_cache[file] = font_cache[file] or {}
+    local font = font_cache[file][size]
+    if not font then
+        font = love.graphics.newFont(file, size)
+        font:setFilter("nearest", "nearest")
+        font_cache[file][size] = font
     end
+    return font
 end
 
 return cursor
