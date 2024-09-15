@@ -1,5 +1,6 @@
 local cursor = require("ui.cursor")
 local edge = cursor.edge
+local click = require("ui.element.click")
 local theme = require("ui.theme")
 local draw_queue = require("ui.draw_queue")
 
@@ -12,10 +13,9 @@ return function(toggle_state)
     cursor.height = 20
     cursor.place()
 
-    -- TODO: interaction
-    -- if edge.mouse.left.up then
-    --     toggle_state.on = not toggle_state.on -- not nil = true
-    -- end
+    if click(toggle_state) == click.LEFT then
+        toggle_state.on = not toggle_state.on -- not nil = true
+    end
 
     -- base shape
     local radius = cursor.height / 2
