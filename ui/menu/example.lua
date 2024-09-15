@@ -63,7 +63,11 @@ return function()
     cursor.width = 100
     cursor.height = 40
 
-    button2()
+    button2(id.btn2)
+
+    if id.btn2.clicked then
+        print("clicked", id.btn2.clicked)
+    end
 
 
     -- draw_queue.push_scissor(0, 0, 60, 60)

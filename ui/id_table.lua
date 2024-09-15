@@ -1,7 +1,11 @@
 local meta = {
-    __index = function(t, k)
-        t[k] = {}
-        return t[k]
+    -- Make a new table if a previously unknown name is provided as a key
+    __index = function(t, new_name)
+        -- The new table comes with some standard fields with default values
+        t[new_name] = {
+            enabled = true
+        }
+        return t[new_name]
     end,
 }
 

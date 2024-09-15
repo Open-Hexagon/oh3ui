@@ -18,9 +18,18 @@ local cursor = {
         CENTER = 0.5,
     },
 
-    -- output tables
-    edge = {},
-    mouse = {},
+    -- edge output table
+    edge = {
+        left = 0,
+        top = 0,
+        right = 0,
+        bottom = 0,
+    },
+    mouse = {
+        enter = false,
+        exit = false,
+        hovering = false,
+    },
 }
 
 local anchor = cursor.anchor
@@ -57,11 +66,6 @@ function cursor.reset()
     mouse.enter = false
     mouse.exit = false
     mouse.hovering = false
-
-    -- mouse clicks
-    cursor.clicked.right = false
-    cursor.clicked.left = false
-    cursor.clicked.middle = false
 end
 
 -- first cursor setup
@@ -172,17 +176,17 @@ end
 ---Check and update whether the mouse is intersecting the cursor (i.e. the mouse is hovering the cursor).
 ---Also detects if the mouse just entered or exited the cursor area.
 function cursor.update_mouse_intersect()
-    local mouse = require("ui.interaction.mouse")
+    local mouse_interaction = require("ui.interaction.mouse")
 
-    local hovering_before = mouse.prev_x >= edge.left
-        and mouse.prev_x <= edge.right
-        and mouse.prev_y >= edge.top
-        and mouse.prev_y <= edge.bottom
+    local hovering_before = mouse_interaction.prev_x >= edge.left
+        and mouse_interaction.prev_x <= edge.right
+        and mouse_interaction.prev_y >= edge.top
+        and mouse_interaction.prev_y <= edge.bottom
 
-    local hovering_now = mouse.x >= edge.left
-        and mouse.x <= edge.right
-        and mouse.y >= edge.top
-        and mouse.y <= edge.bottom
+    local hovering_now = mouse_interaction.x >= edge.left
+        and mouse_interaction.x <= edge.right
+        and mouse_interaction.y >= edge.top
+        and mouse_interaction.y <= edge.bottom
 
     mouse.hovering = hovering_now
     mouse.enter = hovering_now and not hovering_before
