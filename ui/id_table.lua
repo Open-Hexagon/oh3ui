@@ -5,7 +5,7 @@ local meta = {
         ---@field initialized boolean may be used to keep track of first time initialization
         ---@field enabled boolean true when the user can interact with the element
         ---@field clicked integer? contains the mouse button id that clicked this element
-        ---@field primed integer? contains the mouse button id that is primed to click this element
+        ---@field holding integer? contains the mouse button id that is currently holding down this element
         ---@field value any contains whatever data the element may be representing
         t[new_name] = {
             initialized = false,

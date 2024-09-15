@@ -1,4 +1,4 @@
----An invisible element that tracks clicking
+---An invisible element that tracks mouse clicking and holding
 
 local mouse = require("ui.interaction.mouse")
 local cursor = require("ui.cursor")
@@ -17,26 +17,26 @@ local meta = {
 
         state.clicked = nil
 
-        -- unprime if the mouse is dragged away
-        if state.primed and cursor.mouse_intersect.exit then
-            state.primed = nil
+        -- unhold if the mouse is dragged away
+        if state.holding and cursor.mouse_intersect.exit then
+            state.holding = nil
         end
 
         if cursor.mouse_intersect.hovering then
             if mouse.any.down then
-                if state.primed then
-                    -- another mouse button was pressed while the primed button was being held
-                    state.primed = nil
+                if state.holding then
+                    -- another mouse button was pressed while holding
+                    state.holding = nil
                 else
-                    -- prime the click with the last pressed button
-                    state.primed = mouse.last_down
+                    -- holding with the last pressed button
+                    state.holding = mouse.last_down
                 end
             end
 
-            -- if the button matching the primed field is released, set the clicked field
-            if state.primed and mouse[state.primed].up then
-                state.clicked = state.primed
-                state.primed = nil
+            -- if the button being held is released, set the clicked field
+            if state.holding and mouse[state.holding].up then
+                state.clicked = state.holding
+                state.holding = nil
             end
         end
 
