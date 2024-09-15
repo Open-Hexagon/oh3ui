@@ -1,6 +1,6 @@
 local cursor = require("ui.cursor")
 local edge = cursor.edge
-local click = require("ui.element.click")
+local clickbox = require("ui.element.clickbox")
 local theme = require("ui.theme")
 local draw_queue = require("ui.draw_queue")
 
@@ -13,7 +13,7 @@ return function(toggle_state)
     cursor.height = 20
     cursor.place()
 
-    if click(toggle_state) == click.LEFT then
+    if clickbox(toggle_state) == clickbox.LEFT then
         toggle_state.on = not toggle_state.on -- not nil = true
     end
 

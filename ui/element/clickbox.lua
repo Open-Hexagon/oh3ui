@@ -3,7 +3,7 @@
 local mouse = require("ui.interaction.mouse")
 local cursor = require("ui.cursor")
 
-local click = {
+local clickbox = {
     LEFT = 1,
     RIGHT = 2,
     MIDDLE = 3,
@@ -45,4 +45,4 @@ local meta = {
     end,
 }
 
-return setmetatable(click, meta)
+return setmetatable(clickbox, meta)

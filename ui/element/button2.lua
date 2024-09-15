@@ -1,7 +1,7 @@
 local draw_queue = require("ui.draw_queue")
 local cursor = require("ui.cursor")
 local edge = cursor.edge
-local click = require("ui.element.click")
+local clickbox = require("ui.element.clickbox")
 local theme = require("ui.theme")
 
 return function(state, text)
@@ -12,5 +12,5 @@ return function(state, text)
     cursor.place()
     draw_queue.rectangle("line", edge.left, edge.top, edge.right, edge.bottom, theme.button_border, 3, 3)
 
-    click(state)
+    clickbox(state)
 end
