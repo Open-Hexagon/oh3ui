@@ -14,7 +14,7 @@ return function(state, text)
         edge.top,
         edge.right,
         edge.bottom,
-        state.primed and theme.button_background_highlight or theme.button_background,
+        state.holding and theme.button_background_highlight or theme.button_background,
         3,
         3
     )
