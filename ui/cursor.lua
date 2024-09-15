@@ -25,7 +25,7 @@ local cursor = {
         right = 0,
         bottom = 0,
     },
-    mouse = {
+    mouse_intersect = {
         enter = false,
         exit = false,
         hovering = false,
@@ -34,7 +34,7 @@ local cursor = {
 
 local anchor = cursor.anchor
 local edge = cursor.edge
-local mouse = cursor.mouse
+local mouse_intersect = cursor.mouse_intersect
 
 ---Reset manual cursor to default values
 function cursor.reset()
@@ -63,9 +63,9 @@ function cursor.reset()
     edge.bottom = 0
 
     -- mouse intersection
-    mouse.enter = false
-    mouse.exit = false
-    mouse.hovering = false
+    mouse_intersect.enter = false
+    mouse_intersect.exit = false
+    mouse_intersect.hovering = false
 end
 
 -- first cursor setup
@@ -176,21 +176,21 @@ end
 ---Check and update whether the mouse is intersecting the cursor (i.e. the mouse is hovering the cursor).
 ---Also detects if the mouse just entered or exited the cursor area.
 function cursor.update_mouse_intersect()
-    local mouse_interaction = require("ui.interaction.mouse")
+    local mouse_pos = require("ui.interaction.mouse")
 
-    local hovering_before = mouse_interaction.prev_x >= edge.left
-        and mouse_interaction.prev_x <= edge.right
-        and mouse_interaction.prev_y >= edge.top
-        and mouse_interaction.prev_y <= edge.bottom
+    local hovering_before = mouse_pos.prev_x >= edge.left
+        and mouse_pos.prev_x <= edge.right
+        and mouse_pos.prev_y >= edge.top
+        and mouse_pos.prev_y <= edge.bottom
 
-    local hovering_now = mouse_interaction.x >= edge.left
-        and mouse_interaction.x <= edge.right
-        and mouse_interaction.y >= edge.top
-        and mouse_interaction.y <= edge.bottom
+    local hovering_now = mouse_pos.x >= edge.left
+        and mouse_pos.x <= edge.right
+        and mouse_pos.y >= edge.top
+        and mouse_pos.y <= edge.bottom
 
-    mouse.hovering = hovering_now
-    mouse.enter = hovering_now and not hovering_before
-    mouse.exit = not hovering_now and hovering_before
+    mouse_intersect.hovering = hovering_now
+    mouse_intersect.enter = hovering_now and not hovering_before
+    mouse_intersect.exit = not hovering_now and hovering_before
 end
 
 ---Cache of fonts based on file used and size

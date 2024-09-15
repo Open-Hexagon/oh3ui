@@ -18,11 +18,11 @@ local meta = {
         state.clicked = nil
 
         -- unprime if the mouse is dragged away
-        if state.primed and cursor.mouse.exit then
+        if state.primed and cursor.mouse_intersect.exit then
             state.primed = nil
         end
 
-        if cursor.mouse.hovering then
+        if cursor.mouse_intersect.hovering then
             if mouse.any.down then
                 if state.primed then
                     -- another mouse button was pressed while the primed button was being held

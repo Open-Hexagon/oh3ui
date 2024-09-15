@@ -76,5 +76,5 @@ return function(slider_state, min, max, step)
 
     -- draw knob
     x = state.left + radius + slider_state.position
-    draw_queue.rectangle("fill", x - radius, state.top, x + radius, state.bottom, theme.knob_color, radius, radius)
+    draw_queue.rectangle("fill", x - radius, state.top, x + radius, state.bottom, theme.toggle_actuator, radius, radius)
 end

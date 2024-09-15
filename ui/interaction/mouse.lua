@@ -21,11 +21,11 @@ do
 
     mouse = {
         -- mouse button ids
-        LEFT_BUTTON = LEFT_BUTTON,
-        RIGHT_BUTTON = RIGHT_BUTTON,
-        MIDDLE_BUTTON = MIDDLE_BUTTON,
-        BACK_BUTTON = BACK_BUTTON,
-        FORWARD_BUTTON = FORWARD_BUTTON,
+        LEFT = LEFT_BUTTON,
+        RIGHT = RIGHT_BUTTON,
+        MIDDLE = MIDDLE_BUTTON,
+        BACK = BACK_BUTTON,
+        FORWARD = FORWARD_BUTTON,
 
         -- number of mouse buttons
         BUTTON_COUNT = BUTTON_COUNT,
