@@ -3,6 +3,8 @@
 ---Also checks for mouse intersection.
 ---For checking mouse buttons, see mouse.lua
 
+local json = require("extlibs.json.json")
+
 -- Note: parameters that are contained within tables are not saved in snapshots
 local cursor = {
     -- anchor constants
@@ -43,7 +45,7 @@ function cursor.reset()
     cursor.anchor_y = anchor.TOP
     ---if true, when the cursor is placed with a desired size that is different from the
     ---current cursor, the cursor will be reshaped to enclose the placement
-    cursor.enclose_placement = false
+    cursor.reshape_on_placement = false
 
     -- text
     cursor.font = "assets/OpenSquare.ttf"
@@ -220,7 +222,7 @@ end
 ---Desired width and height are typically used by elements when their contents don't fit the cursor exactly.
 ---@param desired_width number? if provided, the placement will use this instead of cursor.width
 ---@param desired_height number? if provided, the placement will use this instead of cursor.height
----@param enclose_override boolean? overrides the cursor.enclose_placement field
+---@param enclose_override boolean? overrides the cursor.reshape_on_placement field
 function cursor.place(desired_width, desired_height, enclose_override)
     local width, height = desired_width or cursor.width, desired_height or cursor.height
 
@@ -235,7 +237,7 @@ function cursor.place(desired_width, desired_height, enclose_override)
     area.expand(edge.left, edge.top, edge.right, edge.bottom)
 
     -- Enclose the placed area if needed
-    if enclose_override or cursor.enclose_placement then
+    if enclose_override or cursor.reshape_on_placement then
         cursor.width, cursor.height = width, height
     end
 end
@@ -280,6 +282,26 @@ function cursor.get_font(scale_adjusted)
         font_cache[file][size] = font
     end
     return font
+end
+
+local icon_font_ids = {}
+
+---get a table of icon id keys with the actual string values for the icons in the current font
+---@return unknown?
+function cursor.get_icon_font_ids()
+    local file = cursor.font:gsub("(.*)%..+", "%1.json")
+    local ids = icon_font_ids[file]
+    if not ids then
+        if not love.filesystem.exists(file) then
+            return
+        end
+        ids = json.decode(love.filesystem.read(file))
+        for key, value in pairs(ids) do
+            ids[key] = love.data.decode("string", "hex", value)
+        end
+        icon_font_ids[file] = ids
+    end
+    return ids
 end
 
 return cursor

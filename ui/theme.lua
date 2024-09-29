@@ -37,6 +37,7 @@ end
 ---@param a number[]
 ---@param b number[]
 ---@param t number
+---@return number[]
 local function mix(a, b, t)
     local c = {}
     for i = 1, #a do
@@ -47,9 +48,10 @@ end
 
 -- default theme colors
 local theme = {
-    default = {1, 1, 1, 1}, -- the color of primitives
+    default = { 0.2, 0.2, 0.2, 1 }, -- default color of primitives
+    text_color = { 1, 1, 1, 1 }, -- default text color
+
     rectangle_color = { 0.2, 0.2, 0.2, 1 },
-    label_text = { 1, 1, 1, 1 },
     active_color = { 0.4, 0.4, 1, 1 },
     -- no alpha, it is animated in the code
     scrollbar_color = { 1, 1, 1 },
