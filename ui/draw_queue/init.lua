@@ -6,39 +6,38 @@ local scissor_stack = require("ui.draw_queue.scissor_stack")
 local text_cache = require("ui.text.cache")
 local draw_queue = {}
 
----Queue of draw operations. A place in the queue is referred to as a "slot".
-local queue = {}
-local index = 0
-
 local op_ids = {
     rectangle = 0,
     polygon = 1,
     push_scissor = 2,
     pop_scissor = 3,
     text = 4,
+    call_group = 5,
 }
 
----Stack of reservations
-local reservations = {}
-local reserve_index = 0
+-- A list of groups
+local groups = {}
+-- Holds the index of the current group. Equal to 1 after initialization. Group 1 is the root group.
+local current_group_index = 0
+-- Holds the index of the last created group. Equal to 1 after initialization.
+local last_group_index = 0
 
----Holds the index of the reservation that the next draw operation should take.
----Is nil otherwise.
-local take_reservation
-
----Pushes a table to the queue. The first value should be an operation id.
+---Pushes an operations to the current group. The first value should be an operation id.
 ---This operation id can be nil which will cause the operation to be ignored.
 ---@param ... unknown
 local function push_operation(...)
+    local current_group = groups[current_group_index]
+    local queue = current_group.op_list
+
     local slot_index
 
-    if take_reservation then
+    if current_group.take_reservation then
         -- take a reservation
-        slot_index = take_reservation
-        take_reservation = nil
+        slot_index = current_group.take_reservation
+        current_group.take_reservation = nil
     else
-        index = index + 1
-        slot_index = index
+        current_group.op_index = current_group.op_index + 1
+        slot_index = current_group.op_index
     end
 
     queue[slot_index] = queue[slot_index] or {}
@@ -47,20 +46,94 @@ local function push_operation(...)
     end
 end
 
----Reserves the next draw operation to be filled in later.
+function draw_queue.begin_group()
+    -- save the current group index so we can come back
+    local return_index = current_group_index
+
+    -- set up a new group
+    last_group_index = last_group_index + 1
+    local new_group = groups[last_group_index]
+
+    if new_group then
+        -- reset the new group
+        new_group.op_index = 0
+        new_group.reserve_index = 0
+        new_group.return_index = return_index
+        new_group.take_reservation = nil
+    else
+        -- this new group has never been made before
+        new_group = {
+            -- The list of draw operations in this group
+            op_list = {},
+            -- Holds the index of the last item in the op_list. Equals 0 if it's empty.
+            op_index = 0,
+            -- the reservation stack
+            reservations = {},
+            -- Holds the index of the topmost item in the reservation stack. Equals 0 if it's empty.
+            reserve_index = 0,
+            -- Holds the index of the reservation that the next draw operation should take.
+            take_reservation = nil,
+            -- The index of the group to return to when this group is ended. If it's 0, then it's the root group.
+            return_index = return_index,
+        }
+        groups[last_group_index] = new_group
+    end
+
+    current_group_index = last_group_index
+end
+
+function draw_queue.end_group()
+    -- save where we returned from
+    local from_group_index = current_group_index
+
+    local current_group = groups[current_group_index]
+
+    -- warn if not all reservations were taken from this group
+    if current_group.reserve_index ~= 0 or current_group.take_reservation then
+        print(string.format("warning: not all reservations were taken in group %d after ending", from_group_index))
+    end
+
+    -- get were we're returning to
+    local return_group_index = current_group.return_index
+
+    if return_group_index == 0 then
+        error("no more groups to end!")
+    end
+
+    -- return and push an operation to call the group we just ended
+    current_group_index = return_group_index
+    push_operation(op_ids.call_group, from_group_index)
+end
+
+---resets the group list to its initial state
+local function reset_groups()
+    current_group_index = 0
+    last_group_index = 0
+    draw_queue.begin_group()
+end
+
+-- do initial group setup
+reset_groups()
+
+---Reserves the next, single draw operation to be filled in later.
 ---This reservation is pushed to the reservations stack.
 function draw_queue.reserve()
     push_operation()
-    reserve_index = reserve_index + 1
-    reservations[reserve_index] = index
+    local current_group = groups[current_group_index]
+    current_group.reserve_index = current_group.reserve_index + 1
+    current_group.reservations[current_group.reserve_index] = current_group.op_index
 end
 
----The next executed draw operation will fill in the last reserved slot.
+---The next executed draw operation will fill in the last single reserved slot.
 ---The reservation on the top of the reservations stack is popped.
 ---Does not work on elements!
 function draw_queue.take_last_reservation()
-    take_reservation = reservations[reserve_index]
-    reserve_index = reserve_index - 1
+    local current_group = groups[current_group_index]
+    if current_group.reserve_index == 0 then
+        error(string.format("no more reservations to take in group %d", current_group_index))
+    end
+    current_group.take_reservation = current_group.reservations[current_group.reserve_index]
+    current_group.reserve_index = current_group.reserve_index - 1
 end
 
 ---Add a no-operation to the queue.
@@ -135,11 +208,12 @@ end
 
 --#endregion
 
----Execute all queued commands.
----This will also reset everything related to the queue
-function draw_queue.draw()
-    for i = 1, index do
-        local item = queue[i]
+---Executes all draw operations. Uses recursion to handle groups
+---@param group_index integer the group to run
+local function run_draw_operations(group_index)
+    local current_group = groups[group_index]
+    for i = 1, current_group.op_index do
+        local item = current_group.op_list[i]
         local id = item[1]
         -- id may be nil if a placeholder was left in / nothing was appended
         if id then
@@ -160,18 +234,30 @@ function draw_queue.draw()
                 scissor_stack.push(x1, y1, x2 - x1, y2 - y1)
             elseif id == op_ids.pop_scissor then
                 scissor_stack.pop()
+            elseif id == op_ids.call_group then
+                run_draw_operations(item[2])
             end
         end
     end
+end
 
-    -- Start overwriting commands from the start next frame
-    index = 0
-
-    -- Ensure all reservations were taken
-    if reserve_index ~= 0 then
-        print("warning: not all reservations were taken")
-        reserve_index = 0
+---Execute all queued commands.
+---This will also reset everything related to the queue
+function draw_queue.draw()
+    if current_group_index ~= 1 then
+        error("not all groups were ended")
     end
+
+    local current_group = groups[current_group_index]
+
+    -- warn if not all reservations were taken
+    if current_group.reserve_index ~= 0 or current_group.take_reservation then
+        print(string.format("warning: not all reservations were taken in root group 1 before drawing"))
+    end
+
+    run_draw_operations(1)
+
+    reset_groups()
 
     -- Ensure the scissor stack is empty
     scissor_stack.finish()
