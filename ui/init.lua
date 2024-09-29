@@ -46,6 +46,7 @@ function ui.finish()
     events.clear()
     love.graphics.pop()
     draw_queue.draw()
+    cursor.finish()
 end
 
 ---get the width of the ui adjusted for scale

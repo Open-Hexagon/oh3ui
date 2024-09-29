@@ -1,4 +1,4 @@
-local text_cache = require("ui.text_cache")
+local text_cache = require("ui.text.cache")
 local state = require("ui.state")
 local utils = require("tests.utils")
 

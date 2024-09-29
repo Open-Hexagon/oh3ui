@@ -3,7 +3,7 @@ local bit = require("bit")
 ---Converts an integer to a color table with alpha
 ---@param x integer
 ---@return number[]
-local function i2rgba(x)
+local function i2a(x)
     return {
         bit.band(bit.rshift(x, 24), 0xff) / 0xff,
         bit.band(bit.rshift(x, 16), 0xff) / 0xff,
@@ -15,7 +15,7 @@ end
 ---Converts an integer to a color table with alpha set to 1
 ---@param x integer
 ---@return number[]
-local function i2rgb(x)
+local function i2c(x)
     return {
         bit.band(bit.rshift(x, 16), 0xff) / 0xff,
         bit.band(bit.rshift(x, 8), 0xff) / 0xff,
@@ -47,6 +47,7 @@ end
 
 -- default theme colors
 local theme = {
+    default = {1, 1, 1, 1}, -- the color of primitives
     rectangle_color = { 0.2, 0.2, 0.2, 1 },
     label_text = { 1, 1, 1, 1 },
     active_color = { 0.4, 0.4, 1, 1 },
@@ -57,11 +58,10 @@ local theme = {
     toggle_on_background = { 0.4, 0.4, 1, 1 },
     toggle_off_background = { 0.2, 0.2, 0.2, 1 },
     toggle_actuator = { 0.8, 0.8, 0.8, 1 },
-
 }
-theme.button_background = i2rgb(0x31363b)
-theme.button_border = i2rgb(0x838689)
-theme.button_border_highlight = i2rgb(0x3daee9)
+theme.button_background = i2c(0x31363b)
+theme.button_border = i2c(0x838689)
+theme.button_border_highlight = i2c(0x3daee9)
 theme.button_background_highlight = mix(theme.button_background, theme.button_border_highlight, 0.5)
 
 -- export the mix function

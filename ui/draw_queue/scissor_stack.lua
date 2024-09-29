@@ -26,6 +26,9 @@ end
 
 ---Pop an area from the stack
 function scissor_stack.pop()
+    if index == 0 then
+        error("scissor stack underflow")
+    end
     index = index - 1
     if index == 0 then
         love.graphics.setScissor()

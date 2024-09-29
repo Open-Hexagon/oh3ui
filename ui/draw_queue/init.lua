@@ -1,5 +1,9 @@
+---Handles a queue of draw operations. All queued drawed operations will be executed at the end of the frame.
+---These draw operations are lower-level bare commands and do not interact with the cursor at all.
+---For nicer functions that implicitly use the cursor and color themes, see primitive.lua
+
 local scissor_stack = require("ui.draw_queue.scissor_stack")
-local text_cache = require("ui.text_cache")
+local text_cache = require("ui.text.cache")
 local draw_queue = {}
 
 ---Queue of draw operations. A place in the queue is referred to as a "slot".
@@ -53,6 +57,7 @@ end
 
 ---The next executed draw operation will fill in the last reserved slot.
 ---The reservation on the top of the reservations stack is popped.
+---Does not work on elements!
 function draw_queue.take_last_reservation()
     take_reservation = reservations[reserve_index]
     reserve_index = reserve_index - 1
@@ -63,6 +68,24 @@ end
 function draw_queue.nop()
     push_operation()
 end
+
+---queue pushing a scissor rectangle onto the scissor stack
+---@param x1 number
+---@param y1 number
+---@param x2 number
+---@param y2 number
+function draw_queue.push_scissor(x1, y1, x2, y2)
+    x1, y1 = love.graphics.transformPoint(x1, y1)
+    x2, y2 = love.graphics.transformPoint(x2, y2)
+    push_operation(op_ids.push_scissor, x1, y1, x2, y2)
+end
+
+---queue poping a scissor rectangle from the scissor stack
+function draw_queue.pop_scissor()
+    push_operation(op_ids.pop_scissor)
+end
+
+--#region functions that actually draw things
 
 ---add a rectangle to the queue
 ---@param mode love.DrawMode
@@ -96,19 +119,6 @@ function draw_queue.polygon(mode, vertices, color)
     push_operation(op_ids.polygon, mode, unpack(polygon_data, 1, #vertices + 4))
 end
 
----Get size of text. Not a draw operation!
----? There maybe could be a better place for this
----@param text string
----@param font love.Font
----@param wraplimit number?
----@param align love.AlignMode?
----@return number
----@return number
-function draw_queue.get_text_size(text, font, wraplimit, align)
-    local text_object = text_cache.get(font, text, wraplimit or math.huge, align or "left")
-    return text_object:getDimensions()
-end
-
 ---add text to the queue
 ---@param text string
 ---@param font love.Font
@@ -123,21 +133,7 @@ function draw_queue.text(text, font, x, y, color, wraplimit, align)
     push_operation(op_ids.text, text_object, x, y, unpack(color))
 end
 
----queue pushing a scissor rectangle onto the scissor stack
----@param x1 number
----@param y1 number
----@param x2 number
----@param y2 number
-function draw_queue.push_scissor(x1, y1, x2, y2)
-    x1, y1 = love.graphics.transformPoint(x1, y1)
-    x2, y2 = love.graphics.transformPoint(x2, y2)
-    push_operation(op_ids.push_scissor, x1, y1, x2, y2)
-end
-
----queue poping a scissor rectangle from the scissor stack
-function draw_queue.pop_scissor()
-    push_operation(op_ids.pop_scissor)
-end
+--#endregion
 
 ---Execute all queued commands.
 ---This will also reset everything related to the queue

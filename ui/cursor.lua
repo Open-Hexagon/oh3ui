@@ -3,10 +3,6 @@
 ---Also checks for mouse intersection.
 ---For checking mouse buttons, see mouse.lua
 
--- Cursor snapshots
-local snapshots = {}
-local index = 0
-
 -- Note: parameters that are contained within tables are not saved in snapshots
 local cursor = {
     -- anchor constants
@@ -45,14 +41,15 @@ function cursor.reset()
     cursor.height = 0
     cursor.anchor_x = anchor.LEFT
     cursor.anchor_y = anchor.TOP
+    ---if true, when the cursor is placed with a desired size that is different from the
+    ---current cursor, the cursor will be reshaped to enclose the placement
+    cursor.enclose_placement = false
 
     -- text
     cursor.font = "assets/OpenSquare.ttf"
     cursor.font_size = 32
-    cursor.text_wraplimit = math.huge
     cursor.text_align = "left"
-    -- allow increasing element size automatically if too small
-    cursor.allow_automatic_resizing = true
+    cursor.wrap_text = false -- if true, the cursor width will be used to wrap text.
 
     -- * do not write to the following fields manually
 
@@ -70,6 +67,12 @@ end
 
 -- first cursor setup
 cursor.reset()
+
+--#region snapshotting
+
+-- Cursor snapshots
+local snapshots = {}
+local index = 0
 
 ---Push a snapshot of the cursor, saving its current state for later.
 function cursor.push()
@@ -96,6 +99,18 @@ function cursor.pop()
     end
     index = index - 1
 end
+
+---Should be run at the end of a frame
+function cursor.finish()
+    if index ~= 0 then
+        print("warning: cursor stack was not empty")
+        index = 0
+    end
+end
+
+--#endregion
+
+--#region layout and arrangement
 
 ---Changes the location of the cursor anchor without actually moving the cursor.
 ---@param anchor_x number
@@ -125,28 +140,26 @@ end
 
 ---Returns an iterator function that will move the cursor in a grid pattern.
 ---The anchor will be moved to the top-left of the cursor on each iteration.
----@param nx integer number of iterations along the x direction
----@param ny integer number of iterations along the y direction
----@param padding integer? spacing between iterations
+---@param cols integer number of columns
+---@param rows integer number of rows
+---@param padding integer? spacing between columns and rows
 ---@param flip_horizontal boolean? iterate right to left
 ---@param flip_vertical boolean? iterate from bottom to top
 ---@return fun():integer?, integer?
-function cursor.grid(nx, ny, padding, flip_horizontal, flip_vertical)
+function cursor.grid(cols, rows, padding, flip_horizontal, flip_vertical)
     ---Get the base location and size so grid geometry is not
     ---lost even if the cursor is modified between iterations.
     cursor.change_anchor(anchor.LEFT, anchor.TOP)
-    local width = cursor.width
-    local height = cursor.height
-    local base_x = cursor.x
-    local base_y = cursor.y
+    local width, height = cursor.width, cursor.height
+    local base_x, base_y = cursor.x, cursor.y
 
     padding = padding or 0
     local dir_x = flip_horizontal and -1 or 1
     local dir_y = flip_vertical and -1 or 1
 
     return coroutine.wrap(function()
-        for y = 0, (ny - 1) * dir_y, dir_y do
-            for x = 0, (nx - 1) * dir_x, dir_x do
+        for y = 0, (rows - 1) * dir_y, dir_y do
+            for x = 0, (cols - 1) * dir_x, dir_x do
                 cursor.x = base_x + (width + padding) * x
                 cursor.y = base_y + (height + padding) * y
                 cursor.width = width
@@ -159,18 +172,72 @@ function cursor.grid(nx, ny, padding, flip_horizontal, flip_vertical)
     end)
 end
 
+---Returns an iterator that moves the cursor in a grid pattern
+---formed by subdividing the current cursor into rows and columns.
+---The anchor will be moved to the top-left of the cursor on each iteration.
+---@param cols integer number of columns
+---@param rows integer number of rows
+---@param padding number spacing between columns and rows
+---@return fun():integer?, integer?
+function cursor.subdivide(cols, rows, padding)
+    cursor.change_anchor(anchor.LEFT, anchor.TOP)
+    cursor.width = (cursor.width - (cols - 1) * padding) / cols
+    cursor.height = (cursor.height - (rows - 1) * padding) / rows
+    return cursor.grid(cols, rows, padding)
+end
+
+---Move the cursor right by its own width
+---@param padding number? defaults to 0
+---@param times integer? defaults to 1
+function cursor.shift_right(padding, times)
+    cursor.x = cursor.x + (cursor.width + (padding or 0)) * (times or 1)
+end
+
+---Move the cursor left by its own width
+---@param padding number? defaults to 0
+---@param times integer? defaults to 1
+function cursor.shift_left(padding, times)
+    cursor.x = cursor.x - (cursor.width + (padding or 0)) * (times or 1)
+end
+
+---Move the cursor down by its own height
+---@param padding number? defaults to 0
+---@param times integer? defaults to 1
+function cursor.shift_down(padding, times)
+    cursor.y = cursor.y + (cursor.height + (padding or 0)) * (times or 1)
+end
+
+---Move the cursor up by its own height
+---@param padding number? defaults to 0
+---@param times integer? defaults to 1
+function cursor.shift_up(padding, times)
+    cursor.y = cursor.y - (cursor.height + (padding or 0)) * (times or 1)
+end
+
+--#endregion
+
 ---Places the current cursor down. This will update the cursor edges output table (left, top, right, bottom) as well as expand areas.
----All elements should implicitly place the cursor.
-function cursor.place()
+---Desired width and height are typically used by elements when their contents don't fit the cursor exactly.
+---@param desired_width number? if provided, the placement will use this instead of cursor.width
+---@param desired_height number? if provided, the placement will use this instead of cursor.height
+---@param enclose_override boolean? overrides the cursor.enclose_placement field
+function cursor.place(desired_width, desired_height, enclose_override)
+    local width, height = desired_width or cursor.width, desired_height or cursor.height
+
     -- Update edges
-    edge.left = cursor.x - cursor.anchor_x * cursor.width
-    edge.top = cursor.y - cursor.anchor_y * cursor.height
-    edge.right = cursor.x + (1 - cursor.anchor_x) * cursor.width
-    edge.bottom = cursor.y + (1 - cursor.anchor_y) * cursor.height
+    edge.left = cursor.x - cursor.anchor_x * width
+    edge.top = cursor.y - cursor.anchor_y * height
+    edge.right = cursor.x + (1 - cursor.anchor_x) * width
+    edge.bottom = cursor.y + (1 - cursor.anchor_y) * height
 
     -- Expand the current area
     local area = require("ui.area")
     area.expand(edge.left, edge.top, edge.right, edge.bottom)
+
+    -- Enclose the placed area if needed
+    if enclose_override or cursor.enclose_placement then
+        cursor.width, cursor.height = width, height
+    end
 end
 
 ---Check and update whether the mouse is intersecting the cursor (i.e. the mouse is hovering the cursor).
@@ -179,14 +246,14 @@ function cursor.update_mouse_intersect()
     local mouse_pos = require("ui.interaction.mouse")
 
     local hovering_before = mouse_pos.prev_x >= edge.left
-        and mouse_pos.prev_x <= edge.right
+        and mouse_pos.prev_x < edge.right
         and mouse_pos.prev_y >= edge.top
-        and mouse_pos.prev_y <= edge.bottom
+        and mouse_pos.prev_y < edge.bottom
 
     local hovering_now = mouse_pos.x >= edge.left
-        and mouse_pos.x <= edge.right
+        and mouse_pos.x < edge.right
         and mouse_pos.y >= edge.top
-        and mouse_pos.y <= edge.bottom
+        and mouse_pos.y < edge.bottom
 
     mouse_intersect.hovering = hovering_now
     mouse_intersect.enter = hovering_now and not hovering_before

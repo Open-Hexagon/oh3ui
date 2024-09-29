@@ -1,5 +1,5 @@
 local utils = require("tests.utils")
-local text_cache = require("ui.text_cache")
+local text_cache = require("ui.text.cache")
 local draw_queue = require("ui.draw_queue")
 local state = require("ui.state")
 local ui = require("ui")

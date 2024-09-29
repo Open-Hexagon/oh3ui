@@ -6,7 +6,8 @@ local meta = {
         ---@field enabled boolean true when the user can interact with the element
         ---@field clicked integer? contains the mouse button id that clicked this element
         ---@field holding integer? contains the mouse button id that is currently holding down this element
-        ---@field value any contains whatever data the element may be representing
+        ---@field value number? contains whatever numerical data the element may be representing
+        ---@field on boolean? contains whatever boolean data the element may be representing
         t[new_name] = {
             initialized = false,
             enabled = true,

@@ -142,7 +142,7 @@ end
 local icon_font_ids = {}
 
 ---get a table of icon id keys with the actual string values for the icons in the current font
----@return unknown
+---@return unknown?
 function state.get_icon_font_ids()
     local file = state.font:gsub("(.*)%..+", "%1.json")
     local ids = icon_font_ids[file]

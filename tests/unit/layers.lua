@@ -1,5 +1,5 @@
 local layers = require("ui.layers")
-local text_cache = require("ui.text_cache")
+local text_cache = require("ui.text.cache")
 local label = require("ui.element.label")
 local utils = require("tests.utils")
 local state = require("ui.state")

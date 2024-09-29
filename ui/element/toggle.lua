@@ -3,7 +3,7 @@ local edge = cursor.edge
 local clickbox = require("ui.element.clickbox")
 local theme = require("ui.theme")
 local draw_queue = require("ui.draw_queue")
-
+local slot = require("ui.element.slot")
 local WIDTH, HEIGHT = 40, 20
 
 ---Toggle switch element. This element ignores the cursor width and height.
@@ -22,7 +22,7 @@ return function(state)
     -- base shape
     local radius = cursor.height / 2
     local color = state.value and theme.active_color or theme.rectangle_color
-    draw_queue.rectangle("fill", edge.left, edge.top, edge.right, edge.bottom, color, radius, radius)
+    slot("fill", color)
 
     -- circle on current state
     state.position = state.position or 0

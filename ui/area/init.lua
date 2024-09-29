@@ -24,7 +24,7 @@ function area.start()
     new_area.bounds.right = nil
     new_area.bounds.bottom = nil
 
-    -- ? Is the extra_data table really needed?
+    -- ? This extra data table might be moved somewhere else
     -- Clear extra data. Make a new table if needed
     new_area.extra_data = new_area.extra_data or {}
     for key in pairs(new_area.extra_data) do
@@ -70,6 +70,7 @@ function area.expand(left, top, right, bottom)
 end
 
 ---check if a position is inside the current area
+---! may become obsolete
 ---@param x number
 ---@param y number
 ---@param is_screen_space boolean?
@@ -83,6 +84,7 @@ function area.is_position_inside(x, y, is_screen_space)
 end
 
 ---check if mouse is inside the current area
+---! may become obsolete
 ---@return boolean
 function area.is_mouse_inside()
     local x, y = love.mouse.getPosition()

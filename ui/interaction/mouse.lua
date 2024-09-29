@@ -81,7 +81,7 @@ function mouse.update()
         local name, x, y, a, b, c = unpack(event)
         if name == "mousemoved" then
             local dx, dy, istouch = a, b, c
-            -- todo
+            -- todo Behavior is different for touchscreens
         else
             local button_id, istouch, presses = a, b, c
             local button = mouse[button_id]

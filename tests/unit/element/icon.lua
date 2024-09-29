@@ -1,9 +1,10 @@
-local text_cache = require("ui.text_cache")
+local text_cache = require("ui.text.cache")
 local draw_queue = require("ui.draw_queue")
 local icon = require("ui.element.icon")
 local state = require("ui.state")
 local utils = require("tests.utils")
 local ui = require("ui")
+local text = require("ui.text")
 local test = {}
 
 local width, height
@@ -41,7 +42,7 @@ test.sequence = coroutine.create(function()
     end)
 
 
-    local check_width, check_height = draw_queue.get_text_size(char, state.get_font(), state.text_wraplimit, state.text_align)
+    local check_width, check_height = text.get_size(char, state.get_font(), state.text_wraplimit, state.text_align)
     assert(width == check_width, "icon width is wrong")
     assert(height == check_height, "icon height is wrong")
 
