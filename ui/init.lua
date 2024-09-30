@@ -26,15 +26,15 @@ local broadcasters = {
 
 ---reset ui state and set scale
 function ui.start()
-    cursor.reset()
-
-    -- scale now so that screen spaces positions can be accounted for
+    -- scale immediately so that screen space positions can be accounted for in any transforms and inverseTransforms
     love.graphics.push()
     love.graphics.scale(ui.scale)
 
     for i = 1, #broadcasters do
         broadcasters[i].update()
     end
+
+    cursor.reset()
 
     -- scroll_interaction.reset()
     -- love.keyboard.setKeyRepeat(text_interaction.is_interacting_with_text)
@@ -47,7 +47,7 @@ end
 function ui.finish()
     -- keyboard_navigation.run()
 
-    -- scale before drawing
+    -- draw before undoing scale
     draw_queue.draw()
     love.graphics.pop()
 

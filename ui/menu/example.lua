@@ -17,6 +17,8 @@ Ducimus voluptas asperiores rerum.
 ]]
 
 return function()
+    primitive.rectangle_outline(nil, 10)
+
     cursor.anchor_x = 0
     cursor.anchor_y = 0
     cursor.x = 40

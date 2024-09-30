@@ -39,8 +39,11 @@ function cursor.reset()
     -- Position
     cursor.x = 0
     cursor.y = 0
-    cursor.width = 0
-    cursor.height = 0
+
+    -- setting width and height to the screen size.
+    -- this is nice when used with cursor subdividing to easily divide the screen.
+    cursor.width, cursor.height = love.graphics.inverseTransformPoint(love.graphics.getDimensions())
+
     cursor.anchor_x = anchor.LEFT
     cursor.anchor_y = anchor.TOP
 
