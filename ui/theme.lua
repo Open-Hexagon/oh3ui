@@ -1,4 +1,5 @@
 local bit = require("bit")
+local extmath = require("ui.extmath")
 
 ---Converts an integer to a color table with alpha
 ---@param x integer
@@ -24,15 +25,6 @@ local function i2c(x)
     }
 end
 
----Linear interpolation between `a` and `b` with parameter `t`
----@param a number
----@param b number
----@param t number
----@return number
-local function lerp(a, b, t)
-    return (1 - t) * a + t * b
-end
-
 ---1d lerp
 ---@param a number[]
 ---@param b number[]
@@ -41,7 +33,7 @@ end
 local function mix(a, b, t)
     local c = {}
     for i = 1, #a do
-        c[i] = lerp(a[i], b[i], t)
+        c[i] = extmath.lerp(a[i], b[i], t)
     end
     return c
 end
@@ -57,14 +49,18 @@ local theme = {
     scrollbar_color = { 1, 1, 1 },
     grabbed_scrollbar_color = { 1, 1, 0.8, 1 },
 
-    toggle_on_background = { 0.4, 0.4, 1, 1 },
-    toggle_off_background = { 0.2, 0.2, 0.2, 1 },
-    toggle_actuator = { 0.8, 0.8, 0.8, 1 },
+
 }
+theme.button_outline = i2c(0x838689)
+theme.button_outline_highlight = i2c(0x3daee9)
 theme.button_background = i2c(0x31363b)
-theme.button_border = i2c(0x838689)
-theme.button_border_highlight = i2c(0x3daee9)
-theme.button_background_highlight = mix(theme.button_background, theme.button_border_highlight, 0.5)
+theme.button_background_highlight = mix(theme.button_background, theme.button_outline_highlight, 0.5)
+
+theme.toggle_on_background = theme.button_background_highlight
+theme.toggle_off_background = theme.button_background
+theme.toggle_actuator = { 0.8, 0.8, 0.8, 1 }
+theme.toggle_actuator_outline = { 1, 1, 1, 1 }
+theme.toggle_actuator_outline_highlight = theme.button_outline_highlight
 
 -- export the mix function
 theme.mix = mix

@@ -1,0 +1,2 @@
+---Sensors are elements that deal with user input.
+---They are invisible and never create draw operations.

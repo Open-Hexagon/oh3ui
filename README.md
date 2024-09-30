@@ -2,6 +2,14 @@
 This GUI Framework is made with simplicity in both usage and implementation in mind.
 It is also made to work well with games.
 To achieve these goals I chose to make an immediate mode GUI.
+
+
+## Compromises
+Compromises to make development of the ui system easier.
+
+- There will be no system to backpropagate the size of elements. If something doesn't fit where it needs to go, it will have to either spill out of bounds or get cut off. It is up to the developer to ensure that there is enough space for elements or make special cases when elements can't fit.
+
+
 # Testing
 There is a graphical test ui made with this framework. Just run the project normally (`<path/to/love12> .`) to see it. Then just click on tests to execute them.
 

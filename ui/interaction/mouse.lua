@@ -38,7 +38,7 @@ do
         prev_x = -1,
         prev_y = -1,
 
-        -- any mouse button up/down/pressed states 
+        -- any mouse button up/down/pressed states
         any = m(),
 
         -- named individual mouse button up/down/pressed states
@@ -55,7 +55,7 @@ do
         [BACK_BUTTON] = temp[BACK_BUTTON],
         [FORWARD_BUTTON] = temp[FORWARD_BUTTON],
 
-        -- holds the mouse button id of the last button pressed or released this frame 
+        -- holds the mouse button id of the last button pressed or released this frame
         last_down = nil,
         last_up = nil,
     }

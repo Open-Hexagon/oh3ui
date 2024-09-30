@@ -8,7 +8,13 @@ local id = require("ui.id_table")()
 local button = require("ui.element.button")
 -- local background = require("ui.area.background")
 -- local theme = require("ui.theme")
--- local toggle = require("ui.element.toggle")
+local toggle = require("ui.element.toggle")
+
+local sample_text = [[
+Atque et cumque enim fugiat numquam commodi.
+Velit iste sit aut inventore numquam.
+Ducimus voluptas asperiores rerum.
+]]
 
 return function()
     cursor.anchor_x = 0
@@ -25,34 +31,33 @@ return function()
     cursor.shift_down()
 
     button(id.button1)
-    
-    cursor.shift_right(0, 2)
-    
-    cursor.width = 200
-    cursor.height = 200
 
-    for x, y in cursor.subdivide(3, 2, 10) do
+    cursor.shift_right(0, 2)
+
+    cursor.width = 800
+    cursor.height = 100
+
+
+    for x, y in cursor.subdivide(3, 1, 10) do
         -- primitive.rectangle()
-        button(id[string.format("button%d%d", x, y)])
+        button(id[string.format("button%d%d", x, y)], "hello world")
     end
 
+    cursor.y = 250
+    primitive.rectangle({ 1, 0, 0, 1 }, "line")
+    toggle(id.toggle)
+    primitive.rectangle({ 0, 1, 0, 1 }, "line")
+    
     cursor.x = 400
     cursor.y = 300
-    -- toggle(id.toggle)
-    cursor.width = 300
-    cursor.height = 300
+    cursor.width = 200
+    cursor.height = 200
     cursor.wrap_text = false
-    cursor.reshape_on_placement = true
     cursor.change_anchor(0.5, 1)
-    primitive.rectangle("line", { 1, 0, 0, 1 })
 
-    primitive.label([[
-Atque et cumque enim fugiat numquam commodi.
-Velit iste sit aut inventore numquam.
-Ducimus voluptas asperiores rerum.
-]])
-
-    primitive.rectangle("line", { 0, 1, 0, 1 })
+    primitive.rectangle({ 1, 0, 0, 1 }, "line")
+    primitive.label(sample_text)
+    primitive.rectangle({ 0, 1, 0, 1 }, "line")
 
     -- cursor.y = 500
     -- cursor.width = 100

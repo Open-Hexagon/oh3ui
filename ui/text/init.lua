@@ -12,7 +12,8 @@ local text = {}
 ---@return number, number
 function text.get_size(str, font, wraplimit, align)
     local text_object = text_cache.get(font, str, wraplimit or math.huge, align or "left")
-    return text_object:getDimensions()
+    -- scale the font size back since font point size was scaled by ui.scaling
+    return love.graphics.inverseTransformPoint(text_object:getDimensions())
 end
 
 return text

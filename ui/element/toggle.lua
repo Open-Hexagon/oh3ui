@@ -1,38 +1,35 @@
 local cursor = require("ui.cursor")
-local edge = cursor.edge
-local clickbox = require("ui.element.clickbox")
+local clickbox = require("ui.sensor.clickbox")
+local primitive = require("ui.primitive")
+local element = require("ui.element")
 local theme = require("ui.theme")
-local draw_queue = require("ui.draw_queue")
-local slot = require("ui.element.slot")
-local WIDTH, HEIGHT = 40, 20
+local extmath = require("ui.extmath")
 
----Toggle switch element. This element ignores the cursor width and height.
+---Toggle switch element. This element ignores the cursor size will reshape the cursor.
 ---@param state table
 return function(state)
+    cursor.place(element.toggle_width, element.toggle_height)
     cursor.push()
 
-    cursor.width = WIDTH
-    cursor.height = HEIGHT
-    cursor.place()
-
     if clickbox(state) == clickbox.LEFT then
-        state.value = not state.value -- not nil = true
+        state.on = not state.on -- not nil = true
     end
 
     -- base shape
-    local radius = cursor.height / 2
-    local color = state.value and theme.active_color or theme.rectangle_color
-    slot("fill", color)
+    primitive.slot(state.on and theme.toggle_on_background or theme.toggle_off_background)
 
     -- circle on current state
-    state.position = state.position or 0
-    if state.value then
-        state.position = math.min(cursor.width - radius, state.position + love.timer.getDelta() * 500)
-    else
-        state.position = math.max(radius, state.position - love.timer.getDelta() * 500)
-    end
-    local x = edge.left + state.position
-    draw_queue.rectangle("fill", x - radius, edge.top, x + radius, edge.bottom, theme.toggle_actuator, radius, radius)
+    state.toggle_position =
+        extmath.clamp((state.toggle_position or 0) + 25 * love.timer.getDelta() * (state.on and 1 or -1), 0, 1)
+
+    cursor.change_anchor(0, 0)
+    cursor.width = element.toggle_height
+    cursor.height = element.toggle_height
+    cursor.x = cursor.x + state.toggle_position * (element.toggle_width - element.toggle_height)
+
+    primitive.circle(theme.toggle_actuator)
+    primitive.circle_outline(cursor.mouse_intersect.hovering and theme.toggle_actuator_outline_highlight or theme.toggle_actuator_outline)
 
     cursor.pop()
+    return state.on
 end

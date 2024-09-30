@@ -27,9 +27,15 @@ local broadcasters = {
 ---reset ui state and set scale
 function ui.start()
     cursor.reset()
+
+    -- scale now so that screen spaces positions can be accounted for
+    love.graphics.push()
+    love.graphics.scale(ui.scale)
+
     for i = 1, #broadcasters do
         broadcasters[i].update()
     end
+
     -- scroll_interaction.reset()
     -- love.keyboard.setKeyRepeat(text_interaction.is_interacting_with_text)
     -- love.keyboard.setTextInput(text_interaction.is_interacting_with_text)
@@ -40,11 +46,12 @@ end
 ---Do ui finalization and cleanup
 function ui.finish()
     -- keyboard_navigation.run()
-    love.graphics.push()
-    love.graphics.scale(ui.scale)
+
+    -- scale before drawing
     draw_queue.draw()
     love.graphics.pop()
 
+    -- clean up
     events.clear()
     cursor.finish()
 end

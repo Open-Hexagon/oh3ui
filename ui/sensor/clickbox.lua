@@ -1,4 +1,4 @@
----An invisible element that tracks mouse clicking and holding
+---A sensor that tracks mouse clicking and holding
 
 local mouse = require("ui.interaction.mouse")
 local cursor = require("ui.cursor")
@@ -13,6 +13,7 @@ local clickbox = {
 
 local meta = {
     __call = function(_, state)
+        cursor.place()
         cursor.update_mouse_intersect()
 
         state.clicked = nil

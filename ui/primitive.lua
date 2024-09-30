@@ -1,5 +1,5 @@
 ---Primitives are elements that only use a single draw operation.
----Draw queue reservations will work on these elements.
+---Draw queue reservations will work on these elements without the use of grouping.
 
 local cursor = require("ui.cursor")
 local edge = cursor.edge
@@ -11,33 +11,25 @@ local text = require("ui.text")
 local primitive = {}
 
 ---Rectangle primitive. Never reshapes the cursor.
----@param mode string? "fill" or "line" (default is "fill")
 ---@param color number[]? overrides the default color
-function primitive.rectangle(mode, color)
+---@param mode string? "fill" or "line" (default is "fill")
+function primitive.rectangle(color, mode)
     cursor.place()
     draw_queue.rectangle(mode or "fill", edge.left, edge.top, edge.right, edge.bottom, color or theme.default)
 end
 
----Outline primitive. Never reshapes the cursor.
----This is a line rectangle inset by 0.5 pixels because when drawing lines at integer coordinates,
----it ends up actually drawing a 2 pixel wide line, since the line lies exactly between 2 pixels.
+---Rectangle outline primitive. Never reshapes the cursor.
 ---@param color number[]? overrides the default color
-function primitive.outline(color)
+---@param line_width number?
+function primitive.rectangle_outline(color, line_width)
     cursor.place()
-    draw_queue.rectangle(
-        "line",
-        edge.left + 0.5,
-        edge.top + 0.5,
-        edge.right - 0.5,
-        edge.bottom - 0.5,
-        color or theme.default
-    )
+    draw_queue.outline(edge.left, edge.top, edge.right, edge.bottom, color or theme.default, line_width or 1)
 end
 
 ---Slot primitive, aka a pill shape. Never reshapes the cursor.
----@param mode string? "fill" or "line" (default is "fill")
 ---@param color number[]? overrides the default color
-function primitive.slot(mode, color)
+---@param mode string? "fill" or "line" (default is "fill")
+function primitive.slot(color, mode)
     local radius = math.min(cursor.width, cursor.height) / 2
     cursor.place()
     draw_queue.rectangle(
@@ -52,29 +44,32 @@ function primitive.slot(mode, color)
     )
 end
 
--- TODO
-
----Horizontal line primitive. Never reshapes the cursor.
----The line will be placed at cursor.y + 0.5 and extend from edge.left to edge.right.
-function primitive.hline(color)
-
-end
-
----Vertical line primitive. Never reshapes the cursor.
----The line will be placed at cursor.x + 0.5 and extend from edge.top to edge.bottom.
-function primitive.vline(color)
-
-end
-
----Circle primitive. May reshape the cursor if the cursor width and height aren't the same.
----@param mode string? "fill" or "line" (default is "fill")
+---Slot outline primitive. Never reshapes the cursor.
 ---@param color number[]? overrides the default color
-function primitive.circle(mode, color)
+---@param line_width number?
+function primitive.slot_outline(color, line_width)
+    local radius = math.min(cursor.width, cursor.height) / 2
+    cursor.place()
+    draw_queue.outline(
+        edge.left,
+        edge.top,
+        edge.right,
+        edge.bottom,
+        color or theme.default,
+        line_width or 1,
+        radius,
+        radius
+    )
+end
+
+---Circle primitive. Will reshape the cursor if the cursor width and height aren't the same.
+---@param color number[]? overrides the default color
+---@param mode string? "fill" or "line" (default is "fill")
+function primitive.circle(color, mode)
     local diameter = math.min(cursor.width, cursor.height)
     local radius = diameter / 2
     cursor.place(diameter, diameter)
-
-    --? Is this faster than using love.graphics.circle?
+    --? Is using rectangle faster than using love.graphics.circle?
     draw_queue.rectangle(
         mode or "fill",
         edge.left,
@@ -82,6 +77,26 @@ function primitive.circle(mode, color)
         edge.right,
         edge.bottom,
         color or theme.default,
+        radius,
+        radius
+    )
+end
+
+---Circle primitive. Will reshape the cursor if the cursor width and height aren't the same.
+---@param color number[]? overrides the default color
+---@param line_width number?
+function primitive.circle_outline(color, line_width)
+    local diameter = math.min(cursor.width, cursor.height)
+    local radius = diameter / 2
+    cursor.place(diameter, diameter)
+    --? Is using rectangle faster than using love.graphics.circle?
+    draw_queue.outline(
+        edge.left,
+        edge.top,
+        edge.right,
+        edge.bottom,
+        color or theme.default,
+        line_width or 1,
         radius,
         radius
     )
@@ -97,19 +112,34 @@ function primitive.label(str, color)
 
     cursor.place(text_width, text_height)
 
-    -- undo scale to render text with full resolution
-    love.graphics.push()
-    love.graphics.scale(1 / ui.scale, 1 / ui.scale)
     draw_queue.text(
         str,
-        cursor.get_font(true),
+        cursor.get_font(),
         edge.left,
         edge.top,
         color or theme.text_color,
         cursor.wrap_text and (cursor.width * ui.scale) or math.huge,
         cursor.text_align
     )
-    love.graphics.pop()
 end
+
+function primitive.push_mask()
+    cursor.place()
+    draw_queue.push_scissor(edge.left, edge.top, edge.right, edge.bottom)
+end
+
+function primitive.pop_mask()
+    draw_queue.pop_scissor()
+end
+
+-- TODO
+
+---Horizontal line primitive. Never reshapes the cursor.
+---The line will be placed at cursor.y + 0.5 and extend from edge.left to edge.right.
+function primitive.hline(color) end
+
+---Vertical line primitive. Never reshapes the cursor.
+---The line will be placed at cursor.x + 0.5 and extend from edge.top to edge.bottom.
+function primitive.vline(color) end
 
 return primitive

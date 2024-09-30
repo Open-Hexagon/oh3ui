@@ -13,6 +13,7 @@ local op_ids = {
     pop_scissor = 3,
     text = 4,
     call_group = 5,
+    outline = 6,
 }
 
 -- A list of groups
@@ -126,7 +127,7 @@ end
 
 ---The next executed draw operation will fill in the last single reserved slot.
 ---The reservation on the top of the reservations stack is popped.
----Only works on a single draw operation. Use groups to have multiple operations take the place of one reservation. 
+---Only works on a single draw operation. Use groups to have multiple operations take the place of one reservation.
 function draw_queue.take_last_reservation()
     local current_group = groups[current_group_index]
     if current_group.reserve_index == 0 then
@@ -164,7 +165,7 @@ end
 ---@param top number
 ---@param right number
 ---@param bottom number
----@param color table
+---@param color number[]
 ---@param rx number?
 ---@param ry number?
 function draw_queue.rectangle(mode, left, top, right, bottom, color, rx, ry)
@@ -172,35 +173,26 @@ function draw_queue.rectangle(mode, left, top, right, bottom, color, rx, ry)
     push_operation(op_ids.rectangle, mode, left, top, right, bottom, rx, ry, unpack(color))
 end
 
--- ---add a rectangle to the queue
--- ---@param left number
--- ---@param top number
--- ---@param right number
--- ---@param bottom number
--- ---@param color table
--- ---@param rx number?
--- ---@param ry number?
--- function draw_queue.outline(left, top, right, bottom, color, rx, ry)
---     local x1, y1 = love.graphics.transformPoint(left, top)
---     local x2, y2 = love.graphics.transformPoint(right, bottom)
---     rx, ry = love.graphics.transformPoint(rx or 0, ry or 0)
---     push_operation(op_ids.outline, "line", x1, y1, x2, y2, rx, ry, unpack(color))
--- end
-
-local polygon_data = {}
+---add an outline to the queue
+---@param left number
+---@param top number
+---@param right number
+---@param bottom number
+---@param line_width number
+---@param color number[]
+---@param rx number?
+---@param ry number?
+function draw_queue.outline(left, top, right, bottom, color, line_width, rx, ry)
+    rx, ry = rx or 0, ry or 0
+    push_operation(op_ids.outline, left, top, right, bottom, line_width, rx, ry, unpack(color))
+end
 
 ---add a polygon to the queue
 ---@param mode string
----@param vertices table
----@param color table
-function draw_queue.polygon(mode, vertices, color)
-    for i = 1, #vertices, 2 do
-        polygon_data[i], polygon_data[i + 1] = vertices[i], vertices[i + 1]
-    end
-    for i = 1, 4 do
-        polygon_data[#vertices + i] = color[i]
-    end
-    push_operation(op_ids.polygon, mode, unpack(polygon_data, 1, #vertices + 4))
+---@param color number[]
+---@param ... number
+function draw_queue.polygon(mode, color, ...)
+    push_operation(op_ids.polygon, mode, color[1], color[2], color[3], color[4], ...)
 end
 
 ---add text to the queue
@@ -208,7 +200,7 @@ end
 ---@param font love.Font
 ---@param x number
 ---@param y number
----@param color table
+---@param color number[]
 ---@param wraplimit number?
 ---@param align love.AlignMode?
 function draw_queue.text(text, font, x, y, color, wraplimit, align)
@@ -218,7 +210,8 @@ end
 
 --#endregion
 
----Executes all draw operations. Uses recursion to handle groups
+---Executes all draw operations in order specified by group_index.
+---Uses recursion to handle groups calls.
 ---@param group_index integer the group to run
 local function run_draw_operations(group_index)
     local current_group = groups[group_index]
@@ -232,20 +225,43 @@ local function run_draw_operations(group_index)
                 love.graphics.setColor(r, g, b, a)
                 love.graphics.rectangle(mode, x1, y1, x2 - x1, y2 - y1, rx, ry)
             elseif id == op_ids.polygon then
-                local len = #item
-                love.graphics.setColor(unpack(item, len - 3, len))
-                love.graphics.polygon(item[2], unpack(item, 3, len - 4))
+                love.graphics.setColor(item[3], item[4], item[5], item[6])
+                love.graphics.polygon(item[2], unpack(item, 7))
             elseif id == op_ids.text then
                 local text_object, x, y, r, g, b, a = unpack(item, 2)
                 love.graphics.setColor(r, g, b, a)
+                -- draw text objects without scaling for full resolution
+                -- we have to manually transform (x, y)
+                x, y = love.graphics.transformPoint(x, y)
+                love.graphics.push()
+                love.graphics.origin()
                 love.graphics.draw(text_object, x, y)
+                love.graphics.pop()
             elseif id == op_ids.push_scissor then
                 local x1, y1, x2, y2 = unpack(item, 2)
+                -- scissor operates on screen space coordinates so we have to manually transform
+                x1, y1 = love.graphics.transformPoint(x1, y1)
+                x2, y2 = love.graphics.transformPoint(x2, y2)
                 scissor_stack.push(x1, y1, x2 - x1, y2 - y1)
             elseif id == op_ids.pop_scissor then
                 scissor_stack.pop()
             elseif id == op_ids.call_group then
+                -- recursive call to group
                 run_draw_operations(item[2])
+            elseif id == op_ids.outline then
+                local x1, y1, x2, y2, line_width, rx, ry, r, g, b, a = unpack(item, 2)
+                local half_width = line_width * 0.5
+                love.graphics.setLineWidth(line_width)
+                love.graphics.setColor(r, g, b, a)
+                love.graphics.rectangle(
+                    "line",
+                    x1 + half_width,
+                    y1 + half_width,
+                    x2 - x1 - line_width,
+                    y2 - y1 - line_width,
+                    rx,
+                    ry
+                )
             end
         end
     end

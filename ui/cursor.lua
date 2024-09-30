@@ -43,9 +43,6 @@ function cursor.reset()
     cursor.height = 0
     cursor.anchor_x = anchor.LEFT
     cursor.anchor_y = anchor.TOP
-    ---if true, when the cursor is placed with a desired size that is different from the
-    ---current cursor, the cursor will be reshaped to enclose the placement
-    cursor.reshape_on_placement = false
 
     -- text
     cursor.font = "assets/OpenSquare.ttf"
@@ -222,8 +219,7 @@ end
 ---Desired width and height are typically used by elements when their contents don't fit the cursor exactly.
 ---@param desired_width number? if provided, the placement will use this instead of cursor.width
 ---@param desired_height number? if provided, the placement will use this instead of cursor.height
----@param enclose_override boolean? overrides the cursor.reshape_on_placement field
-function cursor.place(desired_width, desired_height, enclose_override)
+function cursor.place(desired_width, desired_height)
     local width, height = desired_width or cursor.width, desired_height or cursor.height
 
     -- Update edges
@@ -236,10 +232,8 @@ function cursor.place(desired_width, desired_height, enclose_override)
     local area = require("ui.area")
     area.expand(edge.left, edge.top, edge.right, edge.bottom)
 
-    -- Enclose the placed area if needed
-    if enclose_override or cursor.reshape_on_placement then
-        cursor.width, cursor.height = width, height
-    end
+    -- reshape the cursor
+    cursor.width, cursor.height = width, height
 end
 
 ---Check and update whether the mouse is intersecting the cursor (i.e. the mouse is hovering the cursor).
@@ -265,15 +259,13 @@ end
 ---Cache of fonts based on file used and size
 local font_cache = {}
 
----get the currently used font object
----@param scale_adjusted boolean?
+---Get the currently used font object.
+---Font size is always scaled by the ui.scaling so that it can be later drawn at full resolution.
 ---@return love.Font
-function cursor.get_font(scale_adjusted)
+function cursor.get_font()
     local file = cursor.font
-    local size = cursor.font_size
-    if scale_adjusted then
-        size = size * math.floor(require("ui").scale * 100) / 100
-    end
+    -- increase the size of the font by the ui scaling
+    local size = cursor.font_size * math.floor(require("ui").scale * 100) / 100
     font_cache[file] = font_cache[file] or {}
     local font = font_cache[file][size]
     if not font then

@@ -3,6 +3,9 @@
 
 local element = {}
 
-element.BUTTON_INTERNAL_PADDING = 4
+element.button_internal_padding = 4
+
+element.toggle_width = 40
+element.toggle_height = 20
 
 return element
