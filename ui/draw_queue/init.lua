@@ -22,7 +22,7 @@ local current_group_index = 0
 -- Holds the index of the last created group. Equal to 1 after initialization.
 local last_group_index = 0
 
----Pushes an operations to the current group. The first value should be an operation id.
+---Pushes an operation to the current group. The first value should be an operation id.
 ---This operation id can be nil which will cause the operation to be ignored.
 ---@param ... unknown
 local function push_operation(...)
@@ -126,7 +126,7 @@ end
 
 ---The next executed draw operation will fill in the last single reserved slot.
 ---The reservation on the top of the reservations stack is popped.
----Does not work on elements!
+---Only works on a single draw operation. Use groups to have multiple operations take the place of one reservation. 
 function draw_queue.take_last_reservation()
     local current_group = groups[current_group_index]
     if current_group.reserve_index == 0 then
@@ -143,14 +143,12 @@ function draw_queue.nop()
 end
 
 ---queue pushing a scissor rectangle onto the scissor stack
----@param x1 number
----@param y1 number
----@param x2 number
----@param y2 number
-function draw_queue.push_scissor(x1, y1, x2, y2)
-    x1, y1 = love.graphics.transformPoint(x1, y1)
-    x2, y2 = love.graphics.transformPoint(x2, y2)
-    push_operation(op_ids.push_scissor, x1, y1, x2, y2)
+---@param left number
+---@param top number
+---@param right number
+---@param bottom number
+function draw_queue.push_scissor(left, top, right, bottom)
+    push_operation(op_ids.push_scissor, left, top, right, bottom)
 end
 
 ---queue poping a scissor rectangle from the scissor stack
@@ -170,11 +168,24 @@ end
 ---@param rx number?
 ---@param ry number?
 function draw_queue.rectangle(mode, left, top, right, bottom, color, rx, ry)
-    local x1, y1 = love.graphics.transformPoint(left, top)
-    local x2, y2 = love.graphics.transformPoint(right, bottom)
-    rx, ry = love.graphics.transformPoint(rx or 0, ry or 0)
-    push_operation(op_ids.rectangle, mode, x1, y1, x2, y2, rx, ry, unpack(color))
+    rx, ry = rx or 0, ry or 0
+    push_operation(op_ids.rectangle, mode, left, top, right, bottom, rx, ry, unpack(color))
 end
+
+-- ---add a rectangle to the queue
+-- ---@param left number
+-- ---@param top number
+-- ---@param right number
+-- ---@param bottom number
+-- ---@param color table
+-- ---@param rx number?
+-- ---@param ry number?
+-- function draw_queue.outline(left, top, right, bottom, color, rx, ry)
+--     local x1, y1 = love.graphics.transformPoint(left, top)
+--     local x2, y2 = love.graphics.transformPoint(right, bottom)
+--     rx, ry = love.graphics.transformPoint(rx or 0, ry or 0)
+--     push_operation(op_ids.outline, "line", x1, y1, x2, y2, rx, ry, unpack(color))
+-- end
 
 local polygon_data = {}
 
@@ -184,7 +195,7 @@ local polygon_data = {}
 ---@param color table
 function draw_queue.polygon(mode, vertices, color)
     for i = 1, #vertices, 2 do
-        polygon_data[i], polygon_data[i + 1] = love.graphics.transformPoint(vertices[i], vertices[i + 1])
+        polygon_data[i], polygon_data[i + 1] = vertices[i], vertices[i + 1]
     end
     for i = 1, 4 do
         polygon_data[#vertices + i] = color[i]
@@ -201,7 +212,6 @@ end
 ---@param wraplimit number?
 ---@param align love.AlignMode?
 function draw_queue.text(text, font, x, y, color, wraplimit, align)
-    x, y = love.graphics.transformPoint(x, y)
     local text_object = text_cache.get(font, text, wraplimit or math.huge, align or "left")
     push_operation(op_ids.text, text_object, x, y, unpack(color))
 end
@@ -244,19 +254,18 @@ end
 ---Execute all queued commands.
 ---This will also reset everything related to the queue
 function draw_queue.draw()
+    -- ensure all groups are ended
     if current_group_index ~= 1 then
         error("not all groups were ended")
     end
 
-    local current_group = groups[current_group_index]
-
     -- warn if not all reservations were taken
+    local current_group = groups[current_group_index]
     if current_group.reserve_index ~= 0 or current_group.take_reservation then
         print(string.format("warning: not all reservations were taken in root group 1 before drawing"))
     end
 
     run_draw_operations(1)
-
     reset_groups()
 
     -- Ensure the scissor stack is empty
