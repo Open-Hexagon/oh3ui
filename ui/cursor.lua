@@ -47,6 +47,7 @@ function cursor.reset()
     cursor.anchor_x = anchor.LEFT
     cursor.anchor_y = anchor.TOP
 
+    -- TODO move this to the text module
     -- text
     cursor.font = "assets/OpenSquare.ttf"
     cursor.font_size = 32

@@ -1,6 +1,7 @@
+---A bunch of more niche math functions.
 local extmath = {}
 
--- The only useful constant from utils.lua
+---the only useful constant from utils.lua.
 extmath.tau = 2 * math.pi
 
 ---sign function
@@ -28,7 +29,7 @@ end
 do
     local alpha = 0.898204193266868
     local beta = 0.485968200201465
-    ---Approximates sqrt(x * x + y * y)
+    ---Approximates sqrt(x * x + y * y), though not very well.
     ---@param x number
     ---@param y number
     ---@return number
@@ -48,7 +49,7 @@ do
     end
 end
 
----Linear interpolation between `a` and `b` with parameter `t`
+---Linear interpolation between `a` and `b` with parameter `t`.
 ---@param a number
 ---@param b number
 ---@param t number
@@ -57,7 +58,7 @@ function extmath.lerp(a, b, t)
     return (1 - t) * a + t * b
 end
 
----Inverse linear interpolation between `a` and `b` with parameter value `c`
+---Inverse linear interpolation between `a` and `b` with parameter value `c`.
 ---@param a number
 ---@param b number
 ---@param c number
@@ -66,8 +67,8 @@ function extmath.inverse_lerp(a, b, c)
     return (c - a) / (b - a)
 end
 
----Takes a value `t` between `a` and `b` and proportionally maps it to a value between `c` and `d`
----`a` != `b`
+---Takes a value `t` between `a` and `b` and proportionally maps it to a value between `c` and `d`.
+---`a` != `b`.
 ---@param t number
 ---@param a number
 ---@param b number
@@ -105,6 +106,33 @@ function extmath.point_in_polygon(vertices, x, y)
         end
     end
     return result
+end
+
+---Gets the inradius of a regular polygon from its radius and number of sides.
+---The inradius of a regular polygon is the distance from its center to the midpoint of a side.
+---@param r number radius
+---@param n integer number of sides
+---@return number
+function extmath.to_inradius(r, n)
+    return r * math.cos(math.pi / n)
+end
+
+---Gets the radius of a regular polygon from its inradius and number of sides.
+---The inradius of a regular polygon is the distance from its center to the midpoint of a side.
+---@param a number inradius
+---@param n integer number of sides
+---@return number
+function extmath.from_inradius(a, n)
+    return a / math.cos(math.pi / n)
+end
+
+---Returns a new regular polygon radius by applying an offset to what its inradius would be.
+---@param r number regular polygon radius
+---@param n any number of sides
+---@param o any offset
+---@return number
+function extmath.inradius_offset(r, n, o)
+    return r + o / math.cos(math.pi / n)
 end
 
 return extmath

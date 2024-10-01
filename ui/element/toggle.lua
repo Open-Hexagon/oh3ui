@@ -18,7 +18,7 @@ return function(state)
     -- base shape
     primitive.slot(state.on and theme.toggle_on_background or theme.toggle_off_background)
 
-    -- circle on current state
+    -- normalized position
     state.toggle_position =
         extmath.clamp((state.toggle_position or 0) + 25 * love.timer.getDelta() * (state.on and 1 or -1), 0, 1)
 

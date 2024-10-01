@@ -23,7 +23,7 @@ end
 ---@param line_width number?
 function primitive.rectangle_outline(color, line_width)
     cursor.place()
-    draw_queue.outline(edge.left, edge.top, edge.right, edge.bottom, color or theme.default, line_width or 1)
+    draw_queue.rectangle_outline(edge.left, edge.top, edge.right, edge.bottom, color or theme.default, line_width or 1)
 end
 
 ---Slot primitive, aka a pill shape. Never reshapes the cursor.
@@ -50,7 +50,7 @@ end
 function primitive.slot_outline(color, line_width)
     local radius = math.min(cursor.width, cursor.height) / 2
     cursor.place()
-    draw_queue.outline(
+    draw_queue.rectangle_outline(
         edge.left,
         edge.top,
         edge.right,
@@ -63,43 +63,28 @@ function primitive.slot_outline(color, line_width)
 end
 
 ---Circle primitive. Will reshape the cursor if the cursor width and height aren't the same.
+---Can also create regular polygons.
 ---@param color number[]? overrides the default color
+---@param sides integer? create regular polygons instead
+---@param rotation number? only useful if the number of sides is small
 ---@param mode string? "fill" or "line" (default is "fill")
-function primitive.circle(color, mode)
+function primitive.circle(color, sides, rotation, mode)
     local diameter = math.min(cursor.width, cursor.height)
     local radius = diameter / 2
     cursor.place(diameter, diameter)
-    --? Is using rectangle faster than using love.graphics.circle?
-    draw_queue.rectangle(
-        mode or "fill",
-        edge.left,
-        edge.top,
-        edge.right,
-        edge.bottom,
-        color or theme.default,
-        radius,
-        radius
-    )
+    draw_queue.circle(mode or "fill", edge.left + radius, edge.top + radius, radius, color or theme.default, sides, rotation)
 end
 
 ---Circle primitive. Will reshape the cursor if the cursor width and height aren't the same.
 ---@param color number[]? overrides the default color
 ---@param line_width number?
-function primitive.circle_outline(color, line_width)
+---@param sides integer? create regular polygons instead
+---@param rotation number? only useful if the number of sides is small
+function primitive.circle_outline(color, line_width, sides, rotation)
     local diameter = math.min(cursor.width, cursor.height)
     local radius = diameter / 2
     cursor.place(diameter, diameter)
-    --? Is using rectangle faster than using love.graphics.circle?
-    draw_queue.outline(
-        edge.left,
-        edge.top,
-        edge.right,
-        edge.bottom,
-        color or theme.default,
-        line_width or 1,
-        radius,
-        radius
-    )
+    draw_queue.circle_outline(edge.left + radius, edge.top + radius, radius, line_width or 1, color or theme.default, sides, rotation)
 end
 
 ---Creates a label. Will almost certainly reshape the cursor.
@@ -123,11 +108,13 @@ function primitive.label(str, color)
     )
 end
 
+---Mask everything outside of the cursor. Further draw operations will not affect masked areas.
 function primitive.push_mask()
     cursor.place()
     draw_queue.push_scissor(edge.left, edge.top, edge.right, edge.bottom)
 end
 
+---Removes the last applied mask.
 function primitive.pop_mask()
     draw_queue.pop_scissor()
 end

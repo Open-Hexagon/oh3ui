@@ -9,6 +9,8 @@ local button = require("ui.element.button")
 -- local background = require("ui.area.background")
 -- local theme = require("ui.theme")
 local toggle = require("ui.element.toggle")
+local toggle_hex = require("ui.element.toggle_hex")
+local draw_queue = require("ui.draw_queue")
 
 local sample_text = [[
 Atque et cumque enim fugiat numquam commodi.
@@ -39,23 +41,25 @@ return function()
     cursor.width = 800
     cursor.height = 100
 
-
     for x, y in cursor.subdivide(3, 1, 10) do
         -- primitive.rectangle()
         button(id[string.format("button%d%d", x, y)], "hello world")
     end
 
-    cursor.y = 250
-    primitive.rectangle({ 1, 0, 0, 1 }, "line")
+    cursor.x = 10
+    cursor.y = 10
     toggle(id.toggle)
-    primitive.rectangle({ 0, 1, 0, 1 }, "line")
+    cursor.shift_down(10)
+    -- primitive.rectangle({ 1, 0, 0, 1 }, "line")
+    toggle_hex(id.toggle_hex)
+    -- primitive.rectangle({ 0, 1, 0, 1 }, "line")
     
     cursor.x = 400
     cursor.y = 300
     cursor.width = 200
     cursor.height = 200
     cursor.wrap_text = false
-    cursor.change_anchor(0.5, 1)
+    cursor.change_anchor(1, 0.5)
 
     primitive.rectangle({ 1, 0, 0, 1 }, "line")
     primitive.label(sample_text)

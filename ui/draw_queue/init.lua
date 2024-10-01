@@ -4,6 +4,7 @@
 
 local scissor_stack = require("ui.draw_queue.scissor_stack")
 local text_cache = require("ui.text.cache")
+local extmath = require("ui.extmath")
 local draw_queue = {}
 
 local op_ids = {
@@ -13,7 +14,9 @@ local op_ids = {
     pop_scissor = 3,
     text = 4,
     call_group = 5,
-    outline = 6,
+    rectangle_outline = 6,
+    circle = 7,
+    circle_outline = 8,
 }
 
 -- A list of groups
@@ -173,7 +176,7 @@ function draw_queue.rectangle(mode, left, top, right, bottom, color, rx, ry)
     push_operation(op_ids.rectangle, mode, left, top, right, bottom, rx, ry, unpack(color))
 end
 
----add an outline to the queue
+---add a rectangle outline to the queue
 ---@param left number
 ---@param top number
 ---@param right number
@@ -182,9 +185,47 @@ end
 ---@param color number[]
 ---@param rx number?
 ---@param ry number?
-function draw_queue.outline(left, top, right, bottom, color, line_width, rx, ry)
+function draw_queue.rectangle_outline(left, top, right, bottom, color, line_width, rx, ry)
     rx, ry = rx or 0, ry or 0
-    push_operation(op_ids.outline, left, top, right, bottom, line_width, rx, ry, unpack(color))
+    push_operation(op_ids.rectangle_outline, left, top, right, bottom, line_width, rx, ry, unpack(color))
+end
+
+---Add a circle to the queue. Can also be used to make regular polygons.
+---@param mode love.DrawMode
+---@param x number
+---@param y number
+---@param radius number
+---@param color number[]
+---@param segments integer? number of sides
+---@param rotation number? only useful if the number of segments is low
+function draw_queue.circle(mode, x, y, radius, color, segments, rotation)
+    rotation = rotation or 0
+    push_operation(op_ids.circle, mode, x, y, radius, color[1], color[2], color[3], color[4], rotation, segments)
+end
+
+---Add a circle outline to the queue. Can also be used to make regular polygons.
+---@param x number
+---@param y number
+---@param radius number
+---@param line_width number
+---@param color number[]
+---@param segments integer? number of sides
+---@param rotation number? only useful if the number of segments is low
+function draw_queue.circle_outline(x, y, radius, line_width, color, segments, rotation)
+    rotation = rotation or 0
+    push_operation(
+        op_ids.circle_outline,
+        x,
+        y,
+        radius,
+        line_width,
+        color[1],
+        color[2],
+        color[3],
+        color[4],
+        rotation,
+        segments
+    )
 end
 
 ---add a polygon to the queue
@@ -248,7 +289,7 @@ local function run_draw_operations(group_index)
             elseif id == op_ids.call_group then
                 -- recursive call to group
                 run_draw_operations(item[2])
-            elseif id == op_ids.outline then
+            elseif id == op_ids.rectangle_outline then
                 local x1, y1, x2, y2, line_width, rx, ry, r, g, b, a = unpack(item, 2)
                 local half_width = line_width * 0.5
                 love.graphics.setLineWidth(line_width)
@@ -262,6 +303,27 @@ local function run_draw_operations(group_index)
                     rx,
                     ry
                 )
+            elseif id == op_ids.circle then
+                local mode, x, y, radius, r, g, b, a, rotation, segments = unpack(item, 2)
+                love.graphics.setColor(r, g, b, a)
+                love.graphics.push()
+                love.graphics.translate(x, y)
+                love.graphics.rotate(rotation)
+                love.graphics.circle(mode, 0, 0, radius, segments)
+                love.graphics.pop()
+            elseif id == op_ids.circle_outline then
+                local x, y, radius, line_width, r, g, b, a, rotation, segments = unpack(item, 2)
+                if segments then
+                    radius = extmath.inradius_offset(radius, segments, -0.5 * line_width)
+                else
+                    radius = radius - 0.5 * line_width
+                end
+                love.graphics.setColor(r, g, b, a)
+                love.graphics.push()
+                love.graphics.translate(x, y)
+                love.graphics.rotate(rotation)
+                love.graphics.circle("line", 0, 0, radius, segments)
+                love.graphics.pop()
             end
         end
     end
