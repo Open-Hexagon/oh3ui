@@ -128,15 +128,9 @@ end
 ---@param color number[]? override text color
 ---@param icon_font string? override text.icon_font
 function primitive.icon(icon_name, size, color, icon_font)
-    local icon_table = text.get_icon_font_table(icon_font)
-    local str = icon_table[icon_name]
     icon_font = icon_font or text.icon_font
-    if not str then
-        error(string.format("Could not find `%s` in `%s` icon table", icon_name, icon_font))
-    end
-
-    -- overide with an icon font
-    local font = text.get_font(size, icon_font or text.icon_font)
+    local str = text.get_icon_string(icon_name, icon_font)
+    local font = text.get_font(size, icon_font)
 
     local width, height = text.get_size(str, font)
 

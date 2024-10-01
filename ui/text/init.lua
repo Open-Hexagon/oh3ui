@@ -41,14 +41,14 @@ function text.get_font(size, font_path)
     return font
 end
 
+---A cache of tables, keyed with icon font paths.
+---Each cached table has icon names as keys and representative strings as values for an icon font.
 local icon_font_table_cache = {}
 
----Get a table with icon names as keys and representative strings as values for a icon font 
----@param font_path string? override text.icon_font
----@return table
-function text.get_icon_font_table(font_path)
-    font_path = font_path or text.icon_font
-
+---@param icon_name string
+---@param font_path string
+---@return string
+function text.get_icon_string(icon_name, font_path)
     -- try to find the table in the cache
     local icon_table = icon_font_table_cache[font_path]
     if not icon_table then
@@ -65,7 +65,13 @@ function text.get_icon_font_table(font_path)
 
         icon_font_table_cache[json_file] = icon_table
     end
-    return icon_table
+
+    local str = icon_table[icon_name]
+    if not str then
+        error(string.format("Could not find `%s` in `%s` icon table", icon_name, font_path))
+    end
+
+    return str
 end
 
 ---Get size of text
