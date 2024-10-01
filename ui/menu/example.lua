@@ -50,10 +50,15 @@ return function()
     cursor.y = 10
     toggle(id.toggle)
     cursor.shift_down(10)
-    -- primitive.rectangle({ 1, 0, 0, 1 }, "line")
     toggle_hex(id.toggle_hex)
-    -- primitive.rectangle({ 0, 1, 0, 1 }, "line")
-    
+
+    cursor.shift_down(10)
+    cursor.shift_right(10)
+
+    primitive.rectangle({ 1, 0, 0, 1 }, "line")
+    primitive.icon("archive")
+    primitive.rectangle({ 0, 1, 0, 1 }, "line")
+
     cursor.x = 400
     cursor.y = 300
     cursor.width = 200

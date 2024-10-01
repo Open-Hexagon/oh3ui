@@ -1,5 +1,4 @@
 local cursor = require("ui.cursor")
-local anchor = cursor.anchor
 local theme = require("ui.theme")
 local draw_queue = require("ui.draw_queue")
 local clickbox = require("ui.sensor.clickbox")

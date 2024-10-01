@@ -72,10 +72,19 @@ function primitive.circle(color, sides, rotation, mode)
     local diameter = math.min(cursor.width, cursor.height)
     local radius = diameter / 2
     cursor.place(diameter, diameter)
-    draw_queue.circle(mode or "fill", edge.left + radius, edge.top + radius, radius, color or theme.default, sides, rotation)
+    draw_queue.circle(
+        mode or "fill",
+        edge.left + radius,
+        edge.top + radius,
+        radius,
+        color or theme.default,
+        sides,
+        rotation
+    )
 end
 
 ---Circle primitive. Will reshape the cursor if the cursor width and height aren't the same.
+---Can also create regular polygons.
 ---@param color number[]? overrides the default color
 ---@param line_width number?
 ---@param sides integer? create regular polygons instead
@@ -84,28 +93,55 @@ function primitive.circle_outline(color, line_width, sides, rotation)
     local diameter = math.min(cursor.width, cursor.height)
     local radius = diameter / 2
     cursor.place(diameter, diameter)
-    draw_queue.circle_outline(edge.left + radius, edge.top + radius, radius, line_width or 1, color or theme.default, sides, rotation)
+    draw_queue.circle_outline(
+        edge.left + radius,
+        edge.top + radius,
+        radius,
+        line_width or 1,
+        color or theme.default,
+        sides,
+        rotation
+    )
 end
 
----Creates a label. Will almost certainly reshape the cursor.
----@param str string
----@param color number[]?
-function primitive.label(str, color)
+---Creates a label. Will reshape the cursor.
+---@param str string label text
+---@param size number? override font size in pixels
+---@param align love.AlignMode? override alignment mode
+---@param color number[]? override text color
+---@param font_path string? override text.font
+function primitive.label(str, size, align, color, font_path)
+    local font = text.get_font(size, font_path)
+    local wrap_limit = cursor.wrap_text and cursor.width or math.huge
+    align = align or text.align
+
     -- Get text size. It can change even if wrap_text is true.
-    local text_width, text_height =
-        text.get_size(str, cursor.get_font(), cursor.wrap_text and cursor.width or math.huge, cursor.text_align)
+    local text_width, text_height = text.get_size(str, font, wrap_limit, align)
 
     cursor.place(text_width, text_height)
+    draw_queue.text(str, font, edge.left, edge.top, color or theme.text_color, wrap_limit, align)
+end
 
-    draw_queue.text(
-        str,
-        cursor.get_font(),
-        edge.left,
-        edge.top,
-        color or theme.text_color,
-        cursor.wrap_text and (cursor.width * ui.scale) or math.huge,
-        cursor.text_align
-    )
+---Creates an icon. Uses "assets/bootstrap-icons.ttf" by default. Will reshape the cursor.
+---@param icon_name string icon name
+---@param size number? icon override icon size in pixels (works like a font)
+---@param color number[]? override text color
+---@param icon_font string? override text.icon_font
+function primitive.icon(icon_name, size, color, icon_font)
+    local icon_table = text.get_icon_font_table(icon_font)
+    local str = icon_table[icon_name]
+    icon_font = icon_font or text.icon_font
+    if not str then
+        error(string.format("Could not find `%s` in `%s` icon table", icon_name, icon_font))
+    end
+
+    -- overide with an icon font
+    local font = text.get_font(size, icon_font or text.icon_font)
+
+    local width, height = text.get_size(str, font)
+
+    cursor.place(width, height)
+    draw_queue.text(str, font, edge.left, edge.top, color or theme.text_color)
 end
 
 ---Mask everything outside of the cursor. Further draw operations will not affect masked areas.

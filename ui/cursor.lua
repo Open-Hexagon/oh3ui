@@ -3,8 +3,6 @@
 ---Also checks for mouse intersection.
 ---For checking mouse buttons, see mouse.lua
 
-local json = require("extlibs.json.json")
-
 -- Note: parameters that are contained within tables are not saved in snapshots
 local cursor = {
     -- anchor constants
@@ -46,13 +44,6 @@ function cursor.reset()
 
     cursor.anchor_x = anchor.LEFT
     cursor.anchor_y = anchor.TOP
-
-    -- TODO move this to the text module
-    -- text
-    cursor.font = "assets/OpenSquare.ttf"
-    cursor.font_size = 32
-    cursor.text_align = "left"
-    cursor.wrap_text = false -- if true, the cursor width will be used to wrap text.
 
     -- * do not write to the following fields manually
 
@@ -258,46 +249,6 @@ function cursor.update_mouse_intersect()
     mouse_intersect.hovering = hovering_now
     mouse_intersect.enter = hovering_now and not hovering_before
     mouse_intersect.exit = not hovering_now and hovering_before
-end
-
----Cache of fonts based on file used and size
-local font_cache = {}
-
----Get the currently used font object.
----Font size is always scaled by the ui.scaling so that it can be later drawn at full resolution.
----@return love.Font
-function cursor.get_font()
-    local file = cursor.font
-    -- increase the size of the font by the ui scaling
-    local size = cursor.font_size * math.floor(require("ui").scale * 100) / 100
-    font_cache[file] = font_cache[file] or {}
-    local font = font_cache[file][size]
-    if not font then
-        font = love.graphics.newFont(file, size)
-        font:setFilter("nearest", "nearest")
-        font_cache[file][size] = font
-    end
-    return font
-end
-
-local icon_font_ids = {}
-
----get a table of icon id keys with the actual string values for the icons in the current font
----@return unknown?
-function cursor.get_icon_font_ids()
-    local file = cursor.font:gsub("(.*)%..+", "%1.json")
-    local ids = icon_font_ids[file]
-    if not ids then
-        if not love.filesystem.exists(file) then
-            return
-        end
-        ids = json.decode(love.filesystem.read(file))
-        for key, value in pairs(ids) do
-            ids[key] = love.data.decode("string", "hex", value)
-        end
-        icon_font_ids[file] = ids
-    end
-    return ids
 end
 
 return cursor
