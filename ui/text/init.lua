@@ -63,7 +63,7 @@ function text.get_icon_string(icon_name, font_path)
             icon_table[name] = love.data.decode("string", "hex", value)
         end
 
-        icon_font_table_cache[json_file] = icon_table
+        icon_font_table_cache[font_path] = icon_table
     end
 
     local str = icon_table[icon_name]
