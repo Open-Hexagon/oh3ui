@@ -111,15 +111,15 @@ end
 ---@param color number[]? override text color
 ---@param font_path string? override text.font
 function primitive.label(str, size, align, color, font_path)
-    local font = text.get_font(size, font_path)
-    local wrap_limit = cursor.wrap_text and cursor.width or math.huge
+    local font = text.get_font(size or text.font_size, font_path or text.font_path)
+    local wrap_limit = text.wrap_text and cursor.width or math.huge
     align = align or text.align
 
     -- Get text size. It can change even if wrap_text is true.
     local text_width, text_height = text.get_size(str, font, wrap_limit, align)
 
     cursor.place(text_width, text_height)
-    draw_queue.text(str, font, edge.left, edge.top, color or theme.text_color, wrap_limit, align)
+    draw_queue.text(str, font, edge.left, edge.top, color or theme.text_color, text_width, align)
 end
 
 ---Creates an icon. Uses "assets/bootstrap-icons.ttf" by default. Will reshape the cursor.
@@ -128,9 +128,9 @@ end
 ---@param color number[]? override text color
 ---@param icon_font string? override text.icon_font
 function primitive.icon(icon_name, size, color, icon_font)
-    icon_font = icon_font or text.icon_font
+    icon_font = icon_font or text.icon_font_path
     local str = text.get_icon_string(icon_name, icon_font)
-    local font = text.get_font(size, icon_font)
+    local font = text.get_font(size or text.font_size, icon_font)
 
     local width, height = text.get_size(str, font)
 

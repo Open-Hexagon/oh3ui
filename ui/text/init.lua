@@ -6,28 +6,36 @@ local text_cache = require("ui.text.cache")
 local text = {}
 
 ---Default font
-text.font = "assets/OpenSquare.ttf"
+---@type string
+text.font_path = "assets/OpenSquare.ttf"
+
 ---Default font size
+---@type number
 text.font_size = 32
+
 ---Default text alignment
+---@type love.AlignMode
 text.align = "left"
+
 ---If true, the cursor width will be used to wrap text.
+---@type boolean
 text.wrap = false
+
 ---Default icon font
-text.icon_font = "assets/bootstrap-icons.ttf"
+---@type string
+text.icon_font_path = "assets/bootstrap-icons.ttf"
 
 ---Cache of fonts based on file used and size
 local font_cache = {}
 
 ---Get the currently used font object.
 ---Font size is always scaled by the ui.scaling so that it can be later drawn at full resolution.
----@param size number? override default font size
----@param font_path string? override text.font
+---@param size number
+---@param font_path string
 ---@return love.Font
 function text.get_font(size, font_path)
-    font_path = font_path or text.font
     -- increase the size of the font by the ui scaling
-    size = (size or text.font_size) * math.floor(require("ui").scale * 100) / 100
+    size = size * math.floor(require("ui").scale * 100) / 100
     font_cache[font_path] = font_cache[font_path] or {}
     local font = font_cache[font_path][size]
     if not font then
