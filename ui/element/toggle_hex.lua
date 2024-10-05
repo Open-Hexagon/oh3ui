@@ -14,6 +14,7 @@ local inradius = indiameter * 0.5
 local radius = diameter * 0.5
 
 local half_radius = radius * 0.5
+local travel_distance = element.toggle_width - diameter
 
 ---Hexagonal toggle switch element (because funny).
 ---This element ignores the cursor size will reshape the cursor.
@@ -60,7 +61,7 @@ return function(state)
     cursor.change_anchor(0.5, 0.5)
     cursor.width = diameter
     cursor.height = diameter
-    cursor.x = cursor.x + state.toggle_position * (element.toggle_width - diameter)
+    cursor.x = cursor.x + state.toggle_position * travel_distance
 
     primitive.circle(theme.toggle_actuator, 6)
     primitive.circle_outline(

@@ -5,6 +5,8 @@ local element = require("ui.element")
 local theme = require("ui.theme")
 local extmath = require("ui.extmath")
 
+local travel_distance = element.toggle_width - element.toggle_height
+
 ---Toggle switch element. This element ignores the cursor size will reshape the cursor.
 ---@param state table
 return function(state)
@@ -25,7 +27,7 @@ return function(state)
     cursor.change_anchor(0, 0)
     cursor.width = element.toggle_height
     cursor.height = element.toggle_height
-    cursor.x = cursor.x + state.toggle_position * (element.toggle_width - element.toggle_height)
+    cursor.x = cursor.x + state.toggle_position * travel_distance
 
     primitive.circle(theme.toggle_actuator)
     primitive.circle_outline(cursor.mouse_intersect.hovering and theme.toggle_actuator_outline_highlight or theme.toggle_actuator_outline)
