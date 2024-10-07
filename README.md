@@ -8,6 +8,7 @@ To achieve these goals I chose to make an immediate mode GUI.
 Compromises to make development of the ui system easier.
 
 - There will be no system to backpropagate the size of elements. If something doesn't fit where it needs to go, it will have to either spill out of bounds or get cut off. It is up to the developer to ensure that there is enough space for elements or make special cases when elements can't fit.
+- There will be no universal method to get the size of an element before it gets rendered.
 
 
 # Testing
