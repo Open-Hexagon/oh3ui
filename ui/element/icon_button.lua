@@ -5,12 +5,11 @@ local clickbox = require("ui.sensor.clickbox")
 local primitive = require("ui.primitive")
 local element = require("ui.element")
 
----Button element. Can optionally contain text.
----Text that doesn't fit in the button gets cropped.
+---Button element with icon. Icons that don't fit get cropped.
 ---Never reshapes the cursor.
 ---@param state table
----@param text string?
-return function(state, text)
+---@param icon_name string
+return function(state, icon_name)
     clickbox(state)
 
     -- draw background and outline
@@ -20,15 +19,13 @@ return function(state, text)
     )
 
     -- draw button internals
-    if text then
-        cursor.push()
-        cursor.inset(element.button_internal_padding)
-        primitive.push_mask()
-        cursor.change_anchor(0.5, 0.5)
-        primitive.label(text)
-        primitive.pop_mask()
-        cursor.pop()
-    end
+    cursor.push()
+    cursor.inset(element.button_internal_padding)
+    primitive.push_mask()
+    cursor.change_anchor(0.5, 0.5)
+    primitive.icon(icon_name)
+    primitive.pop_mask()
+    cursor.pop()
 
     return state.clicked
 end
