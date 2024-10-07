@@ -1,4 +1,4 @@
-local slider = require("ui.element.slider")
+local slider = require("ui.element.slider_old")
 local utils = require("tests.utils")
 local state = require("ui.state")
 local theme = require("ui.theme")

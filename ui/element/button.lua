@@ -1,9 +1,9 @@
 local cursor = require("ui.cursor")
 local theme = require("ui.theme")
-local draw_queue = require("ui.draw_queue")
 local clickbox = require("ui.sensor.clickbox")
 local primitive = require("ui.primitive")
 local element = require("ui.element")
+local sensor = require("ui.sensor")
 
 ---Button element. Can optionally contain text.
 ---Text that doesn't fit in the button gets cropped.
@@ -16,7 +16,7 @@ return function(state, text)
     -- draw background and outline
     primitive.rectangle(state.holding and theme.button_background_highlight or theme.button_background)
     primitive.rectangle_outline(
-        cursor.mouse_intersect.hovering and theme.button_outline_highlight or theme.button_outline
+        sensor.hovering and theme.button_outline_highlight or theme.button_outline
     )
 
     -- draw button internals

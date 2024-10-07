@@ -6,9 +6,12 @@ local dragbox = require("ui.sensor.dragbox")
 local primitive = require("ui.primitive")
 local element = require("ui.element")
 local text = require("ui.text")
-local mouse = require("ui.interaction.mouse")
+local mouse = require("ui.mouse")
 local extmath = require("ui.extmath")
+local sensor = require("ui.sensor")
 
+---Combination number slider and entry with increment buttons.
+---TODO add manual keyboard input when element is clicked.
 ---@param state table
 return function(state, min, max, step, format)
     -- first time initialization
@@ -22,11 +25,11 @@ return function(state, min, max, step, format)
     cursor.push() -- (1)
 
     -- set base shape
-    local full_width = math.max(100, cursor.width)
+    local full_width = math.max(element.numeric_input_min_width, cursor.width)
     cursor.place(full_width, element.numeric_input_height)
-    cursor.update_mouse_intersect()
+    sensor.update_mouse_intersect()
 
-    local hovering = cursor.mouse_intersect.hovering
+    local hovering = sensor.hovering
     local center_width = cursor.width - element.numeric_input_lr_button_width * 2
 
     cursor.auto_reshape = false
@@ -41,22 +44,22 @@ return function(state, min, max, step, format)
     -- center
     cursor.width = center_width
     cursor.place()
-    cursor.update_mouse_intersect()
+    sensor.update_mouse_intersect()
     local dragging = dragbox(state)
 
     -- stop the mouse from reaching the edges of the screen
     if state.started_dragging then
         love.mouse.setRelativeMode(true)
+        sensor.do_intersections = false
     elseif state.stopped_dragging then
         love.mouse.setRelativeMode(false)
-        -- put the cursor back where it started
-        love.mouse.setPosition(love.graphics.transformPoint(state.drag_origin_x, state.drag_origin_y))
+        sensor.do_intersections = true
     end
 
     -- change the mouse cursor to <-> when hovering the center
-    if cursor.mouse_intersect.enter then
+    if sensor.enter then
         love.mouse.setCursor(love.mouse.getSystemCursor("sizewe"))
-    elseif cursor.mouse_intersect.exit then
+    elseif sensor.exit then
         love.mouse.setCursor()
     end
 
@@ -71,6 +74,7 @@ return function(state, min, max, step, format)
         -- highlighted background
         cursor.width = full_width
         primitive.rectangle(theme.button_background_highlight)
+
         state.value = state.value + mouse.dx
     else
         -- normal background
@@ -79,7 +83,7 @@ return function(state, min, max, step, format)
         cursor.width = center_width
 
         -- brighter center
-        if cursor.mouse_intersect.hovering then
+        if sensor.hovering then
             primitive.rectangle(theme.button_background_brighter)
         end
     end
@@ -97,7 +101,7 @@ return function(state, min, max, step, format)
             end
             if state.numeric_input_left.holding then
                 primitive.rectangle(theme.button_background_highlight)
-            elseif cursor.mouse_intersect.hovering then
+            elseif sensor.hovering then
                 primitive.rectangle(theme.button_background_brighter)
             end
         end
@@ -115,7 +119,7 @@ return function(state, min, max, step, format)
             end
             if state.numeric_input_right.holding then
                 primitive.rectangle(theme.button_background_highlight)
-            elseif cursor.mouse_intersect.hovering then
+            elseif sensor.hovering then
                 primitive.rectangle(theme.button_background_brighter)
             end
         end

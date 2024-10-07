@@ -21,7 +21,7 @@ end
 ---Broadcasters are modules that need to be updated at the beginning of each frame.
 ---Their outputs should remain constant during a frame.
 local broadcasters = {
-    require("ui.interaction.mouse"),
+    require("ui.mouse"),
 }
 
 ---reset ui state and set scale

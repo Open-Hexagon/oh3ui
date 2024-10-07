@@ -38,6 +38,7 @@ element.toggle_height = 20
 
 element.slider_radius = 10
 
+element.numeric_input_min_width = 100
 element.numeric_input_height = 20
 element.numeric_input_lr_button_width = 16
 element.numeric_input_text_size = 16

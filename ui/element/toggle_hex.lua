@@ -6,7 +6,8 @@ local element = require("ui.element")
 local theme = require("ui.theme")
 local extmath = require("ui.extmath")
 local draw_queue = require("ui.draw_queue")
-local mouse = require("ui.interaction.mouse")
+local mouse = require("ui.mouse")
+local sensor = require("ui.sensor")
 
 local indiameter = element.toggle_height
 local diameter = extmath.from_inradius(indiameter, 6)
@@ -68,7 +69,7 @@ return function(state)
 
     primitive.circle(theme.toggle_actuator, 6)
     primitive.circle_outline(
-        cursor.mouse_intersect.hovering and theme.toggle_actuator_outline_highlight or theme.toggle_actuator_outline,
+        sensor.hovering and theme.toggle_actuator_outline_highlight or theme.toggle_actuator_outline,
         nil,
         6
     )

@@ -4,7 +4,8 @@ local primitive = require("ui.primitive")
 local element = require("ui.element")
 local theme = require("ui.theme")
 local extmath = require("ui.extmath")
-local mouse = require("ui.interaction.mouse")
+local mouse = require("ui.mouse")
+local sensor = require("ui.sensor")
 
 local travel_distance = element.toggle_width - element.toggle_height
 
@@ -33,7 +34,7 @@ return function(state)
     cursor.x = cursor.x + state.toggle_position * travel_distance
 
     primitive.circle(theme.toggle_actuator)
-    primitive.circle_outline(cursor.mouse_intersect.hovering and theme.toggle_actuator_outline_highlight or theme.toggle_actuator_outline)
+    primitive.circle_outline(sensor.hovering and theme.toggle_actuator_outline_highlight or theme.toggle_actuator_outline)
 
     cursor.pop()
     

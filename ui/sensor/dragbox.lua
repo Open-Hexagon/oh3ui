@@ -1,13 +1,15 @@
----An extension of clickbox that additionally tracks dragging
 
-local mouse = require("ui.interaction.mouse")
+local mouse = require("ui.mouse")
 local cursor = require("ui.cursor")
+local sensor = require("ui.sensor")
 
+---An extension of clickbox that additionally tracks dragging
+---Implicitly does a `cursor place` and `sensor.update_mouse_intersect`
 ---@param state table
 ---@return integer?
 return function(state)
     cursor.place()
-    cursor.update_mouse_intersect()
+    sensor.update_mouse_intersect()
 
     state.clicked = nil
     state.stopped_dragging = nil
@@ -22,7 +24,7 @@ return function(state)
             return
         end
     else
-        if cursor.mouse_intersect.hovering then
+        if sensor.hovering then
             if mouse.any.down then
                 if state.holding then
                     -- another mouse button was pressed while holding

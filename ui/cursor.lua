@@ -1,7 +1,6 @@
 ---The cursor represents a rectangular area on screen and is used as
 ---a tool for positioning and aligning ui elements.
----Also checks for mouse intersection.
----For checking mouse buttons, see mouse.lua
+---For checking whether the mouse is currently intersecting the cursor, see sensor/init.lua
 
 -- Note: parameters that are contained within tables are not saved in snapshots
 local cursor = {
@@ -21,16 +20,10 @@ local cursor = {
         right = 0,
         bottom = 0,
     },
-    mouse_intersect = {
-        enter = false,
-        exit = false,
-        hovering = false,
-    },
 }
 
 local anchor = cursor.anchor
 local edge = cursor.edge
-local mouse_intersect = cursor.mouse_intersect
 
 ---Reset manual cursor to default values
 function cursor.reset()
@@ -55,11 +48,6 @@ function cursor.reset()
     edge.top = 0
     edge.right = 0
     edge.bottom = 0
-
-    -- mouse intersection
-    mouse_intersect.enter = false
-    mouse_intersect.exit = false
-    mouse_intersect.hovering = false
 end
 
 -- first cursor setup
@@ -261,27 +249,6 @@ function cursor.place(desired_width, desired_height)
 
     -- reshape the cursor
     cursor.width, cursor.height = width, height
-end
-
----Check and update whether the mouse is intersecting the cursor (i.e. the mouse is hovering the cursor).
----Also detects if the mouse just entered or exited the cursor area.
----Should be preceded by a `cursor.place()` of some sort.
-function cursor.update_mouse_intersect()
-    local mouse_pos = require("ui.interaction.mouse")
-
-    local hovering_before = mouse_pos.prev_x >= edge.left
-        and mouse_pos.prev_x < edge.right
-        and mouse_pos.prev_y >= edge.top
-        and mouse_pos.prev_y < edge.bottom
-
-    local hovering_now = mouse_pos.x >= edge.left
-        and mouse_pos.x < edge.right
-        and mouse_pos.y >= edge.top
-        and mouse_pos.y < edge.bottom
-
-    mouse_intersect.hovering = hovering_now
-    mouse_intersect.enter = hovering_now and not hovering_before
-    mouse_intersect.exit = not hovering_now and hovering_before
 end
 
 return cursor

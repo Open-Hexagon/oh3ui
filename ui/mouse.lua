@@ -1,5 +1,5 @@
 ---A broadcasting module that updates mouse position and button states.
----For checking mouse intersection: see cursor.lua
+---For checking mouse intersection: see sensor/init.lua
 
 local events = require("ui.events")
 
@@ -88,9 +88,8 @@ function mouse.update()
     for event in events.iterate("mouse[prm]") do
         local name, x, y, a, b, c = unpack(event)
         if name == "mousemoved" then
-            -- There should only be one of these per frame
             local dx, dy, istouch = a, b, c
-            mouse.dx, mouse.dy = dx, dy
+            mouse.dx, mouse.dy = love.graphics.inverseTransformPoint(dx, dy)
             mouse.moved = true
 
             -- todo Some behavior is different for touchscreens
