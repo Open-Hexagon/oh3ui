@@ -4,21 +4,24 @@ local primitive = require("ui.primitive")
 local element = require("ui.element")
 local theme = require("ui.theme")
 local extmath = require("ui.extmath")
+local mouse = require("ui.interaction.mouse")
 
 local travel_distance = element.toggle_width - element.toggle_height
 
 ---Toggle switch element. This element ignores the cursor size will reshape the cursor.
 ---@param state table
 return function(state)
+    cursor.push()
+
     cursor.place(element.toggle_width, element.toggle_height)
     cursor.push()
 
-    if clickbox(state) == clickbox.LEFT then
+    if clickbox(state) == mouse.LEFT then
         state.on = not state.on -- not nil = true
     end
 
     -- base shape
-    primitive.slot(state.on and theme.toggle_on_background or theme.toggle_off_background)
+    primitive.slot(state.on and theme.accent_color or theme.toggle_off_background)
 
     -- normalized position
     state.toggle_position =
@@ -33,5 +36,7 @@ return function(state)
     primitive.circle_outline(cursor.mouse_intersect.hovering and theme.toggle_actuator_outline_highlight or theme.toggle_actuator_outline)
 
     cursor.pop()
+    
+    cursor.do_auto_reshape()
     return state.on
 end

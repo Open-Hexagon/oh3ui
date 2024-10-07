@@ -6,6 +6,7 @@ local element = require("ui.element")
 local theme = require("ui.theme")
 local extmath = require("ui.extmath")
 local draw_queue = require("ui.draw_queue")
+local mouse = require("ui.interaction.mouse")
 
 local indiameter = element.toggle_height
 local diameter = extmath.from_inradius(indiameter, 6)
@@ -20,10 +21,12 @@ local travel_distance = element.toggle_width - diameter
 ---This element ignores the cursor size will reshape the cursor.
 ---@param state table
 return function(state)
+    cursor.push()
+
     cursor.place(element.toggle_width, element.toggle_height)
     cursor.push()
 
-    if clickbox(state) == clickbox.LEFT then
+    if clickbox(state) == mouse.LEFT then
         state.on = not state.on -- not nil = true
     end
 
@@ -39,7 +42,7 @@ return function(state)
     -- base shape
     draw_queue.polygon(
         "fill",
-        state.on and theme.toggle_on_background or theme.toggle_off_background,
+        state.on and theme.accent_color or theme.toggle_off_background,
         x0,
         y1,
         x1,
@@ -71,5 +74,7 @@ return function(state)
     )
 
     cursor.pop()
+
+    cursor.do_auto_reshape()
     return state.on
 end
