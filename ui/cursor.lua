@@ -45,6 +45,9 @@ function cursor.reset()
     cursor.anchor_x = anchor.LEFT
     cursor.anchor_y = anchor.TOP
 
+    -- If true, elements that don't fit in the cursor will cause the cursor to reshape
+    cursor.auto_reshape = true
+
     -- * do not write to the following fields manually
 
     -- edges
@@ -83,15 +86,41 @@ function cursor.push()
     end
 end
 
----Pop a snapshot of the cursor, returning it to the last pushed state.
-function cursor.pop()
+---Peek a snapshot of the cursor, returning it to the last pushed state without dropping it.
+function cursor.peek()
     if index == 0 then
         error("cursor stack underflow")
     end
     for k, v in pairs(snapshots[index]) do
         cursor[k] = v
     end
+end
+
+---Pop a snapshot of the cursor, returning it to the last pushed state.
+function cursor.pop()
+    cursor.peek()
     index = index - 1
+end
+
+---Drops the last snapshot of the cursor
+function cursor.drop()
+    if index == 0 then
+        error("cursor stack underflow")
+    end
+    index = index - 1
+end
+
+---Undos cursor reshaping for elements if cursor.auto_reshape is false. Requires a corresponding `cursor.push()`.
+function cursor.do_auto_reshape()
+    -- use the last snapshot's auto_reshape since elements themselves may have changed the current one.
+    if snapshots[index].auto_reshape then
+        -- anchor should not change, even if reshaping is happening
+        cursor.anchor_x = snapshots[index].anchor_x
+        cursor.anchor_y = snapshots[index].anchor_y
+        cursor.drop()
+    else
+        cursor.pop()
+    end
 end
 
 ---Should be run at the end of a frame
@@ -107,9 +136,11 @@ end
 --#region layout and arrangement
 
 ---Changes the location of the cursor anchor without actually moving the cursor.
+---If anchor_y isn't provided, then it will use the same value as anchor_x
 ---@param anchor_x number
----@param anchor_y number
+---@param anchor_y number?
 function cursor.change_anchor(anchor_x, anchor_y)
+    anchor_y = anchor_y or anchor_x
     cursor.x = cursor.x + (anchor_x - cursor.anchor_x) * cursor.width
     cursor.y = cursor.y + (anchor_y - cursor.anchor_y) * cursor.height
     cursor.anchor_x = anchor_x
@@ -212,6 +243,7 @@ end
 
 ---Places the current cursor down. This will update the cursor edges output table (left, top, right, bottom) as well as expand areas.
 ---Desired width and height are typically used by elements when their contents don't fit the cursor exactly.
+---Passing desired width and height will reshape the cursor.
 ---@param desired_width number? if provided, the placement will use this instead of cursor.width
 ---@param desired_height number? if provided, the placement will use this instead of cursor.height
 function cursor.place(desired_width, desired_height)
@@ -233,6 +265,7 @@ end
 
 ---Check and update whether the mouse is intersecting the cursor (i.e. the mouse is hovering the cursor).
 ---Also detects if the mouse just entered or exited the cursor area.
+---Should be preceded by a `cursor.place()` of some sort.
 function cursor.update_mouse_intersect()
     local mouse_pos = require("ui.interaction.mouse")
 
