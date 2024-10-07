@@ -5,8 +5,8 @@ local cursor = require("ui.cursor")
 local edge = cursor.edge
 local theme = require("ui.theme")
 local draw_queue = require("ui.draw_queue")
-local ui = require("ui")
 local text = require("ui.text")
+local ui = require("ui")
 
 local primitive = {}
 
@@ -69,6 +69,7 @@ end
 ---@param rotation number? only useful if the number of sides is small
 ---@param mode string? "fill" or "line" (default is "fill")
 function primitive.circle(color, sides, rotation, mode)
+    cursor.push()
     local diameter = math.min(cursor.width, cursor.height)
     local radius = diameter / 2
     cursor.place(diameter, diameter)
@@ -81,6 +82,7 @@ function primitive.circle(color, sides, rotation, mode)
         sides,
         rotation
     )
+    cursor.do_auto_reshape()
 end
 
 ---Circle primitive. Will reshape the cursor if the cursor width and height aren't the same.
@@ -90,6 +92,7 @@ end
 ---@param sides integer? create regular polygons instead
 ---@param rotation number? only useful if the number of sides is small
 function primitive.circle_outline(color, line_width, sides, rotation)
+    cursor.push()
     local diameter = math.min(cursor.width, cursor.height)
     local radius = diameter / 2
     cursor.place(diameter, diameter)
@@ -102,6 +105,7 @@ function primitive.circle_outline(color, line_width, sides, rotation)
         sides,
         rotation
     )
+    cursor.do_auto_reshape()
 end
 
 ---Creates a label. Will reshape the cursor.
@@ -111,15 +115,25 @@ end
 ---@param color number[]? override text color
 ---@param font_path string? override text.font
 function primitive.label(str, size, align, color, font_path)
-    local font = text.get_font(size or text.font_size, font_path or text.font_path)
-    local wrap_limit = text.wrap_text and cursor.width or math.huge
+    cursor.push()
+
+    -- Scale up (math.huge causes transformPoint to choke so we just use a really big number)
+    local wrap_limit = text.wrap_text and (cursor.width * ui.scale) or math.huge
+    size = (size or text.font_size) * ui.scale
+
+    local font = text.get_font(size, font_path or text.font_path)
     align = align or text.align
 
-    -- Get text size. It can change even if wrap_text is true.
-    local text_width, text_height = text.get_size(str, font, wrap_limit, align)
+    -- get a new text object
+    local text_object = text.get_text_object(font, str, wrap_limit, align)
+
+    -- Get text size. It can change even if wrap_text is true. Scaled down this time.
+    local text_width, text_height = love.graphics.inverseTransformPoint(text_object:getDimensions())
 
     cursor.place(text_width, text_height)
-    draw_queue.text(str, font, edge.left, edge.top, color or theme.text_color, text_width, align)
+    draw_queue.text(text_object, edge.left, edge.top, color or theme.text_color)
+
+    cursor.do_auto_reshape()
 end
 
 ---Creates an icon. Uses "assets/bootstrap-icons.ttf" by default. Will reshape the cursor.
@@ -128,14 +142,20 @@ end
 ---@param color number[]? override text color
 ---@param icon_font string? override text.icon_font
 function primitive.icon(icon_name, size, color, icon_font)
+    cursor.push()
+    size = (size or text.font_size) * ui.scale
     icon_font = icon_font or text.icon_font_path
     local str = text.get_icon_string(icon_name, icon_font)
-    local font = text.get_font(size or text.font_size, icon_font)
+    local font = text.get_font(size, icon_font)
 
-    local width, height = text.get_size(str, font)
+    local text_object = text.get_text_object(font, str, math.huge, "left")
+
+    local width, height = love.graphics.inverseTransformPoint(text_object:getDimensions())
 
     cursor.place(width, height)
-    draw_queue.text(str, font, edge.left, edge.top, color or theme.text_color)
+    draw_queue.text(text_object, edge.left, edge.top, color or theme.text_color)
+    
+    cursor.do_auto_reshape()
 end
 
 ---Mask everything outside of the cursor. Further draw operations will not affect masked areas.

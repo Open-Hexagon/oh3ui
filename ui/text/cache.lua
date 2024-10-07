@@ -47,7 +47,7 @@ end
 local last_update = love.timer.getTime()
 local update_interval = 0.5 -- seconds
 
----get a text object with the correct font, text, wraplimit and align mode
+---Get a text object using font, text, wraplimit and align mode.
 ---@param font love.Font
 ---@param text string
 ---@param wraplimit number

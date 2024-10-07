@@ -1,4 +1,6 @@
 ---For stuff related to text, but not drawing of text.
+---No text scaling of any kind is done by these functions.
+---What you put in is what you get out.
 
 local json = require("extlibs.json.json")
 local text_cache = require("ui.text.cache")
@@ -28,14 +30,11 @@ text.icon_font_path = "assets/bootstrap-icons.ttf"
 ---Cache of fonts based on file used and size
 local font_cache = {}
 
----Get the currently used font object.
----Font size is always scaled by the ui.scaling so that it can be later drawn at full resolution.
+---Gets a font object.
 ---@param size number
 ---@param font_path string
 ---@return love.Font
 function text.get_font(size, font_path)
-    -- increase the size of the font by the ui scaling
-    size = size * math.floor(require("ui").scale * 100) / 100
     font_cache[font_path] = font_cache[font_path] or {}
     local font = font_cache[font_path][size]
     if not font then
@@ -48,6 +47,8 @@ function text.get_font(size, font_path)
     end
     return font
 end
+
+text.get_text_object = text_cache.get
 
 ---A cache of tables, keyed with icon font paths.
 ---Each cached table has icon names as keys and representative strings as values for an icon font.
@@ -80,18 +81,6 @@ function text.get_icon_string(icon_name, font_path)
     end
 
     return str
-end
-
----Get size of text
----@param str string
----@param font love.Font
----@param wraplimit number?
----@param align love.AlignMode?
----@return number, number
-function text.get_size(str, font, wraplimit, align)
-    local text_object = text_cache.get(font, str, wraplimit or math.huge, align or "left")
-    -- scale the font size back since font size was scaled by ui.scaling
-    return love.graphics.inverseTransformPoint(text_object:getDimensions())
 end
 
 return text
