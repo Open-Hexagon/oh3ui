@@ -3,47 +3,36 @@
 local mouse = require("ui.interaction.mouse")
 local cursor = require("ui.cursor")
 
-local clickbox = {
-    LEFT = 1,
-    RIGHT = 2,
-    MIDDLE = 3,
-    BACK = 4,
-    FORWARD = 5,
-}
+---@param state table
+return function(state)
+    cursor.place()
+    cursor.update_mouse_intersect()
 
-local meta = {
-    __call = function(_, state)
-        cursor.place()
-        cursor.update_mouse_intersect()
+    state.clicked = nil
 
-        state.clicked = nil
+    -- unhold if the mouse is dragged away
+    if state.holding and cursor.mouse_intersect.exit then
+        state.holding = nil
+    end
 
-        -- unhold if the mouse is dragged away
-        if state.holding and cursor.mouse_intersect.exit then
+    if cursor.mouse_intersect.hovering then
+        if mouse.any.down then
+            if state.holding then
+                -- another mouse button was pressed while holding
+                state.holding = nil
+            else
+                -- holding with the last pressed button
+                state.holding = mouse.last_down
+            end
+        end
+
+        -- if the button being held is released, set the clicked field
+        if state.holding and mouse[state.holding].up then
+            state.clicked = state.holding
             state.holding = nil
         end
+    end
 
-        if cursor.mouse_intersect.hovering then
-            if mouse.any.down then
-                if state.holding then
-                    -- another mouse button was pressed while holding
-                    state.holding = nil
-                else
-                    -- holding with the last pressed button
-                    state.holding = mouse.last_down
-                end
-            end
-
-            -- if the button being held is released, set the clicked field
-            if state.holding and mouse[state.holding].up then
-                state.clicked = state.holding
-                state.holding = nil
-            end
-        end
-
-        -- return the click state because we can
-        return state.clicked
-    end,
-}
-
-return setmetatable(clickbox, meta)
+    -- return the click state because we can
+    return state.clicked
+end
