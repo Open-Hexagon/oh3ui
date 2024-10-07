@@ -50,10 +50,8 @@ return function(state, min, max, step, format)
     -- stop the mouse from reaching the edges of the screen
     if state.started_dragging then
         love.mouse.setRelativeMode(true)
-        sensor.do_intersections = false
     elseif state.stopped_dragging then
         love.mouse.setRelativeMode(false)
-        sensor.do_intersections = true
     end
 
     -- change the mouse cursor to <-> when hovering the center

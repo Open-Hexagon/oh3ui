@@ -16,6 +16,7 @@ local op_ids = {
     rectangle_outline = 6,
     circle = 7,
     circle_outline = 8,
+    line = 9,
 }
 
 -- A list of groups
@@ -244,6 +245,18 @@ function draw_queue.text(text_object, x, y, color)
     push_operation(op_ids.text, text_object, x, y, unpack(color))
 end
 
+---Add a multiline to the queue
+---@param line_width number
+---@param color number[]
+---@param x1 number first point x coordinate
+---@param y1 number first point y coordinate
+---@param x2 number second point x coordinate
+---@param y2 number second point y coordinate
+---@param ... number more coordinates
+function draw_queue.line(line_width, color, x1, y1, x2, y2, ...)
+    push_operation(op_ids.line, line_width, color[1], color[2], color[3], color[4], x1, y1, x2, y2, ...)
+end
+
 --#endregion
 
 ---Executes all draw operations in order specified by group_index.
@@ -319,6 +332,11 @@ local function run_draw_operations(group_index)
                 love.graphics.rotate(rotation)
                 love.graphics.circle("line", 0, 0, radius, segments)
                 love.graphics.pop()
+            elseif id == op_ids.line then
+                local line_width, r, g, b, a = unpack(item, 2, 6)
+                love.graphics.setLineWidth(line_width)
+                love.graphics.setColor(r, g, b, a)
+                love.graphics.line(unpack(item, 7))
             end
         end
     end

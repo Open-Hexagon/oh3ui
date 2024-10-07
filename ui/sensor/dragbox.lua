@@ -3,8 +3,9 @@ local mouse = require("ui.mouse")
 local cursor = require("ui.cursor")
 local sensor = require("ui.sensor")
 
----An extension of clickbox that additionally tracks dragging
----Implicitly does a `cursor place` and `sensor.update_mouse_intersect`
+---An extension of clickbox that additionally tracks dragging.
+---Implicitly does a `cursor place` and `sensor.update_mouse_intersect`.
+---Disables mouse intersections while dragging.
 ---@param state table
 ---@return integer?
 return function(state)
@@ -20,7 +21,8 @@ return function(state)
             -- end dragging
             state.stopped_dragging = state.dragging
             state.dragging = nil
-            -- origin values are not cleared since the can be used by a stopped_dragging event! 
+            sensor.do_intersections = true
+            -- origin values are not cleared since they can be used by a stopped_dragging event! 
             return
         end
     else
@@ -50,6 +52,7 @@ return function(state)
         state.holding = nil
         state.drag_origin_x = mouse.prev_x
         state.drag_origin_y = mouse.prev_y
+        sensor.do_intersections = false
     end
 
     -- return the dragging state

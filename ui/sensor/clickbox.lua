@@ -3,7 +3,7 @@ local cursor = require("ui.cursor")
 local sensor = require("ui.sensor")
 
 ---A sensor element that tracks mouse clicking and holding.
----Implicitly does a `cursor place` and `sensor.update_mouse_intersect`
+---Implicitly does a `cursor place` and `sensor.update_mouse_intersect`.
 ---@param state table
 ---@return integer?
 return function(state)

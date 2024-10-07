@@ -7,8 +7,9 @@ local id = require("ui.id_table")()
 local button = require("ui.element.button")
 local icon_button = require("ui.element.icon_button")
 local numeric_input = require("ui.element.numeric_input")
+local slider = require("ui.element.slider")
 -- local background = require("ui.area.background")
--- local theme = require("ui.theme")
+local theme = require("ui.theme")
 local toggle = require("ui.element.toggle")
 local toggle_hex = require("ui.element.toggle_hex")
 local draw_queue = require("ui.draw_queue")
@@ -22,6 +23,7 @@ Ducimus voluptas asperiores rerum.
 ]]
 
 return function()
+    cursor.auto_reshape = true
     -- primitive.rectangle_outline(nil, 10)
 
     -- cursor.anchor_x = 0
@@ -42,10 +44,24 @@ return function()
     cursor.x = 60
     cursor.y = 10
     cursor.width = 150
+
+    -- primitive.rectangle(theme.red, "line")
     numeric_input(id.numeric, -100, 100, 5, "X = %.2f")
     if id.numeric.clicked then
         print("numeric_input clicked")
     end
+    -- primitive.rectangle(theme.green, "line")
+
+    cursor.shift_down(10)
+    slider(id.slider, 0, 1, 101)
+    cursor.shift_down(10)
+    primitive.label(string.format("%.2f", id.slider.value), 16)
+    cursor.shift_down(10)
+
+    cursor.width = 150
+    slider(id.slider2, 0, 10, 11, true)
+    cursor.shift_down(10)
+    primitive.label(string.format("%.2f", id.slider2.value), 16)
     cursor.shift_down(10)
 
     -- toggles
@@ -55,16 +71,14 @@ return function()
     cursor.shift_down(10)
     toggle_hex(id.toggle_hex)
 
-    cursor.shift_down(10)
-    cursor.shift_right(10)
+    cursor.x = 260
+    cursor.y = 10
 
     cursor.height = 40
     cursor.width = 200
     button(id.button, "hello world")
 
-    -- primitive.rectangle({ 1, 0, 0, 1 }, "line")
     -- primitive.icon("archive")
-    -- primitive.rectangle({ 0, 1, 0, 1 }, "line")
 
     -- Text
     cursor.x = 300
@@ -74,7 +88,7 @@ return function()
     text.wrap_text = false
     text.align = "left"
 
-    cursor.change_anchor(0.5, 0.5)
+    cursor.change_anchor(0)
 
     primitive.rectangle({ 1, 0, 0, 1 }, "line")
     primitive.label(sample_text, nil, "left")

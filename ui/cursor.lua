@@ -100,14 +100,11 @@ end
 
 ---Undos cursor reshaping for elements if cursor.auto_reshape is false. Requires a corresponding `cursor.push()`.
 function cursor.do_auto_reshape()
-    -- use the last snapshot's auto_reshape since elements themselves may have changed the current one.
-    if snapshots[index].auto_reshape then
-        -- anchor should not change, even if reshaping is happening
-        cursor.anchor_x = snapshots[index].anchor_x
-        cursor.anchor_y = snapshots[index].anchor_y
-        cursor.drop()
-    else
-        cursor.pop()
+    -- We only want the width and height to change.
+    local width_new, height_new = cursor.width, cursor.height
+    cursor.pop()
+    if cursor.auto_reshape then
+        cursor.width, cursor.height = width_new, height_new
     end
 end
 
@@ -150,6 +147,42 @@ end
 function cursor.outset(d)
     cursor.inset(-d)
 end
+
+---Returns an iterator that returns linspaced x coordinates derived from the current x-axis span of the cursor.
+---An enumerate integer is also given. Goes from 1 to n.
+---@param n integer
+---@return fun():number?, integer?
+function cursor.xlinspace(n)
+    cursor.push()
+    cursor.change_anchor(0)
+    local base_x = cursor.x
+    local step = cursor.width / (n - 1)
+    cursor.pop()
+    return coroutine.wrap(function()
+        for i = 1, n do
+            coroutine.yield(base_x + step * (i - 1), i)
+        end
+    end)
+end
+
+---Returns an iterator that returns linspaced y coordinates derived from the current y-axis span of the cursor.
+---An enumerate integer is also given. Goes from 1 to n.
+---@param n integer
+---@return fun():number?, integer?
+function cursor.ylinspace(n)
+    cursor.push()
+    cursor.change_anchor(0)
+    local base_y = cursor.y
+    local step = cursor.height / (n - 1)
+    cursor.pop()
+    return coroutine.wrap(function()
+        for i = 0, n - 1 do
+            coroutine.yield(base_y + step * i)
+        end
+    end)
+end
+
+-- TODO Simplify grid and subdivide functionality. They do too much
 
 ---Returns an iterator function that will move the cursor in a grid pattern.
 ---The anchor will be moved to the top-left of the cursor on each iteration.

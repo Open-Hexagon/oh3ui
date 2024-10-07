@@ -89,6 +89,8 @@ function mouse.update()
         local name, x, y, a, b, c = unpack(event)
         if name == "mousemoved" then
             local dx, dy, istouch = a, b, c
+
+            -- using the event dx, dy happens to work better if the mouse is being repositioned
             mouse.dx, mouse.dy = love.graphics.inverseTransformPoint(dx, dy)
             mouse.moved = true
 

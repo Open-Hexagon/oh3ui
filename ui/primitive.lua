@@ -154,7 +154,7 @@ function primitive.icon(icon_name, size, color, icon_font)
 
     cursor.place(width, height)
     draw_queue.text(text_object, edge.left, edge.top, color or theme.text_color)
-    
+
     cursor.do_auto_reshape()
 end
 
@@ -169,14 +169,24 @@ function primitive.pop_mask()
     draw_queue.pop_scissor()
 end
 
--- TODO
-
 ---Horizontal line primitive. Never reshapes the cursor.
----The line will be placed at cursor.y + 0.5 and extend from edge.left to edge.right.
-function primitive.hline(color) end
+---The line will be placed at about cursor.y and extend from edge.left to edge.right.
+---@param color number[]?
+---@param line_width number?
+function primitive.hline(color, line_width)
+    cursor.place()
+    local y = cursor.y - cursor.anchor_y + 0.5
+    draw_queue.line(line_width or 1, color or theme.default, edge.left, y, edge.right, y)
+end
 
 ---Vertical line primitive. Never reshapes the cursor.
----The line will be placed at cursor.x + 0.5 and extend from edge.top to edge.bottom.
-function primitive.vline(color) end
+---The line will be placed at about cursor.x and extend from edge.top to edge.bottom.
+---@param color number[]?
+---@param line_width number?
+function primitive.vline(color, line_width)
+    cursor.place()
+    local x = cursor.x - cursor.anchor_x + 0.5
+    draw_queue.line(line_width or 1, color or theme.default, x, edge.top, x, edge.bottom)
+end
 
 return primitive
