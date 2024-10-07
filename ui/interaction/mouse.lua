@@ -38,6 +38,11 @@ do
         prev_x = -1,
         prev_y = -1,
 
+        -- change in coordinates from last frame
+        dx = 0,
+        dy = 0,
+        moved = false,
+
         -- any mouse button up/down/pressed states
         any = m(),
 
@@ -75,13 +80,20 @@ function mouse.update()
     mouse.last_down = nil
     mouse.last_up = nil
 
+    mouse.dx, mouse.dy = 0, 0
+    mouse.moved = false
+
     -- Search for press and release events and update the left, right, middle, back, and forward tables
     -- Also update which button was last released and last pressed.
     for event in events.iterate("mouse[prm]") do
         local name, x, y, a, b, c = unpack(event)
         if name == "mousemoved" then
+            -- There should only be one of these per frame
             local dx, dy, istouch = a, b, c
-            -- todo Behavior is different for touchscreens
+            mouse.dx, mouse.dy = dx, dy
+            mouse.moved = true
+
+            -- todo Some behavior is different for touchscreens
         else
             local button_id, istouch, presses = a, b, c
             local button = mouse[button_id]
