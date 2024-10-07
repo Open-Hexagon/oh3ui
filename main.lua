@@ -24,6 +24,7 @@ function love.run()
             if name == "quit" then
                 return 0
             end
+            -- print(name, a, b, c, d, e, f)
             ui.push_event(name, a, b, c, d, e, f)
         end
 

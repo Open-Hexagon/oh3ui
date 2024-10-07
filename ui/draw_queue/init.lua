@@ -3,7 +3,6 @@
 ---For nicer functions that implicitly use the cursor and color themes, see primitive.lua
 
 local scissor_stack = require("ui.draw_queue.scissor_stack")
-local text_cache = require("ui.text.cache")
 local extmath = require("ui.extmath")
 local draw_queue = {}
 
@@ -236,16 +235,12 @@ function draw_queue.polygon(mode, color, ...)
     push_operation(op_ids.polygon, mode, color[1], color[2], color[3], color[4], ...)
 end
 
----add text to the queue
----@param text string
----@param font love.Font
+---Add text to the queue. Does not obey scaling!
+---@param text_object love.Text
 ---@param x number
 ---@param y number
 ---@param color number[]
----@param wraplimit number?
----@param align love.AlignMode?
-function draw_queue.text(text, font, x, y, color, wraplimit, align)
-    local text_object = text_cache.get(font, text, wraplimit or math.huge, align or "left")
+function draw_queue.text(text_object, x, y, color)
     push_operation(op_ids.text, text_object, x, y, unpack(color))
 end
 
