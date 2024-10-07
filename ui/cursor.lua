@@ -1,7 +1,6 @@
 ---The cursor represents a rectangular area on screen and is used as
 ---a tool for positioning and aligning ui elements.
----For checking whether the mouse is currently intersecting the cursor, see sensor/init.lua
-
+---For checking whether the mouse is currently intersecting the cursor, see sensor/init.lua.
 -- Note: parameters that are contained within tables are not saved in snapshots
 local cursor = {
     -- anchor constants
@@ -181,6 +180,8 @@ function cursor.ylinspace(n)
         end
     end)
 end
+
+
 
 -- TODO Simplify grid and subdivide functionality. They do too much
 

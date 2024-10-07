@@ -21,6 +21,7 @@ local function get_closest_position(value, min, max, positions)
     return math.ceil(real_step - 0.5)
 end
 
+---Slider element. This element will reshape the cursor.
 ---@param state table state
 ---@param min number min representable number in state.value
 ---@param max number max representable number in state.value

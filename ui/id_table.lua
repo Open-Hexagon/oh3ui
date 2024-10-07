@@ -12,7 +12,8 @@ local meta = {
         ---@field stopped_dragging integer? the mouse button id just stopped dragging this element
         ---@field drag_origin_x number? the mouse x coordinate where dragging began
         ---@field drag_origin_y number? the mouse y coordinate where dragging began
-        ---@field value number? contains whatever numerical data the element may be representing
+        ---@field position integer? contains whatever discrete state the element is in
+        ---@field value number? contains whatever real numerical data the element may be representing
         ---@field on boolean? contains whatever boolean data the element may be representing
         t[new_name] = {}
 

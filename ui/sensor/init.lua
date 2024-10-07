@@ -7,7 +7,7 @@ local edge = require("ui.cursor").edge
 local mouse = require("ui.mouse")
 
 local sensor = {
-    -- If false, disables mouse intersection checks and the enter, exit, and hovering fields will always be false.
+    -- If false, disables mouse intersection checks. The enter, exit, and hovering fields will always be false.
     do_intersections = true,
 
     -- * should be read only

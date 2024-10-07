@@ -1,4 +1,3 @@
-
 local mouse = require("ui.mouse")
 local cursor = require("ui.cursor")
 local sensor = require("ui.sensor")
@@ -22,7 +21,7 @@ return function(state)
             state.stopped_dragging = state.dragging
             state.dragging = nil
             sensor.do_intersections = true
-            -- origin values are not cleared since they can be used by a stopped_dragging event! 
+            -- origin values are not cleared since they can be used by a stopped_dragging event!
             return
         end
     else

@@ -11,6 +11,7 @@ local extmath = require("ui.extmath")
 local sensor = require("ui.sensor")
 
 ---Combination number slider and entry with increment buttons.
+---This element will reshape the cursor.
 ---TODO add manual keyboard input when element is clicked.
 ---@param state table
 return function(state, min, max, step, format)

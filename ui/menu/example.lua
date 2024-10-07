@@ -53,15 +53,15 @@ return function()
     -- primitive.rectangle(theme.green, "line")
 
     cursor.shift_down(10)
-    slider(id.slider, 0, 1, 101)
+    slider(id.slider, 0, 100, 101)
     cursor.shift_down(10)
-    primitive.label(string.format("%.2f", id.slider.value), 16)
+    primitive.label(string.format("%d%%", id.slider.value), 16)
     cursor.shift_down(10)
 
     cursor.width = 150
     slider(id.slider2, 0, 10, 11, true)
     cursor.shift_down(10)
-    primitive.label(string.format("%.2f", id.slider2.value), 16)
+    primitive.label(string.format("%d/10", id.slider2.value), 16)
     cursor.shift_down(10)
 
     -- toggles
