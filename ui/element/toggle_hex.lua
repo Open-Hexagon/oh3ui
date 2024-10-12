@@ -18,7 +18,7 @@ local radius = diameter * 0.5
 local half_radius = radius * 0.5
 local travel_distance = element.toggle_width - diameter
 
----Hexagonal toggle switch element (because funny).
+---Hexagonal two-position toggle switch element (because funny).
 ---This element ignores the cursor size will reshape the cursor.
 ---@param state table
 return function(state)

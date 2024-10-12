@@ -8,6 +8,7 @@ local button = require("ui.element.button")
 local icon_button = require("ui.element.icon_button")
 local numeric_input = require("ui.element.numeric_input")
 local slider = require("ui.element.slider")
+local switch = require("ui.element.switch")
 -- local background = require("ui.area.background")
 local theme = require("ui.theme")
 local toggle = require("ui.element.toggle")
@@ -64,21 +65,46 @@ return function()
     primitive.label(string.format("%d/10", id.slider2.value), 16)
     cursor.shift_down(10)
 
+    cursor.width = 150
+    switch(id.switch, "a", "b", "c", "d", "e")
+
     -- toggles
     cursor.x = 10
     cursor.y = 10
     toggle(id.toggle)
     cursor.shift_down(10)
     toggle_hex(id.toggle_hex)
+    cursor.shift_down(10)
 
+    -- array and combining
+    cursor.width = 20
+    cursor.height = 20
+    cursor.v_array(10, 10)
+
+    cursor.pop()
+    primitive.rectangle(theme.white)
+
+    cursor.pop()
+    cursor.combine()
+    primitive.rectangle(theme.white)
+
+    cursor.pop()
+    cursor.drop()
+    cursor.combine()
+    primitive.rectangle(theme.white)
+
+    cursor.pop()
+    cursor.drop()
+    cursor.drop()
+    cursor.combine()
+    primitive.rectangle(theme.white)
+
+    -- button
     cursor.x = 260
     cursor.y = 10
-
     cursor.height = 40
     cursor.width = 200
     button(id.button, "hello world")
-
-    -- primitive.icon("archive")
 
     -- Text
     cursor.x = 300
@@ -93,4 +119,5 @@ return function()
     primitive.rectangle({ 1, 0, 0, 1 }, "line")
     primitive.label(sample_text, nil, "left")
     primitive.rectangle({ 0, 1, 0, 1 }, "line")
+
 end

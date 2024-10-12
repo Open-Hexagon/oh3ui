@@ -37,6 +37,11 @@ element.toggle_height = 20
 element.slider_min_width = 100
 element.slider_height = 20
 
+element.switch_min_width = 100
+element.switch_height = 20
+element.switch_text_size = 16
+element.switch_internal_padding = 2
+
 element.numeric_input_min_width = 100
 element.numeric_input_height = 20
 element.numeric_input_lr_button_width = 16

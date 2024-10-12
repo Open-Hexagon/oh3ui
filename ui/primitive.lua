@@ -159,15 +159,14 @@ function primitive.icon(icon_name, size, color, icon_font)
 end
 
 ---Mask everything outside of the cursor. Further draw operations will not affect masked areas.
+---Make sure to pop the mask when you're done!
 function primitive.push_mask()
     cursor.place()
     draw_queue.push_scissor(edge.left, edge.top, edge.right, edge.bottom)
 end
 
 ---Removes the last applied mask.
-function primitive.pop_mask()
-    draw_queue.pop_scissor()
-end
+primitive.pop_mask = draw_queue.pop_scissor
 
 ---Horizontal line primitive. Never reshapes the cursor.
 ---The line will be placed at about cursor.y and extend from edge.left to edge.right.

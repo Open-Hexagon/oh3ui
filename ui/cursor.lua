@@ -49,6 +49,25 @@ function cursor.reset()
     edge.bottom = 0
 end
 
+---Returns edges from the current cursor parameters
+---@param x number
+---@param y number
+---@param anchor_x number
+---@param anchor_y number
+---@param width number
+---@param height number
+---@return number
+---@return number
+---@return number
+---@return number
+local function get_edges(x, y, anchor_x, anchor_y, width, height)
+    local left = x - anchor_x * width
+    local top = y - anchor_y * height
+    local right = x + (1 - anchor_x) * width
+    local bottom = y + (1 - anchor_y) * height
+    return left, top, right, bottom
+end
+
 -- first cursor setup
 cursor.reset()
 
@@ -56,21 +75,33 @@ cursor.reset()
 
 -- Cursor snapshots
 local snapshots = {}
-local index = 0
+local index = 0 -- index of the last pushed snapshot
+
+---Should be run at the end of a frame to clean up the snapshot stack
+function cursor.finish()
+    if index ~= 0 then
+        print("warning: cursor stack was not empty")
+        index = 0
+    end
+end
 
 ---Push a snapshot of the cursor, saving its current state for later.
 function cursor.push()
     index = index + 1
-    if not snapshots[index] then
-        snapshots[index] = {}
+
+    local new_snapshot = snapshots[index]
+    if not new_snapshot then
+        new_snapshot = {}
+        snapshots[index] = new_snapshot
     end
-    for k, v in pairs(cursor) do
-        local t = type(v)
-        -- Only certain types should be saved
-        if t == "number" or t == "string" or t == "boolean" then
-            snapshots[index][k] = v
-        end
-    end
+
+    new_snapshot.x = cursor.x
+    new_snapshot.y = cursor.y
+    new_snapshot.width = cursor.width
+    new_snapshot.height = cursor.height
+    new_snapshot.anchor_x = cursor.anchor_x
+    new_snapshot.anchor_y = cursor.anchor_y
+    new_snapshot.auto_reshape = cursor.auto_reshape
 end
 
 ---Peek a snapshot of the cursor, returning it to the last pushed state without dropping it.
@@ -107,12 +138,92 @@ function cursor.do_auto_reshape()
     end
 end
 
----Should be run at the end of a frame
-function cursor.finish()
-    if index ~= 0 then
-        print("warning: cursor stack was not empty")
-        index = 0
+---Pushes n snapshots to the stack, such that when popping them,
+---the cursor will move from left to right with padding,
+---while maintaining the cursor's current shape.
+---@param n integer
+---@param padding number?
+function cursor.h_array(n, padding)
+    padding = padding or 0
+    for i = n - 1, 0, -1 do
+        cursor.push()
+        snapshots[index].x = cursor.x + (cursor.width + padding) * i
     end
+end
+
+---Pushes n snapshots to the stack, such that when popping them,
+---the cursor will move from top to bottom with padding,
+---while maintaining the cursor's current shape.
+---@param n integer
+---@param padding number?
+function cursor.v_array(n, padding)
+    padding = padding or 0
+    for i = n - 1, 0, -1 do
+        cursor.push()
+        snapshots[index].y = cursor.y + (cursor.height + padding) * i
+    end
+end
+
+---Pushes n snapshots to the stack, such that when popping them,
+---the cursor will move from left to right with padding within the bounding box of the current cursor.
+---Cursors take on the shape formed by horizontally subdividing the current cursor with padding.
+---@param n integer
+---@param padding number?
+function cursor.h_split(n, padding)
+    padding = padding or 0
+    local section_width = (cursor.width - (n - 1) * padding) / n
+    local left_edge = cursor.x - cursor.anchor_x * cursor.width
+
+    for i = n - 1, 0, -1 do
+        cursor.push()
+        snapshots[index].x = left_edge + (section_width + padding) * i + section_width * cursor.anchor_x
+        snapshots[index].width = section_width
+    end
+end
+
+---Pushes n snapshots to the stack, such that when popping them,
+---the cursor will move from top to bottom with padding within the bounding box of the current cursor.
+---Cursors take on the shape formed by vertically subdividing the current cursor with padding.
+---@param n integer
+---@param padding number?
+function cursor.v_split(n, padding)
+    padding = padding or 0
+
+    local section_height = (cursor.height - (n - 1) * padding) / n
+    local top_edge = cursor.y - cursor.anchor_y * cursor.height
+
+    for i = n - 1, 0, -1 do
+        cursor.push()
+        snapshots[index].y = top_edge + (section_height + padding) * i + section_height * cursor.anchor_y
+        snapshots[index].height = section_height
+    end
+end
+
+---Pop a snapshot and expand the current cursor to surround it.
+---Does not change relative anchor locations.
+---If the anchor is in the top-left then it will stay in the top-left after the operation, even if the cursor x, y had to move.
+function cursor.combine()
+    if index == 0 then
+        error("cursor stack underflow")
+    end
+
+    local s = snapshots[index]
+
+    local new_left, new_top, new_right, new_bottom = get_edges(s.x, s.y, s.anchor_x, s.anchor_y, s.width, s.height)
+    local left, top, right, bottom =
+        get_edges(cursor.x, cursor.y, cursor.anchor_x, cursor.anchor_y, cursor.width, cursor.height)
+
+    left = math.min(new_left, left)
+    top = math.min(new_top, top)
+    right = math.max(new_right, right)
+    bottom = math.max(new_bottom, bottom)
+
+    cursor.width = right - left
+    cursor.height = bottom - top
+    cursor.x = left + cursor.anchor_x * cursor.width
+    cursor.y = top + cursor.anchor_y * cursor.height
+
+    index = index - 1
 end
 
 --#endregion
@@ -151,7 +262,7 @@ end
 ---An enumerate integer is also given. Goes from 1 to n.
 ---@param n integer
 ---@return fun():number?, integer?
-function cursor.xlinspace(n)
+function cursor.x_linspace(n)
     cursor.push()
     cursor.change_anchor(0)
     local base_x = cursor.x
@@ -168,7 +279,7 @@ end
 ---An enumerate integer is also given. Goes from 1 to n.
 ---@param n integer
 ---@return fun():number?, integer?
-function cursor.ylinspace(n)
+function cursor.y_linspace(n)
     cursor.push()
     cursor.change_anchor(0)
     local base_y = cursor.y
@@ -179,58 +290,6 @@ function cursor.ylinspace(n)
             coroutine.yield(base_y + step * i)
         end
     end)
-end
-
-
-
--- TODO Simplify grid and subdivide functionality. They do too much
-
----Returns an iterator function that will move the cursor in a grid pattern.
----The anchor will be moved to the top-left of the cursor on each iteration.
----@param cols integer number of columns
----@param rows integer number of rows
----@param padding integer? spacing between columns and rows
----@param flip_horizontal boolean? iterate right to left
----@param flip_vertical boolean? iterate from bottom to top
----@return fun():integer?, integer?
-function cursor.grid(cols, rows, padding, flip_horizontal, flip_vertical)
-    ---Get the base location and size so grid geometry is not
-    ---lost even if the cursor is modified between iterations.
-    cursor.change_anchor(anchor.LEFT, anchor.TOP)
-    local width, height = cursor.width, cursor.height
-    local base_x, base_y = cursor.x, cursor.y
-
-    padding = padding or 0
-    local dir_x = flip_horizontal and -1 or 1
-    local dir_y = flip_vertical and -1 or 1
-
-    return coroutine.wrap(function()
-        for y = 0, (rows - 1) * dir_y, dir_y do
-            for x = 0, (cols - 1) * dir_x, dir_x do
-                cursor.x = base_x + (width + padding) * x
-                cursor.y = base_y + (height + padding) * y
-                cursor.width = width
-                cursor.height = height
-                cursor.anchor_x = anchor.LEFT
-                cursor.anchor_y = anchor.TOP
-                coroutine.yield(x, y)
-            end
-        end
-    end)
-end
-
----Returns an iterator that moves the cursor in a grid pattern
----formed by subdividing the current cursor into rows and columns.
----The anchor will be moved to the top-left of the cursor on each iteration.
----@param cols integer number of columns
----@param rows integer number of rows
----@param padding number spacing between columns and rows
----@return fun():integer?, integer?
-function cursor.subdivide(cols, rows, padding)
-    cursor.change_anchor(anchor.LEFT, anchor.TOP)
-    cursor.width = (cursor.width - (cols - 1) * padding) / cols
-    cursor.height = (cursor.height - (rows - 1) * padding) / rows
-    return cursor.grid(cols, rows, padding)
 end
 
 ---Move the cursor right by its own width
@@ -272,10 +331,8 @@ function cursor.place(desired_width, desired_height)
     local width, height = desired_width or cursor.width, desired_height or cursor.height
 
     -- Update edges
-    edge.left = cursor.x - cursor.anchor_x * width
-    edge.top = cursor.y - cursor.anchor_y * height
-    edge.right = cursor.x + (1 - cursor.anchor_x) * width
-    edge.bottom = cursor.y + (1 - cursor.anchor_y) * height
+    edge.left, edge.top, edge.right, edge.bottom =
+        get_edges(cursor.x, cursor.y, cursor.anchor_x, cursor.anchor_y, width, height)
 
     -- Expand the current area
     local area = require("ui.area")

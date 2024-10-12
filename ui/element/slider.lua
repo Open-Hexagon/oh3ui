@@ -80,12 +80,11 @@ return function(state, min, max, positions, show_positions)
     if show_positions then
         cursor.peek()
         cursor.change_anchor(0.5)
-        cursor.width = full_width - actuator_radius * 2
+        cursor.width = full_width - actuator_radius * 2 - 1
         cursor.height = cursor.height - 2 -- prevents lines from spilling over
-        -- cursor.y = cursor.y + 12
         cursor.change_anchor(0)
-        for x, i in cursor.xlinspace(positions) do
-            cursor.x = math.floor(x)
+        for x, i in cursor.x_linspace(positions) do
+            cursor.x = x
             primitive.vline(i - 1 > state.position and theme.button_outline or theme.accent_color)
         end
         cursor.pop()
