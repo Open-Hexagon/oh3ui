@@ -13,9 +13,9 @@ return function(state, icon_name)
     clickbox(state)
 
     -- draw background and outline
-    primitive.rectangle(state.holding and theme.button_background_highlight or theme.button_background)
+    primitive.rectangle(state.holding and theme.widget_background_highlight or theme.widget_background)
     primitive.rectangle_outline(
-        sensor.hovering and theme.button_outline_highlight or theme.button_outline
+        sensor.hovering and theme.widget_outline_highlight or theme.widget_outline
     )
 
     -- draw button internals

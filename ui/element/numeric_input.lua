@@ -72,18 +72,18 @@ return function(state, min, max, step, format)
     if dragging or state.holding then
         -- highlighted background
         cursor.width = full_width
-        primitive.rectangle(theme.button_background_highlight)
+        primitive.rectangle(theme.widget_background_highlight)
 
         state.value = state.value + mouse.dx
     else
         -- normal background
         cursor.width = full_width
-        primitive.rectangle(theme.button_background)
+        primitive.rectangle(theme.widget_background)
         cursor.width = center_width
 
         -- brighter center
         if sensor.hovering then
-            primitive.rectangle(theme.button_background_brighter)
+            primitive.rectangle(theme.widget_background_brighter)
         end
     end
 
@@ -99,9 +99,9 @@ return function(state, min, max, step, format)
                 state.value = state.value - step
             end
             if state.numeric_input_left.holding then
-                primitive.rectangle(theme.button_background_highlight)
+                primitive.rectangle(theme.widget_background_highlight)
             elseif sensor.hovering then
-                primitive.rectangle(theme.button_background_brighter)
+                primitive.rectangle(theme.widget_background_brighter)
             end
         end
         primitive.icon("chevron-left", element.numeric_input_text_size)
@@ -117,9 +117,9 @@ return function(state, min, max, step, format)
                 state.value = state.value + step
             end
             if state.numeric_input_right.holding then
-                primitive.rectangle(theme.button_background_highlight)
+                primitive.rectangle(theme.widget_background_highlight)
             elseif sensor.hovering then
-                primitive.rectangle(theme.button_background_brighter)
+                primitive.rectangle(theme.widget_background_brighter)
             end
         end
         primitive.icon("chevron-right", element.numeric_input_text_size)
@@ -129,7 +129,7 @@ return function(state, min, max, step, format)
 
     state.value = extmath.clamp(state.value, min or -math.huge, max or math.huge)
     primitive.label(string.format(format or "%f", state.value), 16)
-    primitive.rectangle_outline((hovering or dragging) and theme.button_outline_highlight or theme.button_outline)
+    primitive.rectangle_outline((hovering or dragging) and theme.widget_outline_highlight or theme.widget_outline)
 
     cursor.do_auto_reshape() -- (1)
 end

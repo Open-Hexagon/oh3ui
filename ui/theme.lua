@@ -45,17 +45,14 @@ theme.default = { 0.2, 0.2, 0.2, 1 } -- default color of primitives
 theme.text_color = { 1, 1, 1, 1 } -- default text color
 theme.accent_color = i2c(0x3daee9)
 
-theme.button_outline = i2c(0x8c8c8c)
-theme.button_outline_highlight = theme.accent_color
-theme.button_background = i2c(0x404040)
-theme.button_background_brighter = mix(theme.button_background, theme.white, 0.2)
-theme.button_background_highlight = mix(theme.button_background, theme.button_outline_highlight, 0.5)
-
-theme.toggle_on_background = theme.button_background_highlight
-theme.toggle_off_background = theme.button_background
-theme.toggle_actuator = { 0.8, 0.8, 0.8, 1 }
-theme.toggle_actuator_outline = { 1, 1, 1, 1 }
-theme.toggle_actuator_outline_highlight = theme.button_outline_highlight
+theme.widget_outline = i2c(0x8c8c8c)
+theme.widget_outline_highlight = theme.accent_color
+theme.widget_background = i2c(0x404040)
+theme.widget_background_brighter = mix(theme.widget_background, theme.white, 0.2)
+theme.widget_background_highlight = mix(theme.widget_background, theme.widget_outline_highlight, 0.5)
+theme.widget_actuator = { 0.8, 0.8, 0.8, 1 }
+theme.widget_actuator_outline = theme.white
+theme.widget_actuator_outline_highlight = theme.accent_color
 
 -- export the mix function
 theme.mix = mix

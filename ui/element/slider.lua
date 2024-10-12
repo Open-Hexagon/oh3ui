@@ -52,8 +52,8 @@ return function(state, min, max, positions, show_positions)
 
     -- background slot
     cursor.height = slot_height
-    primitive.slot(theme.button_background)
-    primitive.slot_outline(theme.button_outline)
+    primitive.slot(theme.widget_background)
+    primitive.slot_outline(theme.widget_outline)
     -- save background slot position for by show_positions
     cursor.push()
 
@@ -73,19 +73,18 @@ return function(state, min, max, positions, show_positions)
 
     -- background slot filled portion
     cursor.width = fill_width
-    primitive.slot(theme.button_background_highlight)
+    primitive.slot(theme.widget_background_highlight)
     primitive.slot_outline(theme.accent_color)
 
     -- position lines
     if show_positions then
         cursor.peek()
         cursor.change_anchor(0.5)
-        cursor.width = full_width - actuator_radius * 2 - 1
+        cursor.width = full_width - actuator_radius * 2
         cursor.height = cursor.height - 2 -- prevents lines from spilling over
-        cursor.change_anchor(0)
         for x, i in cursor.x_linspace(positions) do
             cursor.x = x
-            primitive.vline(i - 1 > state.position and theme.button_outline or theme.accent_color)
+            primitive.vline(i - 1 > state.position and theme.widget_outline or theme.accent_color)
         end
         cursor.pop()
     else
@@ -97,9 +96,9 @@ return function(state, min, max, positions, show_positions)
     cursor.anchor_x = 0.5
     cursor.width = element.slider_height
     cursor.height = element.slider_height
-    primitive.circle(theme.toggle_actuator)
+    primitive.circle(theme.widget_actuator)
     primitive.circle_outline(
-        (hovering or dragging) and theme.toggle_actuator_outline_highlight or theme.toggle_actuator_outline
+        (hovering or dragging) and theme.widget_actuator_outline_highlight or theme.widget_actuator_outline
     )
 
     cursor.pop() -- (2)

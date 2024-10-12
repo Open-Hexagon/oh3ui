@@ -22,7 +22,7 @@ return function(state)
     end
 
     -- base shape
-    primitive.slot(state.on and theme.accent_color or theme.toggle_off_background)
+    primitive.slot(state.on and theme.accent_color or theme.widget_background)
 
     -- normalized position
     state.toggle_position =
@@ -33,11 +33,11 @@ return function(state)
     cursor.height = element.toggle_height
     cursor.x = cursor.x + state.toggle_position * travel_distance
 
-    primitive.circle(theme.toggle_actuator)
-    primitive.circle_outline(sensor.hovering and theme.toggle_actuator_outline_highlight or theme.toggle_actuator_outline)
+    primitive.circle(theme.widget_actuator)
+    primitive.circle_outline(sensor.hovering and theme.widget_actuator_outline_highlight or theme.widget_actuator_outline)
 
     cursor.pop()
-    
+
     cursor.do_auto_reshape()
     return state.on
 end

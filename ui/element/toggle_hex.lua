@@ -43,7 +43,7 @@ return function(state)
     -- base shape
     draw_queue.polygon(
         "fill",
-        state.on and theme.accent_color or theme.toggle_off_background,
+        state.on and theme.accent_color or theme.widget_background,
         x0,
         y1,
         x1,
@@ -67,9 +67,9 @@ return function(state)
     cursor.height = diameter
     cursor.x = cursor.x + state.toggle_position * travel_distance
 
-    primitive.circle(theme.toggle_actuator, 6)
+    primitive.circle(theme.widget_actuator, 6)
     primitive.circle_outline(
-        sensor.hovering and theme.toggle_actuator_outline_highlight or theme.toggle_actuator_outline,
+        sensor.hovering and theme.widget_actuator_outline_highlight or theme.widget_actuator_outline,
         nil,
         6
     )
