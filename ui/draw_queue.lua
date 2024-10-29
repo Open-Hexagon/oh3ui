@@ -2,21 +2,20 @@
 ---These draw operations are lower-level bare commands and do not interact with the cursor at all.
 ---For nicer functions that implicitly use the cursor and color themes, see primitive.lua
 
-local scissor_stack = require("ui.draw_queue.scissor_stack")
 local extmath = require("ui.extmath")
 local draw_queue = {}
 
 local op_ids = {
     rectangle = 0,
     polygon = 1,
-    push_scissor = 2,
-    pop_scissor = 3,
+    -- 2, 3 free
     text = 4,
     call_group = 5,
     rectangle_outline = 6,
     circle = 7,
     circle_outline = 8,
     line = 9,
+    call_function = 10,
 }
 
 -- A list of groups
@@ -146,18 +145,12 @@ function draw_queue.nop()
     push_operation()
 end
 
----queue pushing a scissor rectangle onto the scissor stack
----@param left number
----@param top number
----@param right number
----@param bottom number
-function draw_queue.push_scissor(left, top, right, bottom)
-    push_operation(op_ids.push_scissor, left, top, right, bottom)
-end
-
----queue poping a scissor rectangle from the scissor stack
-function draw_queue.pop_scissor()
-    push_operation(op_ids.pop_scissor)
+---Add a call to an arbitrary function.
+---With great power comes great responsibility!
+---@param f function
+---@param ... any
+function draw_queue.call(f, ...)
+    push_operation(op_ids.call_function, f, ...)
 end
 
 --#region functions that actually draw things
@@ -259,6 +252,38 @@ end
 
 --#endregion
 
+--[[
+    * Aside: How ui scaling and transformations are done 
+
+    Old method
+
+    apply transforms e.g. scale x2
+    build the queue while passing any coordinate through transformPoint e.g x2 to all coordinate values
+    undo all transforms
+    draw elements using absolute coordinates (they all got scaled by x2 anyways)
+
+    Upsides:
+    - calling graphics transformations directly while building the queue works (even with weird stuff like rotate or skew).
+
+    Downsides:
+    - line widths are not scaled properly, they would have to be multiplied too.
+    - May be confusing e.g. forgetting to pass coordinates through transformPoint.
+
+    New method (currently implemented)
+
+    apply transforms (this could go after "build queue" but we want [inverse]TransformPoint to work)
+    build the queue
+    draw elements with transforms
+    undo transforms
+
+    Upsides:
+    - No need to remember to transform everything manually.
+    - Transforms are completely accurate.
+
+    Downsides:
+    - calling graphics transformations has no affect while building the queue.
+]]
+
 ---Executes all draw operations in order specified by group_index.
 ---Uses recursion to handle groups calls.
 ---@param group_index integer the group to run
@@ -286,14 +311,6 @@ local function run_draw_operations(group_index)
                 love.graphics.origin()
                 love.graphics.draw(text_object, x, y)
                 love.graphics.pop()
-            elseif id == op_ids.push_scissor then
-                local x1, y1, x2, y2 = unpack(item, 2)
-                -- scissor operates on screen space coordinates so we have to manually transform
-                x1, y1 = love.graphics.transformPoint(x1, y1)
-                x2, y2 = love.graphics.transformPoint(x2, y2)
-                scissor_stack.push(x1, y1, x2 - x1, y2 - y1)
-            elseif id == op_ids.pop_scissor then
-                scissor_stack.pop()
             elseif id == op_ids.call_group then
                 -- recursive call to group
                 run_draw_operations(item[2])
@@ -337,6 +354,8 @@ local function run_draw_operations(group_index)
                 love.graphics.setLineWidth(line_width)
                 love.graphics.setColor(r, g, b, a)
                 love.graphics.line(unpack(item, 7))
+            elseif id == op_ids.call_function then
+                item[2](unpack(item, 3))
             end
         end
     end
@@ -358,9 +377,6 @@ function draw_queue.draw()
 
     run_draw_operations(1)
     reset_groups()
-
-    -- Ensure the scissor stack is empty
-    scissor_stack.finish()
 end
 
 return draw_queue

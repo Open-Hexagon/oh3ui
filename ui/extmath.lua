@@ -135,4 +135,44 @@ function extmath.inradius_offset(r, n, o)
     return r + o / math.cos(math.pi / n)
 end
 
+---Returns true if (x, y) is inside the aligned rectangle.
+---@param x number
+---@param y number
+---@param left number
+---@param right number
+---@param top number
+---@param bottom number
+---@return boolean
+function extmath.point_in_aligned_rectangle(x, y, left, top, right, bottom)
+    return x >= left and x < right and y >= top and y < bottom
+end
+
+---Get the intersection of two aligned rectangles. Returns nil if there was no intersection.
+---@param x1 number rectangle 1 coordinate 1
+---@param y1 number rectangle 1 coordinate 1
+---@param x2 number rectangle 1 coordinate 2
+---@param y2 number rectangle 1 coordinate 2
+---@param x3 number rectangle 2 coordinate 1
+---@param y3 number rectangle 2 coordinate 1
+---@param x4 number rectangle 2 coordinate 2
+---@param y4 number rectangle 2 coordinate 2
+---@return number?
+---@return number?
+---@return number?
+---@return number?
+function extmath.aligned_rectangle_intersection(x1, y1, x2, y2, x3, y3, x4, y4)
+    -- Calculate the coordinates of the intersection rectangle
+    local x_inter1 = math.max(x1, x3)
+    local y_inter1 = math.max(y1, y3)
+    local x_inter2 = math.min(x2, x4)
+    local y_inter2 = math.min(y2, y4)
+
+    -- Check if there is an intersection
+    if x_inter1 < x_inter2 and y_inter1 < y_inter2 then
+        return x_inter1, y_inter1, x_inter2, y_inter2
+    else
+        return nil -- No intersection
+    end
+end
+
 return extmath

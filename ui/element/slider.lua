@@ -82,7 +82,7 @@ return function(state, min, max, positions, show_positions)
         cursor.change_anchor(0.5)
         cursor.width = full_width - actuator_radius * 2
         cursor.height = cursor.height - 2 -- prevents lines from spilling over
-        for x, i in cursor.x_linspace(positions) do
+        for x, i in cursor.h_linspace(positions) do
             cursor.x = x
             primitive.vline(i - 1 > state.position and theme.widget_outline or theme.accent_color)
         end

@@ -7,6 +7,7 @@ local theme = require("ui.theme")
 local draw_queue = require("ui.draw_queue")
 local text = require("ui.text")
 local ui = require("ui")
+local mask = require("ui.mask")
 
 local primitive = {}
 
@@ -157,16 +158,6 @@ function primitive.icon(icon_name, size, color, icon_font)
 
     cursor.do_auto_reshape()
 end
-
----Mask everything outside of the cursor. Further draw operations will not affect masked areas.
----Make sure to pop the mask when you're done!
-function primitive.push_mask()
-    cursor.place()
-    draw_queue.push_scissor(edge.left, edge.top, edge.right, edge.bottom)
-end
-
----Removes the last applied mask.
-primitive.pop_mask = draw_queue.pop_scissor
 
 ---Horizontal line primitive. Never reshapes the cursor.
 ---The line will be placed at about cursor.y and extend from edge.left to edge.right.

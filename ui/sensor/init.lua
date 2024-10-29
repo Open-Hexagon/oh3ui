@@ -5,6 +5,8 @@
 
 local edge = require("ui.cursor").edge
 local mouse = require("ui.mouse")
+local extmath = require("ui.extmath")
+local mask = require("ui.mask")
 
 local sensor = {
     -- If false, disables mouse intersection checks. The enter, exit, and hovering fields will always be false.
@@ -19,6 +21,7 @@ local sensor = {
 ---Check and update whether the mouse is intersecting the cursor (i.e. the mouse is hovering the cursor).
 ---Also detects if the mouse just entered or exited the cursor area.
 ---Can be disabled by setting `sensor.do_intersections` to false.
+---Masked areas are excluded from this check.
 ---Should be preceded by a `cursor.place()` of some sort.
 function sensor.update_mouse_intersect()
     if not sensor.do_intersections then
@@ -28,12 +31,36 @@ function sensor.update_mouse_intersect()
         return
     end
 
-    local hovering_before = mouse.prev_x >= edge.left
-        and mouse.prev_x < edge.right
-        and mouse.prev_y >= edge.top
-        and mouse.prev_y < edge.bottom
+    -- exclude masked areas
+    local x1, y1, x2, y2 = mask.get_bounds()
+    if x1 then
+        ---to appease the type checker
+        ---@cast x1 number
+        ---@cast y1 number
+        ---@cast x2 number
+        ---@cast y2 number
+        x1, y1, x2, y2 =
+            extmath.aligned_rectangle_intersection(edge.left, edge.top, edge.right, edge.bottom, x1, y1, x2, y2)
 
-    local hovering_now = mouse.x >= edge.left and mouse.x < edge.right and mouse.y >= edge.top and mouse.y < edge.bottom
+        if not x1 then
+            -- no intersection
+            sensor.enter = false
+            sensor.exit = false
+            sensor.hovering = false
+            return
+        end
+    else
+        -- no masks
+        x1, y1, x2, y2 = edge.left, edge.top, edge.right, edge.bottom
+    end
+
+    ---to appease the type checker
+    ---@cast x1 number
+    ---@cast y1 number
+    ---@cast x2 number
+    ---@cast y2 number
+    local hovering_before = extmath.point_in_aligned_rectangle(mouse.prev_x, mouse.prev_y, x1, y1, x2, y2)
+    local hovering_now = extmath.point_in_aligned_rectangle(mouse.x, mouse.y, x1, y1, x2, y2)
 
     sensor.hovering = hovering_now
     sensor.enter = hovering_now and not hovering_before

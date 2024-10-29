@@ -4,6 +4,7 @@ local clickbox = require("ui.sensor.clickbox")
 local primitive = require("ui.primitive")
 local element = require("ui.element")
 local sensor = require("ui.sensor")
+local mask = require("ui.mask")
 
 ---Button element. Can optionally contain text.
 ---Text that doesn't fit in the button gets cropped.
@@ -23,10 +24,10 @@ return function(state, text)
     if text then
         cursor.push()
         cursor.inset(element.button_internal_padding)
-        primitive.push_mask()
+        mask.push()
         cursor.change_anchor(0.5, 0.5)
         primitive.label(text)
-        primitive.pop_mask()
+        mask.pop()
         cursor.pop()
     end
 

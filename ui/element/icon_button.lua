@@ -4,6 +4,7 @@ local clickbox = require("ui.sensor.clickbox")
 local primitive = require("ui.primitive")
 local element = require("ui.element")
 local sensor = require("ui.sensor")
+local mask = require("ui.mask")
 
 ---Button element with icon. Icons that don't fit get cropped.
 ---Never reshapes the cursor.
@@ -21,10 +22,10 @@ return function(state, icon_name)
     -- draw button internals
     cursor.push()
     cursor.inset(element.button_internal_padding)
-    primitive.push_mask()
+    mask.push()
     cursor.change_anchor(0.5, 0.5)
     primitive.icon(icon_name)
-    primitive.pop_mask()
+    mask.pop()
     cursor.pop()
 
     return state.clicked

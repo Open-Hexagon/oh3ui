@@ -9,13 +9,13 @@ local icon_button = require("ui.element.icon_button")
 local numeric_input = require("ui.element.numeric_input")
 local slider = require("ui.element.slider")
 local switch = require("ui.element.switch")
--- local background = require("ui.area.background")
 local theme = require("ui.theme")
 local toggle = require("ui.element.toggle")
 local toggle_hex = require("ui.element.toggle_hex")
 local draw_queue = require("ui.draw_queue")
 local element = require("ui.element")
 local text = require("ui.text")
+local mask = require("ui.mask")
 
 local sample_text = [[
 Atque et cumque enim fugiat numquam commodi.
@@ -42,6 +42,14 @@ return function()
 
     -- button(id.button1)
 
+
+    cursor.x = 60
+    cursor.y = 10
+    cursor.width = 75
+    cursor.height = 1000
+
+    mask.push()
+
     cursor.x = 60
     cursor.y = 10
     cursor.width = 150
@@ -67,6 +75,8 @@ return function()
 
     cursor.width = 150
     switch(id.switch, "a", "b", "c", "d", "e")
+
+    mask.pop()
 
     -- toggles
     cursor.x = 10
