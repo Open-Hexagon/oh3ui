@@ -262,7 +262,7 @@ end
 ---An enumerate integer is also given. Goes from 1 to n.
 ---@param n integer
 ---@return fun():number?, integer?
-function cursor.x_linspace(n)
+function cursor.h_linspace(n)
     cursor.push()
     cursor.change_anchor(0)
     local base_x = cursor.x
@@ -279,7 +279,7 @@ end
 ---An enumerate integer is also given. Goes from 1 to n.
 ---@param n integer
 ---@return fun():number?, integer?
-function cursor.y_linspace(n)
+function cursor.v_linspace(n)
     cursor.push()
     cursor.change_anchor(0)
     local base_y = cursor.y
@@ -321,6 +321,13 @@ function cursor.shift_up(padding, times)
 end
 
 --#endregion
+
+
+---Returns true if the cursor has a non-positive width or height
+---@return boolean
+function cursor.is_degenerate()
+    return cursor.width <= 0 or cursor.height <= 0
+end
 
 ---Places the current cursor down. This will update the cursor edges output table (left, top, right, bottom) as well as expand areas.
 ---Desired width and height are typically used by elements when their contents don't fit the cursor exactly.

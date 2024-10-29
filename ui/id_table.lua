@@ -15,6 +15,7 @@ local meta = {
         ---@field position integer? contains whatever discrete state the element is in
         ---@field value number? contains whatever real numerical data the element may be representing
         ---@field on boolean? contains whatever boolean data the element may be representing
+        ---@field text string? contains whatever string data the element may be representing
         t[new_name] = {}
 
         return t[new_name]
