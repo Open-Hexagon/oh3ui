@@ -16,6 +16,9 @@ local meta = {
         ---@field value number? contains whatever real numerical data the element may be representing
         ---@field on boolean? contains whatever boolean data the element may be representing
         ---@field text string? contains whatever string data the element may be representing
+        ---@field enter boolean? used only by sensors, true on cursor enter, read only, only accurate to the previous frame
+        ---@field exit boolean? used only by sensors, true on cursor exit, read only, only accurate to the previous frame
+        ---@field hovering boolean? used only by sensors. true when cursor is hovering, read only, only accurate to the previous frame
         t[new_name] = {}
 
         return t[new_name]

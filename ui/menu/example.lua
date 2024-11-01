@@ -15,7 +15,7 @@ local toggle_hex = require("ui.element.toggle_hex")
 local draw_queue = require("ui.draw_queue")
 local element = require("ui.element")
 local text = require("ui.text")
-local mask = require("ui.mask")
+local area = require("ui.area")
 
 local sample_text = [[
 Atque et cumque enim fugiat numquam commodi.
@@ -48,7 +48,7 @@ return function()
     cursor.width = 75
     cursor.height = 1000
 
-    mask.push()
+    primitive.push_mask()
 
     cursor.x = 60
     cursor.y = 10
@@ -76,7 +76,7 @@ return function()
     cursor.width = 150
     switch(id.switch, "a", "b", "c", "d", "e")
 
-    mask.pop()
+    primitive.pop_mask()
 
     -- toggles
     cursor.x = 10
@@ -115,6 +115,9 @@ return function()
     cursor.height = 40
     cursor.width = 200
     button(id.button, "hello world")
+    cursor.x = 360
+    cursor.y = 30
+    button(id.button2, "hello world")
 
     -- Text
     cursor.x = 300

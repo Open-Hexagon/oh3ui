@@ -1,6 +1,8 @@
 local cursor = require("ui.cursor")
 local events = require("ui.events")
 local draw_queue = require("ui.draw_queue")
+local mouse = require("ui.mouse")
+local sensor = require("ui.sensor")
 -- local scroll_interaction = require("ui.interaction.scroll")
 -- local text_interaction = require("ui.interaction.text")
 -- local keyboard_navigation = require("ui.keyboard_navigation")
@@ -24,15 +26,34 @@ local broadcasters = {
     require("ui.mouse"),
 }
 
+--[[
+    UI update process
+
+    1 frame
+    [unordered events] [ordered event execution] [update state changes]
+
+    unordered events
+    - add events to the draw_queue
+    - reservations and groups can be used to add events out of order
+
+    ordered event execution
+    - draw all objects in order
+    - perform secondhand calculations that require ordered execution
+
+    update state changes
+    - mouse click z-ordering requires in order execution
+    - these won't be seen until the next frame
+]]
+
 ---reset ui state and set scale
 function ui.start()
     -- scale immediately so that screen space positions can be accounted for in any transforms and inverseTransforms
     love.graphics.push()
     love.graphics.scale(ui.scale)
 
-    for i = 1, #broadcasters do
-        broadcasters[i].update()
-    end
+    -- for i = 1, #broadcasters do
+    --     broadcasters[i].update()
+    -- end
 
     cursor.reset()
 
@@ -47,8 +68,14 @@ end
 function ui.finish()
     -- keyboard_navigation.run()
 
-    -- draw before undoing scale
+    -- draw in order
     draw_queue.draw()
+
+    -- do z-order stuff
+    mouse.update()
+    sensor.finish()
+
+    -- undo scaling
     love.graphics.pop()
 
     -- clean up

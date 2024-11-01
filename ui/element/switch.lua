@@ -4,7 +4,6 @@ local clickbox = require("ui.sensor.clickbox")
 local primitive = require("ui.primitive")
 local element = require("ui.element")
 local sensor = require("ui.sensor")
-local mask = require("ui.mask")
 
 
 ---N-position switch
@@ -41,14 +40,14 @@ return function (state, ...)
             state.position = i
         end
 
-        hovering = hovering or sensor.hovering
+        hovering = hovering or cb_state.hovering
 
         local button_color
         if i == state.position then
             button_color = theme.accent_color
         elseif cb_state.holding then
             button_color = theme.widget_background_highlight
-        elseif sensor.hovering then
+        elseif cb_state.hovering then
             button_color = theme.widget_background_brighter
         else
             button_color = theme.widget_background
@@ -57,9 +56,9 @@ return function (state, ...)
         primitive.rectangle(button_color)
 
         cursor.inset(element.switch_internal_padding)
-        mask.push()
+        primitive.push_mask()
         primitive.label(select(i, ...), element.switch_text_size)
-        mask.pop()
+        primitive.pop_mask()
     end
 
     cursor.pop() -- (2)

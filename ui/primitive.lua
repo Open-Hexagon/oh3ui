@@ -7,7 +7,6 @@ local theme = require("ui.theme")
 local draw_queue = require("ui.draw_queue")
 local text = require("ui.text")
 local ui = require("ui")
-local mask = require("ui.mask")
 
 local primitive = {}
 
@@ -178,5 +177,15 @@ function primitive.vline(color, line_width)
     local x = cursor.x - cursor.anchor_x + 0.5
     draw_queue.line(line_width or 1, color or theme.default, x, edge.top, x, edge.bottom)
 end
+
+---Mask everything outside of the cursor. Further draw operations will not affect masked areas.
+---Make sure to pop the mask when you're done!
+function primitive.push_mask()
+    cursor.place()
+    draw_queue.push_scissor(edge.left, edge.top, edge.right, edge.bottom)
+end
+
+---Removes the last applied mask.
+primitive.pop_mask = draw_queue.pop_scissor
 
 return primitive

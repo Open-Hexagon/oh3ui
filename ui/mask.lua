@@ -1,12 +1,12 @@
 -- Handles masking of ui elements
 local cursor = require("ui.cursor")
 local edge = cursor.edge
-local draw_queue = require("ui.draw_queue")
+-- local draw_queue = require("ui.draw_queue")
 local aligned_rectangle_intersection = require("ui.extmath").aligned_rectangle_intersection
 
 local mask = {}
 
--- A stack of scissor snapshots
+-- A stack of mask snapshots
 local snapshot = {}
 local index = 0
 
@@ -66,7 +66,7 @@ function mask.pop()
     end
 end
 
----Gets the bounds of the intersection of all maps
+---Gets the bounds of the intersection of all masks
 ---@return number?, number?, number?, number?
 function mask.get_bounds()
     if index > 0 then

@@ -48,7 +48,7 @@ return function(state, min, max, positions, show_positions)
     cursor.push() -- (2)
 
     local dragging = dragbox(state)
-    local hovering = sensor.hovering
+    local hovering = state.hovering
 
     -- background slot
     cursor.height = slot_height

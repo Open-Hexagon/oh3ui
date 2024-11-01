@@ -156,10 +156,10 @@ end
 ---@param y3 number rectangle 2 coordinate 1
 ---@param x4 number rectangle 2 coordinate 2
 ---@param y4 number rectangle 2 coordinate 2
----@return number?
----@return number?
----@return number?
----@return number?
+---@return number? x_inter1 output rectangle coordinate 1, nil if there was no intersection
+---@return number y_inter1 output rectangle coordinate 1
+---@return number x_inter2 output rectangle coordinate 2
+---@return number y_inter2 output rectangle coordinate 2
 function extmath.aligned_rectangle_intersection(x1, y1, x2, y2, x3, y3, x4, y4)
     -- Calculate the coordinates of the intersection rectangle
     local x_inter1 = math.max(x1, x3)
@@ -171,7 +171,7 @@ function extmath.aligned_rectangle_intersection(x1, y1, x2, y2, x3, y3, x4, y4)
     if x_inter1 < x_inter2 and y_inter1 < y_inter2 then
         return x_inter1, y_inter1, x_inter2, y_inter2
     else
-        return nil -- No intersection
+        return nil, 0, 0, 0 -- No intersection
     end
 end
 

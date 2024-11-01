@@ -2,13 +2,16 @@
 ---These draw operations are lower-level bare commands and do not interact with the cursor at all.
 ---For nicer functions that implicitly use the cursor and color themes, see primitive.lua
 
+local scissor_stack = require("ui.draw_queue.scissor_stack")
 local extmath = require("ui.extmath")
+local sensor = require("ui.sensor")
 local draw_queue = {}
 
 local op_ids = {
     rectangle = 0,
     polygon = 1,
-    -- 2, 3 free
+    push_scissor = 2,
+    pop_scissor = 3,
     text = 4,
     call_group = 5,
     rectangle_outline = 6,
@@ -16,6 +19,7 @@ local op_ids = {
     circle_outline = 8,
     line = 9,
     call_function = 10,
+    mouse_sensor = 11,
 }
 
 -- A list of groups
@@ -49,6 +53,7 @@ local function push_operation(...)
     end
 end
 
+---Begin a group of draw queue operations. Groups are treated as a single draw operations.
 function draw_queue.begin_group()
     -- save the current group index so we can come back
     local return_index = current_group_index
@@ -85,6 +90,7 @@ function draw_queue.begin_group()
     current_group_index = last_group_index
 end
 
+---End a group of draw queue operations
 function draw_queue.end_group()
     -- save where we returned from
     local from_group_index = current_group_index
@@ -145,6 +151,20 @@ function draw_queue.nop()
     push_operation()
 end
 
+---Add a push to the scissor stack
+---@param left number
+---@param top number
+---@param right number
+---@param bottom number
+function draw_queue.push_scissor(left, top, right, bottom)
+    push_operation(op_ids.push_scissor, left, top, right, bottom)
+end
+
+---Add a pop to the scissor stack
+function draw_queue.pop_scissor()
+    push_operation(op_ids.pop_scissor)
+end
+
 ---Add a call to an arbitrary function.
 ---With great power comes great responsibility!
 ---@param f function
@@ -153,9 +173,16 @@ function draw_queue.call(f, ...)
     push_operation(op_ids.call_function, f, ...)
 end
 
+---Add a mouse sensor to the draw queue.
+---This will be used by the sensor module to determine which sensor is being hovered.
+---The actual shape of the sensor may be changed by the scissor during execution of the draw queue.
+function draw_queue.mouse_sensor(state, left, top, right, bottom)
+    push_operation(op_ids.mouse_sensor, state, left, top, right, bottom)
+end
+
 --#region functions that actually draw things
 
----add a rectangle to the queue
+---Add a rectangle to the queue
 ---@param mode love.DrawMode
 ---@param left number
 ---@param top number
@@ -169,7 +196,7 @@ function draw_queue.rectangle(mode, left, top, right, bottom, color, rx, ry)
     push_operation(op_ids.rectangle, mode, left, top, right, bottom, rx, ry, unpack(color))
 end
 
----add a rectangle outline to the queue
+---Add a rectangle outline to the queue
 ---@param left number
 ---@param top number
 ---@param right number
@@ -221,7 +248,7 @@ function draw_queue.circle_outline(x, y, radius, line_width, color, segments, ro
     )
 end
 
----add a polygon to the queue
+---Add a polygon to the queue
 ---@param mode string
 ---@param color number[]
 ---@param ... number
@@ -229,7 +256,7 @@ function draw_queue.polygon(mode, color, ...)
     push_operation(op_ids.polygon, mode, color[1], color[2], color[3], color[4], ...)
 end
 
----Add text to the queue. Does not obey scaling!
+---Add text to the queue
 ---@param text_object love.Text
 ---@param x number
 ---@param y number
@@ -301,6 +328,14 @@ local function run_draw_operations(group_index)
             elseif id == op_ids.polygon then
                 love.graphics.setColor(item[3], item[4], item[5], item[6])
                 love.graphics.polygon(item[2], unpack(item, 7))
+            elseif id == op_ids.push_scissor then
+                local x1, y1, x2, y2 = unpack(item, 2)
+                -- scissor operates on screen space coordinates so we have to manually transform
+                x1, y1 = love.graphics.transformPoint(x1, y1)
+                x2, y2 = love.graphics.transformPoint(x2, y2)
+                scissor_stack.push(x1, y1, x2 - x1, y2 - y1)
+            elseif id == op_ids.pop_scissor then
+                scissor_stack.pop()
             elseif id == op_ids.text then
                 local text_object, x, y, r, g, b, a = unpack(item, 2)
                 love.graphics.setColor(r, g, b, a)
@@ -356,6 +391,22 @@ local function run_draw_operations(group_index)
                 love.graphics.line(unpack(item, 7))
             elseif id == op_ids.call_function then
                 item[2](unpack(item, 3))
+            elseif id == op_ids.mouse_sensor then
+                local state, x1, y1, x2, y2 = unpack(item, 2, 6)
+                local x, y, width, height = love.graphics.getScissor()
+                if x then
+                    x, y = love.graphics.inverseTransformPoint(x, y)
+                    width, height = love.graphics.inverseTransformPoint(width, height)
+
+                    x1, y1, x2, y2 = extmath.aligned_rectangle_intersection(x1, y1, x2, y2, x, y, x + width, y + height)
+                    -- only push if there was an intersection
+                    if x1 then
+                        sensor.push(state, x1, y1, x2, y2)
+                    end
+                else
+                    -- push if there is no active scissor
+                    sensor.push(state, x1, y1, x2, y2)
+                end
             end
         end
     end
