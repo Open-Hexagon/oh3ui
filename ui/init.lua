@@ -14,17 +14,10 @@ local ui = {
 
 ---Push a love event to the event sequence.
 ---All love events should be pushed at the very beginning of a frame.
----@param name string
----@param ... unknown
-function ui.push_event(name, ...)
-    events.add(name, ...)
-end
+ui.push_event = events.add
 
----Broadcasters are modules that need to be updated at the beginning of each frame.
----Their outputs should remain constant during a frame.
-local broadcasters = {
-    require("ui.mouse"),
-}
+---Grid to show screen and scaled coordinate systems
+local debug_grid = tonumber(os.getenv("GRID")) or 40
 
 --[[
     UI update process
@@ -47,15 +40,64 @@ local broadcasters = {
 
 ---reset ui state and set scale
 function ui.start()
+    -- The red grid shows screen space
+    if debug_grid then
+        love.graphics.setLineWidth(2)
+        love.graphics.setColor(1, 0, 0, 0.2)
+
+        local width, height = love.graphics.getDimensions()
+
+        local x = 0
+        while x < width do
+            love.graphics.line(x, 0, x, height)
+            x = x + debug_grid
+        end
+        x = width
+        love.graphics.line(x, 0, x, height)
+
+        local y = 0
+        while y < height do
+            love.graphics.line(0, y, width, y)
+            y = y + debug_grid
+        end
+        y = height
+        love.graphics.line(0, y, width, y)
+    end
+
     -- scale immediately so that screen space positions can be accounted for in any transforms and inverseTransforms
     love.graphics.push()
     love.graphics.scale(ui.scale)
-
-    -- for i = 1, #broadcasters do
-    --     broadcasters[i].update()
-    -- end
-
     cursor.reset()
+
+    ---The green grid shows scaled space.
+    ---This is where drawn graphics end up, but not everything is affected by graphics transforms.
+    if debug_grid then
+        love.graphics.setLineWidth(2)
+        love.graphics.setColor(0, 1, 0, 0.2)
+
+        local width, height = love.graphics.getDimensions()
+
+        local x = 0
+        while x < width do
+            love.graphics.line(x, 0, x, height)
+            x = x + debug_grid
+        end
+        x = width
+        love.graphics.line(x, 0, x, height)
+
+        local y = 0
+        while y < height do
+            love.graphics.line(0, y, width, y)
+            y = y + debug_grid
+        end
+        y = height
+        love.graphics.line(0, y, width, y)
+
+        -- Show scaled mouse position
+        x, y = love.mouse.getPosition()
+        love.graphics.transformPoint(x, y)
+        love.graphics.circle("line", x, y, 4)
+    end
 
     -- scroll_interaction.reset()
     -- love.keyboard.setKeyRepeat(text_interaction.is_interacting_with_text)
