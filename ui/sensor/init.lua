@@ -9,11 +9,6 @@ local extmath = require("ui.extmath")
 local sensor = {
     -- If false, disables mouse intersection checks. The enter, exit, and hovering fields will always be false.
     do_intersections = true,
-
-    -- * should be read only
-    enter = false,
-    exit = false,
-    hovering = false,
 }
 
 local z_list = {}
@@ -36,6 +31,7 @@ function sensor.push(state, mode, left, top, right, bottom)
     end
 end
 
+---Gets run after the draw queue to determine which sensors are hovered by the mouse
 function sensor.finish()
     if sensor.do_intersections then
         -- set to true once a single blocking sensor is found
@@ -48,9 +44,10 @@ function sensor.finish()
                 state.exit = false
                 state.hovering = false
             else
-                local hovering_now = extmath.point_in_aligned_rectangle(mouse.x, mouse.y, unpack(z_list[i], 3))
+                local x1, y1, x2, y2 = unpack(z_list[i], 3)
+                local hovering_now = extmath.point_in_aligned_rectangle(mouse.x, mouse.y, x1, y1, x2, y2)
                 local hovering_before =
-                    extmath.point_in_aligned_rectangle(mouse.prev_x, mouse.prev_y, unpack(z_list[i], 3))
+                    extmath.point_in_aligned_rectangle(mouse.prev_x, mouse.prev_y, x1, y1, x2, y2)
 
                 state.enter = hovering_now and not hovering_before
                 state.exit = not hovering_now and hovering_before

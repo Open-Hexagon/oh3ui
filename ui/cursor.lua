@@ -258,7 +258,7 @@ function cursor.outset(d)
     cursor.inset(-d)
 end
 
----Returns an iterator that returns linspaced x coordinates derived from the current x-axis span of the cursor.
+---Returns an iterator that returns n linspaced x coordinates derived from the current x-axis span of the cursor.
 ---An enumerate integer is also given. Goes from 1 to n.
 ---@param n integer
 ---@return fun():number?, integer?
@@ -275,7 +275,7 @@ function cursor.h_linspace(n)
     end)
 end
 
----Returns an iterator that returns linspaced y coordinates derived from the current y-axis span of the cursor.
+---Returns an iterator that returns n linspaced y coordinates derived from the current y-axis span of the cursor.
 ---An enumerate integer is also given. Goes from 1 to n.
 ---@param n integer
 ---@return fun():number?, integer?
@@ -286,8 +286,8 @@ function cursor.v_linspace(n)
     local step = cursor.height / (n - 1)
     cursor.pop()
     return coroutine.wrap(function()
-        for i = 0, n - 1 do
-            coroutine.yield(base_y + step * i)
+        for i = 1, n do
+            coroutine.yield(base_y + step * (i - 1), i)
         end
     end)
 end
@@ -321,7 +321,6 @@ function cursor.shift_up(padding, times)
 end
 
 --#endregion
-
 
 ---Returns true if the cursor has a non-positive width or height
 ---@return boolean

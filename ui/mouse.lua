@@ -70,7 +70,7 @@ end
 function mouse.update()
     -- Get mouse position and set previous position
     mouse.prev_x, mouse.prev_y = mouse.x, mouse.y
-    mouse.x, mouse.y = love.graphics.inverseTransformPoint(love.mouse.getPosition())
+    mouse.x, mouse.y = love.mouse.getPosition()
 
     -- Clear the up/down fields
     for i = 1, mouse.BUTTON_COUNT do

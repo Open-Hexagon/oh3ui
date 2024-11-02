@@ -17,10 +17,10 @@ function scroll.start(state)
     if cursor.is_degenerate() then
         return false
     end
+
     primitive.push_mask()
     -- this is just used to measure the area covered by all included elements
     area.start()
-
 
     return true
 end
@@ -28,8 +28,11 @@ end
 
 
 function scroll.finish()
-    primitive.pop_mask()
     area.finish()
+    
+
+
+    primitive.pop_mask()
 end
 
 return scroll

@@ -1,6 +1,8 @@
 ---Handles a queue of draw operations. All queued drawed operations will be executed at the end of the frame.
 ---These draw operations are lower-level bare commands and do not interact with the cursor at all.
 ---For nicer functions that implicitly use the cursor and color themes, see primitive.lua
+---Because this is an ordered event list, it does some other things not necessarily related to drawing but require ordered execution.
+---e.g. setting up the sensor z-list
 
 local scissor_stack = require("ui.draw_queue.scissor_stack")
 local extmath = require("ui.extmath")
@@ -400,10 +402,14 @@ local function run_draw_operations(group_index)
             elseif id == op_ids.mouse_sensor then
                 local state, mode, x1, y1, x2, y2 = unpack(item, 2)
                 local x, y, width, height = love.graphics.getScissor()
-                if x then
-                    x, y = love.graphics.inverseTransformPoint(x, y)
-                    width, height = love.graphics.inverseTransformPoint(width, height)
 
+                love.graphics.setColor(1, 0, 0, 1)
+                love.graphics.rectangle("line", x1, y1, x2 - x1, y2 - y1)
+
+                x1, y1 = love.graphics.transformPoint(x1, y1)
+                x2, y2 = love.graphics.transformPoint(x2, y2)
+
+                if x then
                     x1, y1, x2, y2 = extmath.aligned_rectangle_intersection(x1, y1, x2, y2, x, y, x + width, y + height)
                     -- only push if there was an intersection
                     if x1 then

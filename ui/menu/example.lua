@@ -81,7 +81,10 @@ return function()
     -- toggles
     cursor.x = 10
     cursor.y = 10
+    draw_queue.call(love.graphics.push)
+    draw_queue.call(love.graphics.translate, 40, 30)
     toggle(id.toggle)
+    draw_queue.call(love.graphics.pop)
     cursor.shift_down(10)
     toggle_hex(id.toggle_hex)
     cursor.shift_down(10)
