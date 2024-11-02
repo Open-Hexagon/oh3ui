@@ -45,9 +45,9 @@ function sensor.finish()
                 state.hovering = false
             else
                 local x1, y1, x2, y2 = unpack(z_list[i], 3)
-                local hovering_now = extmath.point_in_aligned_rectangle(mouse.x, mouse.y, x1, y1, x2, y2)
+                local hovering_now = extmath.point_in_aligned_rectangle(mouse.screen_x, mouse.screen_y, x1, y1, x2, y2)
                 local hovering_before =
-                    extmath.point_in_aligned_rectangle(mouse.prev_x, mouse.prev_y, x1, y1, x2, y2)
+                    extmath.point_in_aligned_rectangle(mouse.screen_prev_x, mouse.screen_prev_y, x1, y1, x2, y2)
 
                 state.enter = hovering_now and not hovering_before
                 state.exit = not hovering_now and hovering_before
