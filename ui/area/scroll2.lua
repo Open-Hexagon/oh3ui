@@ -1,5 +1,4 @@
 local draw_queue = require("ui.draw_queue")
-local area = require("ui.area")
 local primitive = require("ui.primitive")
 local cursor = require("ui.cursor")
 local edge = cursor.edge

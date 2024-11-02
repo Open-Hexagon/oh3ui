@@ -18,11 +18,23 @@ local cursor = {
         top = 0,
         right = 0,
         bottom = 0,
+        -- These get affected by the translations
+        x = 0,
+        y = 0,
     },
 }
 
 local anchor = cursor.anchor
 local edge = cursor.edge
+
+local snapshot_stack = {}
+local snapshot_index = 0 -- index of the last pushed snapshot
+
+local translate_stack = { { 0, 0 } } -- the do-nothing translation is always here
+local translate_index = 1 -- index of the last pushed translation
+
+local area_stack = {}
+local area_index = 0 -- index of the last started area
 
 ---Reset manual cursor to default values
 function cursor.reset()
@@ -40,13 +52,15 @@ function cursor.reset()
     -- If true, elements that don't fit in the cursor will cause the cursor to reshape
     cursor.auto_reshape = true
 
-    -- * do not write to the following fields manually
+    -- * Do not write to the following fields manually
 
     -- edges
     edge.left = 0
     edge.top = 0
     edge.right = 0
     edge.bottom = 0
+    edge.x = 0
+    edge.y = 0
 end
 
 ---Returns edges from the current cursor parameters
@@ -71,28 +85,28 @@ end
 -- first cursor setup
 cursor.reset()
 
---#region snapshotting
-
--- Cursor snapshots
-local snapshots = {}
-local index = 0 -- index of the last pushed snapshot
-
----Should be run at the end of a frame to clean up the snapshot stack
+---Should be run at the end of a frame to clean up all stacks
 function cursor.finish()
-    if index ~= 0 then
+    if snapshot_index ~= 0 then
         print("warning: cursor stack was not empty")
-        index = 0
+        snapshot_index = 0
+    end
+    if translate_index ~= 1 then
+        print("warning: translation stack was not empty")
+        translate_index = 1
     end
 end
 
+--#region snapshotting
+
 ---Push a snapshot of the cursor, saving its current state for later.
 function cursor.push()
-    index = index + 1
+    snapshot_index = snapshot_index + 1
 
-    local new_snapshot = snapshots[index]
+    local new_snapshot = snapshot_stack[snapshot_index]
     if not new_snapshot then
         new_snapshot = {}
-        snapshots[index] = new_snapshot
+        snapshot_stack[snapshot_index] = new_snapshot
     end
 
     new_snapshot.x = cursor.x
@@ -106,10 +120,10 @@ end
 
 ---Peek a snapshot of the cursor, returning it to the last pushed state without dropping it.
 function cursor.peek()
-    if index == 0 then
+    if snapshot_index == 0 then
         error("cursor stack underflow")
     end
-    for k, v in pairs(snapshots[index]) do
+    for k, v in pairs(snapshot_stack[snapshot_index]) do
         cursor[k] = v
     end
 end
@@ -117,15 +131,15 @@ end
 ---Pop a snapshot of the cursor, returning it to the last pushed state.
 function cursor.pop()
     cursor.peek()
-    index = index - 1
+    snapshot_index = snapshot_index - 1
 end
 
 ---Drops the last snapshot of the cursor
 function cursor.drop()
-    if index == 0 then
+    if snapshot_index == 0 then
         error("cursor stack underflow")
     end
-    index = index - 1
+    snapshot_index = snapshot_index - 1
 end
 
 ---Undos cursor reshaping for elements if cursor.auto_reshape is false. Requires a corresponding `cursor.push()`.
@@ -147,7 +161,7 @@ function cursor.h_array(n, padding)
     padding = padding or 0
     for i = n - 1, 0, -1 do
         cursor.push()
-        snapshots[index].x = cursor.x + (cursor.width + padding) * i
+        snapshot_stack[snapshot_index].x = cursor.x + (cursor.width + padding) * i
     end
 end
 
@@ -160,7 +174,7 @@ function cursor.v_array(n, padding)
     padding = padding or 0
     for i = n - 1, 0, -1 do
         cursor.push()
-        snapshots[index].y = cursor.y + (cursor.height + padding) * i
+        snapshot_stack[snapshot_index].y = cursor.y + (cursor.height + padding) * i
     end
 end
 
@@ -176,8 +190,8 @@ function cursor.h_split(n, padding)
 
     for i = n - 1, 0, -1 do
         cursor.push()
-        snapshots[index].x = left_edge + (section_width + padding) * i + section_width * cursor.anchor_x
-        snapshots[index].width = section_width
+        snapshot_stack[snapshot_index].x = left_edge + (section_width + padding) * i + section_width * cursor.anchor_x
+        snapshot_stack[snapshot_index].width = section_width
     end
 end
 
@@ -194,8 +208,8 @@ function cursor.v_split(n, padding)
 
     for i = n - 1, 0, -1 do
         cursor.push()
-        snapshots[index].y = top_edge + (section_height + padding) * i + section_height * cursor.anchor_y
-        snapshots[index].height = section_height
+        snapshot_stack[snapshot_index].y = top_edge + (section_height + padding) * i + section_height * cursor.anchor_y
+        snapshot_stack[snapshot_index].height = section_height
     end
 end
 
@@ -203,11 +217,11 @@ end
 ---Does not change relative anchor locations.
 ---If the anchor is in the top-left then it will stay in the top-left after the operation, even if the cursor x, y had to move.
 function cursor.combine()
-    if index == 0 then
+    if snapshot_index == 0 then
         error("cursor stack underflow")
     end
 
-    local s = snapshots[index]
+    local s = snapshot_stack[snapshot_index]
 
     local new_left, new_top, new_right, new_bottom = get_edges(s.x, s.y, s.anchor_x, s.anchor_y, s.width, s.height)
     local left, top, right, bottom =
@@ -223,7 +237,7 @@ function cursor.combine()
     cursor.x = left + cursor.anchor_x * cursor.width
     cursor.y = top + cursor.anchor_y * cursor.height
 
-    index = index - 1
+    snapshot_index = snapshot_index - 1
 end
 
 --#endregion
@@ -320,15 +334,109 @@ function cursor.shift_up(padding, times)
     cursor.y = cursor.y - (cursor.height + (padding or 0)) * (times or 1)
 end
 
---#endregion
-
 ---Returns true if the cursor has a non-positive width or height
 ---@return boolean
 function cursor.is_degenerate()
     return cursor.width <= 0 or cursor.height <= 0
 end
 
----Places the current cursor down. This will update the cursor edges output table (left, top, right, bottom) as well as expand areas.
+--#endregion
+
+--#region translations
+
+---Apply a translation to the cursor. Translations stack.
+---Only affects the edge output table.
+---@param x number
+---@param y number
+function cursor.apply_translation(x, y)
+    local prev_x, prev_y = unpack(translate_stack[translate_index])
+    translate_index = translate_index + 1
+
+    if translate_stack[translate_index] then
+        translate_stack[translate_index][1] = prev_x + x
+        translate_stack[translate_index][2] = prev_y + y
+    else
+        translate_stack[translate_index] = { prev_x + x, prev_y + y }
+    end
+end
+
+---Removes the last applied translation
+function cursor.remove_translation()
+    if translate_index == 1 then
+        error("no more translations to remove")
+    end
+    translate_index = translate_index - 1
+end
+
+--#endregion
+
+--#region areas
+-- An area is a generic rectangular bounding box for elements.
+-- After an area is started, any new elements that are created will expand the area.
+-- Areas can be stacked within each other.
+
+---expands a specified area
+---@param area table
+---@param left number
+---@param top number
+---@param right number
+---@param bottom number
+local function expand_area(area, left, top, right, bottom)
+    if area then
+        area.left = area.left == nil and left or math.min(area.left, left)
+        area.top = area.top == nil and top or math.min(area.top, top)
+        area.right = area.right == nil and right or math.max(area.right, right)
+        area.bottom = area.bottom == nil and bottom or math.max(area.bottom, bottom)
+    end
+end
+
+---Begins a new area
+function cursor.begin_area()
+    -- Add a new area to the stack
+    area_index = area_index + 1
+    local new_area = area_stack[area_index]
+    if new_area then
+        new_area.left = nil
+        new_area.top = nil
+        new_area.right = nil
+        new_area.bottom = nil
+    else
+        area_stack[area_index] = {}
+    end
+end
+
+---Ends the last started area.
+---The cursor will be set to that area.
+function cursor.end_area()
+    if area_index == 0 then
+        error("no areas to end")
+    end
+
+    -- The area that's about to be dropped
+    local this_area = area_stack[area_index]
+
+    -- Put the current area into the cursor
+    -- There might be nothing to put if the area was immediately ended
+    if this_area.left then
+        cursor.width = this_area.right - this_area.left
+        cursor.height = this_area.bottom - this_area.top
+        cursor.x = this_area.left + cursor.anchor_x * cursor.width
+        cursor.y = this_area.top + cursor.anchor_y * cursor.height
+
+        -- expand the area below if it exists
+        local last_area = area_stack[area_index - 1]
+        if last_area then
+            expand_area(last_area, this_area.left, this_area.top, this_area.right, this_area.bottom)
+        end
+    end
+
+    area_index = area_index - 1
+end
+
+--#endregion
+
+---Places the current cursor down. This will update the cursor edge output table as well as expand areas.
+---Translations will be applied to the edge output table.
 ---Desired width and height are typically used by elements when their contents don't fit the cursor exactly.
 ---Passing desired width and height will reshape the cursor.
 ---@param desired_width number? if provided, the placement will use this instead of cursor.width
@@ -336,13 +444,16 @@ end
 function cursor.place(desired_width, desired_height)
     local width, height = desired_width or cursor.width, desired_height or cursor.height
 
+    -- Apply translation
+    edge.x = cursor.x + translate_stack[translate_index][1]
+    edge.y = cursor.y + translate_stack[translate_index][2]
+
     -- Update edges
     edge.left, edge.top, edge.right, edge.bottom =
-        get_edges(cursor.x, cursor.y, cursor.anchor_x, cursor.anchor_y, width, height)
+        get_edges(edge.x, edge.y, cursor.anchor_x, cursor.anchor_y, width, height)
 
     -- Expand the current area
-    local area = require("ui.area")
-    area.expand(edge.left, edge.top, edge.right, edge.bottom)
+    expand_area(area_stack[area_index], edge.left, edge.top, edge.right, edge.bottom)
 
     -- reshape the cursor
     cursor.width, cursor.height = width, height

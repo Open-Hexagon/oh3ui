@@ -15,7 +15,6 @@ local toggle_hex = require("ui.element.toggle_hex")
 local draw_queue = require("ui.draw_queue")
 local element = require("ui.element")
 local text = require("ui.text")
-local area = require("ui.area")
 
 local sample_text = [[
 Atque et cumque enim fugiat numquam commodi.
@@ -49,6 +48,7 @@ return function()
     cursor.height = 1000
 
     -- primitive.push_mask()
+    cursor.apply_translation(40, 0)
 
     cursor.x = 60
     cursor.y = 10
@@ -76,15 +76,16 @@ return function()
     cursor.width = 150
     switch(id.switch, "a", "b", "c", "d", "e")
 
+    cursor.remove_translation()
+
     -- primitive.pop_mask()
 
     -- toggles
     cursor.x = 10
     cursor.y = 10
-    draw_queue.call(love.graphics.push)
-    draw_queue.call(love.graphics.translate, 40, 30)
+    cursor.apply_translation(40, 30)
     toggle(id.toggle)
-    draw_queue.call(love.graphics.pop)
+    cursor.remove_translation()
     cursor.shift_down(10)
     toggle_hex(id.toggle_hex)
     cursor.shift_down(10)
@@ -115,7 +116,7 @@ return function()
     -- button
 
     draw_queue.reserve()
-    area.start()
+    cursor.begin_area()
     cursor.x = 260
     cursor.y = 10
     cursor.height = 40
@@ -130,7 +131,7 @@ return function()
     if id.button2.clicked then
         print("id.button2")
     end
-    area.finish()
+    cursor.end_area()
     cursor.inset(15)
     draw_queue.take_last_reservation()
     primitive.push_mask()

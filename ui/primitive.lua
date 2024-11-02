@@ -164,7 +164,7 @@ end
 ---@param line_width number?
 function primitive.hline(color, line_width)
     cursor.place()
-    local y = cursor.y - cursor.anchor_y + 0.5
+    local y = edge.y - cursor.anchor_y + 0.5
     draw_queue.line(line_width or 1, color or theme.default, edge.left, y, edge.right, y)
 end
 
@@ -174,7 +174,7 @@ end
 ---@param line_width number?
 function primitive.vline(color, line_width)
     cursor.place()
-    local x = cursor.x - cursor.anchor_x + 0.5
+    local x = edge.x - cursor.anchor_x + 0.5
     draw_queue.line(line_width or 1, color or theme.default, x, edge.top, x, edge.bottom)
 end
 

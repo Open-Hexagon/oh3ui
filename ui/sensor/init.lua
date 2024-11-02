@@ -1,6 +1,7 @@
 ---Sensors are invisible elements that deal with user input.
 ---The sensor module itself checks for mouse intersections.
 ---Overlapping sensors are prioritized from top to bottom with z-ordering.
+---Uses screen coordinates.
 ---For checking mouse buttons, see mouse.lua.
 
 local mouse = require("ui.mouse")
