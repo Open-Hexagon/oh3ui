@@ -59,7 +59,7 @@ return function(state, min, max, positions, show_positions)
 
     -- get fill width and update position
     local fill_width
-    if dragging or state.clicked or state.stopped_dragging then
+    if dragging or state.holding or state.stopped_dragging then
         -- draw using mouse position
         fill_width = clamped_mouse_x - cursor.x
 

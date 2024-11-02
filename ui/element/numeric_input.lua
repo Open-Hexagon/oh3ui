@@ -3,12 +3,12 @@ local theme = require("ui.theme")
 local draw_queue = require("ui.draw_queue")
 local clickbox = require("ui.sensor.clickbox")
 local dragbox = require("ui.sensor.dragbox")
+local hoverbox = require("ui.sensor.hoverbox")
 local primitive = require("ui.primitive")
 local element = require("ui.element")
 local text = require("ui.text")
 local mouse = require("ui.mouse")
 local extmath = require("ui.extmath")
-local sensor = require("ui.sensor")
 
 ---Combination number slider and entry with increment buttons.
 ---This element will reshape the cursor.
@@ -19,6 +19,7 @@ return function(state, min, max, step, format)
     if not state.initialized then
         state.numeric_input_left = {}
         state.numeric_input_right = {}
+        state.numeric_input_center = {}
         state.value = 0
         state.initialized = true
     end
@@ -28,9 +29,9 @@ return function(state, min, max, step, format)
     -- set base shape
     local full_width = math.max(element.numeric_input_min_width, cursor.width)
     cursor.place(full_width, element.numeric_input_height)
-    sensor.update_mouse_intersect()
+    hoverbox(state)
 
-    local hovering = sensor.hovering
+    local hovering = state.hovering
     local center_width = cursor.width - element.numeric_input_lr_button_width * 2
 
     cursor.auto_reshape = false
@@ -45,31 +46,35 @@ return function(state, min, max, step, format)
     -- center
     cursor.width = center_width
     cursor.place()
-    sensor.update_mouse_intersect()
-    local dragging = dragbox(state)
+    local dragging = dragbox(state.numeric_input_center, "pass")
 
     -- stop the mouse from reaching the edges of the screen
-    if state.started_dragging then
+    if state.numeric_input_center.started_dragging then
         love.mouse.setRelativeMode(true)
-    elseif state.stopped_dragging then
+    elseif state.numeric_input_center.stopped_dragging then
         love.mouse.setRelativeMode(false)
     end
 
     -- change the mouse cursor to <-> when hovering the center
-    if sensor.enter then
+    if state.numeric_input_center.enter then
         love.mouse.setCursor(love.mouse.getSystemCursor("sizewe"))
-    elseif sensor.exit then
+    elseif state.numeric_input_center.exit then
         love.mouse.setCursor()
     end
 
     -- prevent the mouse from moving when dragging
     if dragging then
-        love.mouse.setPosition(love.graphics.transformPoint(state.drag_origin_x, state.drag_origin_y))
+        love.mouse.setPosition(
+        love.graphics.transformPoint(
+                state.numeric_input_center.drag_origin_x,
+                state.numeric_input_center.drag_origin_y
+            )
+        )
     end
 
     -- draw background
     draw_queue.take_last_reservation()
-    if dragging or state.holding then
+    if dragging or state.numeric_input_center.holding then
         -- highlighted background
         cursor.width = full_width
         primitive.rectangle(theme.widget_background_highlight)
@@ -82,7 +87,7 @@ return function(state, min, max, step, format)
         cursor.width = center_width
 
         -- brighter center
-        if sensor.hovering then
+        if state.numeric_input_center.hovering then
             primitive.rectangle(theme.widget_background_brighter)
         end
     end
@@ -95,12 +100,12 @@ return function(state, min, max, step, format)
         cursor.change_anchor(0.5)
 
         if not dragging then
-            if clickbox(state.numeric_input_left) then
+            if clickbox(state.numeric_input_left, "pass") then
                 state.value = state.value - step
             end
             if state.numeric_input_left.holding then
                 primitive.rectangle(theme.widget_background_highlight)
-            elseif sensor.hovering then
+            elseif state.numeric_input_left.hovering then
                 primitive.rectangle(theme.widget_background_brighter)
             end
         end
@@ -113,12 +118,12 @@ return function(state, min, max, step, format)
         cursor.change_anchor(0.5)
 
         if not dragging then
-            if clickbox(state.numeric_input_right) then
+            if clickbox(state.numeric_input_right, "pass") then
                 state.value = state.value + step
             end
             if state.numeric_input_right.holding then
                 primitive.rectangle(theme.widget_background_highlight)
-            elseif sensor.hovering then
+            elseif state.numeric_input_right.hovering then
                 primitive.rectangle(theme.widget_background_brighter)
             end
         end

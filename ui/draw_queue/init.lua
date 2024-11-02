@@ -31,7 +31,7 @@ local last_group_index = 0
 
 ---Pushes an operation to the current group. The first value should be an operation id.
 ---This operation id can be nil which will cause the operation to be ignored.
----@param ... unknown
+---@param ... any
 local function push_operation(...)
     local current_group = groups[current_group_index]
     local queue = current_group.op_list
@@ -176,8 +176,14 @@ end
 ---Add a mouse sensor to the draw queue.
 ---This will be used by the sensor module to determine which sensor is being hovered.
 ---The actual shape of the sensor may be changed by the scissor during execution of the draw queue.
-function draw_queue.mouse_sensor(state, left, top, right, bottom)
-    push_operation(op_ids.mouse_sensor, state, left, top, right, bottom)
+---@param state table
+---@param mode "block"|"pass"
+---@param left number
+---@param top number
+---@param right number
+---@param bottom number
+function draw_queue.mouse_sensor(state, mode, left, top, right, bottom)
+    push_operation(op_ids.mouse_sensor, state, mode, left, top, right, bottom)
 end
 
 --#region functions that actually draw things
@@ -392,7 +398,7 @@ local function run_draw_operations(group_index)
             elseif id == op_ids.call_function then
                 item[2](unpack(item, 3))
             elseif id == op_ids.mouse_sensor then
-                local state, x1, y1, x2, y2 = unpack(item, 2, 6)
+                local state, mode, x1, y1, x2, y2 = unpack(item, 2)
                 local x, y, width, height = love.graphics.getScissor()
                 if x then
                     x, y = love.graphics.inverseTransformPoint(x, y)
@@ -401,11 +407,11 @@ local function run_draw_operations(group_index)
                     x1, y1, x2, y2 = extmath.aligned_rectangle_intersection(x1, y1, x2, y2, x, y, x + width, y + height)
                     -- only push if there was an intersection
                     if x1 then
-                        sensor.push(state, x1, y1, x2, y2)
+                        sensor.push(state, mode, x1, y1, x2, y2)
                     end
                 else
                     -- push if there is no active scissor
-                    sensor.push(state, x1, y1, x2, y2)
+                    sensor.push(state, mode, x1, y1, x2, y2)
                 end
             end
         end

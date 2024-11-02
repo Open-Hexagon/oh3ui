@@ -7,6 +7,7 @@ extmath.tau = 2 * math.pi
 ---sign function
 ---@param x number
 ---@return integer
+---@nodiscard
 function extmath.sgn(x)
     return x > 0 and 1 or x == 0 and 0 or -1
 end
@@ -16,6 +17,7 @@ end
 ---@param a number
 ---@param b number
 ---@return number
+---@nodiscard
 function extmath.clamp(t, a, b)
     if t < a then
         return a
@@ -54,6 +56,7 @@ end
 ---@param b number
 ---@param t number
 ---@return number
+---@nodiscard
 function extmath.lerp(a, b, t)
     return (1 - t) * a + t * b
 end
@@ -63,6 +66,7 @@ end
 ---@param b number
 ---@param c number
 ---@return number
+---@nodiscard
 function extmath.inverse_lerp(a, b, c)
     return (c - a) / (b - a)
 end
@@ -75,6 +79,7 @@ end
 ---@param c number
 ---@param d number
 ---@return number
+---@nodiscard
 function extmath.map(t, a, b, c, d)
     return c + ((d - c) / (b - a)) * (t - a)
 end
@@ -95,6 +100,7 @@ end
 ---@param x number
 ---@param y number
 ---@return boolean
+---@nodiscard
 function extmath.point_in_polygon(vertices, x, y)
     local result = false
     for i = 1, #vertices, 2 do
@@ -113,6 +119,7 @@ end
 ---@param r number radius
 ---@param n integer number of sides
 ---@return number
+---@nodiscard
 function extmath.to_inradius(r, n)
     return r * math.cos(math.pi / n)
 end
@@ -122,6 +129,7 @@ end
 ---@param a number inradius
 ---@param n integer number of sides
 ---@return number
+---@nodiscard
 function extmath.from_inradius(a, n)
     return a / math.cos(math.pi / n)
 end
@@ -131,6 +139,7 @@ end
 ---@param n any number of sides
 ---@param o any offset
 ---@return number
+---@nodiscard
 function extmath.inradius_offset(r, n, o)
     return r + o / math.cos(math.pi / n)
 end
@@ -143,6 +152,7 @@ end
 ---@param top number
 ---@param bottom number
 ---@return boolean
+---@nodiscard
 function extmath.point_in_aligned_rectangle(x, y, left, top, right, bottom)
     return x >= left and x < right and y >= top and y < bottom
 end
@@ -160,6 +170,7 @@ end
 ---@return number y_inter1 output rectangle coordinate 1
 ---@return number x_inter2 output rectangle coordinate 2
 ---@return number y_inter2 output rectangle coordinate 2
+---@nodiscard
 function extmath.aligned_rectangle_intersection(x1, y1, x2, y2, x3, y3, x4, y4)
     -- Calculate the coordinates of the intersection rectangle
     local x_inter1 = math.max(x1, x3)

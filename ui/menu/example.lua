@@ -48,7 +48,7 @@ return function()
     cursor.width = 75
     cursor.height = 1000
 
-    primitive.push_mask()
+    -- primitive.push_mask()
 
     cursor.x = 60
     cursor.y = 10
@@ -76,7 +76,7 @@ return function()
     cursor.width = 150
     switch(id.switch, "a", "b", "c", "d", "e")
 
-    primitive.pop_mask()
+    -- primitive.pop_mask()
 
     -- toggles
     cursor.x = 10
@@ -110,14 +110,29 @@ return function()
     primitive.rectangle(theme.white)
 
     -- button
+
+    draw_queue.reserve()
+    area.start()
     cursor.x = 260
     cursor.y = 10
     cursor.height = 40
     cursor.width = 200
     button(id.button, "hello world")
+    if id.button.clicked then
+        print("id.button")
+    end
     cursor.x = 360
     cursor.y = 30
     button(id.button2, "hello world")
+    if id.button2.clicked then
+        print("id.button2")
+    end
+    area.finish()
+    cursor.inset(15)
+    draw_queue.take_last_reservation()
+    primitive.push_mask()
+    primitive.pop_mask()
+
 
     -- Text
     cursor.x = 300
