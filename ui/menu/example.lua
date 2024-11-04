@@ -13,8 +13,8 @@ local theme = require("ui.theme")
 local toggle = require("ui.element.toggle")
 local toggle_hex = require("ui.element.toggle_hex")
 local draw_queue = require("ui.draw_queue")
-local element = require("ui.element")
 local text = require("ui.text")
+local scroll = require("ui.area.scroll2")
 
 local sample_text = [[
 Atque et cumque enim fugiat numquam commodi.
@@ -40,7 +40,6 @@ return function()
     -- cursor.shift_down()
 
     -- button(id.button1)
-
 
     cursor.x = 60
     cursor.y = 10
@@ -115,41 +114,44 @@ return function()
 
     -- button
 
-    draw_queue.reserve()
-    cursor.begin_area()
+    -- draw_queue.reserve()
+    -- cursor.begin_area()
+
+    -- problematic
+
     cursor.x = 260
     cursor.y = 10
     cursor.height = 40
     cursor.width = 200
-    button(id.button, "hello world")
-    if id.button.clicked then
-        print("id.button")
-    end
-    cursor.x = 360
-    cursor.y = 30
-    button(id.button2, "hello world")
-    if id.button2.clicked then
-        print("id.button2")
-    end
-    cursor.end_area()
-    cursor.inset(15)
-    draw_queue.take_last_reservation()
-    primitive.push_mask()
-    primitive.pop_mask()
+    button(id.button, "button")
 
+    -- cursor.x = 360
+    cursor.y = 30
+    -- cursor.shift_down()
+    button(id.button2, "button2")
+
+    -- cursor.end_area()
+    -- cursor.inset(15)
+    -- draw_queue.take_last_reservation()
+    -- primitive.push_mask()
+    -- primitive.pop_mask()
 
     -- Text
+    cursor.change_anchor(0)
+
     cursor.x = 300
     cursor.y = 100
     cursor.width = 400
     cursor.height = 200
+
     text.wrap_text = false
     text.align = "left"
 
-    cursor.change_anchor(0)
+    if scroll.start(id.scroll) then
+        primitive.rectangle(theme.red, "line")
+        primitive.label(sample_text, nil, "left")
+        primitive.rectangle(theme.green, "line")
 
-    primitive.rectangle({ 1, 0, 0, 1 }, "line")
-    primitive.label(sample_text, nil, "left")
-    primitive.rectangle({ 0, 1, 0, 1 }, "line")
-
+        scroll.finish(id.scroll)
+    end
 end

@@ -36,15 +36,21 @@ local translate_index = 1 -- index of the last pushed translation
 local area_stack = {}
 local area_index = 0 -- index of the last started area
 
----Reset manual cursor to default values
-function cursor.reset()
+---Reset manual cursor to default values.
+---By default cursor width and height are set to reflect the size of the screen.
+---Explicit width and height can be passed in to override this behavior.
+---@param desired_width number?
+---@param desired_height number?
+function cursor.reset(desired_width, desired_height)
     -- Position
     cursor.x = 0
     cursor.y = 0
 
-    -- setting width and height to the screen size.
-    -- this is nice when used with cursor subdividing to easily divide the screen.
-    cursor.width, cursor.height = love.graphics.inverseTransformPoint(love.graphics.getDimensions())
+    if desired_width and desired_height then
+        cursor.width, cursor.height = desired_width, desired_height
+    else
+        cursor.width, cursor.height = love.graphics.inverseTransformPoint(love.graphics.getDimensions())
+    end
 
     cursor.anchor_x = anchor.LEFT
     cursor.anchor_y = anchor.TOP

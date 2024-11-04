@@ -7,10 +7,7 @@ local draw_queue = require("ui.draw_queue")
 ---An extension of clickbox that additionally tracks dragging.
 ---Disables mouse intersections while dragging.
 ---@param state table
----@param mode
----|"block" # Blocks the mouse from interacting with anything underneath this sensor (default mode).
----|"pass" # Allows the mouse to interact with sensors underneath this sensor. This sensor will still be active.
----|nil
+---@param mode? "block"|"lazy"|"pass"
 ---@return integer?
 return function(state, mode)
     cursor.place()

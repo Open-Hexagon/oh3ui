@@ -173,7 +173,7 @@ end
 ---This will be used by the sensor module to determine which sensor is being hovered.
 ---The actual shape of the sensor may be changed by the scissor during execution of the draw queue.
 ---@param state table
----@param mode "block"|"pass"
+---@param mode "block"|"lazy"|"pass"
 ---@param left number
 ---@param top number
 ---@param right number

@@ -51,6 +51,9 @@ do
         dy = 0,
         moved = false,
 
+        wheel_dx = 0,
+        wheel_dy = 0,
+
         -- any mouse button up/down/pressed states
         any = m(),
 
@@ -74,6 +77,11 @@ do
     }
 end
 
+---@param event_name string
+local function event_filter(event_name)
+    return string.match(event_name, "mouse[prm]") or event_name == "wheelmoved"
+end
+
 ---Update mouse output
 function mouse.update()
     -- Get mouse position and set previous position
@@ -93,12 +101,16 @@ function mouse.update()
 
     mouse.dx, mouse.dy = 0, 0
     mouse.moved = false
+    mouse.wheel_dx, mouse.wheel_dy = 0, 0
 
     -- Search for press and release events and update the left, right, middle, back, and forward tables
     -- Also update which button was last released and last pressed.
-    for event in events.iterate("mouse[prm]") do
+    for event in events.iterate(event_filter) do
         local name, x, y, a, b, c = unpack(event)
-        if name == "mousemoved" then
+        if name == "wheelmoved" then
+            mouse.wheel_dx = mouse.wheel_dx + x
+            mouse.wheel_dy = mouse.wheel_dy + y
+        elseif name == "mousemoved" then
             local dx, dy, istouch = a, b, c
 
             -- using the event dx, dy happens to work better if the mouse is being repositioned

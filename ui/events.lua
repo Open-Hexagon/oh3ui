@@ -33,14 +33,25 @@ end
 
 ---iterate over the event tables and filter for specific event names if required
 ---(processed events are not removed so they can be processed in different places!)
----@param filter string? a string pattern that is matched against a love event name
+---@param filter?
+---|string # a string pattern that is matched against a love event name
+---|fun(event_name:string):any # a function that returns something truthy if an event is matched
 ---@return fun():table
 function events.iterate(filter)
-    if filter then
+    if type(filter) == "string" then
         return coroutine.wrap(function()
             for i = 1, length do
                 local event = sequence[i]
-                if event[1]:match(filter) then
+                if string.match(event[1], filter) then
+                    coroutine.yield(event)
+                end
+            end
+        end)
+    elseif type(filter) == "function" then
+        return coroutine.wrap(function()
+            for i = 1, length do
+                local event = sequence[i]
+                if filter(event[1]) then
                     coroutine.yield(event)
                 end
             end

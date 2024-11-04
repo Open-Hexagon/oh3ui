@@ -29,7 +29,6 @@ return function(state, min, max, step, format)
     -- set base shape
     local full_width = math.max(element.numeric_input_min_width, cursor.width)
     cursor.place(full_width, element.numeric_input_height)
-    hoverbox(state)
 
     local hovering = state.hovering
     local center_width = cursor.width - element.numeric_input_lr_button_width * 2
@@ -46,7 +45,7 @@ return function(state, min, max, step, format)
     -- center
     cursor.width = center_width
     cursor.place()
-    local dragging = dragbox(state.numeric_input_center, "pass")
+    local dragging = dragbox(state.numeric_input_center)
 
     -- stop the mouse from reaching the edges of the screen
     if state.numeric_input_center.started_dragging then
@@ -100,7 +99,7 @@ return function(state, min, max, step, format)
         cursor.change_anchor(0.5)
 
         if not dragging then
-            if clickbox(state.numeric_input_left, "pass") then
+            if clickbox(state.numeric_input_left) then
                 state.value = state.value - step
             end
             if state.numeric_input_left.holding then
@@ -118,7 +117,7 @@ return function(state, min, max, step, format)
         cursor.change_anchor(0.5)
 
         if not dragging then
-            if clickbox(state.numeric_input_right, "pass") then
+            if clickbox(state.numeric_input_right) then
                 state.value = state.value + step
             end
             if state.numeric_input_right.holding then
@@ -135,6 +134,7 @@ return function(state, min, max, step, format)
     state.value = extmath.clamp(state.value, min or -math.huge, max or math.huge)
     primitive.label(string.format(format or "%f", state.value), 16)
     primitive.rectangle_outline((hovering or dragging) and theme.widget_outline_highlight or theme.widget_outline)
+    hoverbox(state, "pass")
 
     cursor.do_auto_reshape() -- (1)
 end
