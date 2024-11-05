@@ -38,14 +38,6 @@ do
         screen_x = -1,
         screen_y = -1,
 
-        -- the previous frame's mouse position
-        prev_x = -1,
-        prev_y = -1,
-
-        -- the previous frame's mouse position (screen coordinates)
-        screen_prev_x = -1,
-        screen_prev_y = -1,
-
         -- change in coordinates from last frame
         dx = 0,
         dy = 0,
@@ -84,10 +76,7 @@ end
 
 ---Update mouse output
 function mouse.update()
-    -- Get mouse position and set previous position
-    mouse.screen_prev_x, mouse.screen_prev_y = mouse.screen_x, mouse.screen_y
-    mouse.prev_x, mouse.prev_y = mouse.x, mouse.y
-
+    -- Get mouse positions
     mouse.screen_x, mouse.screen_y = love.mouse.getPosition()
     mouse.x, mouse.y = love.graphics.inverseTransformPoint(mouse.screen_x, mouse.screen_y)
 

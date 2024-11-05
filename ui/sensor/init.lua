@@ -62,14 +62,9 @@ end
 function sensor.finish()
     if sensor.do_intersections then
         -- after the loop, set to the last encountered lazy intersection for this and the previous frame
-        local lazy_now
-        local lazy_before
-        -- after the loop, set to the last encountered blocking intersection for this and the previous frame
-        local blocking_now
-        local blocking_before
+        local last_lazy_intersection
         -- set to true once a single blocking sensor is found for both before and after intersections
-        local now_blocked_flag = false
-        local before_blocked_flag = false
+        local blocked = false
 
         for i = index, 1, -1 do
             local state = z_list[i][1]
@@ -80,96 +75,30 @@ function sensor.finish()
 
             -- check intersections
             -- intersections are forced to be false if they are blocked
-            local intersecting_now = extmath.point_in_aligned_rectangle(mouse.screen_x, mouse.screen_y, x1, y1, x2, y2)
-                and not now_blocked_flag
-            local intersecting_before = extmath.point_in_aligned_rectangle(
-                mouse.screen_prev_x,
-                mouse.screen_prev_y,
-                x1,
-                y1,
-                x2,
-                y2
-            ) and not before_blocked_flag
+            local intersecting_now = not blocked
+                and extmath.point_in_aligned_rectangle(mouse.screen_x, mouse.screen_y, x1, y1, x2, y2)
 
-            -- lazy intersections are handled differently
-            if mode == "lazy" then
-                -- clear lingering enter and exit flags for lazy intersections since the part at the bottom won't (1)
-                state.exit = false
-                state.enter = false
+            state.hovering = intersecting_now
 
-                -- store references to the state tables of lazy intersections.
-                if intersecting_before then
-                    lazy_before = state
+            if intersecting_now then
+                -- lazy intersections are handled differently
+                if mode == "lazy" then
+                    if last_lazy_intersection then
+                        last_lazy_intersection.hovering = false
+                    end
+                    last_lazy_intersection = state
+                elseif mode == "block" then
+                    blocked = true
+                elseif mode == "pass" then
+                else
+                    error(string.format("invalid intersection mode `%s`", mode))
                 end
-                if intersecting_now then
-                    lazy_now = state
-                end
-            elseif mode == "block" then
-                state.exit = false
-                state.enter = false
-
-                -- store references to the state tables of blocking intersections
-                if intersecting_before then
-                    blocking_before = state
-                    before_blocked_flag = true
-                end
-                if intersecting_now then
-                    blocking_now = state
-                    now_blocked_flag = true
-                end
-            elseif mode == "pass" then
-                state.hovering = intersecting_now
-                state.enter = not intersecting_before and intersecting_now
-                state.exit = not intersecting_now and intersecting_before
-            else
-                error(string.format("invalid intersection mode `%s`", mode))
-            end
-        end
-
-        -- Do lazy intersections. At least one needs to be found.
-        if lazy_now or lazy_before then
-            -- if they're different then the mouse just crossed over some boundary
-            if lazy_now ~= lazy_before then
-                -- one might still be nil
-                if lazy_now then
-                    lazy_now.hovering = true
-                    lazy_now.enter = true
-                end
-                if lazy_before then
-                    lazy_before.hovering = false
-                    lazy_before.exit = true
-                end
-            -- if they're the same, then the mouse is just hovering
-            else
-                -- hovering should be constantly asserted
-                lazy_now.hovering = true
-            end
-        end
-
-        -- Do blocking intersections. At least one needs to be found.
-        if blocking_now or blocking_before then
-            -- if they're different then the mouse just crossed over some boundary
-            if blocking_now ~= blocking_before then
-                if blocking_now then
-                    blocking_now.hovering = true
-                    blocking_now.enter = true
-                end
-                if blocking_before then
-                    blocking_before.hovering = false
-                    blocking_before.exit = true
-                end
-            -- if they're the same, then the mouse is just hovering
-            else
-                -- hovering should be constantly asserted
-                blocking_now.hovering = true
             end
         end
     else
         -- reset all
         for i = 1, index do
             local state = z_list[i][1]
-            state.enter = false
-            state.exit = false
             state.hovering = false
         end
     end

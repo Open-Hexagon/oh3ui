@@ -14,7 +14,7 @@ return function(state, mode)
     state.clicked = nil
 
     -- unhold if the mouse is dragged away
-    if state.holding and state.exit then
+    if state.holding and not state.hovering then
         state.holding = nil
     end
 

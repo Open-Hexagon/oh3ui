@@ -19,8 +19,6 @@ function scroll.start(state)
     state.scroll_dist_x = state.scroll_dist_x or 0
     state.scroll_dist_y = state.scroll_dist_y or 0
 
-
-
     -- save the current cursor
     cursor.push()
 
@@ -28,10 +26,10 @@ function scroll.start(state)
     primitive.push_mask()
 
     -- make it seem like the origin is at the top-left corner of the scroll area
-    cursor.apply_translation(edge.left - state.scroll_dist_x, edge.top - state.scroll_dist_y)
+    cursor.apply_translation(state.scroll_dist_x, state.scroll_dist_y)
 
-    -- reset cursor values
-    cursor.reset(cursor.width, cursor.height)
+    -- -- reset cursor values
+    -- cursor.reset(cursor.width, cursor.height)
 
     -- this is just used to measure the area covered by all included elements
     cursor.begin_area()

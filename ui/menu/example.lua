@@ -147,11 +147,24 @@ return function()
     text.wrap_text = false
     text.align = "left"
 
+    primitive.rectangle(theme.white, "line")
     if scroll.start(id.scroll) then
+        cursor.inset(10)
+        cursor.v_split(2, 10)
+        cursor.pop()
         primitive.rectangle(theme.red, "line")
-        primitive.label(sample_text, nil, "left")
-        primitive.rectangle(theme.green, "line")
+        cursor.pop()
+        primitive.rectangle(theme.white, "line")
+        if scroll.start(id.scroll2) then
+            cursor.inset(10)
+            cursor.height = 20
 
+            for i = 1, 20 do
+                primitive.rectangle(theme.green, "line")
+                cursor.shift_down(10)
+            end
+            scroll.finish(id.scroll2)
+        end
         scroll.finish(id.scroll)
     end
 end

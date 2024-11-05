@@ -55,16 +55,19 @@ return function(state, min, max, step, format)
     end
 
     -- change the mouse cursor to <-> when hovering the center
-    if state.numeric_input_center.enter then
-        love.mouse.setCursor(love.mouse.getSystemCursor("sizewe"))
-    elseif state.numeric_input_center.exit then
-        love.mouse.setCursor()
+    if state.center_hover_prev ~= state.numeric_input_center.hovering then
+        state.center_hover_prev = state.numeric_input_center.hovering
+        if state.numeric_input_center.hovering then
+            love.mouse.setCursor(love.mouse.getSystemCursor("sizewe"))
+        else
+            love.mouse.setCursor()
+        end
     end
 
     -- prevent the mouse from moving when dragging
     if dragging then
         love.mouse.setPosition(
-        love.graphics.transformPoint(
+            love.graphics.transformPoint(
                 state.numeric_input_center.drag_origin_x,
                 state.numeric_input_center.drag_origin_y
             )

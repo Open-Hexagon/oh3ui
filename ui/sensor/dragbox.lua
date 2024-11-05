@@ -51,8 +51,8 @@ return function(state, mode)
         state.started_dragging = state.holding
         state.dragging = state.holding
         state.holding = nil
-        state.drag_origin_x = mouse.prev_x
-        state.drag_origin_y = mouse.prev_y
+        state.drag_origin_x = mouse.x
+        state.drag_origin_y = mouse.y
         sensor.do_intersections = false
     end
 
