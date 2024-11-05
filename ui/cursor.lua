@@ -3,16 +3,11 @@
 ---For checking whether the mouse is currently intersecting the cursor, see sensor/init.lua.
 -- Note: parameters that are contained within tables are not saved in snapshots
 local cursor = {
-    -- anchor constants
-    anchor = {
-        TOP = 0,
-        LEFT = 0,
-        BOTTOM = 1,
-        RIGHT = 1,
-        CENTER = 0.5,
-    },
-
-    -- edge output table
+    ---Edge output table mainly to be used by elements.
+    ---This table gets affected by translations so the area it represents will not coincide with the cursor if a translation is in affect.
+    ---Elements have to be literally placed in their final locations and not transformed by other means.
+    ---or else other position related functionality would break.
+    ---* Use this if you want to check against a the location of a placed element.
     edge = {
         left = 0,
         top = 0,
@@ -22,10 +17,15 @@ local cursor = {
         x = 0,
         y = 0,
     },
+
+    ---Readback edge table. Does not get affected by translations.
+    ---Helpful if you need the edges are actually coincide with the cursor after a place.
+    ---* Use this if you want to check against a the location of the cursor itself.
+    readback = { left = 0, top = 0, right = 0, bottom = 0 },
 }
 
-local anchor = cursor.anchor
 local edge = cursor.edge
+local readback = cursor.readback
 
 local snapshot_stack = {}
 local snapshot_index = 0 -- index of the last pushed snapshot
@@ -52,21 +52,11 @@ function cursor.reset(desired_width, desired_height)
         cursor.width, cursor.height = love.graphics.inverseTransformPoint(love.graphics.getDimensions())
     end
 
-    cursor.anchor_x = anchor.LEFT
-    cursor.anchor_y = anchor.TOP
+    cursor.anchor_x = 0
+    cursor.anchor_y = 0
 
     -- If true, elements that don't fit in the cursor will cause the cursor to reshape
     cursor.auto_reshape = true
-
-    -- * Do not write to the following fields manually
-
-    -- edges
-    edge.left = 0
-    edge.top = 0
-    edge.right = 0
-    edge.bottom = 0
-    edge.x = 0
-    edge.y = 0
 end
 
 ---Returns edges from the current cursor parameters
@@ -266,7 +256,7 @@ end
 ---@param d number
 function cursor.inset(d)
     local ax, ay = cursor.anchor_x, cursor.anchor_y
-    cursor.change_anchor(anchor.CENTER, anchor.CENTER)
+    cursor.change_anchor(0.5, 0.5)
     cursor.width = cursor.width - 2 * d
     cursor.height = cursor.height - 2 * d
     cursor.change_anchor(ax, ay)
@@ -449,6 +439,10 @@ end
 ---@param desired_height number? if provided, the placement will use this instead of cursor.height
 function cursor.place(desired_width, desired_height)
     local width, height = desired_width or cursor.width, desired_height or cursor.height
+
+    -- Update readback
+    readback.left, readback.top, readback.right, readback.bottom =
+        get_edges(cursor.x, cursor.y, cursor.anchor_x, cursor.anchor_y, width, height)
 
     -- Apply translation
     edge.x = cursor.x + translate_stack[translate_index][1]
