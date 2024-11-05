@@ -1,5 +1,5 @@
 local cursor = require("ui.cursor")
-local edge = cursor.edge
+local placement = cursor.placement
 local draw_queue = require("ui.draw_queue")
 
 ---A sensor element that tracks mouse hovering, entering, and exiting.
@@ -7,6 +7,6 @@ local draw_queue = require("ui.draw_queue")
 ---@param mode? "block"|"lazy"|"pass"
 return function(state, mode)
     cursor.place()
-    draw_queue.mouse_sensor(state, mode or "block", edge.left, edge.top, edge.right, edge.bottom)
+    draw_queue.mouse_sensor(state, mode or "block", placement.left, placement.top, placement.right, placement.bottom)
     return state.hovering
 end

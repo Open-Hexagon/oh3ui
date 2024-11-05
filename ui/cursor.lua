@@ -1,14 +1,14 @@
 ---The cursor represents a rectangular area on screen and is used as
 ---a tool for positioning and aligning ui elements.
 ---For checking whether the mouse is currently intersecting the cursor, see sensor/init.lua.
--- Note: parameters that are contained within tables are not saved in snapshots
+---Note: parameters that are contained within tables are not saved in snapshots
 local cursor = {
     ---Edge output table mainly to be used by elements.
     ---This table gets affected by translations so the area it represents will not coincide with the cursor if a translation is in affect.
     ---Elements have to be literally placed in their final locations and not transformed by other means.
     ---or else other position related functionality would break.
     ---* Use this if you want to check against a the location of a placed element.
-    edge = {
+    placement = {
         left = 0,
         top = 0,
         right = 0,
@@ -24,7 +24,7 @@ local cursor = {
     readback = { left = 0, top = 0, right = 0, bottom = 0 },
 }
 
-local edge = cursor.edge
+local placement = cursor.placement
 local readback = cursor.readback
 
 local snapshot_stack = {}
@@ -445,15 +445,15 @@ function cursor.place(desired_width, desired_height)
         get_edges(cursor.x, cursor.y, cursor.anchor_x, cursor.anchor_y, width, height)
 
     -- Apply translation
-    edge.x = cursor.x + translate_stack[translate_index][1]
-    edge.y = cursor.y + translate_stack[translate_index][2]
+    placement.x = cursor.x + translate_stack[translate_index][1]
+    placement.y = cursor.y + translate_stack[translate_index][2]
 
     -- Update edges
-    edge.left, edge.top, edge.right, edge.bottom =
-        get_edges(edge.x, edge.y, cursor.anchor_x, cursor.anchor_y, width, height)
+    placement.left, placement.top, placement.right, placement.bottom =
+        get_edges(placement.x, placement.y, cursor.anchor_x, cursor.anchor_y, width, height)
 
     -- Expand the current area
-    expand_area(area_stack[area_index], edge.left, edge.top, edge.right, edge.bottom)
+    expand_area(area_stack[area_index], placement.left, placement.top, placement.right, placement.bottom)
 
     -- reshape the cursor
     cursor.width, cursor.height = width, height

@@ -1,6 +1,6 @@
 local mouse = require("ui.mouse")
 local cursor = require("ui.cursor")
-local edge = cursor.edge
+local placement = cursor.placement
 local sensor = require("ui.sensor")
 local draw_queue = require("ui.draw_queue")
 
@@ -11,7 +11,7 @@ local draw_queue = require("ui.draw_queue")
 ---@return integer?
 return function(state, mode)
     cursor.place()
-    draw_queue.mouse_sensor(state, mode or "block", edge.left, edge.top, edge.right, edge.bottom)
+    draw_queue.mouse_sensor(state, mode or "block", placement.left, placement.top, placement.right, placement.bottom)
 
     state.clicked = nil
     state.stopped_dragging = nil

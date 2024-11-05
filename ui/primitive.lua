@@ -2,7 +2,7 @@
 ---Draw queue reservations will work on these elements without the use of grouping.
 
 local cursor = require("ui.cursor")
-local edge = cursor.edge
+local placement = cursor.placement
 local theme = require("ui.theme")
 local draw_queue = require("ui.draw_queue")
 local text = require("ui.text")
@@ -15,7 +15,7 @@ local primitive = {}
 ---@param mode string? "fill" or "line" (default is "fill")
 function primitive.rectangle(color, mode)
     cursor.place()
-    draw_queue.rectangle(mode or "fill", edge.left, edge.top, edge.right, edge.bottom, color or theme.default)
+    draw_queue.rectangle(mode or "fill", placement.left, placement.top, placement.right, placement.bottom, color or theme.default)
 end
 
 ---Rectangle outline primitive. Never reshapes the cursor.
@@ -23,7 +23,7 @@ end
 ---@param line_width number?
 function primitive.rectangle_outline(color, line_width)
     cursor.place()
-    draw_queue.rectangle_outline(edge.left, edge.top, edge.right, edge.bottom, color or theme.default, line_width or 1)
+    draw_queue.rectangle_outline(placement.left, placement.top, placement.right, placement.bottom, color or theme.default, line_width or 1)
 end
 
 ---Slot primitive, aka a pill shape. Never reshapes the cursor.
@@ -34,10 +34,10 @@ function primitive.slot(color, mode)
     cursor.place()
     draw_queue.rectangle(
         mode or "fill",
-        edge.left,
-        edge.top,
-        edge.right,
-        edge.bottom,
+        placement.left,
+        placement.top,
+        placement.right,
+        placement.bottom,
         color or theme.default,
         radius,
         radius
@@ -51,10 +51,10 @@ function primitive.slot_outline(color, line_width)
     local radius = math.min(cursor.width, cursor.height) / 2
     cursor.place()
     draw_queue.rectangle_outline(
-        edge.left,
-        edge.top,
-        edge.right,
-        edge.bottom,
+        placement.left,
+        placement.top,
+        placement.right,
+        placement.bottom,
         color or theme.default,
         line_width or 1,
         radius,
@@ -75,8 +75,8 @@ function primitive.circle(color, sides, rotation, mode)
     cursor.place(diameter, diameter)
     draw_queue.circle(
         mode or "fill",
-        edge.left + radius,
-        edge.top + radius,
+        placement.left + radius,
+        placement.top + radius,
         radius,
         color or theme.default,
         sides,
@@ -97,8 +97,8 @@ function primitive.circle_outline(color, line_width, sides, rotation)
     local radius = diameter / 2
     cursor.place(diameter, diameter)
     draw_queue.circle_outline(
-        edge.left + radius,
-        edge.top + radius,
+        placement.left + radius,
+        placement.top + radius,
         radius,
         line_width or 1,
         color or theme.default,
@@ -131,7 +131,7 @@ function primitive.label(str, size, align, color, font_path)
     local text_width, text_height = love.graphics.inverseTransformPoint(text_object:getDimensions())
 
     cursor.place(text_width, text_height)
-    draw_queue.text(text_object, edge.left, edge.top, color or theme.text_color)
+    draw_queue.text(text_object, placement.left, placement.top, color or theme.text_color)
 
     cursor.do_auto_reshape()
 end
@@ -153,7 +153,7 @@ function primitive.icon(icon_name, size, color, icon_font)
     local width, height = love.graphics.inverseTransformPoint(text_object:getDimensions())
 
     cursor.place(width, height)
-    draw_queue.text(text_object, edge.left, edge.top, color or theme.text_color)
+    draw_queue.text(text_object, placement.left, placement.top, color or theme.text_color)
 
     cursor.do_auto_reshape()
 end
@@ -164,8 +164,8 @@ end
 ---@param line_width number?
 function primitive.hline(color, line_width)
     cursor.place()
-    local y = edge.y - cursor.anchor_y + 0.5
-    draw_queue.line(line_width or 1, color or theme.default, edge.left, y, edge.right, y)
+    local y = placement.y - cursor.anchor_y + 0.5
+    draw_queue.line(line_width or 1, color or theme.default, placement.left, y, placement.right, y)
 end
 
 ---Vertical line primitive. Never reshapes the cursor.
@@ -174,15 +174,15 @@ end
 ---@param line_width number?
 function primitive.vline(color, line_width)
     cursor.place()
-    local x = edge.x - cursor.anchor_x + 0.5
-    draw_queue.line(line_width or 1, color or theme.default, x, edge.top, x, edge.bottom)
+    local x = placement.x - cursor.anchor_x + 0.5
+    draw_queue.line(line_width or 1, color or theme.default, x, placement.top, x, placement.bottom)
 end
 
 ---Mask everything outside of the cursor. Further draw operations will not affect masked areas.
 ---Make sure to pop the mask when you're done!
 function primitive.push_mask()
     cursor.place()
-    draw_queue.push_scissor(edge.left, edge.top, edge.right, edge.bottom)
+    draw_queue.push_scissor(placement.left, placement.top, placement.right, placement.bottom)
 end
 
 ---Removes the last applied mask.

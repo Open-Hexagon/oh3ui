@@ -3,11 +3,9 @@ local theme = require("ui.theme")
 local clickbox = require("ui.sensor.clickbox")
 local primitive = require("ui.primitive")
 local element = require("ui.element")
-local sensor = require("ui.sensor")
-
 
 ---N-position switch
-return function (state, ...)
+return function(state, ...)
     local positions = select("#", ...)
     if not state.initialized then
         if positions < 2 then

@@ -1,7 +1,7 @@
 local draw_queue = require("ui.draw_queue")
 local primitive = require("ui.primitive")
 local cursor = require("ui.cursor")
-local edge = cursor.edge
+local placement = cursor.placement
 local mouse = require("ui.mouse")
 local hoverbox = require("ui.sensor.hoverbox")
 
@@ -38,11 +38,16 @@ end
 ---Finish a scrolled area. The combination of the current cursor location and the original scroll area is used to calculate the scroll limits
 ---A cursor area should probably be used and finished right before this is run so that the cursor surrounds all created elements.
 function scroll.finish(state)
-    cursor.combine()
-    local content_width = cursor.width
-    local content_height = cursor.height
-
     primitive.pop_mask()
+
+    -- content size should at least be the size of the original scrolled area
+    cursor.combine()
+    -- local content_width, content_height = cursor.get()
+
+    -- local content_width = cursor.width
+    -- local content_height = cursor.height
+
+
 
     -- return curor back to its original state
     cursor.remove_translation()

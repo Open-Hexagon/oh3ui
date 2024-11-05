@@ -1,5 +1,5 @@
 local cursor = require("ui.cursor")
-local edge = cursor.edge
+local placement = cursor.placement
 local theme = require("ui.theme")
 local dragbox = require("ui.sensor.dragbox")
 local primitive = require("ui.primitive")
@@ -41,7 +41,7 @@ return function(state, min, max, positions, show_positions)
     cursor.change_anchor(0, 0.5)
 
     -- absolute min and max slider coordinate positions
-    local min_x, max_x = edge.left + actuator_radius, edge.right - actuator_radius
+    local min_x, max_x = placement.left + actuator_radius, placement.right - actuator_radius
     local clamped_mouse_x = extmath.clamp(mouse.x, min_x, max_x)
     local step_size = (max_x - min_x) / divisions
 
@@ -61,7 +61,7 @@ return function(state, min, max, positions, show_positions)
     local fill_width
     if dragging or state.holding or state.stopped_dragging then
         -- draw using mouse position
-        fill_width = clamped_mouse_x - edge.x
+        fill_width = clamped_mouse_x - placement.x
 
         -- set position and value
         state.position = get_closest_position(clamped_mouse_x, min_x, max_x, positions)

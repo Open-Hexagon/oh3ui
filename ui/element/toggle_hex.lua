@@ -1,5 +1,5 @@
 local cursor = require("ui.cursor")
-local edge = cursor.edge
+local placement = cursor.placement
 local clickbox = require("ui.sensor.clickbox")
 local primitive = require("ui.primitive")
 local element = require("ui.element")
@@ -30,14 +30,14 @@ return function(state)
         state.on = not state.on -- not nil = true
     end
 
-    local x0 = edge.left
-    local x1 = edge.left + half_radius
-    local x2 = edge.right - half_radius
-    local x3 = edge.right
+    local x0 = placement.left
+    local x1 = placement.left + half_radius
+    local x2 = placement.right - half_radius
+    local x3 = placement.right
 
-    local y0 = edge.top
-    local y1 = edge.top + inradius
-    local y2 = edge.bottom
+    local y0 = placement.top
+    local y1 = placement.top + inradius
+    local y2 = placement.bottom
 
     -- base shape
     draw_queue.polygon(
