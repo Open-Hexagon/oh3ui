@@ -21,27 +21,28 @@ function scroll.start(state)
 
     -- save the current cursor
     cursor.push()
+    cursor.push()
 
     -- mask away everything outside of the region
     primitive.push_mask()
 
-    -- make it seem like the origin is at the top-left corner of the scroll area
+    -- move there contents of the scroll area
     cursor.apply_translation(state.scroll_dist_x, state.scroll_dist_y)
 
     -- -- reset cursor values
     -- cursor.reset(cursor.width, cursor.height)
 
-    -- this is just used to measure the area covered by all included elements
-    cursor.begin_area()
     return true
 end
 
+---Finish a scrolled area. The combination of the current cursor location and the original scroll area is used to calculate the scroll limits
+---A cursor area should probably be used and finished right before this is run so that the cursor surrounds all created elements.
 function scroll.finish(state)
-    primitive.pop_mask()
-
-    cursor.end_area()
+    cursor.combine()
     local content_width = cursor.width
     local content_height = cursor.height
+
+    primitive.pop_mask()
 
     -- return curor back to its original state
     cursor.remove_translation()

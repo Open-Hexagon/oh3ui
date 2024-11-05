@@ -155,11 +155,11 @@ return function()
         primitive.rectangle(theme.red, "line")
         cursor.pop()
         primitive.rectangle(theme.white, "line")
-        if scroll.start(id.scroll2) then
+        if scroll.start(id.scroll2) then -- nested scrolls suck for UX but you can do it I guess
             cursor.inset(10)
             cursor.height = 20
 
-            for i = 1, 20 do
+            for i = 1, 4 do
                 primitive.rectangle(theme.green, "line")
                 cursor.shift_down(10)
             end

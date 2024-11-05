@@ -19,7 +19,7 @@ local cursor = {
     },
 
     ---Readback edge table. Does not get affected by translations.
-    ---Helpful if you need the edges are actually coincide with the cursor after a place.
+    ---Helpful if you need edges that actually coincide with the cursor after a place.
     ---* Use this if you want to check against a the location of the cursor itself.
     readback = { left = 0, top = 0, right = 0, bottom = 0 },
 }
