@@ -3,7 +3,6 @@ local theme = require("ui.theme")
 local clickbox = require("ui.sensor.clickbox")
 local primitive = require("ui.primitive")
 local element = require("ui.element")
-local sensor = require("ui.sensor")
 
 ---Button element with icon. Icons that don't fit get cropped.
 ---Never reshapes the cursor.

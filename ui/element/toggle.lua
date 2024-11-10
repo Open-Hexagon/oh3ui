@@ -8,7 +8,8 @@ local mouse = require("ui.mouse")
 
 local travel_distance = element.toggle_width - element.toggle_height
 
----Two-position toggle switch element. This element ignores the cursor size will reshape the cursor.
+---Two-position toggle switch element.
+---This element ignores the cursor size and will reshape the cursor.
 ---@param state table
 return function(state)
     cursor.push()

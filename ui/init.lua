@@ -17,7 +17,7 @@ local ui = {
 ui.push_event = events.add
 
 ---Grid to show screen and scaled coordinate systems
-local debug_grid = tonumber(os.getenv("GRID")) or 40
+local debug_grid = tonumber(os.getenv("GRID"))
 
 --[[
     UI update process

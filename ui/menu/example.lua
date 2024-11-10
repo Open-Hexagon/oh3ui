@@ -141,7 +141,7 @@ return function()
 
     cursor.x = 300
     cursor.y = 100
-    cursor.width = 400
+    cursor.width = 200
     cursor.height = 200
 
     text.wrap_text = false
@@ -149,22 +149,92 @@ return function()
 
     primitive.rectangle(theme.white, "line")
     if scroll.start(id.scroll) then
+        cursor.begin_area()
+
         cursor.inset(10)
+
         cursor.v_split(2, 10)
+
         cursor.pop()
         primitive.rectangle(theme.red, "line")
+
         cursor.pop()
         primitive.rectangle(theme.white, "line")
-        if scroll.start(id.scroll2) then -- nested scrolls suck for UX but you can do it I guess
-            cursor.inset(10)
-            cursor.height = 20
 
-            for i = 1, 4 do
-                primitive.rectangle(theme.green, "line")
-                cursor.shift_down(10)
-            end
+        if scroll.start(id.scroll2) then -- nested scrolls suck for UX but you can do it I guess
+            cursor.begin_area()
+
+            cursor.inset(10)
+            primitive.rectangle(theme.green, "line")
+
+            cursor.push()
+
+            cursor.shift_down(5)
+            slider(id.slider3, 0, 8, 9, true)
+            cursor.peek()
+
+            cursor.shift_left(5)
+            button(id.button3, "button3")
+            cursor.peek()
+
+            cursor.shift_right(5)
+            primitive.rectangle(theme.green, "line")
+            cursor.peek()
+
+            cursor.drop()
+
+            cursor.put_area()
+            cursor.outset(5)
+            primitive.rectangle(theme.blue, "line")
+
+            cursor.end_area()
+            -- no place operations should happen between end area and scroll finish
             scroll.finish(id.scroll2)
         end
+
+        cursor.shift_down(10)
+        numeric_input(id.numeric2, -100, 100, 5, "Y = %.2f")
+        cursor.shift_left(10)
+        primitive.rectangle(theme.red, "line")
+
+        cursor.put_area()
+        cursor.outset(10)
+        primitive.rectangle(theme.blue, "line")
+
+        cursor.end_area()
+        -- no place operations should happen between end area and scroll finish
         scroll.finish(id.scroll)
+    end
+
+    cursor.shift_right(10)
+    primitive.rectangle(theme.white, "line")
+
+    -- infinite scrolling
+    if scroll.start(id.scroll3) then
+        id.scroll3.n = id.scroll3.n or 10
+        cursor.begin_area()
+
+        cursor.inset(10)
+        cursor.change_anchor(0)
+        cursor.height = 20
+
+        if id.scroll3.at_bottom then -- TODO: the at_bottom thing is a bit of a hack, rework later.
+            id.scroll3.n = id.scroll3.n + 5
+        end
+
+        cursor.auto_reshape = false
+        for i = 1, id.scroll3.n do
+            -- TODO: Check to see which elements are in view so we're not processing everything
+            primitive.label(tostring(i), 20)
+            cursor.shift_down(10)
+        end
+        cursor.auto_reshape = true
+
+        cursor.put_area()
+        cursor.outset(10)
+        cursor.place() -- explicitly expand the area
+        cursor.end_area()
+        -- no place operations should happen between end area and scroll finish
+        scroll.finish(id.scroll3)
     end
 end

@@ -5,6 +5,8 @@ local primitive = require("ui.primitive")
 local element = require("ui.element")
 
 ---N-position switch
+---@param state table
+---@param ... string position names
 return function(state, ...)
     local positions = select("#", ...)
     if not state.initialized then
