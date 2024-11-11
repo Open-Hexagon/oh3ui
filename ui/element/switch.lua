@@ -3,6 +3,8 @@ local theme = require("ui.theme")
 local clickbox = require("ui.sensor.clickbox")
 local primitive = require("ui.primitive")
 local element = require("ui.element")
+local mask = require("ui.mask")
+
 
 ---N-position switch
 ---@param state table
@@ -56,9 +58,9 @@ return function(state, ...)
         primitive.rectangle(button_color)
 
         cursor.inset(element.switch_internal_padding)
-        primitive.push_mask()
+        mask.push()
         primitive.label(select(i, ...), element.switch_text_size)
-        primitive.pop_mask()
+        mask.pop()
     end
 
     cursor.pop() -- (2)

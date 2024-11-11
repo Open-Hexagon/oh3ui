@@ -1,4 +1,3 @@
-local draw_queue = require("ui.draw_queue")
 local primitive = require("ui.primitive")
 local cursor = require("ui.cursor")
 local placement = cursor.placement
@@ -8,6 +7,7 @@ local clickbox = require("ui.sensor.clickbox")
 local dragbox = require("ui.sensor.dragbox")
 local extmath = require("ui.extmath")
 local theme = require("ui.theme")
+local mask = require("ui.mask")
 
 local scroll = {}
 
@@ -31,7 +31,7 @@ function scroll.start(state)
     cursor.push()
 
     -- mask away everything outside of the region
-    primitive.push_mask()
+    mask.push()
 
     -- move the contents of the scroll area
     cursor.apply_translation(
@@ -50,7 +50,7 @@ end
 ---A cursor area should probably be used and finished right before this is run so that the cursor surrounds all created elements.
 ---@param state table make sure that this is the same table as the corresponding starting function!
 function scroll.finish(state)
-    primitive.pop_mask()
+    mask.pop()
     cursor.remove_translation()
 
     if state.hovering or state.dragging then
@@ -66,6 +66,9 @@ function scroll.finish(state)
         -- return cursor back to scroll area shape
         cursor.peek()
         local scroll_width, scroll_height = cursor.width, cursor.height
+
+        --- * horizontal and vertical scroll code are near duplicates but I'm going to leave it
+        --- * since it'll get really confusing without explicit variable names
 
         -- horizontal scrolling (disabled if dragging vertically)
         if content_width > scroll_width and not (state.v_act and state.v_act.dragging) then
@@ -140,7 +143,7 @@ function scroll.finish(state)
             if not (state.h_bar.hovering or state.h_act.dragging) then
                 cursor.height = scrollbar_thickness_inactive
             end
-            primitive.slot(theme.white)
+            primitive.slot(state.h_act.dragging and theme.grabbed_scrollbar or theme.scrollbar)
 
             -- mouse wheel (disabled if dragging)
             if not state.h_act.dragging then
@@ -225,7 +228,7 @@ function scroll.finish(state)
             if not (state.v_bar.hovering or state.v_act.dragging) then
                 cursor.width = scrollbar_thickness_inactive
             end
-            primitive.slot(theme.white)
+            primitive.slot(state.v_act.dragging and theme.grabbed_scrollbar or theme.scrollbar)
 
             -- mouse wheel (disabled if dragging)
             if not state.v_act.dragging then

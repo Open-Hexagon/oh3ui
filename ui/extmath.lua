@@ -35,6 +35,7 @@ do
     ---@param x number
     ---@param y number
     ---@return number
+    ---@nodiscard
     function extmath.alpha_max_beta_min(x, y)
         x, y = math.abs(x), math.abs(y)
         local min, max

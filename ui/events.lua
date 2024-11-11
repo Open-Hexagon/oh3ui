@@ -37,6 +37,7 @@ end
 ---|string # a string pattern that is matched against a love event name
 ---|fun(event_name:string):any # a function that returns something truthy if an event is matched
 ---@return fun():table
+---@nodiscard
 function events.iterate(filter)
     if type(filter) == "string" then
         return coroutine.wrap(function()

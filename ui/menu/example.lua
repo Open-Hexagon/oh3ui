@@ -15,6 +15,8 @@ local toggle_hex = require("ui.element.toggle_hex")
 local draw_queue = require("ui.draw_queue")
 local text = require("ui.text")
 local scroll = require("ui.area.scroll2")
+local mask = require("ui.mask")
+
 
 local sample_text = [[
 Atque et cumque enim fugiat numquam commodi.
@@ -46,7 +48,7 @@ return function()
     cursor.width = 75
     cursor.height = 1000
 
-    -- primitive.push_mask()
+    -- mask.push()
     cursor.apply_translation(40, 0)
 
     cursor.x = 60
@@ -77,7 +79,7 @@ return function()
 
     cursor.remove_translation()
 
-    -- primitive.pop_mask()
+    -- mask.pop()
 
     -- toggles
     cursor.x = 10
@@ -133,8 +135,8 @@ return function()
     -- cursor.end_area()
     -- cursor.inset(15)
     -- draw_queue.take_last_reservation()
-    -- primitive.push_mask()
-    -- primitive.pop_mask()
+    -- mask.push()
+    -- mask.pop()
 
     -- Text
     cursor.change_anchor(0)

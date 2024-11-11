@@ -1,6 +1,6 @@
 ---The cursor represents a rectangular area on screen and is used as
 ---a tool for positioning and aligning ui elements.
----For checking whether the mouse is currently intersecting the cursor, see sensor/init.lua.
+
 ---Note: parameters that are contained within tables are not saved in snapshots
 local cursor = {
     ---Edge output table mainly to be used by elements.
@@ -16,13 +16,6 @@ local cursor = {
         -- the coordinate points are also affected
         x = 0,
         y = 0,
-    },
-
-    edges = {
-        left = 0,
-        top = 0,
-        right = 0,
-        bottom = 0,
     },
 }
 
@@ -414,7 +407,7 @@ end
 -- After an area is started, any new elements that are created will expand the area.
 -- Areas can be stacked, newly created elements only affect the topmost area.
 -- When an area is ended, it's representation is put into the cursor.
--- Ending an area does not expand the area below. Use a cursor.place to do that.
+-- Ending an area does not expand the area below. Use a cursor.place immediately after an area is finished to do that.
 
 ---expands a specified area
 ---@param area table

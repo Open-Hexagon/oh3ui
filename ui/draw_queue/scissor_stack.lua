@@ -1,6 +1,6 @@
--- The scissor_stack is stack of rectangular areas.
--- Draw operations will only act upon the intersection of all areas
--- Operates on screen space coordinates
+---The scissor_stack is stack of rectangular areas.
+---Draw operations will only act upon the intersection of all areas
+---Operates on screen space coordinates
 
 local scissor_stack = {}
 

@@ -1,8 +1,11 @@
 ---Sensors are invisible elements that deal with user input.
----The sensor module itself checks for mouse intersections.
----Overlapping sensors are prioritized from bottom to top with z-ordering.
+---The sensor module itself checks for mouse intersections at the end of a frame.
+---Overlapping sensors are prioritized from top to bottom with z-ordering.
 ---Uses screen coordinates.
 ---For checking mouse buttons, see mouse.lua.
+---Sensors are also primitive, they can usedraw queue reservations.
+---Sensor updates are also done at the end of the frame instead of during the frame.
+---This prevents certain weird bugs caused by combining hovering data from the previous frame with current frame data
 
 --[[
 How intersection checking works
@@ -34,7 +37,7 @@ local mouse = require("ui.mouse")
 local extmath = require("ui.extmath")
 
 local sensor = {
-    -- If false, disables mouse intersection checks. The enter, exit, and hovering fields will always be false.
+    -- If false, disables mouse intersection checks. All hovering fields will become false.
     do_intersections = true,
 }
 

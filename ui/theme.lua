@@ -4,6 +4,7 @@ local extmath = require("ui.extmath")
 ---Converts an integer to a color table with alpha set to 1
 ---@param x integer
 ---@return number[]
+---@nodiscard
 local function i2c(x)
     return {
         bit.band(bit.rshift(x, 16), 0xff) / 0xff,
@@ -18,6 +19,7 @@ end
 ---@param b number[]
 ---@param t number
 ---@return number[]
+---@nodiscard
 local function mix(a, b, t)
     local c = {}
     for i = 1, #a do
@@ -26,13 +28,8 @@ local function mix(a, b, t)
     return c
 end
 
-local theme = {
-    rectangle_color = { 0.2, 0.2, 0.2, 1 },
-    active_color = { 0.4, 0.4, 1, 1 },
-    -- no alpha, it is animated in the code
-    scrollbar_color = { 1, 1, 1 },
-    grabbed_scrollbar_color = { 1, 1, 0.8, 1 },
-}
+local theme = {}
+
 -- primitive colors
 theme.black = { 0, 0, 0, 1 }
 theme.red = { 1, 0, 0, 1 }
@@ -53,6 +50,9 @@ theme.widget_background_highlight = mix(theme.widget_background, theme.widget_ou
 theme.widget_actuator = { 0.8, 0.8, 0.8, 1 }
 theme.widget_actuator_outline = theme.white
 theme.widget_actuator_outline_highlight = theme.accent_color
+
+theme.scrollbar = { 1, 1, 1, 0.35 }
+theme.grabbed_scrollbar = { 1, 1, 1, 0.6 }
 
 -- export the mix function
 theme.mix = mix

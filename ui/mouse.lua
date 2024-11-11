@@ -1,4 +1,4 @@
----A broadcasting module that displays mouse position and button states.
+---A module that gathers mouse related events and displays them in a nice way.
 ---For checking mouse intersection: see sensor/init.lua
 
 local events = require("ui.events")

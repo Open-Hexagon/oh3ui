@@ -15,7 +15,14 @@ local primitive = {}
 ---@param mode string? "fill" or "line" (default is "fill")
 function primitive.rectangle(color, mode)
     cursor.place()
-    draw_queue.rectangle(mode or "fill", placement.left, placement.top, placement.right, placement.bottom, color or theme.default)
+    draw_queue.rectangle(
+        mode or "fill",
+        placement.left,
+        placement.top,
+        placement.right,
+        placement.bottom,
+        color or theme.default
+    )
 end
 
 ---Rectangle outline primitive. Never reshapes the cursor.
@@ -23,7 +30,14 @@ end
 ---@param line_width number?
 function primitive.rectangle_outline(color, line_width)
     cursor.place()
-    draw_queue.rectangle_outline(placement.left, placement.top, placement.right, placement.bottom, color or theme.default, line_width or 1)
+    draw_queue.rectangle_outline(
+        placement.left,
+        placement.top,
+        placement.right,
+        placement.bottom,
+        color or theme.default,
+        line_width or 1
+    )
 end
 
 ---Slot primitive, aka a pill shape. Never reshapes the cursor.
@@ -177,15 +191,5 @@ function primitive.vline(color, line_width)
     local x = placement.x - cursor.anchor_x + 0.5
     draw_queue.line(line_width or 1, color or theme.default, x, placement.top, x, placement.bottom)
 end
-
----Mask everything outside of the cursor. Further draw operations will not affect masked areas.
----Make sure to pop the mask when you're done!
-function primitive.push_mask()
-    cursor.place()
-    draw_queue.push_scissor(placement.left, placement.top, placement.right, placement.bottom)
-end
-
----Removes the last applied mask.
-primitive.pop_mask = draw_queue.pop_scissor
 
 return primitive

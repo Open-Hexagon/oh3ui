@@ -113,7 +113,7 @@ function ui.finish()
     -- draw in order
     draw_queue.draw()
 
-    -- do z-order stuff
+    -- do z-ordered mouse intersection checks
     mouse.update()
     sensor.finish()
 
