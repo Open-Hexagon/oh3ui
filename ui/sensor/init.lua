@@ -48,40 +48,37 @@ local index = 0
 ---@param top number
 ---@param right number
 ---@param bottom number
-function sensor.push(state, mode, left, top, right, bottom)
+---@param update_fn? function
+function sensor.push(state, mode, left, top, right, bottom, update_fn)
     index = index + 1
     if z_list[index] then
-        z_list[index][1], z_list[index][2], z_list[index][3], z_list[index][4], z_list[index][5], z_list[index][6] =
-            state, mode, left, top, right, bottom
+        z_list[index][1], z_list[index][2], z_list[index][3], z_list[index][4], z_list[index][5], z_list[index][6], z_list[index][7] =
+            state, mode, left, top, right, bottom, update_fn
     else
-        z_list[index] = { state, mode, left, top, right, bottom }
+        z_list[index] = { state, mode, left, top, right, bottom, update_fn }
     end
 end
 
 ---Gets run after the draw queue to determine which sensors are hovered by the mouse
 function sensor.finish()
-    if sensor.do_intersections then
-        -- after the loop, set to the last encountered lazy intersection for this and the previous frame
-        local last_lazy_intersection
-        -- set to true once a single blocking sensor is found for both before and after intersections
-        local blocked = false
+    local last_lazy_intersection
+    -- set to true once a single blocking sensor is found for both before and after intersections
+    local blocked = false
 
-        for i = index, 1, -1 do
-            local state = z_list[i][1]
+    for i = index, 1, -1 do
+        local state = z_list[i][1]
 
+        if sensor.do_intersections and not blocked then
             -- get intersection mode and bounds
             local mode = z_list[i][2]
-            local x1, y1, x2, y2 = unpack(z_list[i], 3)
+            local x1, y1, x2, y2 = unpack(z_list[i], 3, 6)
 
             -- check intersections
-            -- intersections are forced to be false if they are blocked
-            local intersecting_now = not blocked
-                and extmath.point_in_aligned_rectangle(mouse.screen_x, mouse.screen_y, x1, y1, x2, y2)
+            local intersecting_now = extmath.point_in_aligned_rectangle(mouse.screen_x, mouse.screen_y, x1, y1, x2, y2)
 
             state.hovering = intersecting_now
 
             if intersecting_now then
-                -- lazy intersections are handled differently
                 if mode == "lazy" then
                     if last_lazy_intersection then
                         last_lazy_intersection.hovering = false
@@ -90,16 +87,20 @@ function sensor.finish()
                 elseif mode == "block" then
                     blocked = true
                 elseif mode == "pass" then
+                    -- pass doesn't actually need to do anything
                 else
                     error(string.format("invalid intersection mode `%s`", mode))
                 end
             end
-        end
-    else
-        -- reset all
-        for i = 1, index do
-            local state = z_list[i][1]
+        else
             state.hovering = false
+        end
+
+        ---update all sensor states
+        ---@type function?
+        local update_fn = z_list[i][7]
+        if update_fn then
+            update_fn(state)
         end
     end
 

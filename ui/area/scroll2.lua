@@ -137,8 +137,6 @@ function scroll.finish(state)
 
             -- draw the actuator
             -- shrink the actuator if needed
-            -- TODO | Issue: minor flickering issue if mouse is released after dragging while still hovering the actuator
-            -- TODO | since hovering data is received one frame later.
             if not (state.h_bar.hovering or state.h_act.dragging) then
                 cursor.height = scrollbar_thickness_inactive
             end
@@ -151,14 +149,14 @@ function scroll.finish(state)
 
             -- apply scroll limits
             state.scroll_dist_x = extmath.clamp(state.scroll_dist_x, scroll_limit_right, scroll_limit_left)
+
+            -- return to scroll area
+            cursor.peek()
         end
 
         -- vertical scrolling (disabled if dragging horizontally)
         if content_height > scroll_height and not (state.h_act and state.h_act.dragging) then
-            -- we need this in case the horizontal scrolling has run
-            cursor.peek()
-
-            -- get scroll boundaries-- get scroll boundaries
+            -- get scroll boundaries
             local scroll_top, scroll_bottom = cursor.tb()
 
             -- translation limits
@@ -224,8 +222,6 @@ function scroll.finish(state)
 
             -- draw the actuator
             -- shrink the actuator if needed
-            -- TODO | Issue: minor flickering issue if mouse is released after dragging while still hovering the actuator
-            -- TODO | since hovering data is received one frame later.
             if not (state.v_bar.hovering or state.v_act.dragging) then
                 cursor.width = scrollbar_thickness_inactive
             end

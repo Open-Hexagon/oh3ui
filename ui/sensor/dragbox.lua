@@ -4,15 +4,10 @@ local placement = cursor.placement
 local sensor = require("ui.sensor")
 local draw_queue = require("ui.draw_queue")
 
----An extension of clickbox that additionally tracks dragging.
----Disables mouse intersections while dragging.
+---Updates the state table with dragging info.
+---A referenced is passed to mouse sensor so it can later be called at the end of the frame.
 ---@param state table
----@param mode? "block"|"lazy"|"pass"
----@return integer?
-return function(state, mode)
-    cursor.place()
-    draw_queue.mouse_sensor(state, mode or "block", placement.left, placement.top, placement.right, placement.bottom)
-
+local function update(state)
     state.clicked = nil
     state.stopped_dragging = nil
     state.started_dragging = nil
@@ -55,7 +50,23 @@ return function(state, mode)
         state.drag_origin_y = mouse.y
         sensor.do_intersections = false
     end
+end
 
-    -- return the dragging state
+---An extension of clickbox that additionally tracks dragging.
+---Disables mouse intersections while dragging.
+---@param state table
+---@param mode? "block"|"lazy"|"pass"
+---@return integer?
+return function(state, mode)
+    cursor.place()
+    draw_queue.mouse_sensor(
+        state,
+        mode or "block",
+        placement.left,
+        placement.top,
+        placement.right,
+        placement.bottom,
+        update
+    )
     return state.dragging
 end

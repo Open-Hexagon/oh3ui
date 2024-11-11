@@ -178,8 +178,9 @@ end
 ---@param top number
 ---@param right number
 ---@param bottom number
-function draw_queue.mouse_sensor(state, mode, left, top, right, bottom)
-    push_operation(op_ids.mouse_sensor, state, mode, left, top, right, bottom)
+---@param update_fn? function
+function draw_queue.mouse_sensor(state, mode, left, top, right, bottom, update_fn)
+    push_operation(op_ids.mouse_sensor, state, mode, left, top, right, bottom, update_fn)
 end
 
 --#region functions that actually draw things
@@ -438,7 +439,7 @@ local function run_draw_operations(group_index)
                 love.graphics.setColor(r, g, b, a)
                 love.graphics.line(unpack(item, 7))
             elseif id == op_ids.mouse_sensor then
-                local state, mode, x1, y1, x2, y2 = unpack(item, 2)
+                local state, mode, x1, y1, x2, y2, update_fn = unpack(item, 2)
                 local x, y, width, height = love.graphics.getScissor()
 
                 -- sensor and mouse is not affected by graphics transforms
@@ -449,11 +450,11 @@ local function run_draw_operations(group_index)
                     x1, y1, x2, y2 = extmath.aligned_rectangle_intersection(x1, y1, x2, y2, x, y, x + width, y + height)
                     -- only push if there was an intersection
                     if x1 then
-                        sensor.push(state, mode, x1, y1, x2, y2)
+                        sensor.push(state, mode, x1, y1, x2, y2, update_fn)
                     end
                 else
                     -- push if there is no active scissor
-                    sensor.push(state, mode, x1, y1, x2, y2)
+                    sensor.push(state, mode, x1, y1, x2, y2, update_fn)
                 end
             end
         end
