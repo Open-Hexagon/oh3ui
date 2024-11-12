@@ -14,7 +14,7 @@ local toggle = require("ui.element.toggle")
 local toggle_hex = require("ui.element.toggle_hex")
 local draw_queue = require("ui.draw_queue")
 local text = require("ui.text")
-local scroll = require("ui.area.scroll2")
+local scroll = require("ui.element.scroll")
 local mask = require("ui.mask")
 
 
@@ -202,14 +202,15 @@ return function()
         cursor.put_area()
         cursor.outset(10)
         primitive.rectangle(theme.blue, "line")
-
         cursor.end_area()
         -- no place operations should happen between end area and scroll finish
         scroll.finish(id.scroll)
     end
 
     cursor.shift_right(10)
+    -- cursor.height = 29
     primitive.rectangle(theme.white, "line")
+
 
     -- infinite scrolling
     if scroll.start(id.scroll3) then
@@ -220,23 +221,20 @@ return function()
         cursor.change_anchor(0)
         cursor.height = 20
 
-        if id.scroll3.at_bottom then -- TODO: the at_bottom thing is a bit of a hack, rework later.
+        -- add items if we're at the bottom and we're not dragging the scrollbars
+        if id.scroll3.at_bottom and not id.scroll3.dragging then
             id.scroll3.n = id.scroll3.n + 5
         end
 
         cursor.auto_reshape = false
         for i = 1, id.scroll3.n do
-            -- TODO: Check to see which elements are in view so we're not processing everything
             primitive.label(tostring(i), 20)
             cursor.shift_down(10)
         end
         cursor.auto_reshape = true
 
-        cursor.put_area()
-        cursor.outset(10)
-        cursor.place() -- explicitly expand the area
         cursor.end_area()
-        -- no place operations should happen between end area and scroll finish
+        cursor.outset(10)
         scroll.finish(id.scroll3)
     end
 end

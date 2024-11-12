@@ -40,21 +40,16 @@ return function(state)
     local y2 = placement.bottom
 
     -- base shape
+    -- stylua: ignore
     draw_queue.polygon(
         "fill",
         state.on and theme.accent_color or theme.widget_background,
-        x0,
-        y1,
-        x1,
-        y0,
-        x2,
-        y0,
-        x3,
-        y1,
-        x2,
-        y2,
-        x1,
-        y2
+        x0, y1,
+        x1, y0,
+        x2, y0,
+        x3, y1,
+        x2, y2,
+        x1, y2
     )
 
     -- calculate normalized toggle position
