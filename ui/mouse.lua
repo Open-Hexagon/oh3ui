@@ -41,8 +41,11 @@ do
         -- change in coordinates from last frame
         dx = 0,
         dy = 0,
+
+        -- true if the cursor moved at all this frame
         moved = false,
 
+        -- wheel movement
         wheel_dx = 0,
         wheel_dy = 0,
 

@@ -1,6 +1,6 @@
 local cursor = require("ui.cursor")
 local theme = require("ui.theme")
-local draw_queue = require("ui.draw_queue")
+local reserve = require("ui.reserve")
 local clickbox = require("ui.sensor.clickbox")
 local dragbox = require("ui.sensor.dragbox")
 local hoverbox = require("ui.sensor.hoverbox")
@@ -38,7 +38,7 @@ return function(state, min, max, step, format)
     cursor.change_anchor(0.5)
 
     -- reserve background for later
-    draw_queue.reserve()
+    local bg_res_id = reserve.allocate(1)
 
     cursor.push() -- (2)
 
@@ -75,7 +75,7 @@ return function(state, min, max, step, format)
     end
 
     -- draw background
-    draw_queue.take_last_reservation()
+    reserve.take(bg_res_id)
     if dragging or state.numeric_input_center.holding then
         -- highlighted background
         cursor.width = full_width

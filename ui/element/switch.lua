@@ -4,7 +4,8 @@ local clickbox = require("ui.sensor.clickbox")
 local primitive = require("ui.primitive")
 local element = require("ui.element")
 local mask = require("ui.mask")
-
+local effect = require("ui.effect")
+local draw_queue = require("ui.draw_queue")
 
 ---N-position switch
 ---@param state table
@@ -31,23 +32,25 @@ return function(state, ...)
 
     cursor.push() -- (2)
 
+    local sel_bg_res = draw_queue.reserve(positions)
+    local sel_hl_res = draw_queue.reserve(1)
+
     -- selection buttons
     local hovering = false
-    cursor.h_split(positions)
+    local section_width = cursor.h_split(positions)
     for i = 1, positions do
         cursor.pop()
         local cb_state = state[i]
         clickbox(cb_state)
         if cb_state.clicked then
+            state._switch_selection_highlight_speed = math.abs(state.position - i) * 25
             state.position = i
         end
 
         hovering = hovering or cb_state.hovering
 
         local button_color
-        if i == state.position then
-            button_color = theme.accent_color
-        elseif cb_state.holding then
+        if cb_state.holding or i == state.position then
             button_color = theme.widget_background_highlight
         elseif cb_state.hovering then
             button_color = theme.widget_background_brighter
@@ -55,6 +58,7 @@ return function(state, ...)
             button_color = theme.widget_background
         end
 
+        draw_queue.take_reservation(sel_bg_res)
         primitive.rectangle(button_color)
 
         cursor.inset(element.switch_internal_padding)
@@ -62,6 +66,19 @@ return function(state, ...)
         primitive.label(select(i, ...), element.switch_text_size)
         mask.pop()
     end
+
+    cursor.peek()
+    cursor.change_anchor(0)
+    cursor.width = section_width
+    local base_x = cursor.x
+    state._switch_selection_highlight_position = effect.follow(
+        state._switch_selection_highlight_position,
+        state.position - 1,
+        state._switch_selection_highlight_speed
+    )
+    cursor.x = base_x + state._switch_selection_highlight_position * section_width
+    draw_queue.take_reservation(sel_hl_res)
+    primitive.rectangle(theme.accent_color)
 
     cursor.pop() -- (2)
     primitive.rectangle_outline(hovering and theme.accent_color or theme.widget_outline)

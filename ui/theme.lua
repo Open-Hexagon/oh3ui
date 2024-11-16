@@ -1,3 +1,5 @@
+---A table of standard colors for the UI
+
 local bit = require("bit")
 local extmath = require("ui.extmath")
 

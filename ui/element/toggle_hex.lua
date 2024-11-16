@@ -7,6 +7,7 @@ local theme = require("ui.theme")
 local extmath = require("ui.extmath")
 local draw_queue = require("ui.draw_queue")
 local mouse = require("ui.mouse")
+local effect = require("ui.effect")
 
 local indiameter = element.toggle_height
 local diameter = extmath.from_inradius(indiameter, 6)
@@ -53,13 +54,12 @@ return function(state)
     )
 
     -- calculate normalized toggle position
-    state.toggle_position =
-        extmath.clamp((state.toggle_position or 0) + 25 * love.timer.getDelta() * (state.on and 1 or -1), -0.5, 0.5)
+    state._toggle_actuator_position = effect.follow(state._toggle_actuator_position, state.on and 0.5 or -0.5, 25)
 
     cursor.change_anchor(0.5, 0.5)
     cursor.width = diameter
     cursor.height = diameter
-    cursor.x = cursor.x + state.toggle_position * travel_distance
+    cursor.x = cursor.x + state._toggle_actuator_position * travel_distance
 
     primitive.circle(theme.widget_actuator, 6)
     primitive.circle_outline(

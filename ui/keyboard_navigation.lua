@@ -109,6 +109,8 @@ function keyboard_navigation.run()
             move_or_initialize(0, 1)
         elseif key == "up" then
             move_or_initialize(0, -1)
+        elseif key == "up" then
+        elseif key == "tab" then
         end
     end
 end

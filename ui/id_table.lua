@@ -2,7 +2,7 @@ local meta = {
     -- Make a new table if a previously unknown name is provided as a key
     __index = function(t, new_name)
 
-        ---A list of known fields
+        ---A list of known fields. Fields that are prefixed with an underscore should be treated as private to the element that's using them.
         ---@class ElementStateTable
         ---@field initialized boolean? may be used to keep track of first time initialization
         ---@field clicked integer? the mouse button id that just clicked this element

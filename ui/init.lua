@@ -2,10 +2,8 @@ local cursor = require("ui.cursor")
 local events = require("ui.events")
 local draw_queue = require("ui.draw_queue")
 local mouse = require("ui.mouse")
+local typing = require("ui.typing")
 local sensor = require("ui.sensor")
--- local scroll_interaction = require("ui.interaction.scroll")
--- local text_interaction = require("ui.interaction.text")
--- local keyboard_navigation = require("ui.keyboard_navigation")
 
 local ui = {
     -- this is set using an environment variable, changing it here will do nothing
@@ -116,6 +114,7 @@ function ui.finish()
     -- do z-ordered mouse intersection checks
     mouse.update()
     sensor.finish()
+    typing.update()
 
     -- undo scaling
     love.graphics.pop()

@@ -75,7 +75,7 @@ return function()
     cursor.shift_down(10)
 
     cursor.width = 150
-    switch(id.switch, "a", "b", "c", "d", "e")
+    switch(id.switch, "a", "b", "c")
 
     cursor.remove_translation()
 
