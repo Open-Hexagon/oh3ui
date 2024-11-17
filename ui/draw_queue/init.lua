@@ -30,7 +30,7 @@ local op_ids = {
 local op_list = {}
 ---Hold the index of the last pushed draw operation
 local op_index = 0
----List of reservation
+---List of reservations
 local res_list = {}
 ---Holds the index of the last created reservation
 local res_index = 0
@@ -86,6 +86,8 @@ function draw_queue.reserve(n)
     return res_index
 end
 
+---The next operation will fill in a slot in a reservation
+---@param res_id integer the reservation id to fill
 function draw_queue.take_reservation(res_id)
     local res = res_list[res_id]
 

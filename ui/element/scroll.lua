@@ -17,6 +17,9 @@ local minimum_scrollbar_actuator_length = 20
 local minimum_scrollbar_length = 1.5 * minimum_scrollbar_actuator_length
 local mouse_wheel_scroll_distance = 10
 
+local scroll_stack = {}
+local scroll_stack_index = 0
+
 ---Start a scrolled area. The current cursor location is used as the cutout area. Does not reshape the cursor
 ---If the cursor is degenerate then no scroll area is created and false is returned (nothing would have been drawn anyways).
 ---Otherwise, returns true.
@@ -285,6 +288,11 @@ function scroll.finish(state)
 
     -- check if hovering the whole scroll area
     hoverbox(state, "lazy")
+end
+
+---Moves the current cursor location into
+function scroll.move_into_view()
+
 end
 
 return scroll

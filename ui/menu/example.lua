@@ -16,7 +16,7 @@ local draw_queue = require("ui.draw_queue")
 local text = require("ui.text")
 local scroll = require("ui.element.scroll")
 local mask = require("ui.mask")
-
+local keyboard_navigation = require("ui.keyboard_navigation")
 
 local sample_text = [[
 Atque et cumque enim fugiat numquam commodi.
@@ -94,25 +94,30 @@ return function()
     -- array and combining
     cursor.width = 20
     cursor.height = 20
-    cursor.v_array(10, 10)
-
+    cursor.push() -- (1)
+    cursor.h_array(3, 10)
     cursor.pop()
-    primitive.rectangle(theme.white)
+    keyboard_navigation.next_as_escape()
+    primitive.rectangle(keyboard_navigation.make_cell() and theme.accent_color or theme.white)
+    keyboard_navigation.grid_cell(1, 1)
+    cursor.pop()
+    primitive.rectangle(keyboard_navigation.make_cell() and theme.accent_color or theme.white)
+    -- keyboard_navigation.grid_cell(2, 1)
+    cursor.pop()
+    primitive.rectangle(keyboard_navigation.make_cell() and theme.accent_color or theme.white)
+    keyboard_navigation.grid_cell(3, 1)
 
+    cursor.pop() -- (1)
+    cursor.shift_down(10)
+    cursor.h_array(3, 10)
+    cursor.pop()
+    keyboard_navigation.next_as_default()
+    primitive.rectangle(keyboard_navigation.make_cell() and theme.accent_color or theme.white)
+    keyboard_navigation.grid_cell(1, 2)
     cursor.pop()
     cursor.combine()
-    primitive.rectangle(theme.white)
-
-    cursor.pop()
-    cursor.drop()
-    cursor.combine()
-    primitive.rectangle(theme.white)
-
-    cursor.pop()
-    cursor.drop()
-    cursor.drop()
-    cursor.combine()
-    primitive.rectangle(theme.white)
+    primitive.rectangle(keyboard_navigation.make_cell() and theme.accent_color or theme.white)
+    keyboard_navigation.grid_cell(2, 2, 2)
 
     -- button
 
@@ -210,7 +215,6 @@ return function()
     cursor.shift_right(10)
     -- cursor.height = 29
     primitive.rectangle(theme.white, "line")
-
 
     -- infinite scrolling
     if scroll.start(id.scroll3) then

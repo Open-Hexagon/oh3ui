@@ -13,7 +13,7 @@ Area is now a part of the cursor module. It's now merely another cursor helper f
 The functionality of scissor stack and area cutouts have been merged. Masking will now affect both draw operations and mouse detection. This required the mouse detection to happen after the draw queue runs which causes mouse detection information to be delayed by one frame. This isn't really a problem though.
 
 ### Mouse detection
-Mouse detection is now accurate and reflects the behavior of real GUIs. Proper Z-layering is implemented, so overlapping mouse detection regions are handled properly. This comes along with new invisible sensor elements so mouse detection regions can be precicely calculated.
+Mouse detection is now accurate and reflects the behavior of real GUIs. Proper Z-layering is implemented, so overlapping mouse detection regions are handled properly. This comes along with new invisible sensor elements so mouse detection regions can be precisely calculated.
 
 ### UI Scaling
 UI scaling is now perfectly accurate (with a few minor exceptions). There's no need to pass every coordinate point through `transformPoint` anymore. This came with the loss of some features such as element rotation.

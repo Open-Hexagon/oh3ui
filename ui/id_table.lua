@@ -1,24 +1,38 @@
+--[[
+    ## List of Usable State Table Fields
+    Fields that are prefixed with an underscore should be treated as private to the element that's using them.
+    All fields are optional
+    
+    * Sensor fields
+    hovering boolean --- True when cursor is hovering. Read only; set automatically by the sensor module
+
+    clicked integer --- the mouse button id that just clicked this element
+    holding integer --- the mouse button id that is currently holding down this element
+
+    dragging integer --- the mouse button id that is currently dragging this element
+    started_dragging integer --- the mouse button id just started dragging this element
+    stopped_dragging integer --- the mouse button id just stopped dragging this element
+    drag_origin_x number --- the mouse x coordinate where dragging began
+    drag_origin_y number --- the mouse y coordinate where dragging began
+
+    * Element data representation
+    value number --- contains whatever real numerical data the element may be representing
+    position integer --- contains whatever discrete state the element may be representing
+    on boolean --- contains whatever boolean data the element may be representing
+    text string --- contains whatever string data the element may be representing
+
+    * Keyboard Input Injection
+    kb_selected
+    kb_input
+
+    * Other fields
+    initialized boolean --- may be used to keep track of first time initialization
+]]
+
 local meta = {
     -- Make a new table if a previously unknown name is provided as a key
     __index = function(t, new_name)
-
-        ---A list of known fields. Fields that are prefixed with an underscore should be treated as private to the element that's using them.
-        ---@class ElementStateTable
-        ---@field initialized boolean? may be used to keep track of first time initialization
-        ---@field clicked integer? the mouse button id that just clicked this element
-        ---@field holding integer? the mouse button id that is currently holding down this element
-        ---@field dragging integer? the mouse button id that is currently dragging this element
-        ---@field started_dragging integer? the mouse button id just started dragging this element
-        ---@field stopped_dragging integer? the mouse button id just stopped dragging this element
-        ---@field drag_origin_x number? the mouse x coordinate where dragging began
-        ---@field drag_origin_y number? the mouse y coordinate where dragging began
-        ---@field position integer? contains whatever discrete state the element is in
-        ---@field value number? contains whatever real numerical data the element may be representing
-        ---@field on boolean? contains whatever boolean data the element may be representing
-        ---@field text string? contains whatever string data the element may be representing
-        ---@field hovering boolean? true when cursor is hovering, read only, only accurate to the previous frame
         t[new_name] = {}
-
         return t[new_name]
     end,
 }

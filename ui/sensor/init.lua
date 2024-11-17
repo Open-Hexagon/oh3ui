@@ -63,7 +63,7 @@ function sensor.push(state, mode, left, top, right, bottom, update_fn)
 end
 
 ---Gets run after the draw queue to determine which sensors are hovered by the mouse
-function sensor.finish()
+function sensor.evaluate()
     local last_lazy_intersection
     -- set to true once a single blocking sensor is found for both before and after intersections
     local blocked = false
