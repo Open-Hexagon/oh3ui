@@ -91,28 +91,28 @@ return function()
     toggle_hex(id.toggle_hex)
     cursor.shift_down(10)
 
+    keyboard_navigation.set_wrapping("both_line")
+
     -- array and combining
     cursor.width = 20
     cursor.height = 20
     cursor.push() -- (1)
     cursor.h_array(3, 10)
     cursor.pop()
-    keyboard_navigation.next_as_escape()
-    primitive.rectangle(keyboard_navigation.make_cell() and theme.accent_color or theme.white)
+    primitive.rectangle(keyboard_navigation.make_cell("escape") and theme.accent_color or theme.white)
     keyboard_navigation.grid_cell(1, 1)
     cursor.pop()
     primitive.rectangle(keyboard_navigation.make_cell() and theme.accent_color or theme.white)
-    -- keyboard_navigation.grid_cell(2, 1)
+    -- keyboard_navigation.grid_cell(2, 1) -- make this button have an undefined grid location
     cursor.pop()
     primitive.rectangle(keyboard_navigation.make_cell() and theme.accent_color or theme.white)
-    keyboard_navigation.grid_cell(3, 1)
+    keyboard_navigation.grid_cell(2, 1, 2)
 
     cursor.pop() -- (1)
     cursor.shift_down(10)
     cursor.h_array(3, 10)
     cursor.pop()
-    keyboard_navigation.next_as_default()
-    primitive.rectangle(keyboard_navigation.make_cell() and theme.accent_color or theme.white)
+    primitive.rectangle(keyboard_navigation.make_cell("default") and theme.accent_color or theme.white)
     keyboard_navigation.grid_cell(1, 2)
     cursor.pop()
     cursor.combine()

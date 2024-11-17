@@ -6,12 +6,25 @@ local keyboard_navigation = {}
 ---Real cell values are strictly positive.
 local special_cell = {
     nothing = 0, -- navigation can freely pass through this cell
-    barrier = -1, -- when encountered, navigation is stopped, as if it reached the boundary of the grid
-    wrap = -2, -- when encountered, navigation is wrapped to the closest wrap cell or the border of the grid in the opposite navigation direction
+    barrier = -1, -- when encountered, navigation is stopped
+    wrap = -2, -- when encountered, navigation is wrapped to the closest wrap or barrier cell in the opposite navigation direction
+    tab = -3, -- when encountered, navigation is jumped to the previous or next tab selection
 }
 
----@type "vertical"|"horizontal"|"both"|nil
+---This influences what get_grid_cell sees when it looks outside the bounds of the grid
+---@type "vertical"|"horizontal"|"line"|"both"|"both_line"|nil
 local wrapping_mode
+
+---Set navigation behavior of grid borders.
+---@param mode?
+---|"vertical" navigation is wrapped if it reaches the top or bottom grid borders
+---|"horizontal" navigation is wrapped if it reaches the left or right grid borders
+---|"line" horizontal navigation wraps like text wrapping would using the tab order
+---|"both" union of vertical and horizontal
+---|"both_line" union of vertical and line
+function keyboard_navigation.set_wrapping(mode)
+    wrapping_mode = mode
+end
 
 ---Grid used to assist in determining what the arrow keys will do
 ---This grid can be sparse with holes and maybe entire missing rows
@@ -57,13 +70,18 @@ end
 ---@return integer
 local function get_grid_cell(x, y)
     if x < 1 or x > grid_width then
+        -- x coordinate exceeds grid size
         if wrapping_mode == "horizontal" or wrapping_mode == "both" then
             return special_cell.wrap
+        elseif wrapping_mode == "line" or wrapping_mode == "both_line" then
+            return special_cell.tab
+        else
+            return special_cell.barrier
         end
-        return special_cell.barrier
     end
     if y < 1 or y > grid_height then
-        if wrapping_mode == "vertical" or wrapping_mode == "both" then
+        -- y coordinate exceeds grid size
+        if wrapping_mode == "vertical" or wrapping_mode == "both" or wrapping_mode == "both_line" then
             return special_cell.wrap
         end
         return special_cell.barrier
@@ -92,46 +110,29 @@ local escape_cell
 ---0 indicates the next cell's index will be put in this variable
 local default_cell
 
----Set navigation behavior of grid borders.
----@param mode?
----|"vertical" navigation is wrapped if it reaches the top or bottom grid borders
----|"horizontal" navigation is wrapped if it reaches the left or right grid borders
----|"both" union of vertical and horizontal
-function keyboard_navigation.set_wrapping(mode)
-    wrapping_mode = mode
-end
-
----The next created cell will be the default cell This will override the previous default cell
-function keyboard_navigation.next_as_default()
-    default_cell = 0
-end
-
----The next created cell will be the escape cell. This will override the previous escape cell
-function keyboard_navigation.next_as_escape()
-    escape_cell = 0
-end
-
 ---Create a keyboard navigation cell which can be selected. The order in which these are called determines the tab order.
-function keyboard_navigation.make_cell()
+---@param mode?
+---|"default" make this cell the default cell
+---|"escape" make this cell the escape cell
+---|"both" make this cell both the default and escape cell
+function keyboard_navigation.make_cell(mode)
     -- add a cell to the list
     cell_index = cell_index + 1
     cell_list[cell_index] = cell_list[cell_index] or {}
 
-    -- these don't have to be mutually exclusive
-    if escape_cell == 0 then
+    if mode == "escape" or mode == "both" then
         escape_cell = cell_index
     end
-    if default_cell == 0 then
+
+    if mode == "default" or mode == "both" then
         default_cell = cell_index
     end
 
     return cell_index == selected_cell
 end
 
-function keyboard_navigation.is_selected() end
-
 -- ! There's no protection against overwriting already existing cell values.
--- ! Allowing overwriting may be useful button may also cause strange behavior.
+-- ! Allowing overwriting may be useful but may also cause strange behavior.
 
 ---Fills a rectangle in the grid with the last created cell index.
 ---If this function isn't run after a make_cell call, then that cell can be tabbed to but not selected via navigating the grid.
@@ -150,81 +151,147 @@ function keyboard_navigation.grid_cell(x, y, col_span, row_span)
     cell_list[cell_index].y = y
 end
 
----Fills a rectangle in the grid with barriers.
----@param x integer
----@param y integer
----@param col_span? integer
----@param row_span? integer
-function keyboard_navigation.grid_barrier(x, y, col_span, row_span)
-    col_span = col_span or 1
-    row_span = row_span or 1
-    if x < 1 or y < 1 or col_span < 1 or row_span < 1 then
-        error("bad grid cell rectangle")
-    end
-    fill_grid(special_cell.barrier, x, y, x + col_span - 1, y + row_span - 1)
-end
-
----Fills a rectangle in the grid with wraps.
----@param x integer
----@param y integer
----@param col_span? integer
----@param row_span? integer
-function keyboard_navigation.grid_wrap(x, y, col_span, row_span)
-    col_span = col_span or 1
-    row_span = row_span or 1
-    if x < 1 or y < 1 or col_span < 1 or row_span < 1 then
-        error("bad grid cell rectangle")
-    end
-    fill_grid(special_cell.wrap, x, y, x + col_span - 1, y + row_span - 1)
-end
-
 local function jump_to_cell(new_selection)
     grid_x = cell_list[new_selection].x
     grid_y = cell_list[new_selection].y
-    print(grid_x, grid_y)
     selected_cell = new_selection
 end
 
-local function navigate_grid(mode)
-    -- make sure we're in a proper grid location
-    -- if nothing is selected or grid location is undefined, jump to the first cell
-    if selected_cell == 0 or not grid_x then
+local function jump_forward()
+    if selected_cell >= cell_index then
         jump_to_cell(1)
-    end
-
-    local original_grid_cell = get_grid_cell(grid_x, grid_y)
-
-    -- if the grid cursor is not on a proper cell, jump to the first cell
-    if original_grid_cell < 1 then
-        jump_to_cell(1)
-    end
-
-    if mode == "right" then
-        local n = 0
-        local following_selection
-        repeat
-            n = n + 1
-            following_selection = get_grid_cell(grid_x + n, grid_y)
-        until following_selection ~= original_grid_cell
-
-        if following_selection == special_cell.nothing then
-            repeat
-                n = n + 1
-                following_selection = get_grid_cell(grid_x + n, grid_y)
-            until following_selection ~= special_cell.nothing
-        elseif following_selection == special_cell.barrier then
-        elseif following_selection == special_cell.wrap then
-        else
-        end
-    elseif mode == "left" then
-    elseif mode == "down" then
-    elseif mode == "up" then
+    else
+        jump_to_cell(selected_cell + 1)
     end
 end
 
-function keyboard_navigation.clear_selection()
+local function jump_backwards()
+    if selected_cell <= 1 then
+        jump_to_cell(cell_index)
+    else
+        jump_to_cell(selected_cell - 1)
+    end
+end
+
+local MAX_SEARCH_DISTANCE = 256
+
+---Finds a border between two different cell values by walking in a given direction.
+---The cell under the starting coordinate isn't actually checked, so the starting_value can be different than the value in that cell.
+---@param starting_value integer Function walks until it encounters a cell value that is different from this is value
+---@param x integer Starting coordinate
+---@param y integer Starting coordinate
+---@param dx integer Walk step
+---@param dy integer Walk step
+---@return integer inside_x Coordinate right inside the border
+---@return integer inside_y Coordinate right inside the border
+---@return integer outside_x Coordinate right outside the border
+---@return integer outside_y Coordinate right outside the border
+---@return integer encountered_value Value across border
+local function find_border(starting_value, x, y, dx, dy)
+    for _ = 1, MAX_SEARCH_DISTANCE do
+        local next_x, next_y = x + dx, y + dy
+        local encountered_value = get_grid_cell(next_x, next_y)
+        if encountered_value ~= starting_value then
+            return x, y, next_x, next_y, encountered_value
+        end
+        x = next_x
+        y = next_y
+    end
+    error("couldn't find a border within a reasonable range")
+end
+
+local function find_barriers(x, y, dx, dy)
+    for _ = 1, MAX_SEARCH_DISTANCE do
+        local encountered_value = get_grid_cell(x, y)
+        if encountered_value == special_cell.barrier or encountered_value == special_cell.wrap then
+            return x, y
+        end
+        x = x + dx
+        y = y + dy
+    end
+    error("couldn't find a barrier or wrap within a reasonable range")
+end
+
+local function tab_navigate(mode)
+    if mode == "right" or mode == "down" then
+        jump_forward()
+    elseif mode == "left" or mode == "up" then
+        jump_backwards()
+    end
+end
+
+local function wrap_navigate(mode) end
+
+local function navigate_grid(mode)
+    -- if nothing is selected or selection position is undefined, use tab ordering
+    if selected_cell == 0 or not grid_x then
+        tab_navigate(mode)
+        return
+    end
+    local original_selection = get_grid_cell(grid_x, grid_y)
+    -- if the grid cursor is not on a proper cell, jump to the first cell
+    if original_selection < 1 then
+        keyboard_navigation.back_to_top()
+        return
+    end
+
+    local dx, dy, _
+    if mode == "right" then
+        dx, dy = 1, 0
+    elseif mode == "left" then
+        dx, dy = -1, 0
+    elseif mode == "down" then
+        dx, dy = 0, 1
+    elseif mode == "up" then
+        dx, dy = 0, -1
+    end
+
+    -- Search for the border of our current cell region
+    local inside_x, inside_y, outside_x, outside_y, encountered_cell =
+        find_border(original_selection, grid_x, grid_y, dx, dy)
+
+    if encountered_cell == special_cell.nothing then
+        -- encountered a nothing cell
+        -- move the outside coordinates and change the encountered cell type so as if the nothing cells weren't there
+        _, _, outside_x, outside_y, encountered_cell = find_border(special_cell.nothing, outside_x, outside_y, dx, dy)
+    end
+
+    if encountered_cell == special_cell.wrap then
+        -- locate a barrier in the opposite direction
+        local barrier_x, barrier_y = find_barriers(grid_x, grid_y, -dx, -dy)
+
+        -- search for a border, starting at the barrier
+        local wrap_x, wrap_y, wrap_encountered_cell
+        _, _, wrap_x, wrap_y, wrap_encountered_cell = find_border(special_cell.nothing, barrier_x, barrier_y, dx, dy)
+
+        if wrap_encountered_cell == original_selection then
+            -- we found the same cell again
+            -- wrapping behaves like a barrier in this case
+            grid_x, grid_y = inside_x, inside_y
+        else
+            -- we found a different cell
+            grid_x, grid_y = wrap_x, wrap_y
+            selected_cell = wrap_encountered_cell
+        end
+    elseif encountered_cell == special_cell.tab then
+        tab_navigate(mode)
+    elseif encountered_cell == special_cell.barrier then
+        -- encountered a barrier
+        grid_x, grid_y = inside_x, inside_y
+    else
+        -- encountered a different cell
+        grid_x, grid_y = outside_x, outside_y
+        selected_cell = encountered_cell
+    end
+end
+
+function keyboard_navigation.deactivate()
     selected_cell = 0
     grid_x, grid_y = nil, nil
+end
+
+function keyboard_navigation.back_to_top()
+    jump_to_cell(1)
 end
 
 ---Prints the grid to the console
@@ -232,56 +299,43 @@ function keyboard_navigation.print_grid() end
 
 ---run the navigation logic using keypressed events
 function keyboard_navigation.evaluate()
-    if escape_cell == 0 or default_cell == 0 then
-        -- cells were primed to be set but never were
-        error("escape or default cell not set properly")
+    if cell_index < 1 then
+        -- no cells were created
+        return
     end
 
-    if cell_index >= 0 then
-        for event in events.iterate("keypressed") do
-            local key = event[2]
+    for event in events.iterate("keypressed") do
+        local key = event[2]
 
-            if key == "tab" then
-                if love.keyboard.isDown("lshift", "rshift") then
-                    -- reverse tabbing
-                    if selected_cell <= 1 then
-                        jump_to_cell(cell_index)
-                    else
-                        jump_to_cell(selected_cell - 1)
-                    end
-                else
-                    -- forward tabbing
-                    if selected_cell >= cell_index then
-                        jump_to_cell(1)
-                    else
-                        jump_to_cell(selected_cell + 1)
-                    end
-                end
-                print("tabbed to", selected_cell)
-            elseif key == "return" then
-                if selected_cell == 0 then
-                    if default_cell then
-                        jump_to_cell(default_cell)
-                        print("activated", default_cell)
-                    end
-                else
-                    print("activated", selected_cell)
-                end
-            elseif key == "escape" then
-                if escape_cell then
-                    jump_to_cell(escape_cell)
-                    print("escaped", escape_cell)
-                end
-            elseif key == "right" or key == "left" or key == "down" or key == "up" then
-                navigate_grid(key)
-            elseif key == "q" then -- debug key
-                keyboard_navigation.clear_selection()
+        if key == "tab" then
+            if love.keyboard.isDown("lshift", "rshift") then
+                jump_backwards()
+            else
+                jump_forward()
             end
+        elseif key == "return" then
+            if selected_cell == 0 then
+                if default_cell then
+                    jump_to_cell(default_cell)
+                    print("activated", default_cell)
+                end
+            else
+                print("activated", selected_cell)
+            end
+        elseif key == "escape" then
+            if escape_cell then
+                jump_to_cell(escape_cell)
+                print("escaped", escape_cell)
+            end
+        elseif key == "right" or key == "left" or key == "down" or key == "up" then
+            navigate_grid(key)
+        elseif key == "f8" then -- debug key
+            keyboard_navigation.deactivate()
         end
     end
 
+    erase_grid()
     cell_index = 0
-    grid_width, grid_height = 0, 0
     default_cell = nil
     escape_cell = nil
 end
