@@ -203,7 +203,7 @@ end
 local function find_barriers(x, y, dx, dy)
     for _ = 1, MAX_SEARCH_DISTANCE do
         local encountered_value = get_grid_cell(x, y)
-        if encountered_value == special_cell.barrier or encountered_value == special_cell.wrap then
+        if encountered_value >= special_cell.nothing then
             return x, y
         end
         x = x + dx
