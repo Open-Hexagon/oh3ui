@@ -22,8 +22,8 @@
     text string --- contains whatever string data the element may be representing
 
     * Keyboard Input Injection
-    kb_selected
-    kb_input
+    kb_selected --- True when the keyboard navigation has selected the cell associated with this state. Read only.
+    kb_action --- Contains a number from kb_action if an action is requested from keyboard navigation.
 
     * Other fields
     initialized boolean --- may be used to keep track of first time initialization

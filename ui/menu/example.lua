@@ -91,7 +91,7 @@ return function()
     toggle_hex(id.toggle_hex)
     cursor.shift_down(10)
 
-    keyboard_navigation.set_wrapping("both")
+    keyboard_navigation.set_wrapping("both_line")
 
     -- array and combining
     cursor.width = 20
