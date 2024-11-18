@@ -91,7 +91,7 @@ return function()
     toggle_hex(id.toggle_hex)
     cursor.shift_down(10)
 
-    keyboard_navigation.set_wrapping("both_line")
+    keyboard_navigation.set_wrapping("both")
 
     -- array and combining
     cursor.width = 20
@@ -130,11 +130,17 @@ return function()
     cursor.y = 10
     cursor.height = 40
     cursor.width = 200
+    keyboard_navigation.make_cell()
+    keyboard_navigation.inject(id.button)
+    keyboard_navigation.grid_cell(4, 1)
     button(id.button, "button")
-
+    
     -- cursor.x = 360
     cursor.y = 30
     -- cursor.shift_down()
+    keyboard_navigation.make_cell()
+    keyboard_navigation.inject(id.button2)
+    keyboard_navigation.grid_cell(4, 2)
     button(id.button2, "button2")
 
     -- cursor.end_area()

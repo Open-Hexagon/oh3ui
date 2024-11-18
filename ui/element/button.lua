@@ -17,7 +17,7 @@ return function(state, text)
     -- draw background and outline
     primitive.rectangle(state.holding and theme.widget_background_highlight or theme.widget_background)
     primitive.rectangle_outline(
-        state.hovering and theme.widget_outline_highlight or theme.widget_outline
+        (state.hovering or state.kb_selected) and theme.widget_outline_highlight or theme.widget_outline
     )
 
     -- draw button internals

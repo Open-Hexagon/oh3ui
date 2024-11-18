@@ -79,6 +79,7 @@ local function get_grid_cell(x, y)
             return special_cell.barrier
         end
     end
+
     if y < 1 or y > grid_height then
         -- y coordinate exceeds grid size
         if wrapping_mode == "vertical" or wrapping_mode == "both" or wrapping_mode == "both_line" then
@@ -86,6 +87,7 @@ local function get_grid_cell(x, y)
         end
         return special_cell.barrier
     end
+
     local row = grid[y]
     if not row then
         return special_cell.nothing
@@ -103,11 +105,9 @@ local selected_cell = 0
 
 ---The index of the cell that gets activated if escape is pressed.
 ---nil means there was no cell set.
----0 indicates the next cell's index will be put in this variable
 local escape_cell
 ---The index of the cell that gets activated if enter is pressed while nothing is selected
 ---nil means there was no cell set.
----0 indicates the next cell's index will be put in this variable
 local default_cell
 
 ---Create a keyboard navigation cell which can be selected. The order in which these are called determines the tab order.
@@ -115,6 +115,7 @@ local default_cell
 ---|"default" make this cell the default cell
 ---|"escape" make this cell the escape cell
 ---|"both" make this cell both the default and escape cell
+---@return boolean selected true if this cell is selected
 function keyboard_navigation.make_cell(mode)
     -- add a cell to the list
     cell_index = cell_index + 1
@@ -129,6 +130,12 @@ function keyboard_navigation.make_cell(mode)
     end
 
     return cell_index == selected_cell
+end
+
+---Associate the last created cell with a state table so keyboard input fields can be updated.
+---@param state table 
+function keyboard_navigation.inject(state)
+    cell_list[cell_index].state = state
 end
 
 -- ! There's no protection against overwriting already existing cell values.
@@ -197,19 +204,19 @@ local function find_border(starting_value, x, y, dx, dy)
         x = next_x
         y = next_y
     end
-    error("couldn't find a border within a reasonable range")
+    error("couldn't find a border within a reasonable distance")
 end
 
 local function find_barriers(x, y, dx, dy)
     for _ = 1, MAX_SEARCH_DISTANCE do
         local encountered_value = get_grid_cell(x, y)
-        if encountered_value >= special_cell.nothing then
+        if encountered_value < special_cell.nothing then
             return x, y
         end
         x = x + dx
         y = y + dy
     end
-    error("couldn't find a barrier or wrap within a reasonable range")
+    error("couldn't find a barrier or wrap within a reasonable distance")
 end
 
 local function tab_navigate(mode)
@@ -219,8 +226,6 @@ local function tab_navigate(mode)
         jump_backwards()
     end
 end
-
-local function wrap_navigate(mode) end
 
 local function navigate_grid(mode)
     -- if nothing is selected or selection position is undefined, use tab ordering
@@ -295,7 +300,10 @@ function keyboard_navigation.back_to_top()
 end
 
 ---Prints the grid to the console
-function keyboard_navigation.print_grid() end
+function keyboard_navigation.print_grid()
+    
+
+end
 
 ---run the navigation logic using keypressed events
 function keyboard_navigation.evaluate()
@@ -334,6 +342,14 @@ function keyboard_navigation.evaluate()
         end
     end
 
+    for i = 1, cell_index do
+        local state = cell_list[i].state
+        if state then
+            state.kb_selected = i == selected_cell
+        end
+    end
+
+    -- reset everything
     erase_grid()
     cell_index = 0
     default_cell = nil
