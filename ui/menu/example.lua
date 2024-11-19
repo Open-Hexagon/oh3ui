@@ -17,6 +17,7 @@ local text = require("ui.text")
 local scroll = require("ui.element.scroll")
 local mask = require("ui.mask")
 local keyboard_navigation = require("ui.keyboard_navigation")
+local wrapping_mode = keyboard_navigation.wrapping_mode
 
 local sample_text = [[
 Atque et cumque enim fugiat numquam commodi.
@@ -91,7 +92,7 @@ return function()
     toggle_hex(id.toggle_hex)
     cursor.shift_down(10)
 
-    keyboard_navigation.set_wrapping("both_line")
+    keyboard_navigation.set_wrapping(wrapping_mode.vertical, wrapping_mode.line)
 
     -- array and combining
     cursor.width = 20
@@ -134,7 +135,7 @@ return function()
     keyboard_navigation.inject(id.button)
     keyboard_navigation.grid_cell(4, 1)
     button(id.button, "button")
-    
+
     -- cursor.x = 360
     cursor.y = 30
     -- cursor.shift_down()

@@ -1,9 +1,12 @@
 local events = require("ui.events")
+local bit = require("bit")
+local bor, band = bit.bor, bit.band
 
 local keyboard_navigation = {}
 
 ---Operational grid cell values that trigger special actions when navigating with arrow keys.
 ---Normal cell values are strictly positive.
+---@enum op_cell
 keyboard_navigation.op_cell = {
     nothing = 0, -- navigation can freely pass through this cell
     barrier = -1, -- when encountered, navigation is stopped
@@ -16,35 +19,45 @@ local op_cell = keyboard_navigation.op_cell
 
 ---@enum kb_action
 keyboard_navigation.kb_action = {
-    activate = 0,
-    left = 1,
-    right = 2,
-    up = 3,
-    down = 4,
+    none = 0,
+    activate = 1,
+    left = 2,
+    right = 3,
+    up = 4,
+    down = 5,
 }
 
 local kb_action = keyboard_navigation.kb_action
 
-local key_to_action = {
-    ["left"] = kb_action.left,
-    ["right"] = kb_action.right,
-    ["up"] = kb_action.up,
-    ["down"] = kb_action.down,
+---@enum wrapping_mode
+keyboard_navigation.wrapping_mode = {
+    horizontal = 0x01,
+    line = 0x02,
+    list = 0x04,
+    vertical = 0x10,
 }
 
----This influences what get_grid_cell sees when it looks outside the bounds of the grid
----@type "vertical"|"horizontal"|"line"|"both"|"both_line"|nil
-local wrapping_mode
+local wmode = keyboard_navigation.wrapping_mode
+
+---A bit packed integer that influences what `get_grid_cell` sees when it looks outside the bounds of the grid.\
+---**Bit packing**
+---
+---```text
+---bit 5 4 3 2 1
+---MSB 0 0 0 0 0 LSB
+---```
+---1. horizontal wrapping
+---2. line wrapping
+---3. list wrapping
+---4. unused
+---5. vertical wrapping
+---@type integer
+local wrapping_mode = 0
 
 ---Set navigation behavior of grid borders.
----@param mode?
----|"vertical" navigation is wrapped if it reaches the top or bottom grid borders
----|"horizontal" navigation is wrapped if it reaches the left or right grid borders
----|"line" horizontal navigation wraps like text wrapping would using the tab order
----|"both" union of vertical and horizontal
----|"both_line" union of vertical and line
-function keyboard_navigation.set_wrapping(mode)
-    wrapping_mode = mode
+---@param ... wrapping_mode list of wrapping mode enums
+function keyboard_navigation.set_wrapping(...)
+    wrapping_mode = bor(0, ...)
 end
 
 ---Grid used to assist in determining what the arrow keys will do
@@ -92,10 +105,12 @@ end
 local function get_grid_cell(x, y)
     if x < 1 or x > grid_width then
         -- x coordinate exceeds grid size
-        if wrapping_mode == "horizontal" or wrapping_mode == "both" then
+        if band(wrapping_mode, wmode.horizontal) > 0 then
             return op_cell.wrap
-        elseif wrapping_mode == "line" or wrapping_mode == "both_line" then
+        elseif band(wrapping_mode, wmode.line) > 0 then
             return op_cell.tab
+        elseif band(wrapping_mode, wmode.list) > 0 then
+            return op_cell.redirect
         else
             return op_cell.barrier
         end
@@ -103,7 +118,7 @@ local function get_grid_cell(x, y)
 
     if y < 1 or y > grid_height then
         -- y coordinate exceeds grid size
-        if wrapping_mode == "vertical" or wrapping_mode == "both" or wrapping_mode == "both_line" then
+        if band(wrapping_mode, wmode.vertical) > 0 then
             return op_cell.wrap
         end
         return op_cell.barrier
@@ -121,8 +136,7 @@ local cell_list = {}
 
 ---Holds the index of the last created cell.
 ---Is also the length of the cell list.
----Don't write to this value or bad things will happen.
-keyboard_navigation.cell_index = 0
+local cell_index = 0
 
 ---The index of the currently selected cell.
 ---0 indicates no selection.
@@ -135,6 +149,8 @@ local escape_cell
 ---nil means there was no cell set.
 local default_cell
 
+local last_action
+
 ---Resets keyboard navigation to its initial state, leaving no cell selected.
 function keyboard_navigation.deactivate()
     selected_cell = 0
@@ -146,33 +162,51 @@ end
 ---|"default" make this cell the default cell
 ---|"escape" make this cell the escape cell
 ---|"both" make this cell both the default and escape cell
----@return boolean selected true if this cell is selected
+---@return integer cell_id id number of this cell
 function keyboard_navigation.make_cell(mode)
-    keyboard_navigation.cell_index = keyboard_navigation.cell_index + 1
-    cell_list[keyboard_navigation.cell_index] = cell_list[keyboard_navigation.cell_index] or {}
+    cell_index = cell_index + 1
+    cell_list[cell_index] = cell_list[cell_index] or {}
 
     if mode == "escape" or mode == "both" then
-        escape_cell = keyboard_navigation.cell_index
+        escape_cell = cell_index
     end
 
     if mode == "default" or mode == "both" then
-        default_cell = keyboard_navigation.cell_index
+        default_cell = cell_index
     end
 
-    return keyboard_navigation.cell_index == selected_cell
+    return cell_index
 end
 
----Associate the last created cell with a state table so keyboard input fields can be updated.
+---Associate the last created cell or a specified cell with a state table so keyboard input fields can be updated.
 ---@param state table
-function keyboard_navigation.inject(state)
-    cell_list[keyboard_navigation.cell_index].state = state
+---@param cell_id? integer
+function keyboard_navigation.inject(state, cell_id)
+    cell_list[cell_id or cell_index].state = state
+end
+
+---Returns true if the last created cell or specified cell is selected
+---@param cell_id? integer
+---@return boolean
+function keyboard_navigation.is_selected(cell_id)
+    return (cell_id or cell_index) == selected_cell
+end
+
+---Returns the action of the last created cell
+---@param cell_id? integer
+---@return kb_action
+function keyboard_navigation.get_action(cell_id)
+    if keyboard_navigation.is_selected(cell_id) then
+        return last_action
+    end
+    return kb_action.none
 end
 
 -- ! There's no protection against overwriting already existing cell values.
 -- ! Allowing overwriting may be useful but may also cause strange behavior.
 
 ---Fills a rectangle in the grid with an arbitrary value. Can be used to write special values within the navigation grid.
----Only write special values or valid cell indecies. Otherwise bad things may happen.
+---Only write special values or valid cell ids. Otherwise bad things may happen.
 ---@param cell_value integer
 ---@param x integer
 ---@param y integer
@@ -194,9 +228,9 @@ end
 ---@param col_span? integer
 ---@param row_span? integer
 function keyboard_navigation.grid_cell(x, y, col_span, row_span)
-    keyboard_navigation.fill_grid(keyboard_navigation.cell_index, x, y, col_span, row_span)
-    cell_list[keyboard_navigation.cell_index].x = x
-    cell_list[keyboard_navigation.cell_index].y = y
+    keyboard_navigation.fill_grid(cell_index, x, y, col_span, row_span)
+    cell_list[cell_index].x = x
+    cell_list[cell_index].y = y
 end
 
 local function jump_to_cell(new_selection)
@@ -205,9 +239,14 @@ local function jump_to_cell(new_selection)
     selected_cell = new_selection
 end
 
+---Returns the selection to the first in the tab order list.
+function keyboard_navigation.back_to_top()
+    jump_to_cell(1)
+end
+
 local function jump_forward()
-    if selected_cell >= keyboard_navigation.cell_index then
-        jump_to_cell(1)
+    if selected_cell >= cell_index then
+        keyboard_navigation.back_to_top()
     else
         jump_to_cell(selected_cell + 1)
     end
@@ -215,7 +254,7 @@ end
 
 local function jump_backwards()
     if selected_cell <= 1 then
-        jump_to_cell(keyboard_navigation.cell_index)
+        jump_to_cell(cell_index)
     else
         jump_to_cell(selected_cell - 1)
     end
@@ -270,20 +309,20 @@ local function tab_navigate(action)
     end
 end
 
----Navigates the grid
+---Navigates the grid given a direction action
 ---@param action kb_action keyboard direction action number
----@return kb_action? redirected_action returns an action number only if a redirection happened
+---@return kb_action redirected_action returns an action number
 local function navigate_grid(action)
     -- if nothing is selected or selection position is undefined, use tab ordering
     if selected_cell == 0 or not grid_x then
         tab_navigate(action)
-        return
+        return kb_action.none
     end
     local original_selection = get_grid_cell(grid_x, grid_y)
     -- if the grid cursor is not on a proper cell, jump to the first cell
     if original_selection < 1 then
         keyboard_navigation.back_to_top()
-        return
+        return kb_action.none
     end
 
     local dx, dy, _
@@ -337,26 +376,20 @@ local function navigate_grid(action)
         grid_x, grid_y = outside_x, outside_y
         selected_cell = encountered_cell
     end
-    return nil
-end
-
----Returns the selection to the first in the tab order list.
-function keyboard_navigation.back_to_top()
-    jump_to_cell(1)
+    return kb_action.none
 end
 
 ---Run the navigation logic using keypressed events
 function keyboard_navigation.evaluate()
-    if keyboard_navigation.cell_index < 1 then
+    if cell_index < 1 then
         -- no cells were created
         return
     end
 
-    local action
+    local action = kb_action.none
 
     for event in events.iterate("keypressed") do
         local key = event[2]
-
         if key == "tab" then
             if love.keyboard.isDown("lshift", "rshift") then
                 jump_backwards()
@@ -378,11 +411,11 @@ function keyboard_navigation.evaluate()
                 action = kb_action.activate
             end
         elseif key == "right" or key == "left" or key == "down" or key == "up" then
-            action = navigate_grid(key_to_action[key])
+            action = navigate_grid(kb_action[key])
         end
     end
 
-    for i = 1, keyboard_navigation.cell_index do
+    for i = 1, cell_index do
         local state = cell_list[i].state
         if state then
             if i == selected_cell then
@@ -395,9 +428,11 @@ function keyboard_navigation.evaluate()
         end
     end
 
+    last_action = action
+
     -- reset everything
     erase_grid()
-    keyboard_navigation.cell_index = 0
+    cell_index = 0
     default_cell = nil
     escape_cell = nil
 end
