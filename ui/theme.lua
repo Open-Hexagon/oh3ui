@@ -1,6 +1,7 @@
 ---A table of standard colors for the UI
 
 local bit = require("bit")
+local band, rshift = bit.band, bit.rshift
 local extmath = require("ui.extmath")
 
 ---Converts an integer to a color table with alpha set to 1
@@ -9,9 +10,9 @@ local extmath = require("ui.extmath")
 ---@nodiscard
 local function i2c(x)
     return {
-        bit.band(bit.rshift(x, 16), 0xff) / 0xff,
-        bit.band(bit.rshift(x, 8), 0xff) / 0xff,
-        bit.band(x, 0xff) / 0xff,
+        band(rshift(x, 16), 0xff) / 0xff,
+        band(rshift(x, 8), 0xff) / 0xff,
+        band(x, 0xff) / 0xff,
         1,
     }
 end
