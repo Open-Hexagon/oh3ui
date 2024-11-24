@@ -29,8 +29,6 @@
 
 local element = {}
 
-element.button_internal_padding = 8
-
 element.toggle_width = 40
 element.toggle_height = 20
 

@@ -3,9 +3,9 @@ local clickbox = require("ui.sensor.clickbox")
 local primitive = require("ui.primitive")
 local element = require("ui.element")
 local theme = require("ui.theme")
-local extmath = require("ui.extmath")
 local mouse = require("ui.mouse")
 local effect = require("ui.effect")
+local selection_outline = require("ui.element.selection_outline")
 
 local travel_distance = element.toggle_width - element.toggle_height
 
@@ -18,7 +18,7 @@ return function(state)
     cursor.place(element.toggle_width, element.toggle_height)
     cursor.push()
 
-    if clickbox(state) == mouse.LEFT then
+    if clickbox(state) == mouse.LEFT or state.kb_action then
         state.on = not state.on -- not nil = true
     end
 
@@ -35,10 +35,14 @@ return function(state)
 
     primitive.circle(theme.widget_actuator)
     primitive.circle_outline(
-        state.hovering and theme.widget_actuator_outline_highlight or theme.widget_actuator_outline
+        (state.hovering or state.kb_selected) and theme.widget_actuator_outline_highlight or theme.widget_actuator_outline
     )
 
     cursor.pop()
+
+    if state.kb_selected then
+        selection_outline()
+    end
 
     cursor.do_auto_reshape()
     return state.on

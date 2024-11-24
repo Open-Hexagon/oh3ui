@@ -65,7 +65,7 @@ end
 ---Gets run after the draw queue to determine which sensors are hovered by the mouse
 function sensor.evaluate()
     local last_lazy_intersection
-    -- set to true once a single blocking sensor is found for both before and after intersections
+    -- set to true once a single blocking sensor is found
     local blocked = false
 
     for i = index, 1, -1 do

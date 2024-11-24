@@ -19,22 +19,21 @@ local op_cell = keyboard_navigation.op_cell
 
 ---@enum kb_action
 keyboard_navigation.kb_action = {
-    none = 0,
-    activate = 1,
-    left = 2,
-    right = 3,
-    up = 4,
-    down = 5,
+    activate = 0,
+    left = 1,
+    right = 2,
+    up = 3,
+    down = 4,
 }
 
 local kb_action = keyboard_navigation.kb_action
 
 ---@enum wrapping_mode
 keyboard_navigation.wrapping_mode = {
-    horizontal = 0x01,
-    line = 0x02,
-    list = 0x04,
-    vertical = 0x10,
+    horizontal = 0x01, -- if grid_x is out of bounds, navigation will see wrap op cells
+    line = 0x02, -- if grid_x is out of bounds, navigation will see tab op cells
+    list = 0x04, -- if grid_x is out of bounds, navigation will see redirect op cells
+    vertical = 0x08, -- if grid_y is out of bounds
 }
 
 local wmode = keyboard_navigation.wrapping_mode
@@ -43,14 +42,13 @@ local wmode = keyboard_navigation.wrapping_mode
 ---**Bit packing**
 ---
 ---```text
----bit 5 4 3 2 1
----MSB 0 0 0 0 0 LSB
+---bit 4 3 2 1
+---MSB 0 0 0 0 LSB
 ---```
 ---1. horizontal wrapping
 ---2. line wrapping
 ---3. list wrapping
----4. unused
----5. vertical wrapping
+---4. vertical wrapping
 ---@type integer
 local wrapping_mode = 0
 
@@ -120,8 +118,9 @@ local function get_grid_cell(x, y)
         -- y coordinate exceeds grid size
         if band(wrapping_mode, wmode.vertical) > 0 then
             return op_cell.wrap
+        else
+            return op_cell.barrier
         end
-        return op_cell.barrier
     end
 
     local row = grid[y]
@@ -149,6 +148,9 @@ local escape_cell
 ---nil means there was no cell set.
 local default_cell
 
+---The last performed keyboard action. Nil if there was no action.
+---There only needs to be one since the keyboard can only interact with one thing at a time.
+---@type kb_action?
 local last_action
 
 ---Resets keyboard navigation to its initial state, leaving no cell selected.
@@ -178,6 +180,11 @@ function keyboard_navigation.make_cell(mode)
     return cell_index
 end
 
+---You can either use inject on a state table and later read from the kb fields,
+---or use is_selected and get_action to get immedtate values from the navigation.
+---You should probably use inject almost always for stateful elements,
+---and is_selected and get_action for stateless elements.
+
 ---Associate the last created cell or a specified cell with a state table so keyboard input fields can be updated.
 ---@param state table
 ---@param cell_id? integer
@@ -194,12 +201,12 @@ end
 
 ---Returns the action of the last created cell
 ---@param cell_id? integer
----@return kb_action
+---@return kb_action?
 function keyboard_navigation.get_action(cell_id)
     if keyboard_navigation.is_selected(cell_id) then
         return last_action
     end
-    return kb_action.none
+    return nil
 end
 
 -- ! There's no protection against overwriting already existing cell values.
@@ -311,18 +318,18 @@ end
 
 ---Navigates the grid given a direction action
 ---@param action kb_action keyboard direction action number
----@return kb_action redirected_action returns an action number
+---@return kb_action? redirected_action returns an action number
 local function navigate_grid(action)
     -- if nothing is selected or selection position is undefined, use tab ordering
     if selected_cell == 0 or not grid_x then
         tab_navigate(action)
-        return kb_action.none
+        return nil
     end
     local original_selection = get_grid_cell(grid_x, grid_y)
     -- if the grid cursor is not on a proper cell, jump to the first cell
     if original_selection < 1 then
         keyboard_navigation.back_to_top()
-        return kb_action.none
+        return nil
     end
 
     local dx, dy, _
@@ -376,7 +383,7 @@ local function navigate_grid(action)
         grid_x, grid_y = outside_x, outside_y
         selected_cell = encountered_cell
     end
-    return kb_action.none
+    return nil
 end
 
 ---Run the navigation logic using keypressed events
@@ -386,7 +393,7 @@ function keyboard_navigation.evaluate()
         return
     end
 
-    local action = kb_action.none
+    local action = nil
 
     for event in events.iterate("keypressed") do
         local key = event[2]

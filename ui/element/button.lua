@@ -2,8 +2,8 @@ local cursor = require("ui.cursor")
 local theme = require("ui.theme")
 local clickbox = require("ui.sensor.clickbox")
 local primitive = require("ui.primitive")
-local element = require("ui.element")
-local mask = require("ui.mask")
+local selection_outline = require("ui.element.selection_outline")
+
 
 
 ---Button element. Can optionally contain text.
@@ -11,7 +11,7 @@ local mask = require("ui.mask")
 ---Never reshapes the cursor.
 ---@param state table
 ---@param text string?
-return function(state, text)
+return function(state, text, font_size)
     clickbox(state)
 
     -- draw background and outline
@@ -23,12 +23,13 @@ return function(state, text)
     -- draw button internals
     if text then
         cursor.push()
-        cursor.inset(element.button_internal_padding)
-        mask.push()
         cursor.change_anchor(0.5, 0.5)
-        primitive.label(text)
-        mask.pop()
+        primitive.label(text, font_size)
         cursor.pop()
+    end
+
+    if state.kb_selected then
+        selection_outline()
     end
 
     return state.clicked

@@ -9,6 +9,8 @@ local element = require("ui.element")
 local text = require("ui.text")
 local mouse = require("ui.mouse")
 local extmath = require("ui.extmath")
+local kb_action = require("ui.keyboard_navigation").kb_action
+local selection_outline = require("ui.element.selection_outline")
 
 ---Combination number slider and entry with increment buttons.
 ---This element will reshape the cursor.
@@ -30,7 +32,7 @@ return function(state, min, max, step, format)
     local full_width = math.max(element.numeric_input_min_width, cursor.width)
     cursor.place(full_width, element.numeric_input_height)
 
-    local hovering = state.hovering
+    local hovering = state.hovering or state.kb_selected
     local center_width = cursor.width - element.numeric_input_lr_button_width * 2
 
     cursor.auto_reshape = false
@@ -89,7 +91,7 @@ return function(state, min, max, step, format)
         cursor.width = center_width
 
         -- brighter center
-        if state.numeric_input_center.hovering then
+        if state.numeric_input_center.hovering or state.kb_selected then
             primitive.rectangle(theme.widget_background_brighter)
         end
     end
@@ -102,12 +104,12 @@ return function(state, min, max, step, format)
         cursor.change_anchor(0.5)
 
         if not dragging then
-            if clickbox(state.numeric_input_left) then
+            if clickbox(state.numeric_input_left) or state.kb_action == kb_action.left then
                 state.value = state.value - step
             end
             if state.numeric_input_left.holding then
                 primitive.rectangle(theme.widget_background_highlight)
-            elseif state.numeric_input_left.hovering then
+            elseif state.numeric_input_left.hovering or state.kb_selected then
                 primitive.rectangle(theme.widget_background_brighter)
             end
         end
@@ -120,12 +122,12 @@ return function(state, min, max, step, format)
         cursor.change_anchor(0.5)
 
         if not dragging then
-            if clickbox(state.numeric_input_right) then
+            if clickbox(state.numeric_input_right) or state.kb_action == kb_action.right then
                 state.value = state.value + step
             end
             if state.numeric_input_right.holding then
                 primitive.rectangle(theme.widget_background_highlight)
-            elseif state.numeric_input_right.hovering then
+            elseif state.numeric_input_right.hovering or state.kb_selected then
                 primitive.rectangle(theme.widget_background_brighter)
             end
         end
@@ -138,6 +140,10 @@ return function(state, min, max, step, format)
     primitive.label(string.format(format or "%f", state.value), 16)
     primitive.rectangle_outline((hovering or dragging) and theme.widget_outline_highlight or theme.widget_outline)
     hoverbox(state, "pass")
+
+    if state.kb_selected then
+        selection_outline()
+    end
 
     cursor.do_auto_reshape() -- (1)
 end

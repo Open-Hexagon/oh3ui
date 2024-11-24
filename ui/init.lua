@@ -103,12 +103,11 @@ function ui.start()
     -- love.keyboard.setKeyRepeat(text_interaction.is_interacting_with_text)
     -- love.keyboard.setTextInput(text_interaction.is_interacting_with_text)
     -- text_interaction.reset()
-    -- keyboard_navigation.reset()
+
 end
 
 ---Do ui finalization and cleanup
 function ui.finish()
-    -- keyboard_navigation.run()
 
     -- draw in order
     draw_queue.draw()
@@ -116,9 +115,8 @@ function ui.finish()
     -- do z-ordered mouse intersection checks
     mouse.update()
     sensor.evaluate()
-    -- typing.update()
     keyboard_navigation.evaluate()
-    
+    -- typing.update()
 
     -- undo scaling
     love.graphics.pop()

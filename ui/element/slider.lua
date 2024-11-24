@@ -6,6 +6,8 @@ local primitive = require("ui.primitive")
 local element = require("ui.element")
 local mouse = require("ui.mouse")
 local extmath = require("ui.extmath")
+local kb_action = require("ui.keyboard_navigation").kb_action
+local selection_outline = require("ui.element.selection_outline")
 
 local actuator_radius = element.slider_height / 2
 local slot_height = element.slider_height / 2
@@ -48,7 +50,17 @@ return function(state, min, max, positions, show_positions)
     cursor.push() -- (2)
 
     local dragging = dragbox(state)
-    local hovering = state.hovering
+    local hovering = state.hovering or state.kb_selected
+
+    if state.kb_action then
+        if state.kb_action == kb_action.left then
+            state.position = state.position - 1
+        elseif state.kb_action == kb_action.right then
+            state.position = state.position + 1
+        end
+        state.position = extmath.clamp(state.position, 0, divisions)
+        state.value = extmath.map(state.position, 0, divisions, min, max)
+    end
 
     -- background slot
     cursor.height = slot_height
@@ -102,5 +114,10 @@ return function(state, min, max, positions, show_positions)
     )
 
     cursor.pop() -- (2)
+
+    if state.kb_selected then
+        selection_outline()
+    end
+
     cursor.do_auto_reshape() -- (1)
 end

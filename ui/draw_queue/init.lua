@@ -145,11 +145,11 @@ end
 ---@param right number
 ---@param bottom number
 ---@param color number[]
----@param rx number?
----@param ry number?
-function draw_queue.rectangle(mode, left, top, right, bottom, color, rx, ry)
-    rx, ry = rx or 0, ry or 0
-    push_operation(op_ids.rectangle, mode, left, top, right, bottom, rx, ry, unpack(color))
+---@param rx number
+---@param ry number
+---@param line_width number
+function draw_queue.rectangle(mode, left, top, right, bottom, color, rx, ry, line_width)
+    push_operation(op_ids.rectangle, mode, left, top, right, bottom, rx, ry, line_width, unpack(color))
 end
 
 ---Add a rectangle outline to the queue
@@ -159,10 +159,9 @@ end
 ---@param bottom number
 ---@param line_width number
 ---@param color number[]
----@param rx number?
----@param ry number?
+---@param rx number
+---@param ry number
 function draw_queue.rectangle_outline(left, top, right, bottom, color, line_width, rx, ry)
-    rx, ry = rx or 0, ry or 0
     push_operation(op_ids.rectangle_outline, left, top, right, bottom, line_width, rx, ry, unpack(color))
 end
 
@@ -281,7 +280,8 @@ function draw_queue.draw()
         -- id may be nil if a placeholder was left in / nothing was appended
         if id then
             if id == op_ids.rectangle then
-                local mode, x1, y1, x2, y2, rx, ry, r, g, b, a = unpack(item, 2)
+                local mode, x1, y1, x2, y2, rx, ry, line_width, r, g, b, a = unpack(item, 2)
+                love.graphics.setLineWidth(line_width)
                 love.graphics.setColor(r, g, b, a)
                 love.graphics.rectangle(mode, x1, y1, x2 - x1, y2 - y1, rx, ry)
             elseif id == op_ids.polygon then

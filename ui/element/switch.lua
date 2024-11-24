@@ -6,6 +6,11 @@ local element = require("ui.element")
 local mask = require("ui.mask")
 local effect = require("ui.effect")
 local draw_queue = require("ui.draw_queue")
+local kb_action = require("ui.keyboard_navigation").kb_action
+local extmath = require("ui.extmath")
+local selection_outline = require("ui.element.selection_outline")
+
+local selection_highlight_speed = 25
 
 ---N-position switch
 ---@param state table
@@ -36,14 +41,14 @@ return function(state, ...)
     local sel_hl_res = draw_queue.reserve(1)
 
     -- selection buttons
-    local hovering = false
+    local hovering = state.kb_selected
     local section_width = cursor.h_split(positions)
     for i = 1, positions do
         cursor.pop()
         local cb_state = state[i]
         clickbox(cb_state)
         if cb_state.clicked then
-            state._switch_selection_highlight_speed = math.abs(state.position - i) * 25
+            state._switch_selection_highlight_speed = math.abs(state.position - i) * selection_highlight_speed
             state.position = i
         end
 
@@ -52,7 +57,7 @@ return function(state, ...)
         local button_color
         if cb_state.holding or i == state.position then
             button_color = theme.widget_background_highlight
-        elseif cb_state.hovering then
+        elseif cb_state.hovering or state.kb_selected then
             button_color = theme.widget_background_brighter
         else
             button_color = theme.widget_background
@@ -65,6 +70,28 @@ return function(state, ...)
         mask.push()
         primitive.label(select(i, ...), element.switch_text_size)
         mask.pop()
+    end
+
+    -- keyboard navigation
+    if state.kb_action then
+        if state.kb_action == kb_action.left then
+            if state.position == 1 then
+                state.position = positions
+                state._switch_selection_highlight_speed = (positions - 1) * selection_highlight_speed
+            else
+                state.position = state.position - 1
+                state._switch_selection_highlight_speed = selection_highlight_speed
+            end
+        elseif state.kb_action == kb_action.activate or state.kb_action == kb_action.right then
+            if state.position == positions then
+                state.position = 1
+                state._switch_selection_highlight_speed = (positions - 1) * selection_highlight_speed
+            else
+                state.position = state.position + 1
+                state._switch_selection_highlight_speed = selection_highlight_speed
+            end
+        end
+        state.position = extmath.clamp(state.position, 1, positions)
     end
 
     cursor.peek()
@@ -82,5 +109,8 @@ return function(state, ...)
 
     cursor.pop() -- (2)
     primitive.rectangle_outline(hovering and theme.accent_color or theme.widget_outline)
+    if state.kb_selected then
+        selection_outline()
+    end
     cursor.do_auto_reshape() -- (1)
 end

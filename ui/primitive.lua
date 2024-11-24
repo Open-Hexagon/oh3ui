@@ -13,7 +13,8 @@ local primitive = {}
 ---Rectangle primitive. Never reshapes the cursor.
 ---@param color number[]? overrides the default color
 ---@param mode string? "fill" or "line" (default is "fill")
-function primitive.rectangle(color, mode)
+---@param line_width number?
+function primitive.rectangle(color, mode, line_width)
     cursor.place()
     draw_queue.rectangle(
         mode or "fill",
@@ -21,7 +22,10 @@ function primitive.rectangle(color, mode)
         placement.top,
         placement.right,
         placement.bottom,
-        color or theme.default
+        color or theme.default,
+        0,
+        0,
+        line_width or 1
     )
 end
 
@@ -36,7 +40,9 @@ function primitive.rectangle_outline(color, line_width)
         placement.right,
         placement.bottom,
         color or theme.default,
-        line_width or 1
+        line_width or 1,
+        0,
+        0
     )
 end
 
@@ -54,7 +60,8 @@ function primitive.slot(color, mode)
         placement.bottom,
         color or theme.default,
         radius,
-        radius
+        radius,
+        1
     )
 end
 
@@ -131,7 +138,7 @@ end
 function primitive.label(str, size, align, color, font_path)
     cursor.push()
 
-    -- Scale up (math.huge causes transformPoint to choke so we just use a really big number)
+    -- Scale up
     local wrap_limit = text.wrap_text and (cursor.width * ui.scale) or math.huge
     size = (size or text.font_size) * ui.scale
 
