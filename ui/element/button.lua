@@ -11,11 +11,20 @@ local selection_outline = require("ui.element.selection_outline")
 ---Never reshapes the cursor.
 ---@param state table
 ---@param text string?
+---@param font_size number?
 return function(state, text, font_size)
     clickbox(state)
 
     -- draw background and outline
-    primitive.rectangle(state.holding and theme.widget_background_highlight or theme.widget_background)
+    local button_color
+    if state.holding then
+        button_color = theme.widget_background_highlight
+    elseif state.hovering then
+        button_color = theme.widget_background_brighter
+    else
+        button_color = theme.widget_background
+    end
+    primitive.rectangle(button_color)
     primitive.rectangle_outline(
         (state.hovering or state.kb_selected) and theme.widget_outline_highlight or theme.widget_outline
     )

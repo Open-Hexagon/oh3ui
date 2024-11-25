@@ -1,4 +1,4 @@
-local keyboard_navigation = require("ui.keyboard_navigation")
+local keyboard_navigation = require("ui.control.keyboard_navigation")
 
 local test = {}
 

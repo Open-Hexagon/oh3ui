@@ -7,9 +7,9 @@ local hoverbox = require("ui.sensor.hoverbox")
 local primitive = require("ui.primitive")
 local element = require("ui.element")
 local text = require("ui.text")
-local mouse = require("ui.mouse")
+local mouse = require("ui.control.mouse")
 local extmath = require("ui.extmath")
-local kb_action = require("ui.keyboard_navigation").kb_action
+local kb_action = require("ui.control.keyboard_navigation").kb_action
 local selection_outline = require("ui.element.selection_outline")
 
 ---Combination number slider and entry with increment buttons.
@@ -91,7 +91,7 @@ return function(state, min, max, step, format)
         cursor.width = center_width
 
         -- brighter center
-        if state.numeric_input_center.hovering or state.kb_selected then
+        if state.numeric_input_center.hovering then
             primitive.rectangle(theme.widget_background_brighter)
         end
     end
@@ -109,7 +109,7 @@ return function(state, min, max, step, format)
             end
             if state.numeric_input_left.holding then
                 primitive.rectangle(theme.widget_background_highlight)
-            elseif state.numeric_input_left.hovering or state.kb_selected then
+            elseif state.numeric_input_left.hovering then
                 primitive.rectangle(theme.widget_background_brighter)
             end
         end
@@ -127,7 +127,7 @@ return function(state, min, max, step, format)
             end
             if state.numeric_input_right.holding then
                 primitive.rectangle(theme.widget_background_highlight)
-            elseif state.numeric_input_right.hovering or state.kb_selected then
+            elseif state.numeric_input_right.hovering then
                 primitive.rectangle(theme.widget_background_brighter)
             end
         end

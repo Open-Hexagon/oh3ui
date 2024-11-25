@@ -33,7 +33,7 @@ Starting from top to bottom:
 - Pass sensor have no priority. They are always checked when encountered.
 ]]
 
-local mouse = require("ui.mouse")
+local mouse = require("ui.control.mouse")
 local extmath = require("ui.extmath")
 
 local sensor = {

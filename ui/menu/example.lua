@@ -16,7 +16,7 @@ local draw_queue = require("ui.draw_queue")
 local text = require("ui.text")
 local scroll = require("ui.element.scroll")
 local mask = require("ui.mask")
-local kb_nav = require("ui.keyboard_navigation")
+local kb_nav = require("ui.control.keyboard_navigation")
 local wmode = kb_nav.wrapping_mode
 
 local sample_text = [[

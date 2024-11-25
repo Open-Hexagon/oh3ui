@@ -33,7 +33,7 @@ keyboard_navigation.wrapping_mode = {
     horizontal = 0x01, -- if grid_x is out of bounds, navigation will see wrap op cells
     line = 0x02, -- if grid_x is out of bounds, navigation will see tab op cells
     list = 0x04, -- if grid_x is out of bounds, navigation will see redirect op cells
-    vertical = 0x08, -- if grid_y is out of bounds
+    vertical = 0x08, -- if grid_y is out of bounds, navigation will see wrap op cells
 }
 
 local wmode = keyboard_navigation.wrapping_mode
@@ -167,7 +167,16 @@ end
 ---@return integer cell_id id number of this cell
 function keyboard_navigation.make_cell(mode)
     cell_index = cell_index + 1
-    cell_list[cell_index] = cell_list[cell_index] or {}
+
+    local cell = cell_list[cell_index]
+    if cell then
+        --erase old fields
+        cell.x = nil
+        cell.y = nil
+        cell.state = nil
+    else
+        cell_list[cell_index] = {}
+    end
 
     if mode == "escape" or mode == "both" then
         escape_cell = cell_index

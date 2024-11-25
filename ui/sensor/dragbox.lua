@@ -1,4 +1,4 @@
-local mouse = require("ui.mouse")
+local mouse = require("ui.control.mouse")
 local cursor = require("ui.cursor")
 local placement = cursor.placement
 local sensor = require("ui.sensor")
@@ -6,6 +6,16 @@ local draw_queue = require("ui.draw_queue")
 
 ---Updates the state table with dragging info.
 ---A referenced is passed to mouse sensor so it can later be called at the end of the frame.
+---
+---This element makes these fields in the state table:
+--- - `hovering`
+--- - `holding`
+--- - `clicked`
+--- - `dragging`
+--- - `started_dragging`
+--- - `stopped_dragging`
+--- - `drag_origin_x`
+--- - `drag_origin_y`
 ---@param state table
 local function update(state)
     state.clicked = nil

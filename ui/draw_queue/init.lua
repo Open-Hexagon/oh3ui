@@ -340,7 +340,7 @@ function draw_queue.draw()
                     -- use approximation
                     radius = radius - 0.5 * line_width
                 end
-
+                love.graphics.setLineWidth(line_width)
                 love.graphics.setColor(r, g, b, a)
                 if rotation == 0 then
                     love.graphics.circle("line", x, y, radius, segments)

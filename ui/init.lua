@@ -1,10 +1,10 @@
 local cursor = require("ui.cursor")
 local events = require("ui.events")
 local draw_queue = require("ui.draw_queue")
-local mouse = require("ui.mouse")
-local typing = require("ui.typing")
+local mouse = require("ui.control.mouse")
+local typing = require("ui.control.typing")
 local sensor = require("ui.sensor")
-local keyboard_navigation = require("ui.keyboard_navigation")
+local keyboard_navigation = require("ui.control.keyboard_navigation")
 
 
 local ui = {

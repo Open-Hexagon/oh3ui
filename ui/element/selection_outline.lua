@@ -3,6 +3,7 @@ local cursor = require("ui.cursor")
 local theme = require("ui.theme")
 
 ---A rectangular outline that is outset from the cursor
+---Does not modify the cursor in any way
 return function()
     cursor.push()
     cursor.outset(4)

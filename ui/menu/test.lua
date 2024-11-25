@@ -13,7 +13,7 @@ local layers = require("ui.layers")
 local test_overlay = require("ui.menu.test_overlay")
 local toggle = require("ui.element.toggle")
 local slider = require("ui.element.slider_old")
-local keyboard_navigation = require("ui.keyboard_navigation")
+local keyboard_navigation = require("ui.control.keyboard_navigation")
 
 local infinite_scroll_example = require("ui.menu.infinite_scroll_example")
 

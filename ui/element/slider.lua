@@ -4,9 +4,9 @@ local theme = require("ui.theme")
 local dragbox = require("ui.sensor.dragbox")
 local primitive = require("ui.primitive")
 local element = require("ui.element")
-local mouse = require("ui.mouse")
+local mouse = require("ui.control.mouse")
 local extmath = require("ui.extmath")
-local kb_action = require("ui.keyboard_navigation").kb_action
+local kb_action = require("ui.control.keyboard_navigation").kb_action
 local selection_outline = require("ui.element.selection_outline")
 
 local actuator_radius = element.slider_height / 2
@@ -50,7 +50,7 @@ return function(state, min, max, positions, show_positions)
     cursor.push() -- (2)
 
     local dragging = dragbox(state)
-    local hovering = state.hovering or state.kb_selected
+    local hovering = state.hovering
 
     if state.kb_action then
         if state.kb_action == kb_action.left then

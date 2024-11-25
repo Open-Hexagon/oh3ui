@@ -3,7 +3,7 @@ local clickbox = require("ui.sensor.clickbox")
 local primitive = require("ui.primitive")
 local element = require("ui.element")
 local theme = require("ui.theme")
-local mouse = require("ui.mouse")
+local mouse = require("ui.control.mouse")
 local effect = require("ui.effect")
 local selection_outline = require("ui.element.selection_outline")
 
@@ -35,7 +35,7 @@ return function(state)
 
     primitive.circle(theme.widget_actuator)
     primitive.circle_outline(
-        (state.hovering or state.kb_selected) and theme.widget_actuator_outline_highlight or theme.widget_actuator_outline
+        state.hovering and theme.widget_actuator_outline_highlight or theme.widget_actuator_outline
     )
 
     cursor.pop()

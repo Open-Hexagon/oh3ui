@@ -16,15 +16,24 @@ local function utf8_sub(str, i, j)
     return str:sub(i, j)
 end
 
-function typing.set_target(state) end
+local target_state
+local text_pos
+function typing.set_target(state)
+    target_state = state
+    if not target_state.text then
+        target_state.text = ""
+    end
+end
 
-function typing.update()
+function typing.evaluate()
     -- change text and text pos based on events
+    local text = target_state.text
     for event in events.iterate("^[tk]e") do
-        if event[1] == "textinput" then
+        local name = event[1]
+        if name == "textinput" then
             text = utf8_sub(text, 1, text_pos) .. event[2] .. utf8_sub(text, text_pos + 1, -1)
             text_pos = text_pos + 1
-        elseif event[1] == "keypressed" then
+        elseif name == "keypressed" then
             local key = event[2]
             if key == "left" then
                 text_pos = text_pos - 1
@@ -36,10 +45,11 @@ function typing.update()
             elseif key == "delete" then
                 text = utf8_sub(text, 1, text_pos) .. utf8_sub(text, text_pos + 2, -1)
             end
-        elseif event[1] == "textedited" then
+        elseif name == "textedited" then
             -- Apparently this is also a thing. I don't know what it does.
         end
     end
+    target_state.text = text
 end
 
 return typing
