@@ -6,8 +6,8 @@
     * Sensor fields
     hovering boolean --- True when cursor is hovering. Read only; set automatically by the sensor module
 
-    clicked integer --- the mouse button id that just clicked this element
-    holding integer --- the mouse button id that is currently holding down this element
+    clicked integer --- The mouse button id that just clicked this element. Keyboard navigation will also set this value on kb_action.activate
+    holding integer --- The mouse button id that is currently holding down this element
 
     dragging integer --- the mouse button id that is currently dragging this element
     started_dragging integer --- the mouse button id just started dragging this element

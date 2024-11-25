@@ -15,7 +15,12 @@ local selection_outline = require("ui.element.selection_outline")
 ---Combination number slider and entry with increment buttons.
 ---This element will reshape the cursor.
 ---TODO add manual keyboard input when element is clicked.
----@param state table
+---@param state table state table
+---@param min number min representable number in state.value
+---@param max number max representable number in state.value
+---@param step number step size for the increment and decrement buttons
+---@param format string format string for the number display
+---@return number value the "value" field of the state table
 return function(state, min, max, step, format)
     -- first time initialization
     if not state.initialized then
@@ -146,4 +151,6 @@ return function(state, min, max, step, format)
     end
 
     cursor.do_auto_reshape() -- (1)
+
+    return state.value
 end

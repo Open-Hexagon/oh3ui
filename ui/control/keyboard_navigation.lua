@@ -13,6 +13,7 @@ keyboard_navigation.op_cell = {
     wrap = -2, -- when encountered, navigation is wrapped to the closest wrap or barrier cell in the opposite navigation direction
     tab = -3, -- when encountered, navigation is jumped to the previous or next tab selection
     redirect = -4, -- when encountered, any navigation movement is cancelled and the arrow key input is redirected to the state table instead
+    page = -5 -- when encountered, navigation is jumped to the previous or next page
 }
 
 local op_cell = keyboard_navigation.op_cell
@@ -33,7 +34,8 @@ keyboard_navigation.wrapping_mode = {
     horizontal = 0x01, -- if grid_x is out of bounds, navigation will see wrap op cells
     line = 0x02, -- if grid_x is out of bounds, navigation will see tab op cells
     list = 0x04, -- if grid_x is out of bounds, navigation will see redirect op cells
-    vertical = 0x08, -- if grid_y is out of bounds, navigation will see wrap op cells
+    page = 0x08, -- if grid_x is out of bounds, navigation will see page op cells
+    vertical = 0x10, -- if grid_y is out of bounds, navigation will see wrap op cells
 }
 
 local wmode = keyboard_navigation.wrapping_mode
@@ -42,20 +44,32 @@ local wmode = keyboard_navigation.wrapping_mode
 ---**Bit packing**
 ---
 ---```text
----bit 4 3 2 1
----MSB 0 0 0 0 LSB
+---bit 5 4 3 2 1
+---MSB 0 0 0 0 0 LSB
 ---```
 ---1. horizontal wrapping
 ---2. line wrapping
 ---3. list wrapping
----4. vertical wrapping
+---4. page wrapping
+---5. vertical wrapping
 ---@type integer
 local wrapping_mode = 0
+
+local page_length = 1
 
 ---Set navigation behavior of grid borders.
 ---@param ... wrapping_mode list of wrapping mode enums
 function keyboard_navigation.set_wrapping(...)
     wrapping_mode = bor(0, ...)
+end
+
+---Sets how many items forward or backwards to move when encountering the page op_cell or using the pageup or pagedown keys
+---@param n integer
+function keyboard_navigation.set_page_length(n)
+    if n < 1 then
+        error("page length cannot be less than 1")
+    end
+    page_length = n
 end
 
 ---Grid used to assist in determining what the arrow keys will do
@@ -109,6 +123,8 @@ local function get_grid_cell(x, y)
             return op_cell.tab
         elseif band(wrapping_mode, wmode.list) > 0 then
             return op_cell.redirect
+        elseif band(wrapping_mode, wmode.page) > 0 then
+            return op_cell.page
         else
             return op_cell.barrier
         end
@@ -256,13 +272,18 @@ local function jump_to_cell(new_selection)
 end
 
 ---Returns the selection to the first in the tab order list.
-function keyboard_navigation.back_to_top()
+local function jump_to_first()
     jump_to_cell(1)
+end
+
+---Returns the selection to the first in the tab order list.
+local function jump_to_last()
+    jump_to_cell(cell_index)
 end
 
 local function jump_forward()
     if selected_cell >= cell_index then
-        keyboard_navigation.back_to_top()
+        jump_to_first()
     else
         jump_to_cell(selected_cell + 1)
     end
@@ -270,10 +291,32 @@ end
 
 local function jump_backwards()
     if selected_cell <= 1 then
-        jump_to_cell(cell_index)
+        jump_to_last()
     else
         jump_to_cell(selected_cell - 1)
     end
+end
+
+local function page_forward()
+    if selected_cell == cell_index then
+        return
+    end
+    selected_cell = selected_cell + page_length
+    if selected_cell > cell_index then
+        selected_cell = cell_index
+    end
+    jump_to_cell(selected_cell)
+end
+
+local function page_backwards()
+    if selected_cell == 1 then
+        return
+    end
+    selected_cell = selected_cell - page_length
+    if selected_cell < 1 then
+        selected_cell = 1
+    end
+    jump_to_cell(selected_cell)
 end
 
 local MAX_SEARCH_DISTANCE = 256
@@ -325,6 +368,16 @@ local function tab_navigate(action)
     end
 end
 
+local function page_navigate(action)
+    if action == kb_action.right or action == kb_action.down then
+        page_forward()
+    elseif action == kb_action.left or action == kb_action.up then
+        page_backwards()
+    else
+        error("bad navigation action")
+    end
+end
+
 ---Navigates the grid given a direction action
 ---@param action kb_action keyboard direction action number
 ---@return kb_action? redirected_action returns an action number
@@ -337,7 +390,7 @@ local function navigate_grid(action)
     local original_selection = get_grid_cell(grid_x, grid_y)
     -- if the grid cursor is not on a proper cell, jump to the first cell
     if original_selection < 1 then
-        keyboard_navigation.back_to_top()
+        jump_to_first()
         return nil
     end
 
@@ -387,6 +440,8 @@ local function navigate_grid(action)
         tab_navigate(action)
     elseif encountered_cell == op_cell.redirect then
         return action
+    elseif encountered_cell == op_cell.page then
+        page_navigate(action)
     else
         -- encountered a normal cell
         grid_x, grid_y = outside_x, outside_y
@@ -403,16 +458,23 @@ function keyboard_navigation.evaluate()
     end
 
     local action = nil
+    local set_repeatable
 
     for event in events.iterate("keypressed") do
         local key = event[2]
-        if key == "tab" then
+
+        local is_arrow_key = key == "right" or key == "left" or key == "down" or key == "up"
+        local is_tab = key == "tab"
+
+        if is_arrow_key then
+            action = navigate_grid(kb_action[key])
+        elseif is_tab then
             if love.keyboard.isDown("lshift", "rshift") then
                 jump_backwards()
             else
                 jump_forward()
             end
-        elseif key == "return" then
+        elseif key == "return" or key == "space" then
             if selected_cell == 0 then
                 if default_cell then
                     jump_to_cell(default_cell)
@@ -426,9 +488,29 @@ function keyboard_navigation.evaluate()
                 jump_to_cell(escape_cell)
                 action = kb_action.activate
             end
-        elseif key == "right" or key == "left" or key == "down" or key == "up" then
-            action = navigate_grid(kb_action[key])
+        elseif key == "home" then
+            jump_to_first()
+        elseif key == "end" then
+            jump_to_last()
+        elseif key == "pageup" then
+            if selected_cell == 0 then
+                jump_to_last()
+            else
+                page_backwards()
+            end
+        elseif key == "pagedown" then
+            if selected_cell == 0 then
+                jump_to_first()
+            else
+                page_forward()
+            end
         end
+
+        set_repeatable = is_arrow_key or is_tab
+    end
+
+    if set_repeatable ~= nil then
+        love.keyboard.setKeyRepeat(set_repeatable)
     end
 
     for i = 1, cell_index do

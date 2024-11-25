@@ -6,13 +6,13 @@ local primitive = require("ui.primitive")
 local id = require("ui.id_table")()
 local button = require("ui.element.button")
 local icon_button = require("ui.element.icon_button")
+local icon_cycle_button = require("ui.element.icon_cycle_button")
 local numeric_input = require("ui.element.numeric_input")
 local slider = require("ui.element.slider")
 local switch = require("ui.element.switch")
 local theme = require("ui.theme")
 local toggle = require("ui.element.toggle")
 local toggle_hex = require("ui.element.toggle_hex")
-local draw_queue = require("ui.draw_queue")
 local text = require("ui.text")
 local scroll = require("ui.element.scroll")
 local mask = require("ui.mask")
@@ -27,6 +27,7 @@ Ducimus voluptas asperiores rerum.
 
 return function()
     kb_nav.set_wrapping(wmode.list, wmode.vertical)
+    kb_nav.set_page_length(2)
 
     cursor.auto_reshape = true
     cursor.x = 60
@@ -87,6 +88,18 @@ return function()
     kb_nav.grid_cell(1, 7)
     kb_nav.inject(id.toggle_hex)
     toggle_hex(id.toggle_hex)
+    cursor.shift_down(10)
+
+    kb_nav.make_cell()
+    kb_nav.grid_cell(1, 8)
+    kb_nav.inject(id.icon_button)
+    icon_button(id.icon_button, "triangle")
+    cursor.shift_down(10)
+
+    kb_nav.make_cell()
+    kb_nav.grid_cell(1, 9)
+    kb_nav.inject(id.icon_cycle_button)
+    icon_cycle_button(id.icon_cycle_button, nil, nil, "square", "dash-square", "check-square")
     cursor.shift_down(10)
 
     -- kb_nav.set_wrapping(wrapping_mode.vertical, wrapping_mode.line)

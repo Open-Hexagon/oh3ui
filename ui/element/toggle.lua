@@ -11,7 +11,8 @@ local travel_distance = element.toggle_width - element.toggle_height
 
 ---Two-position toggle switch element.
 ---This element ignores the cursor size and will reshape the cursor.
----@param state table
+---@param state table state table
+---@return boolean on the "on" field of the state table
 return function(state)
     cursor.push()
 

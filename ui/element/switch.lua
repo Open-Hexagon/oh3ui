@@ -13,8 +13,9 @@ local mouse = require("ui.control.mouse")
 local selection_highlight_speed = 25
 
 ---N-position switch
----@param state table
+---@param state table state table
 ---@param ... string position names
+---@return integer position the "position" field of the state table
 return function(state, ...)
     local positions = select("#", ...)
     if not state.initialized then
@@ -110,4 +111,6 @@ return function(state, ...)
         selection_outline()
     end
     cursor.do_auto_reshape() -- (1)
+
+    return state.position
 end

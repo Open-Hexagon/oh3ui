@@ -21,7 +21,8 @@ local travel_distance = element.toggle_width - diameter
 
 ---Hexagonal two-position toggle switch element (because funny).
 ---This element ignores the cursor size and will reshape the cursor.
----@param state table
+---@param state table state table
+---@return boolean on the "on" field of the state table
 return function(state)
     cursor.push()
 

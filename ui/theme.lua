@@ -43,7 +43,8 @@ theme.white = { 1, 1, 1, 1 }
 -- standard colors
 theme.default = { 0.2, 0.2, 0.2, 1 } -- default color of primitives
 theme.text_color = theme.white -- default text color
-theme.accent_color = i2c(0x3daee9)
+-- theme.accent_color = i2c(0x3daee9)
+theme.accent_color = i2c(0xff7321)
 
 theme.widget_outline = i2c(0x8c8c8c)
 theme.widget_outline_highlight = theme.accent_color

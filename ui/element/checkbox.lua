@@ -1,19 +1,18 @@
 local cursor = require("ui.cursor")
-local theme = require("ui.theme")
 local clickbox = require("ui.sensor.clickbox")
 local primitive = require("ui.primitive")
+local element = require("ui.element")
+local theme = require("ui.theme")
+local mouse = require("ui.control.mouse")
+local effect = require("ui.effect")
 local selection_outline = require("ui.element.selection_outline")
 
 
-
----Button element. Can optionally contain text.
----Text that doesn't fit in the button gets cropped.
----Never reshapes the cursor.
+---Checkbox with a intermediate state that can only be accessed by manually setting the position field
 ---@param state table
----@param text string?
----@param font_size number?
----@return integer clicked the "clicked" field of the state table
-return function(state, text, font_size)
+return function(state)
+    cursor.push()
+    cursor.place(element.checkbox_size, element.checkbox_size)
     clickbox(state)
 
     -- draw background and outline
@@ -30,17 +29,12 @@ return function(state, text, font_size)
         (state.hovering or state.kb_selected) and theme.widget_outline_highlight or theme.widget_outline
     )
 
-    -- draw button internals
-    if text then
-        cursor.push()
-        cursor.change_anchor(0.5, 0.5)
-        primitive.label(text, font_size)
-        cursor.pop()
-    end
+    primitive.icon("three-dots")
+    primitive.icon("three-dots")
 
     if state.kb_selected then
         selection_outline()
     end
+    cursor.do_auto_reshape()
 
-    return state.clicked
 end

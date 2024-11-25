@@ -24,11 +24,13 @@ local function get_closest_position(value, min, max, positions)
 end
 
 ---Slider element. This element will reshape the cursor.
----@param state table state
+---@param state table state table
 ---@param min number min representable number in state.value
 ---@param max number max representable number in state.value
 ---@param positions integer number of valid slider positions
 ---@param show_positions boolean? show position lines; recommended if the slider is coarse.
+---@return number value the "value" field of the state table
+---@return integer position the "position" field of the state table
 return function(state, min, max, positions, show_positions)
     local divisions = positions - 1
 
@@ -120,4 +122,5 @@ return function(state, min, max, positions, show_positions)
     end
 
     cursor.do_auto_reshape() -- (1)
+    return state.value, state.position
 end

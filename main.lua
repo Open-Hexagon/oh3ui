@@ -17,8 +17,6 @@ function love.run()
     -- * testing menu
     layers.push(example_menu)
 
-    love.keyboard.setKeyRepeat(true)
-
     return function()
         -- Process events
         love.event.pump()

@@ -32,6 +32,8 @@ local element = {}
 element.toggle_width = 40
 element.toggle_height = 20
 
+element.checkbox_size = 20
+
 element.slider_min_width = 100
 element.slider_height = 20
 
