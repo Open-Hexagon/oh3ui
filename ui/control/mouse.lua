@@ -2,34 +2,24 @@
 ---For checking mouse intersection: see sensor/init.lua
 
 local events = require("ui.events")
+local mb = require("ui.control.mouse_button")
+
+local MOUSE_BUTTON_COUNT = 5
 
 local mouse
 
 do
-    local LEFT_BUTTON, RIGHT_BUTTON, MIDDLE_BUTTON, BACK_BUTTON, FORWARD_BUTTON = 1, 2, 3, 4, 5
-    local BUTTON_COUNT = 5
-
     local function m()
         return { up = false, down = false, pressed = false, times = 0 }
     end
 
     local temp = {}
 
-    for i = 1, BUTTON_COUNT do
+    for i = 1, MOUSE_BUTTON_COUNT do
         temp[i] = m()
     end
 
     mouse = {
-        -- mouse button ids
-        LEFT = LEFT_BUTTON,
-        RIGHT = RIGHT_BUTTON,
-        MIDDLE = MIDDLE_BUTTON,
-        BACK = BACK_BUTTON,
-        FORWARD = FORWARD_BUTTON,
-
-        -- number of mouse buttons
-        BUTTON_COUNT = BUTTON_COUNT,
-
         -- this frame's mouse position
         x = -1,
         y = -1,
@@ -53,18 +43,18 @@ do
         any = m(),
 
         -- named individual mouse button up/down/pressed states
-        left = temp[LEFT_BUTTON],
-        right = temp[RIGHT_BUTTON],
-        middle = temp[MIDDLE_BUTTON],
-        back = temp[BACK_BUTTON],
-        forward = temp[FORWARD_BUTTON],
+        left = temp[mb.left],
+        right = temp[mb.right],
+        middle = temp[mb.middle],
+        back = temp[mb.back],
+        forward = temp[mb.forward],
 
         -- numbered individual mouse button up/down/pressed states
-        [LEFT_BUTTON] = temp[LEFT_BUTTON],
-        [RIGHT_BUTTON] = temp[RIGHT_BUTTON],
-        [MIDDLE_BUTTON] = temp[MIDDLE_BUTTON],
-        [BACK_BUTTON] = temp[BACK_BUTTON],
-        [FORWARD_BUTTON] = temp[FORWARD_BUTTON],
+        [mb.left] = temp[mb.left],
+        [mb.right] = temp[mb.right],
+        [mb.middle] = temp[mb.middle],
+        [mb.back] = temp[mb.back],
+        [mb.forward] = temp[mb.forward],
 
         -- holds the mouse button id of the last button pressed or released this frame
         last_down = nil,
@@ -84,7 +74,7 @@ function mouse.update()
     mouse.x, mouse.y = love.graphics.inverseTransformPoint(mouse.screen_x, mouse.screen_y)
 
     -- Clear the up/down fields
-    for i = 1, mouse.BUTTON_COUNT do
+    for i = 1, MOUSE_BUTTON_COUNT do
         mouse[i].up = false
         mouse[i].down = false
     end
@@ -130,7 +120,7 @@ function mouse.update()
     mouse.any.up = false
     mouse.any.down = false
     mouse.any.pressed = false
-    for i = 1, mouse.BUTTON_COUNT do
+    for i = 1, MOUSE_BUTTON_COUNT do
         mouse.any.up = mouse.any.up or mouse[i].up
         mouse.any.down = mouse.any.down or mouse[i].down
         mouse.any.pressed = mouse.any.pressed or mouse[i].pressed

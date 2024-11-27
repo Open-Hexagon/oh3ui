@@ -3,6 +3,7 @@ local theme = require("ui.theme")
 local clickbox = require("ui.sensor.clickbox")
 local primitive = require("ui.primitive")
 local selection_outline = require("ui.element.selection_outline")
+local kba = require("ui.control.keyboard_action")
 
 ---An icon that can be clicked.
 ---Will reshape the cursor
@@ -17,7 +18,7 @@ return function(state, icon_name, size, icon_font)
     local button_color
     if state.holding then
         button_color = theme.widget_background_highlight
-    elseif state.hovering then
+    elseif state.hovering or state.kb_holding == kba.activate then
         button_color = theme.accent_color
     else
         button_color = theme.white

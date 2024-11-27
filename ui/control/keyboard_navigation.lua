@@ -1,5 +1,6 @@
 local events = require("ui.events")
 local bit = require("bit")
+local kba = require("ui.control.keyboard_action")
 local bor, band = bit.bor, bit.band
 
 local keyboard_navigation = {}
@@ -13,21 +14,10 @@ keyboard_navigation.op_cell = {
     wrap = -2, -- when encountered, navigation is wrapped to the closest wrap or barrier cell in the opposite navigation direction
     tab = -3, -- when encountered, navigation is jumped to the previous or next tab selection
     redirect = -4, -- when encountered, any navigation movement is cancelled and the arrow key input is redirected to the state table instead
-    page = -5 -- when encountered, navigation is jumped to the previous or next page
+    page = -5, -- when encountered, navigation is jumped to the previous or next page
 }
 
 local op_cell = keyboard_navigation.op_cell
-
----@enum kb_action
-keyboard_navigation.kb_action = {
-    activate = 0,
-    left = 1,
-    right = 2,
-    up = 3,
-    down = 4,
-}
-
-local kb_action = keyboard_navigation.kb_action
 
 ---@enum wrapping_mode
 keyboard_navigation.wrapping_mode = {
@@ -166,7 +156,7 @@ local default_cell
 
 ---The last performed keyboard action. Nil if there was no action.
 ---There only needs to be one since the keyboard can only interact with one thing at a time.
----@type kb_action?
+---@type keyboard_action?
 local last_action
 
 ---Resets keyboard navigation to its initial state, leaving no cell selected.
@@ -226,7 +216,7 @@ end
 
 ---Returns the action of the last created cell
 ---@param cell_id? integer
----@return kb_action?
+---@return keyboard_action?
 function keyboard_navigation.get_action(cell_id)
     if keyboard_navigation.is_selected(cell_id) then
         return last_action
@@ -359,9 +349,9 @@ local function find_barriers(x, y, dx, dy)
 end
 
 local function tab_navigate(action)
-    if action == kb_action.right or action == kb_action.down then
+    if action == kba.right or action == kba.down then
         jump_forward()
-    elseif action == kb_action.left or action == kb_action.up then
+    elseif action == kba.left or action == kba.up then
         jump_backwards()
     else
         error("bad navigation action")
@@ -369,9 +359,9 @@ local function tab_navigate(action)
 end
 
 local function page_navigate(action)
-    if action == kb_action.right or action == kb_action.down then
+    if action == kba.right or action == kba.down then
         page_forward()
-    elseif action == kb_action.left or action == kb_action.up then
+    elseif action == kba.left or action == kba.up then
         page_backwards()
     else
         error("bad navigation action")
@@ -379,8 +369,8 @@ local function page_navigate(action)
 end
 
 ---Navigates the grid given a direction action
----@param action kb_action keyboard direction action number
----@return kb_action? redirected_action returns an action number
+---@param action keyboard_action keyboard direction action number
+---@return keyboard_action? redirected_action action number if navigation was redirected
 local function navigate_grid(action)
     -- if nothing is selected or selection position is undefined, use tab ordering
     if selected_cell == 0 or not grid_x then
@@ -395,13 +385,13 @@ local function navigate_grid(action)
     end
 
     local dx, dy, _
-    if action == kb_action.right then
+    if action == kba.right then
         dx, dy = 1, 0
-    elseif action == kb_action.left then
+    elseif action == kba.left then
         dx, dy = -1, 0
-    elseif action == kb_action.down then
+    elseif action == kba.down then
         dx, dy = 0, 1
-    elseif action == kb_action.up then
+    elseif action == kba.up then
         dx, dy = 0, -1
     else
         error("bad navigation action")
@@ -450,6 +440,87 @@ local function navigate_grid(action)
     return nil
 end
 
+-- the key name that is currently being held
+local holding_key
+
+-- converts love2d key names to keyboard actions
+local key_to_action = {
+    ["return"] = kba.activate,
+    ["space"] = kba.activate,
+    ["escape"] = kba.activate,
+    ["right"] = kba.right,
+    ["left"] = kba.left,
+    ["down"] = kba.down,
+    ["up"] = kba.up,
+}
+
+---Iterates through keyboard events and returns an action and whether it was a from a repeated keyboard input
+---@return keyboard_action?
+---@return boolean
+local function iterate_events()
+    local action, is_repeat = nil, false
+
+    for event in events.iterate("^key[pr]") do
+        local name, key = event[1], event[2]
+
+        if name == "keypressed" then
+            is_repeat = event[4]
+            if key == "right" or key == "left" or key == "down" or key == "up" then
+                action = navigate_grid(key_to_action[key])
+                if action then
+                    holding_key = key
+                end
+            elseif key == "return" or key == "space" then
+                holding_key = key
+                if selected_cell == 0 then
+                    if default_cell then
+                        jump_to_cell(default_cell)
+                        action = kba.activate
+                    end
+                else
+                    action = kba.activate
+                end
+            elseif key == "escape" then
+                if escape_cell then
+                    holding_key = key
+                    jump_to_cell(escape_cell)
+                    action = kba.activate
+                end
+
+            -- The below keys do not trigger actions
+            elseif key == "tab" then
+                if love.keyboard.isDown("lshift", "rshift") then
+                    jump_backwards()
+                else
+                    jump_forward()
+                end
+            elseif key == "home" then
+                jump_to_first()
+            elseif key == "end" then
+                jump_to_last()
+            elseif key == "pageup" then
+                if selected_cell == 0 then
+                    jump_to_last()
+                else
+                    page_backwards()
+                end
+            elseif key == "pagedown" then
+                if selected_cell == 0 then
+                    jump_to_first()
+                else
+                    page_forward()
+                end
+            end
+        else -- name == "keyreleased"
+            if key == holding_key then
+                holding_key = nil
+            end
+        end
+    end
+    
+    return action, is_repeat
+end
+
 ---Run the navigation logic using keypressed events
 function keyboard_navigation.evaluate()
     if cell_index < 1 then
@@ -457,61 +528,7 @@ function keyboard_navigation.evaluate()
         return
     end
 
-    local action = nil
-    local set_repeatable
-
-    for event in events.iterate("keypressed") do
-        local key = event[2]
-
-        local is_arrow_key = key == "right" or key == "left" or key == "down" or key == "up"
-        local is_tab = key == "tab"
-
-        if is_arrow_key then
-            action = navigate_grid(kb_action[key])
-        elseif is_tab then
-            if love.keyboard.isDown("lshift", "rshift") then
-                jump_backwards()
-            else
-                jump_forward()
-            end
-        elseif key == "return" or key == "space" then
-            if selected_cell == 0 then
-                if default_cell then
-                    jump_to_cell(default_cell)
-                    action = kb_action.activate
-                end
-            else
-                action = kb_action.activate
-            end
-        elseif key == "escape" then
-            if escape_cell then
-                jump_to_cell(escape_cell)
-                action = kb_action.activate
-            end
-        elseif key == "home" then
-            jump_to_first()
-        elseif key == "end" then
-            jump_to_last()
-        elseif key == "pageup" then
-            if selected_cell == 0 then
-                jump_to_last()
-            else
-                page_backwards()
-            end
-        elseif key == "pagedown" then
-            if selected_cell == 0 then
-                jump_to_first()
-            else
-                page_forward()
-            end
-        end
-
-        set_repeatable = is_arrow_key or is_tab
-    end
-
-    if set_repeatable ~= nil then
-        love.keyboard.setKeyRepeat(set_repeatable)
-    end
+    local action, is_repeat = iterate_events()
 
     for i = 1, cell_index do
         local state = cell_list[i].state
@@ -519,9 +536,13 @@ function keyboard_navigation.evaluate()
             if i == selected_cell then
                 state.kb_selected = true
                 state.kb_action = action
+                state.kb_is_repeat = is_repeat
+                state.kb_holding = key_to_action[holding_key]
             else
                 state.kb_selected = false
                 state.kb_action = nil
+                state.kb_is_repeat = false
+                state.kb_holding = nil
             end
         end
     end

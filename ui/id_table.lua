@@ -6,12 +6,12 @@
     * Sensor fields
     hovering boolean --- True when cursor is hovering. Read only; set automatically by the sensor module
 
-    clicked integer --- The mouse button id that just clicked this element. Keyboard navigation will also set this value on kb_action.activate
-    holding integer --- The mouse button id that is currently holding down this element
+    clicked mouse_button --- The mouse button id that just clicked this element. Keyboard navigation will also set this value on kb_action.activate
+    holding mouse_button --- The mouse button id that is currently holding down this element
 
-    dragging integer --- the mouse button id that is currently dragging this element
-    started_dragging integer --- the mouse button id just started dragging this element
-    stopped_dragging integer --- the mouse button id just stopped dragging this element
+    dragging mouse_button --- the mouse button id that is currently dragging this element
+    started_dragging mouse_button --- the mouse button id just started dragging this element
+    stopped_dragging mouse_button --- the mouse button id just stopped dragging this element
     drag_origin_x number --- the mouse x coordinate where dragging began
     drag_origin_y number --- the mouse y coordinate where dragging began
 
@@ -22,8 +22,10 @@
     text string --- contains whatever string data the element may be representing
 
     * Keyboard Input Injection
-    kb_selected --- True when the keyboard navigation has selected the cell associated with this state. Read only.
-    kb_action --- Contains a number from kb_action if an action is requested from keyboard navigation.
+    kb_selected boolean --- True when the keyboard navigation has selected the cell associated with this state
+    kb_action keyboard_action --- The keyboard action sent to this element.
+    kb_is_repeat boolean --- True when the sent keyboard action is from a repeated input.
+    kb_holding keyboard_action --- The keyboard action that is being held while this element is selected.
 
     * Other fields
     initialized boolean --- may be used to keep track of first time initialization

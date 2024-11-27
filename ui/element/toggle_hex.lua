@@ -6,7 +6,7 @@ local element = require("ui.element")
 local theme = require("ui.theme")
 local extmath = require("ui.extmath")
 local draw_queue = require("ui.draw_queue")
-local mouse = require("ui.control.mouse")
+local mb = require("ui.control.mouse_button")
 local effect = require("ui.effect")
 local selection_outline = require("ui.element.selection_outline")
 
@@ -29,7 +29,8 @@ return function(state)
     cursor.place(element.toggle_width, element.toggle_height)
     cursor.push()
 
-    if clickbox(state) == mouse.LEFT or state.kb_action then
+    clickbox(state)
+    if state.clicked == mb.left or state.clicked == mb.right or (not state.kb_is_repeat and state.kb_action) then
         state.on = not state.on -- not nil = true
     end
 

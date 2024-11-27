@@ -11,11 +11,15 @@ ui.scale = os.getenv("SCALE") or 1
 
 function love.run()
     -- Target duration of each tick in seconds
-    local target_delta = 1 / 240
+    -- local target_delta = 1 / 240
+    local target_delta = 1 / 60
     local last_time = 0
 
     -- * testing menu
     layers.push(example_menu)
+
+    -- keep this always on when using the ui
+    love.keyboard.setKeyRepeat(true)
 
     return function()
         -- Process events

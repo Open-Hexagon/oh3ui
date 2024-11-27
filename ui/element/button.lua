@@ -3,14 +3,12 @@ local theme = require("ui.theme")
 local clickbox = require("ui.sensor.clickbox")
 local primitive = require("ui.primitive")
 local selection_outline = require("ui.element.selection_outline")
+local kba = require("ui.control.keyboard_action")
 
 
-
----Button element. Can optionally contain text.
----Text that doesn't fit in the button gets cropped.
----Never reshapes the cursor.
+---Button element with text. Never reshapes the cursor.
 ---@param state table
----@param text string?
+---@param text string
 ---@param font_size number?
 ---@return integer clicked the "clicked" field of the state table
 return function(state, text, font_size)
@@ -18,7 +16,7 @@ return function(state, text, font_size)
 
     -- draw background and outline
     local button_color
-    if state.holding then
+    if state.holding or state.kb_holding == kba.activate then
         button_color = theme.widget_background_highlight
     elseif state.hovering then
         button_color = theme.widget_background_brighter
@@ -31,12 +29,10 @@ return function(state, text, font_size)
     )
 
     -- draw button internals
-    if text then
-        cursor.push()
-        cursor.change_anchor(0.5, 0.5)
-        primitive.label(text, font_size)
-        cursor.pop()
-    end
+    cursor.push()
+    cursor.change_anchor(0.5, 0.5)
+    primitive.label(text, font_size)
+    cursor.pop()
 
     if state.kb_selected then
         selection_outline()

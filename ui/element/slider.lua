@@ -6,7 +6,7 @@ local primitive = require("ui.primitive")
 local element = require("ui.element")
 local mouse = require("ui.control.mouse")
 local extmath = require("ui.extmath")
-local kb_action = require("ui.control.keyboard_navigation").kb_action
+local kba = require("ui.control.keyboard_action")
 local selection_outline = require("ui.element.selection_outline")
 
 local actuator_radius = element.slider_height / 2
@@ -55,9 +55,9 @@ return function(state, min, max, positions, show_positions)
     local hovering = state.hovering
 
     if state.kb_action then
-        if state.kb_action == kb_action.left then
+        if state.kb_action == kba.left then
             state.position = state.position - 1
-        elseif state.kb_action == kb_action.right then
+        elseif state.kb_action == kba.right then
             state.position = state.position + 1
         end
         state.position = extmath.clamp(state.position, 0, divisions)

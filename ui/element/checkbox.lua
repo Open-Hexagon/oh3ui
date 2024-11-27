@@ -3,7 +3,6 @@ local clickbox = require("ui.sensor.clickbox")
 local primitive = require("ui.primitive")
 local element = require("ui.element")
 local theme = require("ui.theme")
-local mouse = require("ui.control.mouse")
 local effect = require("ui.effect")
 local selection_outline = require("ui.element.selection_outline")
 

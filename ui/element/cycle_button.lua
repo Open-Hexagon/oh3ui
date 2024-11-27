@@ -6,14 +6,13 @@ local selection_outline = require("ui.element.selection_outline")
 local mb = require("ui.control.mouse_button")
 local kba = require("ui.control.keyboard_action")
 
----An icon that cycles between other icons when left or right clicked.
----Will reshape the cursor.
+---Button element that cycles between text when left or right clicked.
+---Never reshapes the cursor.
 ---@param state table
----@param size number? icon override icon size in pixels (works like a font)
----@param icon_font string? override text.icon_font
----@param ... string icon names
+---@param font_size number?
+---@param ... string
 ---@return integer position the "position" field of the state table
-return function(state, size, icon_font, ...)
+return function(state, font_size, ...)
     local positions = select("#", ...)
     if not state.initialized then
         if positions < 2 then
@@ -24,17 +23,6 @@ return function(state, size, icon_font, ...)
         end
         state.position = 1
         state.initialized = true
-    end
-
-    cursor.push()
-
-    local button_color
-    if state.holding then
-        button_color = theme.widget_background_highlight
-    elseif state.hovering or state.kb_holding == kba.activate then
-        button_color = theme.accent_color
-    else
-        button_color = theme.white
     end
 
     if not state.kb_is_repeat then
@@ -51,14 +39,31 @@ return function(state, size, icon_font, ...)
         end
     end
 
-    cursor.auto_reshape = true
-    primitive.icon(select(state.position, ...), size, button_color, icon_font)
     clickbox(state)
+
+    -- draw background and outline
+    local button_color
+    if state.holding or state.kb_holding then
+        button_color = theme.widget_background_highlight
+    elseif state.hovering then
+        button_color = theme.widget_background_brighter
+    else
+        button_color = theme.widget_background
+    end
+    primitive.rectangle(button_color)
+    primitive.rectangle_outline(
+        (state.hovering or state.kb_selected) and theme.widget_outline_highlight or theme.widget_outline
+    )
+
+    -- draw button internals
+    cursor.push()
+    cursor.change_anchor(0.5, 0.5)
+    primitive.label(select(state.position, ...), font_size)
+    cursor.pop()
 
     if state.kb_selected then
         selection_outline()
     end
 
-    cursor.do_auto_reshape()
     return state.position
 end

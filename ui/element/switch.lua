@@ -6,9 +6,9 @@ local element = require("ui.element")
 local mask = require("ui.mask")
 local effect = require("ui.effect")
 local draw_queue = require("ui.draw_queue")
-local kb_action = require("ui.control.keyboard_navigation").kb_action
+local kba = require("ui.control.keyboard_action")
+local mb = require("ui.control.mouse_button")
 local selection_outline = require("ui.element.selection_outline")
-local mouse = require("ui.control.mouse")
 
 local selection_highlight_speed = 25
 
@@ -48,7 +48,7 @@ return function(state, ...)
         cursor.pop()
         local cb_state = state[i]
         clickbox(cb_state)
-        if cb_state.clicked == mouse.LEFT then
+        if cb_state.clicked == mb.left then
             state._switch_selection_highlight_speed = math.abs(state.position - i) * selection_highlight_speed
             state.position = i
         end
@@ -56,7 +56,7 @@ return function(state, ...)
         hovering = hovering or cb_state.hovering
 
         local button_color
-        if cb_state.holding == mouse.LEFT or i == state.position then
+        if cb_state.holding == mb.left or i == state.position then
             button_color = theme.widget_background_highlight
         elseif cb_state.hovering then
             button_color = theme.widget_background_brighter
@@ -74,21 +74,23 @@ return function(state, ...)
     end
 
     -- keyboard navigation
-    if state.kb_action == kb_action.left then
-        if state.position == 1 then
-            state.position = positions
-            state._switch_selection_highlight_speed = (positions - 1) * selection_highlight_speed
-        else
-            state.position = state.position - 1
-            state._switch_selection_highlight_speed = selection_highlight_speed
-        end
-    elseif state.kb_action == kb_action.activate or state.kb_action == kb_action.right then
-        if state.position == positions then
-            state.position = 1
-            state._switch_selection_highlight_speed = (positions - 1) * selection_highlight_speed
-        else
-            state.position = state.position + 1
-            state._switch_selection_highlight_speed = selection_highlight_speed
+    if not state.kb_is_repeat then
+        if state.kb_action == kba.left then
+            if state.position == 1 then
+                state.position = positions
+                state._switch_selection_highlight_speed = (positions - 1) * selection_highlight_speed
+            else
+                state.position = state.position - 1
+                state._switch_selection_highlight_speed = selection_highlight_speed
+            end
+        elseif state.kb_action == kba.activate or state.kb_action == kba.right then
+            if state.position == positions then
+                state.position = 1
+                state._switch_selection_highlight_speed = (positions - 1) * selection_highlight_speed
+            else
+                state.position = state.position + 1
+                state._switch_selection_highlight_speed = selection_highlight_speed
+            end
         end
     end
 

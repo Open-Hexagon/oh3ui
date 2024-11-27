@@ -9,7 +9,7 @@ local element = require("ui.element")
 local text = require("ui.text")
 local mouse = require("ui.control.mouse")
 local extmath = require("ui.extmath")
-local kb_action = require("ui.control.keyboard_navigation").kb_action
+local kba = require("ui.control.keyboard_action")
 local selection_outline = require("ui.element.selection_outline")
 
 ---Combination number slider and entry with increment buttons.
@@ -109,10 +109,10 @@ return function(state, min, max, step, format)
         cursor.change_anchor(0.5)
 
         if not dragging then
-            if clickbox(state.numeric_input_left) or state.kb_action == kb_action.left then
+            if clickbox(state.numeric_input_left) or state.kb_action == kba.left then
                 state.value = state.value - step
             end
-            if state.numeric_input_left.holding then
+            if state.numeric_input_left.holding or state.kb_holding == kba.left then
                 primitive.rectangle(theme.widget_background_highlight)
             elseif state.numeric_input_left.hovering then
                 primitive.rectangle(theme.widget_background_brighter)
@@ -127,10 +127,10 @@ return function(state, min, max, step, format)
         cursor.change_anchor(0.5)
 
         if not dragging then
-            if clickbox(state.numeric_input_right) or state.kb_action == kb_action.right then
+            if clickbox(state.numeric_input_right) or state.kb_action == kba.right then
                 state.value = state.value + step
             end
-            if state.numeric_input_right.holding then
+            if state.numeric_input_right.holding or state.kb_holding == kba.right then
                 primitive.rectangle(theme.widget_background_highlight)
             elseif state.numeric_input_right.hovering then
                 primitive.rectangle(theme.widget_background_brighter)
