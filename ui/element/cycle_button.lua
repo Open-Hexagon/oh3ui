@@ -14,6 +14,7 @@ local kba = require("ui.control.keyboard_action")
 ---@return integer position the "position" field of the state table
 return function(state, font_size, ...)
     local positions = select("#", ...)
+
     if not state.initialized then
         if positions < 2 then
             error("At least 2 positions need to be provided for cycle button")

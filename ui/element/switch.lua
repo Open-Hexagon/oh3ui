@@ -5,7 +5,7 @@ local primitive = require("ui.primitive")
 local element = require("ui.element")
 local mask = require("ui.mask")
 local effect = require("ui.effect")
-local draw_queue = require("ui.draw_queue")
+local reserve = require("ui.reserve")
 local kba = require("ui.control.keyboard_action")
 local mb = require("ui.control.mouse_button")
 local selection_outline = require("ui.element.selection_outline")
@@ -38,8 +38,8 @@ return function(state, ...)
 
     cursor.push() -- (2)
 
-    local sel_bg_res = draw_queue.reserve(positions)
-    local sel_hl_res = draw_queue.reserve(1)
+    local sel_bg_res = reserve.allocate(positions)
+    local sel_hl_res = reserve.allocate(1)
 
     -- selection buttons
     local hovering = state.kb_selected
@@ -64,7 +64,7 @@ return function(state, ...)
             button_color = theme.widget_background
         end
 
-        draw_queue.take_reservation(sel_bg_res)
+        reserve.take(sel_bg_res)
         primitive.rectangle(button_color)
 
         cursor.inset(element.switch_internal_padding)
@@ -104,7 +104,7 @@ return function(state, ...)
         state._switch_selection_highlight_speed
     )
     cursor.x = base_x + state._switch_selection_highlight_position * section_width
-    draw_queue.take_reservation(sel_hl_res)
+    reserve.take(sel_hl_res)
     primitive.rectangle(theme.accent_color)
 
     cursor.pop() -- (2)

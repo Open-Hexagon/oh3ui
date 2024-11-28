@@ -19,6 +19,17 @@ keyboard_navigation.op_cell = {
 
 local op_cell = keyboard_navigation.op_cell
 
+local page_length = 1
+
+---Sets how many items forward or backwards to move when encountering the page op_cell or using the pageup or pagedown keys
+---@param n integer
+function keyboard_navigation.set_page_length(n)
+    if n < 1 then
+        error("page length cannot be less than 1")
+    end
+    page_length = n
+end
+
 ---@enum wrapping_mode
 keyboard_navigation.wrapping_mode = {
     horizontal = 0x01, -- if grid_x is out of bounds, navigation will see wrap op cells
@@ -45,21 +56,10 @@ local wmode = keyboard_navigation.wrapping_mode
 ---@type integer
 local wrapping_mode = 0
 
-local page_length = 1
-
 ---Set navigation behavior of grid borders.
 ---@param ... wrapping_mode list of wrapping mode enums
 function keyboard_navigation.set_wrapping(...)
     wrapping_mode = bor(0, ...)
-end
-
----Sets how many items forward or backwards to move when encountering the page op_cell or using the pageup or pagedown keys
----@param n integer
-function keyboard_navigation.set_page_length(n)
-    if n < 1 then
-        error("page length cannot be less than 1")
-    end
-    page_length = n
 end
 
 ---Grid used to assist in determining what the arrow keys will do
@@ -243,7 +243,7 @@ function keyboard_navigation.fill_grid(cell_value, x, y, col_span, row_span)
     fill_grid(cell_value, x, y, x + col_span - 1, y + row_span - 1)
 end
 
----Fills a rectangle in the grid with the last created cell index.
+---Fills a rectangle in the grid with the last created cell index. That cell's grid position is then defined as the top-left corner of the rectangle.
 ---If this function isn't run after a make_cell call, then that cell can be tabbed to but not selected via navigating the grid.
 ---@param x integer
 ---@param y integer
@@ -255,6 +255,7 @@ function keyboard_navigation.grid_cell(x, y, col_span, row_span)
     cell_list[cell_index].y = y
 end
 
+---Jumps to a specified cell id in the tab ordered table
 local function jump_to_cell(new_selection)
     grid_x = cell_list[new_selection].x
     grid_y = cell_list[new_selection].y
@@ -271,6 +272,7 @@ local function jump_to_last()
     jump_to_cell(cell_index)
 end
 
+---Jumps 1 forward in the tab order. Wraps around if the end is reached.
 local function jump_forward()
     if selected_cell >= cell_index then
         jump_to_first()
@@ -279,6 +281,7 @@ local function jump_forward()
     end
 end
 
+---Jumps 1 backwards in the tab order. Wraps around if the beginning is reached.
 local function jump_backwards()
     if selected_cell <= 1 then
         jump_to_last()
@@ -287,6 +290,7 @@ local function jump_backwards()
     end
 end
 
+---Jumps 1 page forwards in the tab order. Does not wrap.
 local function page_forward()
     if selected_cell == cell_index then
         return
@@ -298,6 +302,7 @@ local function page_forward()
     jump_to_cell(selected_cell)
 end
 
+---Jumps 1 page backwards in the tab order. Does not wrap.
 local function page_backwards()
     if selected_cell == 1 then
         return
@@ -309,6 +314,7 @@ local function page_backwards()
     jump_to_cell(selected_cell)
 end
 
+---The maximum amount of steps that navigation will take on the grid before giving up.
 local MAX_SEARCH_DISTANCE = 256
 
 ---Finds a border between two different cell values by walking in a given direction.
@@ -336,7 +342,14 @@ local function find_border(starting_value, x, y, dx, dy)
     error("couldn't find a border within a reasonable distance")
 end
 
-local function find_barriers(x, y, dx, dy)
+---Finds a point where wrapping can begin. The starting coordinate is checked.
+---@param x integer Starting coordinate
+---@param y integer Starting coordinate
+---@param dx integer Walk step
+---@param dy integer Walk step
+---@return integer x Coordinate of encountered barrier
+---@return integer y Coordinate of encountered barrier
+local function find_wrapping_point(x, y, dx, dy)
     for _ = 1, MAX_SEARCH_DISTANCE do
         local encountered_value = get_grid_cell(x, y)
         if encountered_value < op_cell.nothing then
@@ -348,6 +361,8 @@ local function find_barriers(x, y, dx, dy)
     error("couldn't find a barrier or wrap within a reasonable distance")
 end
 
+---Converts a directional keyboard action into a tab navigation
+---@param action keyboard_action
 local function tab_navigate(action)
     if action == kba.right or action == kba.down then
         jump_forward()
@@ -358,6 +373,8 @@ local function tab_navigate(action)
     end
 end
 
+---Converts a directional keyboard action into a page navigation
+---@param action keyboard_action
 local function page_navigate(action)
     if action == kba.right or action == kba.down then
         page_forward()
@@ -368,7 +385,7 @@ local function page_navigate(action)
     end
 end
 
----Navigates the grid given a direction action
+---Navigates the grid given a directional keyboard action
 ---@param action keyboard_action keyboard direction action number
 ---@return keyboard_action? redirected_action action number if navigation was redirected
 local function navigate_grid(action)
@@ -384,6 +401,7 @@ local function navigate_grid(action)
         return nil
     end
 
+    -- get the step direction
     local dx, dy, _
     if action == kba.right then
         dx, dy = 1, 0
@@ -406,12 +424,13 @@ local function navigate_grid(action)
         -- move the outside coordinates and change the encountered cell type so as if the nothing cells weren't there
         _, _, outside_x, outside_y, encountered_cell = find_border(op_cell.nothing, outside_x, outside_y, dx, dy)
     end
+
     if encountered_cell == op_cell.barrier then
         -- encountered a barrier
         grid_x, grid_y = inside_x, inside_y
     elseif encountered_cell == op_cell.wrap then
         -- locate a barrier in the opposite direction
-        local barrier_x, barrier_y = find_barriers(grid_x, grid_y, -dx, -dy)
+        local barrier_x, barrier_y = find_wrapping_point(grid_x, grid_y, -dx, -dy)
 
         -- search for a border, starting at the barrier
         local wrap_x, wrap_y, wrap_encountered_cell
@@ -440,10 +459,11 @@ local function navigate_grid(action)
     return nil
 end
 
--- the key name that is currently being held
+---The key name that is currently being held down. Only the latest pressed key is considered "held".
+---@type string?
 local holding_key
 
--- converts love2d key names to keyboard actions
+---Converts love2d key names to keyboard actions
 local key_to_action = {
     ["return"] = kba.activate,
     ["space"] = kba.activate,
@@ -454,9 +474,10 @@ local key_to_action = {
     ["up"] = kba.up,
 }
 
----Iterates through keyboard events and returns an action and whether it was a from a repeated keyboard input
----@return keyboard_action?
----@return boolean
+---Iterates through keyboard events and returns an action and whether it was a from a repeated keyboard input.
+---Also updates the `holding_key` variable.
+---@return keyboard_action? action Keyboard action. Nil if there was none.
+---@return boolean is_repeat True if the returned keyboard action is a repeat
 local function iterate_events()
     local action, is_repeat = nil, false
 
@@ -487,7 +508,7 @@ local function iterate_events()
                     action = kba.activate
                 end
 
-            -- The below keys do not trigger actions
+            -- The below keys do not trigger actions. They only navigate
             elseif key == "tab" then
                 if love.keyboard.isDown("lshift", "rshift") then
                     jump_backwards()
@@ -512,12 +533,13 @@ local function iterate_events()
                 end
             end
         else -- name == "keyreleased"
+            -- clear the holding_key field if that key was released.
             if key == holding_key then
                 holding_key = nil
             end
         end
     end
-    
+
     return action, is_repeat
 end
 

@@ -19,21 +19,8 @@ local radius = diameter * 0.5
 local half_radius = radius * 0.5
 local travel_distance = element.toggle_width - diameter
 
----Hexagonal two-position toggle switch element (because funny).
----This element ignores the cursor size and will reshape the cursor.
----@param state table state table
----@return boolean on the "on" field of the state table
-return function(state)
-    cursor.push()
 
-    cursor.place(element.toggle_width, element.toggle_height)
-    cursor.push()
-
-    clickbox(state)
-    if state.clicked == mb.left or state.clicked == mb.right or (not state.kb_is_repeat and state.kb_action) then
-        state.on = not state.on -- not nil = true
-    end
-
+local function draw_base_shape(color)
     local x0 = placement.left
     local x1 = placement.left + half_radius
     local x2 = placement.right - half_radius
@@ -43,11 +30,9 @@ return function(state)
     local y1 = placement.top + inradius
     local y2 = placement.bottom
 
-    -- base shape
     -- stylua: ignore
     draw_queue.polygon(
-        "fill",
-        state.on and theme.accent_color or theme.widget_background,
+        "fill", color,
         x0, y1,
         x1, y0,
         x2, y0,
@@ -55,28 +40,55 @@ return function(state)
         x2, y2,
         x1, y2
     )
+end
+
+---Hexagonal two-position toggle switch element (because funny).
+---This element ignores the cursor size and will reshape the cursor.
+---@param state table state table
+---@return boolean on the "on" field of the state table
+return function(state)
+    if -- toggle state on
+        state.clicked == mb.left -- left click
+        or state.clicked == mb.right -- right click
+        or (not state.kb_is_repeat and state.kb_action) -- any non-repeated keyboard action
+    then
+        state.on = not state.on
+    end
 
     -- calculate normalized toggle position
     state._toggle_actuator_position = effect.follow(state._toggle_actuator_position, state.on and 0.5 or -0.5, 25)
 
-    cursor.change_anchor(0.5, 0.5)
-    cursor.width = diameter
-    cursor.height = diameter
-    cursor.x = cursor.x + state._toggle_actuator_position * travel_distance
+    cursor.push()
+    do
+        -- establish element size and sensor region
+        cursor.place(element.toggle_width, element.toggle_height)
+        clickbox(state)
 
-    primitive.circle(theme.widget_actuator, 6)
-    primitive.circle_outline(
-        state.hovering and theme.widget_actuator_outline_highlight or theme.widget_actuator_outline,
-        nil,
-        6
-    )
+        cursor.push()
+        do
+            draw_base_shape(state.on and theme.accent_color or theme.widget_background)
 
-    cursor.pop()
+            -- draw the actuator
+            cursor.change_anchor(0.5, 0.5)
+            cursor.width = diameter
+            cursor.height = diameter
+            cursor.x = cursor.x + state._toggle_actuator_position * travel_distance
 
-    if state.kb_selected then
-        selection_outline()
+            primitive.circle(theme.widget_actuator, 6)
+            primitive.circle_outline(
+                state.hovering and theme.widget_actuator_outline_highlight or theme.widget_actuator_outline,
+                nil,
+                6
+            )
+        end
+        cursor.pop()
+
+        -- keyboard selection outline
+        if state.kb_selected then
+            selection_outline()
+        end
     end
-
     cursor.do_auto_reshape()
+
     return state.on
 end

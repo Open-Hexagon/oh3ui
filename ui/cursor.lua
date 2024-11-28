@@ -2,22 +2,24 @@
 ---a tool for positioning and aligning ui elements.
 
 ---Note: parameters that are contained within tables are not saved in snapshots
-local cursor = {
-    ---Edge output table mainly to be used by elements.
-    ---This table gets affected by translations so the area it represents will not coincide with the cursor if a translation is in affect.
-    ---Elements have to be literally placed in their final locations and not transformed by other means.
-    ---or else other position related functionality would break.
-    ---* Use this if you want to check against a the location of a placed element.
-    placement = {
-        left = 0,
-        top = 0,
-        right = 0,
-        bottom = 0,
-        -- the coordinate points are also affected
-        x = 0,
-        y = 0,
-    },
+local cursor = {}
+
+---Edge output table mainly to be used by elements.
+---This table gets affected by translations so the area it represents will not always coincide with the cursor if a translation is in affect.
+---Elements have to be literally placed in their final locations and not transformed by other means
+---or else other position related functionality would break.
+---Use this if you want to check against a the literal location of a placed element. Such as when comparing against the mouse position.
+cursor.placement = {
+    left = 0,
+    top = 0,
+    right = 0,
+    bottom = 0,
+    -- the coordinate points are also affected
+    x = 0,
+    y = 0,
 }
+
+local placement = cursor.placement
 
 --#region edge calculations
 
@@ -76,8 +78,6 @@ setmetatable(cursor, {
 })
 
 --#endregion
-
-local placement = cursor.placement
 
 local snapshot_stack = {}
 local snapshot_index = 0 -- index of the last pushed snapshot
@@ -448,7 +448,7 @@ end
 ---If the area contains no objects, this function does nothing.
 function cursor.put_area()
     local this_area = area_stack[area_index]
-    -- There might be nothing to put if the area
+    -- There might be nothing to put if no placements have been made
     if this_area.left then
         cursor.width = this_area.right - this_area.left
         cursor.height = this_area.bottom - this_area.top

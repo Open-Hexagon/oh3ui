@@ -17,8 +17,7 @@ local minimum_scrollbar_actuator_length = 20
 local minimum_scrollbar_length = 1.5 * minimum_scrollbar_actuator_length
 local mouse_wheel_scroll_distance = 10
 
-local scroll_stack = {}
-local scroll_stack_index = 0
+local in_scroll = false
 
 ---Start a scrolled area. The current cursor location is used as the cutout area. Does not reshape the cursor
 ---If the cursor is degenerate then no scroll area is created and false is returned (nothing would have been drawn anyways).
@@ -28,6 +27,10 @@ local scroll_stack_index = 0
 function scroll.start(state)
     if cursor.is_degenerate() then
         return false
+    end
+
+    if in_scroll then
+        error("nested scrolls are not allowed")
     end
 
     state.scroll_dist_x = state.scroll_dist_x or 0
@@ -44,6 +47,8 @@ function scroll.start(state)
         state.scroll_dist_x, -- positive values scroll left
         state.scroll_dist_y -- positive values scroll up
     )
+
+    in_scroll = true
 
     return true
 end
@@ -288,6 +293,8 @@ function scroll.finish(state)
 
     -- check if hovering the whole scroll area
     hoverbox(state, "lazy")
+
+    in_scroll = false
 end
 
 ---Moves the current cursor location into

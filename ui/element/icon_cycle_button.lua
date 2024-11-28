@@ -26,17 +26,6 @@ return function(state, size, icon_font, ...)
         state.initialized = true
     end
 
-    cursor.push()
-
-    local button_color
-    if state.holding then
-        button_color = theme.widget_background_highlight
-    elseif state.hovering or state.kb_holding == kba.activate then
-        button_color = theme.accent_color
-    else
-        button_color = theme.white
-    end
-
     if not state.kb_is_repeat then
         if state.clicked == mb.left or state.kb_action == kba.right or state.kb_action == kba.activate then
             state.position = state.position + 1
@@ -49,6 +38,17 @@ return function(state, size, icon_font, ...)
                 state.position = positions
             end
         end
+    end
+
+    cursor.push()
+
+    local button_color
+    if state.holding then
+        button_color = theme.widget_background_highlight
+    elseif state.hovering or state.kb_holding == kba.activate then
+        button_color = theme.accent_color
+    else
+        button_color = theme.white
     end
 
     cursor.auto_reshape = true

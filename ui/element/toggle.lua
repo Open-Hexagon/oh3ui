@@ -15,38 +15,47 @@ local travel_distance = element.toggle_width - element.toggle_height
 ---@param state table state table
 ---@return boolean on the "on" field of the state table
 return function(state)
-    cursor.push()
-
-    cursor.place(element.toggle_width, element.toggle_height)
-    cursor.push()
-
-    clickbox(state)
-    if state.clicked == mb.left or state.clicked == mb.right or (not state.kb_is_repeat and state.kb_action) then
-        state.on = not state.on -- not nil = true
+    if -- toggle state on
+        state.clicked == mb.left -- left click
+        or state.clicked == mb.right -- right click
+        or (not state.kb_is_repeat and state.kb_action) -- any non-repeated keyboard action
+    then
+        state.on = not state.on
     end
 
-    -- base shape
-    primitive.slot(state.on and theme.accent_color or theme.widget_background)
-
-    -- normalized position
+    -- animate normalized position
     state._toggle_actuator_position = effect.follow(state._toggle_actuator_position, state.on and 1 or 0, 25)
 
-    cursor.change_anchor(0, 0)
-    cursor.width = element.toggle_height
-    cursor.height = element.toggle_height
-    cursor.x = cursor.x + state._toggle_actuator_position * travel_distance
+    cursor.push()
+    do
+        -- establish element size and sensor region
+        cursor.place(element.toggle_width, element.toggle_height)
+        clickbox(state)
 
-    primitive.circle(theme.widget_actuator)
-    primitive.circle_outline(
-        state.hovering and theme.widget_actuator_outline_highlight or theme.widget_actuator_outline
-    )
+        cursor.push()
+        do
+            -- draw the base shape
+            primitive.slot(state.on and theme.accent_color or theme.widget_background)
 
-    cursor.pop()
+            -- draw the actuator
+            cursor.change_anchor(0, 0)
+            cursor.width = element.toggle_height
+            cursor.height = element.toggle_height
+            cursor.x = cursor.x + state._toggle_actuator_position * travel_distance
 
-    if state.kb_selected then
-        selection_outline()
+            primitive.circle(theme.widget_actuator)
+            primitive.circle_outline(
+                state.hovering and theme.widget_actuator_outline_highlight or theme.widget_actuator_outline
+            )
+        end
+        cursor.pop()
+
+        -- keyboard selection outline
+        if state.kb_selected then
+            selection_outline()
+        end
     end
-
     cursor.do_auto_reshape()
+    
     return state.on
 end

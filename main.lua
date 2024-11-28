@@ -11,6 +11,7 @@ ui.scale = os.getenv("SCALE") or 1
 
 function love.run()
     -- Target duration of each tick in seconds
+    -- ? 240 tps seems a bit excessive for a user interface.
     -- local target_delta = 1 / 240
     local target_delta = 1 / 60
     local last_time = 0
