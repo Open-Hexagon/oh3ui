@@ -5,27 +5,17 @@
 local json = require("extlibs.json.json")
 local text_cache = require("ui.text.cache")
 
-local text = {}
+local text = {
+    ---@enum text_font_path
+    font = {
+        default = "assets/OpenSquare.ttf",
+    },
 
----Default font
----@type string
-text.font_path = "assets/OpenSquare.ttf"
-
----Default font size
----@type number
-text.font_size = 32
-
----Default text alignment
----@type love.AlignMode
-text.align = "left"
-
----If true, the cursor width will be used to wrap text.
----@type boolean
-text.wrap = false
-
----Default icon font
----@type string
-text.icon_font_path = "assets/bootstrap-icons.ttf"
+    ---@enum icon_font_path
+    icon_font = {
+        default = "assets/bootstrap-icons.ttf",
+    }
+}
 
 ---Cache of fonts based on file used and size
 local font_cache = {}

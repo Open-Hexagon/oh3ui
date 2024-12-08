@@ -8,12 +8,11 @@ local kba = require("ui.control.keyboard_action")
 
 ---An icon that cycles between other icons when left or right clicked.
 ---Will reshape the cursor.
----@param state table
----@param size number? icon override icon size in pixels (works like a font)
----@param icon_font string? override text.icon_font
+---@param state table state table
+---@param size number icon size in pixels
 ---@param ... string icon names
 ---@return integer position the "position" field of the state table
-return function(state, size, icon_font, ...)
+return function(state, size, ...)
     local positions = select("#", ...)
     if not state.initialized then
         if positions < 2 then
@@ -52,7 +51,7 @@ return function(state, size, icon_font, ...)
     end
 
     cursor.auto_reshape = true
-    primitive.icon(select(state.position, ...), size, button_color, icon_font)
+    primitive.icon(select(state.position, ...), size, button_color)
     clickbox(state)
 
     if state.kb_selected then

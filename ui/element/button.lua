@@ -9,7 +9,7 @@ local kba = require("ui.control.keyboard_action")
 ---Button element with text. Never reshapes the cursor.
 ---@param state table
 ---@param text string
----@param font_size number?
+---@param font_size number
 ---@return integer clicked the "clicked" field of the state table
 return function(state, text, font_size)
     clickbox(state)
@@ -31,7 +31,7 @@ return function(state, text, font_size)
     -- draw button internals
     cursor.push()
     cursor.change_anchor(0.5, 0.5)
-    primitive.label(text, font_size)
+    primitive.label(text, font_size, "center", false)
     cursor.pop()
 
     if state.kb_selected then

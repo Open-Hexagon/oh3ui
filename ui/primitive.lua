@@ -131,19 +131,17 @@ end
 
 ---Creates a label. Will reshape the cursor.
 ---@param str string label text
----@param size number? override font size in pixels
----@param align love.AlignMode? override alignment mode
+---@param size number font size in pixels
+---@param align love.AlignMode alignment mode
+---@param wrap boolean wrap text
 ---@param color number[]? override text color
----@param font_path string? override text.font
-function primitive.label(str, size, align, color, font_path)
+function primitive.label(str, size, align, wrap, color)
     cursor.push()
 
     -- Scale up
-    local wrap_limit = text.wrap_text and (cursor.width * ui.scale) or math.huge
-    size = (size or text.font_size) * ui.scale
+    local wrap_limit = wrap and (cursor.width * ui.scale) or math.huge
 
-    local font = text.get_font(size, font_path or text.font_path)
-    align = align or text.align
+    local font = text.get_font(size * ui.scale, theme.font_path)
 
     -- get a new text object
     local text_object = text.get_text_object(font, str, wrap_limit, align)
@@ -159,15 +157,13 @@ end
 
 ---Creates an icon. Uses "assets/bootstrap-icons.ttf" by default. Will reshape the cursor.
 ---@param icon_name string icon name
----@param size number? icon override icon size in pixels (works like a font)
+---@param size number icon override icon size in pixels (works like a font)
 ---@param color number[]? override text color
----@param icon_font string? override text.icon_font
-function primitive.icon(icon_name, size, color, icon_font)
+function primitive.icon(icon_name, size, color)
     cursor.push()
-    size = (size or text.font_size) * ui.scale
-    icon_font = icon_font or text.icon_font_path
-    local str = text.get_icon_string(icon_name, icon_font)
-    local font = text.get_font(size, icon_font)
+
+    local str = text.get_icon_string(icon_name, theme.icon_font_path)
+    local font = text.get_font(size * ui.scale, theme.icon_font_path)
 
     local text_object = text.get_text_object(font, str, math.huge, "left")
 

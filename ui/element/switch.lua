@@ -69,7 +69,7 @@ return function(state, ...)
 
         cursor.inset(element.switch_internal_padding)
         mask.push()
-        primitive.label(select(i, ...), element.switch_text_size)
+        primitive.label(select(i, ...), element.switch_text_size, "center", false)
         mask.pop()
     end
 

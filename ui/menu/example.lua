@@ -50,7 +50,7 @@ return function()
     kb_nav.inject(id.slider)
     slider(id.slider, 0, 100, 101)
     cursor.shift_down(10)
-    primitive.label(string.format("%d%%", id.slider.value), 16)
+    primitive.label(string.format("%d%%", id.slider.value), 16, "left", false)
     cursor.shift_down(10)
 
     -- Coarse Slider
@@ -60,7 +60,7 @@ return function()
     kb_nav.inject(id.slider_coarse)
     slider(id.slider_coarse, 0, 10, 11, true)
     cursor.shift_down(10)
-    primitive.label(string.format("%d/10", id.slider_coarse.value), 16)
+    primitive.label(string.format("%d/10", id.slider_coarse.value), 16, "left", false)
     cursor.shift_down(10)
 
     -- Switch
@@ -106,7 +106,7 @@ return function()
     kb_nav.make_cell()
     kb_nav.grid_cell(1, 10)
     kb_nav.inject(id.icon_cycle_button)
-    icon_cycle_button(id.icon_cycle_button, nil, nil, "square", "dash-square", "check-square")
+    icon_cycle_button(id.icon_cycle_button, nil, "square", "dash-square", "check-square")
     cursor.shift_down(10)
 
 

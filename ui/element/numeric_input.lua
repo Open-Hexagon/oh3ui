@@ -41,7 +41,6 @@ return function(state, min, max, step, format)
     local center_width = cursor.width - element.numeric_input_lr_button_width * 2
 
     cursor.auto_reshape = false
-    text.wrap = false
     cursor.change_anchor(0.5)
 
     -- reserve background for later
@@ -142,7 +141,7 @@ return function(state, min, max, step, format)
     cursor.pop() -- (2)
 
     state.value = extmath.clamp(state.value, min or -math.huge, max or math.huge)
-    primitive.label(string.format(format or "%f", state.value), 16)
+    primitive.label(string.format(format or "%f", state.value), 16, "center", false)
     primitive.rectangle_outline((hovering or dragging) and theme.widget_outline_highlight or theme.widget_outline)
     hoverbox(state, "pass")
 

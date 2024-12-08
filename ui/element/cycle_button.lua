@@ -9,7 +9,7 @@ local kba = require("ui.control.keyboard_action")
 ---Button element that cycles between text when left or right clicked.
 ---Never reshapes the cursor.
 ---@param state table
----@param font_size number?
+---@param font_size number
 ---@param ... string
 ---@return integer position the "position" field of the state table
 return function(state, font_size, ...)
@@ -59,7 +59,7 @@ return function(state, font_size, ...)
     -- draw button internals
     cursor.push()
     cursor.change_anchor(0.5, 0.5)
-    primitive.label(select(state.position, ...), font_size)
+    primitive.label(select(state.position, ...), font_size, "center", false)
     cursor.pop()
 
     if state.kb_selected then

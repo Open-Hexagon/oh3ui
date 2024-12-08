@@ -9,10 +9,9 @@ local kba = require("ui.control.keyboard_action")
 ---Will reshape the cursor
 ---@param state table
 ---@param icon_name string icon name
----@param size number? icon override icon size in pixels (works like a font)
----@param icon_font string? override text.icon_font
+---@param size number icon override icon size in pixels (works like a font)
 ---@return integer clicked the "clicked" field of the state table
-return function(state, icon_name, size, icon_font)
+return function(state, icon_name, size)
     cursor.push()
 
     local button_color
@@ -25,7 +24,7 @@ return function(state, icon_name, size, icon_font)
     end
 
     cursor.auto_reshape = true
-    primitive.icon(icon_name, size, button_color, icon_font)
+    primitive.icon(icon_name, size, button_color)
     clickbox(state)
 
     if state.kb_selected then

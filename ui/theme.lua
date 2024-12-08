@@ -3,6 +3,7 @@
 local bit = require("bit")
 local band, rshift = bit.band, bit.rshift
 local extmath = require("ui.extmath")
+local text = require("ui.text")
 
 ---Converts an integer to a color table with alpha set to 1
 ---@param x integer
@@ -32,6 +33,14 @@ local function mix(a, b, t)
 end
 
 local theme = {}
+
+---Currently used text font
+---@type text_font_path
+theme.font_path = text.font.default
+
+---Currently used icon font
+---@type icon_font_path
+theme.icon_font_path = text.icon_font.default
 
 -- primitive colors
 theme.black = { 0, 0, 0, 1 }
