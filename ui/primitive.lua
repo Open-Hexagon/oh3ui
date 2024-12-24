@@ -12,8 +12,8 @@ local primitive = {}
 
 ---Rectangle primitive. Never reshapes the cursor.
 ---@param color number[]? overrides the default color
----@param mode string? "fill" or "line" (default is "fill")
----@param line_width number?
+---@param mode? "fill"|"line" default is "fill"
+---@param line_width number? only used in line mode
 function primitive.rectangle(color, mode, line_width)
     cursor.place()
     draw_queue.rectangle(
@@ -48,8 +48,9 @@ end
 
 ---Slot primitive, aka a pill shape. Never reshapes the cursor.
 ---@param color number[]? overrides the default color
----@param mode string? "fill" or "line" (default is "fill")
-function primitive.slot(color, mode)
+---@param mode? "fill"|"line" default is "fill"
+---@param line_width number? only used in line mode
+function primitive.slot(color, mode, line_width)
     local radius = math.min(cursor.width, cursor.height) / 2
     cursor.place()
     draw_queue.rectangle(
@@ -61,7 +62,7 @@ function primitive.slot(color, mode)
         color or theme.default,
         radius,
         radius,
-        1
+        line_width or 1
     )
 end
 
@@ -148,6 +149,12 @@ function primitive.label(str, size, align, wrap, color)
 
     -- Get text size. It can change even if wrap_text is true. Scaled down this time.
     local text_width, text_height = love.graphics.inverseTransformPoint(text_object:getDimensions())
+
+    -- A text object with an infinite wrap limit will not get drawn properly when aligned with center or right,
+    -- so we replace the text_object with a a version with a finite wrap limit in those cases.
+    if not wrap and align ~= "left" then
+        text_object = text.get_text_object(font, str, text_width, align)
+    end
 
     cursor.place(text_width, text_height)
     draw_queue.text(text_object, placement.left, placement.top, color or theme.text_color)

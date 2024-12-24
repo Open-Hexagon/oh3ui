@@ -7,7 +7,7 @@ local element = require("ui.element")
 local mouse = require("ui.control.mouse")
 local extmath = require("ui.extmath")
 local kba = require("ui.control.keyboard_action")
-local selection_outline = require("ui.element.selection_outline")
+local selection_outline = require("ui.decorator.selection_outline")
 
 local actuator_radius = element.slider_height / 2
 local slot_height = element.slider_height / 2

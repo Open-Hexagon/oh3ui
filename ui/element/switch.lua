@@ -8,7 +8,7 @@ local effect = require("ui.effect")
 local reserve = require("ui.reserve")
 local kba = require("ui.control.keyboard_action")
 local mb = require("ui.control.mouse_button")
-local selection_outline = require("ui.element.selection_outline")
+local selection_outline = require("ui.decorator.selection_outline")
 
 local selection_highlight_speed = 25
 
@@ -69,7 +69,7 @@ return function(state, ...)
 
         cursor.inset(element.switch_internal_padding)
         mask.push()
-        primitive.label(select(i, ...), element.switch_text_size, "center", false)
+        primitive.label(select(i, ...), element.switch_text_size, "left", false)
         mask.pop()
     end
 

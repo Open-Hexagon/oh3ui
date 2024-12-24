@@ -4,7 +4,7 @@ local primitive = require("ui.primitive")
 local element = require("ui.element")
 local theme = require("ui.theme")
 local effect = require("ui.effect")
-local selection_outline = require("ui.element.selection_outline")
+local selection_outline = require("ui.decorator.selection_outline")
 
 
 ---Checkbox with a intermediate state that can only be accessed by manually setting the position field

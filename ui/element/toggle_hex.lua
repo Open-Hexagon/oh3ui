@@ -8,7 +8,7 @@ local extmath = require("ui.extmath")
 local draw_queue = require("ui.draw_queue")
 local mb = require("ui.control.mouse_button")
 local effect = require("ui.effect")
-local selection_outline = require("ui.element.selection_outline")
+local selection_outline = require("ui.decorator.selection_outline")
 
 local indiameter = element.toggle_height
 local diameter = extmath.from_inradius(indiameter, 6)

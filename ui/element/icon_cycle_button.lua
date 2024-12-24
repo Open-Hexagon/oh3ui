@@ -2,7 +2,7 @@ local cursor = require("ui.cursor")
 local theme = require("ui.theme")
 local clickbox = require("ui.sensor.clickbox")
 local primitive = require("ui.primitive")
-local selection_outline = require("ui.element.selection_outline")
+local selection_outline = require("ui.decorator.selection_outline")
 local mb = require("ui.control.mouse_button")
 local kba = require("ui.control.keyboard_action")
 

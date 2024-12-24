@@ -2,16 +2,16 @@ local cursor = require("ui.cursor")
 local theme = require("ui.theme")
 local clickbox = require("ui.sensor.clickbox")
 local primitive = require("ui.primitive")
-local selection_outline = require("ui.element.selection_outline")
+local selection_outline = require("ui.decorator.selection_outline")
 local kba = require("ui.control.keyboard_action")
 
 ---An icon that can be clicked.
 ---Will reshape the cursor
 ---@param state table
----@param icon_name string icon name
 ---@param size number icon override icon size in pixels (works like a font)
+---@param icon_name string icon name
 ---@return integer clicked the "clicked" field of the state table
-return function(state, icon_name, size)
+return function(state, size, icon_name)
     cursor.push()
 
     local button_color

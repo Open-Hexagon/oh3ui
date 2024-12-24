@@ -280,31 +280,10 @@ function draw_queue.draw()
         -- id may be nil if a placeholder was left in / nothing was appended
         if id then
             if id == op_ids.rectangle then
-                local mode, x1, y1, x2, y2, rx, ry, line_width, r, g, b, a = unpack(item, 2)
+                local mode, x1, y1, x2, y2, rx, ry, line_width, r, g, b, a = unpack(item, 2, 13)
                 love.graphics.setLineWidth(line_width)
                 love.graphics.setColor(r, g, b, a)
                 love.graphics.rectangle(mode, x1, y1, x2 - x1, y2 - y1, rx, ry)
-            elseif id == op_ids.polygon then
-                love.graphics.setColor(item[3], item[4], item[5], item[6])
-                love.graphics.polygon(item[2], unpack(item, 7))
-            elseif id == op_ids.push_scissor then
-                local x1, y1, x2, y2 = unpack(item, 2)
-                -- scissor is not affected by graphics transforms
-                x1, y1 = love.graphics.transformPoint(x1, y1)
-                x2, y2 = love.graphics.transformPoint(x2, y2)
-                scissor_stack.push(x1, y1, x2 - x1, y2 - y1)
-            elseif id == op_ids.pop_scissor then
-                scissor_stack.pop()
-            elseif id == op_ids.text then
-                local text_object, x, y, r, g, b, a = unpack(item, 2)
-                love.graphics.setColor(r, g, b, a)
-                -- draw text objects without scaling for full resolution
-                -- find out where the text should go after we undo the scaling
-                x, y = love.graphics.transformPoint(x, y)
-                love.graphics.push()
-                love.graphics.origin()
-                love.graphics.draw(text_object, x, y)
-                love.graphics.pop()
             elseif id == op_ids.rectangle_outline then
                 local x1, y1, x2, y2, line_width, rx, ry, r, g, b, a = unpack(item, 2)
                 local half_width = line_width * 0.5
@@ -356,6 +335,29 @@ function draw_queue.draw()
                 love.graphics.setLineWidth(line_width)
                 love.graphics.setColor(r, g, b, a)
                 love.graphics.line(unpack(item, 7))
+            elseif id == op_ids.polygon then
+                love.graphics.setColor(item[3], item[4], item[5], item[6])
+                love.graphics.polygon(item[2], unpack(item, 7))
+            elseif id == op_ids.text then
+                local text_object, x, y, r, g, b, a = unpack(item, 2)
+                love.graphics.setColor(r, g, b, a)
+                -- draw text objects without scaling for full resolution
+                -- find out where the text should go after we undo the scaling
+                x, y = love.graphics.transformPoint(x, y)
+                love.graphics.push()
+                love.graphics.origin()
+                love.graphics.draw(text_object, x, y)
+                love.graphics.pop()
+
+            -- * special
+            elseif id == op_ids.push_scissor then
+                local x1, y1, x2, y2 = unpack(item, 2)
+                -- scissor is not affected by graphics transforms
+                x1, y1 = love.graphics.transformPoint(x1, y1)
+                x2, y2 = love.graphics.transformPoint(x2, y2)
+                scissor_stack.push(x1, y1, x2 - x1, y2 - y1)
+            elseif id == op_ids.pop_scissor then
+                scissor_stack.pop()
             elseif id == op_ids.mouse_sensor then
                 local state, mode, x1, y1, x2, y2, update_fn = unpack(item, 2)
                 local x, y, width, height = love.graphics.getScissor()

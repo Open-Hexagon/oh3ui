@@ -6,7 +6,7 @@ local theme = require("ui.theme")
 local mb = require("ui.control.mouse_button")
 
 local effect = require("ui.effect")
-local selection_outline = require("ui.element.selection_outline")
+local selection_outline = require("ui.decorator.selection_outline")
 
 local travel_distance = element.toggle_width - element.toggle_height
 
@@ -56,6 +56,6 @@ return function(state)
         end
     end
     cursor.do_auto_reshape()
-    
+
     return state.on
 end

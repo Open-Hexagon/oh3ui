@@ -100,71 +100,14 @@ return function()
     kb_nav.make_cell()
     kb_nav.grid_cell(1, 9)
     kb_nav.inject(id.icon_button)
-    icon_button(id.icon_button, "triangle")
+    icon_button(id.icon_button, 16, "triangle")
     cursor.shift_down(10)
 
     kb_nav.make_cell()
     kb_nav.grid_cell(1, 10)
     kb_nav.inject(id.icon_cycle_button)
-    icon_cycle_button(id.icon_cycle_button, nil, "square", "dash-square", "check-square")
+    icon_cycle_button(id.icon_cycle_button, 16, "square", "dash-square", "check-square")
     cursor.shift_down(10)
-
-
-
-    -- kb_nav.set_wrapping(wrapping_mode.vertical, wrapping_mode.line)
-
-    -- -- array and combining
-    -- cursor.width = 20
-    -- cursor.height = 20
-    -- cursor.push() -- (1)
-    -- cursor.h_array(3, 10)
-    -- cursor.pop()
-
-    -- kb_nav.make_cell("escape")
-    -- kb_nav.grid_cell(1, 1)
-    -- primitive.rectangle(kb_nav.is_selected() and theme.accent_color or theme.white)
-
-    -- cursor.pop()
-
-    -- kb_nav.make_cell() -- this selection has an undefined location
-    -- primitive.rectangle(kb_nav.is_selected() and theme.accent_color or theme.white)
-
-    -- cursor.pop()
-
-    -- kb_nav.make_cell()
-    -- kb_nav.grid_cell(2, 1, 2)
-    -- primitive.rectangle(kb_nav.is_selected() and theme.accent_color or theme.white)
-
-    -- cursor.pop() -- (1)
-    -- cursor.shift_down(10)
-    -- cursor.h_array(3, 10)
-    -- cursor.pop()
-
-    -- kb_nav.make_cell("default")
-    -- kb_nav.grid_cell(1, 2)
-    -- primitive.rectangle(kb_nav.is_selected() and theme.accent_color or theme.white)
-
-    -- cursor.pop()
-    -- cursor.combine()
-
-    -- kb_nav.make_cell()
-    -- kb_nav.grid_cell(2, 2, 2)
-    -- primitive.rectangle(kb_nav.is_selected() and theme.accent_color or theme.white)
-
-    -- cursor.x = 260
-    -- cursor.y = 10
-    -- cursor.height = 40
-    -- cursor.width = 200
-    -- kb_nav.make_cell()
-    -- kb_nav.inject(id.button)
-    -- kb_nav.grid_cell(4, 1)
-    -- button(id.button, "button")
-
-    -- -- cursor.x = 360
-    -- cursor.y = 30
-    -- -- cursor.shift_down()
-    -- kb_nav.make_cell()
-    -- kb_nav.inject(id.button2)
-    -- kb_nav.grid_cell(4, 2)
-    -- button(id.button2, "button2")
 end
+
+

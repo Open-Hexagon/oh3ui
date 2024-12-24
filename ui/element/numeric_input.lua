@@ -10,7 +10,7 @@ local text = require("ui.text")
 local mouse = require("ui.control.mouse")
 local extmath = require("ui.extmath")
 local kba = require("ui.control.keyboard_action")
-local selection_outline = require("ui.element.selection_outline")
+local selection_outline = require("ui.decorator.selection_outline")
 
 ---Combination number slider and entry with increment buttons.
 ---This element will reshape the cursor.
@@ -141,7 +141,7 @@ return function(state, min, max, step, format)
     cursor.pop() -- (2)
 
     state.value = extmath.clamp(state.value, min or -math.huge, max or math.huge)
-    primitive.label(string.format(format or "%f", state.value), 16, "center", false)
+    primitive.label(string.format(format or "%f", state.value), 16, "left", false)
     primitive.rectangle_outline((hovering or dragging) and theme.widget_outline_highlight or theme.widget_outline)
     hoverbox(state, "pass")
 

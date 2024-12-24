@@ -2,7 +2,7 @@ local cursor = require("ui.cursor")
 local theme = require("ui.theme")
 local clickbox = require("ui.sensor.clickbox")
 local primitive = require("ui.primitive")
-local selection_outline = require("ui.element.selection_outline")
+local selection_outline = require("ui.decorator.selection_outline")
 local kba = require("ui.control.keyboard_action")
 
 
@@ -31,7 +31,7 @@ return function(state, text, font_size)
     -- draw button internals
     cursor.push()
     cursor.change_anchor(0.5, 0.5)
-    primitive.label(text, font_size, "center", false)
+    primitive.label(text, font_size, "left", false)
     cursor.pop()
 
     if state.kb_selected then
