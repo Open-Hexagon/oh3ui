@@ -6,6 +6,7 @@ local element = require("ui.element")
 local mask = require("ui.mask")
 local effect = require("ui.effect")
 local reserve = require("ui.reserve")
+local kb_nav = require("ui.control.keyboard_navigation")
 local kba = require("ui.control.keyboard_action")
 local mb = require("ui.control.mouse_button")
 local selection_outline = require("ui.decorator.selection_outline")
@@ -42,7 +43,7 @@ return function(state, ...)
     local sel_hl_res = reserve.allocate(1)
 
     -- selection buttons
-    local hovering = state.kb_selected
+    local hovering = kb_nav.is_selected()
     local section_width = cursor.h_split(positions)
     for i = 1, positions do
         cursor.pop()
@@ -74,8 +75,9 @@ return function(state, ...)
     end
 
     -- keyboard navigation
-    if not state.kb_is_repeat then
-        if state.kb_action == kba.left then
+    if not kb_nav.is_repeat() then
+        local kb_action = kb_nav.get_action()
+        if kb_action == kba.left then
             if state.position == 1 then
                 state.position = positions
                 state._switch_selection_highlight_speed = (positions - 1) * selection_highlight_speed
@@ -83,7 +85,7 @@ return function(state, ...)
                 state.position = state.position - 1
                 state._switch_selection_highlight_speed = selection_highlight_speed
             end
-        elseif state.kb_action == kba.activate or state.kb_action == kba.right then
+        elseif kb_action == kba.activate or kb_action == kba.right then
             if state.position == positions then
                 state.position = 1
                 state._switch_selection_highlight_speed = (positions - 1) * selection_highlight_speed
@@ -109,7 +111,7 @@ return function(state, ...)
 
     cursor.pop() -- (2)
     primitive.rectangle_outline(hovering and theme.accent_color or theme.widget_outline)
-    if state.kb_selected then
+    if kb_nav.is_selected() then
         selection_outline()
     end
     cursor.do_auto_reshape() -- (1)

@@ -9,6 +9,7 @@ local draw_queue = require("ui.draw_queue")
 local mb = require("ui.control.mouse_button")
 local effect = require("ui.effect")
 local selection_outline = require("ui.decorator.selection_outline")
+local kb_nav = require("ui.control.keyboard_navigation")
 
 local indiameter = element.toggle_height
 local diameter = extmath.from_inradius(indiameter, 6)
@@ -50,7 +51,7 @@ return function(state)
     if -- toggle state on
         state.clicked == mb.left -- left click
         or state.clicked == mb.right -- right click
-        or (not state.kb_is_repeat and state.kb_action) -- any non-repeated keyboard action
+        or (not kb_nav.is_repeat() and kb_nav.get_action()) -- any non-repeated keyboard action
     then
         state.on = not state.on
     end
@@ -84,7 +85,7 @@ return function(state)
         cursor.pop()
 
         -- keyboard selection outline
-        if state.kb_selected then
+        if kb_nav.is_selected() then
             selection_outline()
         end
     end
