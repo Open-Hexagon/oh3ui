@@ -1,9 +1,9 @@
 local primitive = require("ui.primitive")
 local cursor = require("ui.cursor")
 local theme = require("ui.theme")
-local element = require("ui.element")
+local decorator = require("ui.decorator")
 
-local outset, line_width = element.selection_outline_outset, element.selection_outline_line_width
+local outset, line_width = decorator.selection_outline_outset, decorator.selection_outline_line_width
 
 ---A rectangular outline that is outset from the cursor
 ---Does not modify the cursor in any way

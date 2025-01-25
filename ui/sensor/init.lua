@@ -3,7 +3,7 @@
 ---Overlapping sensors are prioritized from top to bottom with z-ordering.
 ---Uses screen coordinates.
 ---For checking mouse buttons, see mouse.lua.
----Sensors are also primitive, they can usedraw queue reservations.
+---Sensors are also primitive, they can use draw queue reservations.
 ---Sensor updates are also done at the end of the frame instead of during the frame.
 ---This prevents certain weird bugs caused by combining hovering data from the previous frame with current frame data
 

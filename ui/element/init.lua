@@ -52,7 +52,4 @@ element.numeric_input_height = 20
 element.numeric_input_lr_button_width = 16
 element.numeric_input_text_size = 16
 
-element.selection_outline_outset = 4
-element.selection_outline_line_width = 2
-
 return element

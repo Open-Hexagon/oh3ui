@@ -1,5 +1,4 @@
 ---Primitives are elements that only use a single draw operation.
----Draw queue reservations will work on these elements without the use of grouping.
 
 local cursor = require("ui.cursor")
 local placement = cursor.placement

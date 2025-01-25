@@ -85,6 +85,20 @@ function extmath.map(t, a, b, c, d)
     return c + ((d - c) / (b - a)) * (t - a)
 end
 
+
+---Cubic bezier function
+---@param x0 number
+---@param y0 number
+---@param x1 number
+---@param y1 number
+---@param x2 number
+---@param y2 number
+---@param x3 number
+---@param y3 number
+---@param t number
+---@return number
+---@return number
+---@nodiscard
 function extmath.cubic_bezier(x0, y0, x1, y1, x2, y2, x3, y3, t)
     local u = 1 - t
     local uuu = u * u * u
