@@ -158,6 +158,24 @@ local default_cell
 ---There only needs to be one since the keyboard can only interact with one thing at a time.
 ---@type keyboard_action?
 local last_action
+---The whether the last keyboard action is a repeated one
+---There only needs to be one since the keyboard can only interact with one thing at a time.
+local last_is_repeat
+
+---The key name that is currently being held down. Only the latest pressed key is considered "held".
+---@type string?
+local holding_key
+
+---Converts love2d key names to keyboard actions
+local key_to_action = {
+    ["return"] = kba.activate,
+    ["space"] = kba.activate,
+    ["escape"] = kba.activate,
+    ["right"] = kba.right,
+    ["left"] = kba.left,
+    ["down"] = kba.down,
+    ["up"] = kba.up,
+}
 
 ---Resets keyboard navigation to its initial state, leaving no cell selected.
 function keyboard_navigation.deactivate()
@@ -179,7 +197,6 @@ function keyboard_navigation.make_cell(mode)
         --erase old fields
         cell.x = nil
         cell.y = nil
-        cell.state = nil
     else
         cell_list[cell_index] = {}
     end
@@ -195,17 +212,7 @@ function keyboard_navigation.make_cell(mode)
     return cell_index
 end
 
----You can either use inject on a state table and later read from the kb fields,
----or use is_selected and get_action to get immedtate values from the navigation.
----You should probably use inject almost always for stateful elements,
----and is_selected and get_action for stateless elements.
-
----Associate the last created cell or a specified cell with a state table so keyboard input fields can be updated.
----@param state table
----@param cell_id? integer
-function keyboard_navigation.inject(state, cell_id)
-    cell_list[cell_id or cell_index].state = state
-end
+---You can use is_selected and get_action to get immedtate values from the navigation.
 
 ---Returns true if the last created cell or specified cell is selected
 ---@param cell_id? integer
@@ -220,6 +227,26 @@ end
 function keyboard_navigation.get_action(cell_id)
     if keyboard_navigation.is_selected(cell_id) then
         return last_action
+    end
+    return nil
+end
+
+---Returns the repeat state of the action on the last created cell
+---@param cell_id? integer
+---@return boolean?
+function keyboard_navigation.is_repeat(cell_id)
+    if keyboard_navigation.is_selected(cell_id) then
+        return last_is_repeat
+    end
+    return nil
+end
+
+---Returns the holding action of the last created cell
+---@param cell_id? integer
+---@return keyboard_action?
+function keyboard_navigation.get_holding(cell_id)
+    if keyboard_navigation.is_selected(cell_id) then
+        return key_to_action[holding_key]
     end
     return nil
 end
@@ -459,21 +486,6 @@ local function navigate_grid(action)
     return nil
 end
 
----The key name that is currently being held down. Only the latest pressed key is considered "held".
----@type string?
-local holding_key
-
----Converts love2d key names to keyboard actions
-local key_to_action = {
-    ["return"] = kba.activate,
-    ["space"] = kba.activate,
-    ["escape"] = kba.activate,
-    ["right"] = kba.right,
-    ["left"] = kba.left,
-    ["down"] = kba.down,
-    ["up"] = kba.up,
-}
-
 ---Iterates through keyboard events and returns an action and whether it was a from a repeated keyboard input.
 ---Also updates the `holding_key` variable.
 ---@return keyboard_action? action Keyboard action. Nil if there was none.
@@ -552,24 +564,8 @@ function keyboard_navigation.evaluate()
 
     local action, is_repeat = iterate_events()
 
-    for i = 1, cell_index do
-        local state = cell_list[i].state
-        if state then
-            if i == selected_cell then
-                state.kb_selected = true
-                state.kb_action = action
-                state.kb_is_repeat = is_repeat
-                state.kb_holding = key_to_action[holding_key]
-            else
-                state.kb_selected = false
-                state.kb_action = nil
-                state.kb_is_repeat = false
-                state.kb_holding = nil
-            end
-        end
-    end
-
     last_action = action
+    last_is_repeat = is_repeat
 
     -- reset everything
     erase_grid()

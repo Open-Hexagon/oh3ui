@@ -21,12 +21,6 @@
     on boolean --- contains whatever boolean data the element may be representing
     text string --- contains whatever string data the element may be representing
 
-    * Keyboard Input Injection
-    kb_selected boolean --- True when the keyboard navigation has selected the cell associated with this state
-    kb_action keyboard_action --- The keyboard action sent to this element.
-    kb_is_repeat boolean --- True when the sent keyboard action is from a repeated input.
-    kb_holding keyboard_action --- The keyboard action that is being held while this element is selected.
-
     * Other fields
     initialized boolean --- may be used to keep track of first time initialization
 ]]

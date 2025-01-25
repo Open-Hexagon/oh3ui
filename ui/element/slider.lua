@@ -7,6 +7,7 @@ local element = require("ui.element")
 local mouse = require("ui.control.mouse")
 local extmath = require("ui.extmath")
 local kba = require("ui.control.keyboard_action")
+local kb_nav = require("ui.control.keyboard_navigation")
 local selection_outline = require("ui.decorator.selection_outline")
 
 local actuator_radius = element.slider_height / 2
@@ -54,10 +55,11 @@ return function(state, min, max, positions, show_positions)
     local dragging = dragbox(state)
     local hovering = state.hovering
 
-    if state.kb_action then
-        if state.kb_action == kba.left then
+    local kb_action = kb_nav.get_action()
+    if kb_action then
+        if kb_action == kba.left then
             state.position = state.position - 1
-        elseif state.kb_action == kba.right then
+        elseif kb_action == kba.right then
             state.position = state.position + 1
         end
         state.position = extmath.clamp(state.position, 0, divisions)
@@ -117,7 +119,7 @@ return function(state, min, max, positions, show_positions)
 
     cursor.pop() -- (2)
 
-    if state.kb_selected then
+    if kb_nav.is_selected() then
         selection_outline()
     end
 
