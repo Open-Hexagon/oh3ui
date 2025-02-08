@@ -4,17 +4,14 @@
 ---Because this is an ordered event list, it does some other things not necessarily related to drawing but require ordered execution.
 ---e.g. setting up the sensor z-list
 
-local scissor_stack = require("ui.draw_queue.scissor_stack")
 local extmath = require("ui.extmath")
-local sensor = require("ui.sensor")
 
 local draw_queue = {}
 
 local op_ids = {
     -- special operations
-    push_scissor = 0,
-    pop_scissor = 1,
     mouse_sensor = 2,
+    set_scissor = 3,
 
     -- operations that draw stuff
     rectangle = 100,
@@ -37,13 +34,35 @@ local res_index = 0
 ---If set, the next push_operation will be written at the index this variable contains
 local take_reservation = nil
 
+---! Don't take a reservation that came before any newly made scissor operation.
+---! This makes an element think it has the new scissor, but it will get drawn using the previous scissor which probably isn't what you want! 
+---
+--- i.e. Don't do this:
+---     make reservation 1
+---     push scissor
+---     take reservation 1
+--- 
+--- This is okay though:
+---     make reservation 1
+---     push scissor
+---     ...
+---     pop scissor
+---     take reservation 1
+
 ---Pushes an operation to the current group. The first value should be an operation id.
 ---This operation id can be nil which will cause the operation to be ignored.
+---Scissor operations cannot take reservations since it would mess up clicking and dragging functionality.
 ---@param ... any
 local function push_operation(...)
     local slot_index
 
     if take_reservation then
+        -- blacklist scissor operations
+        local op_id = select(1, ...)
+        if op_id == op_ids.set_scissor then
+            error("scissors cannot take reservations")
+        end
+
         -- take a reservation
         slot_index = take_reservation
         take_reservation = nil
@@ -108,18 +127,13 @@ function draw_queue.nop()
     push_operation()
 end
 
----Add a push to the scissor stack
----@param left number
----@param top number
----@param right number
----@param bottom number
-function draw_queue.push_scissor(left, top, right, bottom)
-    push_operation(op_ids.push_scissor, left, top, right, bottom)
-end
-
----Add a pop to the scissor stack
-function draw_queue.pop_scissor()
-    push_operation(op_ids.pop_scissor)
+---Set the scissor
+---@param x number?
+---@param y number?
+---@param width number?
+---@param height number?
+function draw_queue.set_scissor(x, y, width, height)
+    push_operation(op_ids.set_scissor, x, y, width, height)
 end
 
 ---Add a mouse sensor to the draw queue.
@@ -280,7 +294,7 @@ function draw_queue.draw()
         -- id may be nil if a placeholder was left in / nothing was appended
         if id then
             if id == op_ids.rectangle then
-                local mode, x1, y1, x2, y2, rx, ry, line_width, r, g, b, a = unpack(item, 2, 13)
+                local mode, x1, y1, x2, y2, rx, ry, line_width, r, g, b, a = unpack(item, 2)
                 love.graphics.setLineWidth(line_width)
                 love.graphics.setColor(r, g, b, a)
                 love.graphics.rectangle(mode, x1, y1, x2 - x1, y2 - y1, rx, ry)
@@ -350,32 +364,18 @@ function draw_queue.draw()
                 love.graphics.pop()
 
             -- * special
-            elseif id == op_ids.push_scissor then
-                local x1, y1, x2, y2 = unpack(item, 2)
-                -- scissor is not affected by graphics transforms
-                x1, y1 = love.graphics.transformPoint(x1, y1)
-                x2, y2 = love.graphics.transformPoint(x2, y2)
-                scissor_stack.push(x1, y1, x2 - x1, y2 - y1)
-            elseif id == op_ids.pop_scissor then
-                scissor_stack.pop()
-            elseif id == op_ids.mouse_sensor then
-                local state, mode, x1, y1, x2, y2, update_fn = unpack(item, 2)
-                local x, y, width, height = love.graphics.getScissor()
-
-                -- sensor and mouse is not affected by graphics transforms
-                x1, y1 = love.graphics.transformPoint(x1, y1)
-                x2, y2 = love.graphics.transformPoint(x2, y2)
-
+            elseif id == op_ids.set_scissor then
+                local x, y, width, height = unpack(item, 2)
                 if x then
-                    x1, y1, x2, y2 = extmath.aligned_rectangle_intersection(x1, y1, x2, y2, x, y, x + width, y + height)
-                    -- only push if there was an intersection
-                    if x1 then
-                        sensor.push(state, mode, x1, y1, x2, y2, update_fn)
-                    end
+                    -- scissor is not affected by graphics transforms
+                    x, y = love.graphics.transformPoint(x, y)
+                    width, height = love.graphics.transformPoint(width, height)
+                    love.graphics.setScissor(x, y, width, height)
                 else
-                    -- push if there is no active scissor
-                    sensor.push(state, mode, x1, y1, x2, y2, update_fn)
+                    love.graphics.setScissor()
                 end
+            else
+                error("invalid draw queue operation id")
             end
         end
     end

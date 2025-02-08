@@ -1,5 +1,4 @@
 local cursor = require("ui.cursor")
-local clickbox = require("ui.sensor.clickbox")
 local primitive = require("ui.primitive")
 local element = require("ui.element")
 local theme = require("ui.theme")
@@ -13,7 +12,6 @@ local kb_nav = require("ui.control.keyboard_navigation")
 return function(state)
     cursor.push()
     cursor.place(element.checkbox_size, element.checkbox_size)
-    clickbox(state)
 
     -- draw background and outline
     local button_color

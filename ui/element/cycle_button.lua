@@ -1,6 +1,5 @@
 local cursor = require("ui.cursor")
 local theme = require("ui.theme")
-local clickbox = require("ui.sensor.clickbox")
 local primitive = require("ui.primitive")
 local selection_outline = require("ui.decorator.selection_outline")
 local mb = require("ui.control.mouse_button")
@@ -41,8 +40,6 @@ return function(state, font_size, ...)
             end
         end
     end
-
-    clickbox(state)
 
     -- draw background and outline
     local button_color

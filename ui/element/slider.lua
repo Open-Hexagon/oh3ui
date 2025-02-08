@@ -1,7 +1,6 @@
 local cursor = require("ui.cursor")
 local placement = cursor.placement
 local theme = require("ui.theme")
-local dragbox = require("ui.sensor.dragbox")
 local primitive = require("ui.primitive")
 local element = require("ui.element")
 local mouse = require("ui.control.mouse")
@@ -36,8 +35,11 @@ return function(state, min, max, positions, show_positions)
     local divisions = positions - 1
 
     -- first time initialization
-    state.position = state.position or 0
-    state.value = state.value or min
+    if not state.initialized then
+        state.position = 0
+        state.value = min
+        state.initialized = true
+    end
 
     cursor.push() -- (1)
 

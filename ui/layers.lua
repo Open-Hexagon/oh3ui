@@ -25,7 +25,7 @@ function layers.run()
     layers.allow_interaction = false
     for i = 1, index - 1 do
         stack[i]()
-        cursor.reset()
+        cursor.start()
     end
 
     -- We only want the topmost layer to be interactable

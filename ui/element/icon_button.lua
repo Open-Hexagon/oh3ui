@@ -1,6 +1,5 @@
 local cursor = require("ui.cursor")
 local theme = require("ui.theme")
-local clickbox = require("ui.sensor.clickbox")
 local primitive = require("ui.primitive")
 local selection_outline = require("ui.decorator.selection_outline")
 local kba = require("ui.control.keyboard_action")
@@ -26,7 +25,6 @@ return function(state, size, icon_name)
 
     cursor.auto_reshape = true
     primitive.icon(icon_name, size, button_color)
-    clickbox(state)
 
     if kb_nav.is_selected() then
         selection_outline()

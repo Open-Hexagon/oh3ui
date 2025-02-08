@@ -1,11 +1,10 @@
 local cursor = require("ui.cursor")
 local events = require("ui.events")
 local draw_queue = require("ui.draw_queue")
-local mouse = require("ui.control.mouse")
+local mouse = require("ui.control.mouse_navigation")
 local typing = require("ui.control.typing")
-local sensor = require("ui.sensor")
 local keyboard_navigation = require("ui.control.keyboard_navigation")
-
+local mask = require("ui.mask")
 
 local ui = {
     -- this is set using an environment variable, changing it here will do nothing
@@ -67,7 +66,9 @@ function ui.start()
     -- scale immediately so that screen space positions can be accounted for in any transforms and inverseTransforms
     love.graphics.push()
     love.graphics.scale(ui.scale)
-    cursor.reset()
+
+    cursor.start()
+    mouse.evaluate()
 
     ---The green grid shows scaled space.
     ---This is where drawn graphics end up, but not everything is affected by graphics transforms.
@@ -98,32 +99,21 @@ function ui.start()
         love.graphics.transformPoint(x, y)
         love.graphics.circle("line", x, y, 4)
     end
-
-    -- scroll_interaction.reset()
-    -- love.keyboard.setKeyRepeat(text_interaction.is_interacting_with_text)
-    -- love.keyboard.setTextInput(text_interaction.is_interacting_with_text)
-    -- text_interaction.reset()
-
 end
 
 ---Do ui finalization and cleanup
-function ui.finish()
-
-    -- draw in order
+function ui.finish()    
+    -- draw and undo scaling
     draw_queue.draw()
+    love.graphics.pop()
 
-    -- do z-ordered mouse intersection checks
-    mouse.update()
-    sensor.evaluate()
     keyboard_navigation.evaluate()
     -- typing.update()
-
-    -- undo scaling
-    love.graphics.pop()
 
     -- clean up
     events.clear()
     cursor.finish()
+    mask.finish()
 end
 
 ---get the width of the ui adjusted for scale

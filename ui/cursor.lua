@@ -93,7 +93,7 @@ local area_index = 0 -- index of the last started area
 ---Explicit width and height can be passed in to override this behavior.
 ---@param desired_width number?
 ---@param desired_height number?
-function cursor.reset(desired_width, desired_height)
+function cursor.start(desired_width, desired_height)
     -- Position
     cursor.x = 0
     cursor.y = 0
@@ -111,10 +111,8 @@ function cursor.reset(desired_width, desired_height)
     cursor.auto_reshape = true
 end
 
--- first cursor setup
-cursor.reset()
-
----Should be run at the end of a frame to clean up all stacks
+---Guards against sloppy stack management.
+---Should be run at the end of a frame.
 function cursor.finish()
     if snapshot_index ~= 0 then
         print("warning: cursor stack was not empty")
@@ -145,6 +143,14 @@ function cursor.push()
     new_snapshot.anchor_x = cursor.anchor_x
     new_snapshot.anchor_y = cursor.anchor_y
     new_snapshot.auto_reshape = cursor.auto_reshape
+
+    -- -- Placement is also saved. Saves the need to place the cursor again after a pop
+    -- new_snapshot.placement_left = placement.left
+    -- new_snapshot.placement_top = placement.top
+    -- new_snapshot.placement_right = placement.right
+    -- new_snapshot.placement_bottom = placement.bottom
+    -- new_snapshot.placement_x = placement.x
+    -- new_snapshot.placement_y = placement.y
 end
 
 ---Peek a snapshot of the cursor, returning it to the last pushed state without dropping it.
@@ -155,6 +161,23 @@ function cursor.peek()
     for k, v in pairs(snapshot_stack[snapshot_index]) do
         cursor[k] = v
     end
+
+    -- local snapshot = snapshot_stack[snapshot_index]
+
+    -- cursor.x = snapshot.x
+    -- cursor.y = snapshot.y
+    -- cursor.width = snapshot.width
+    -- cursor.height = snapshot.height
+    -- cursor.anchor_x = snapshot.anchor_x
+    -- cursor.anchor_y = snapshot.anchor_y
+    -- cursor.auto_reshape = snapshot.auto_reshape
+
+    -- placement.left = snapshot.placement_left
+    -- placement.top = snapshot.placement_top
+    -- placement.right = snapshot.placement_right
+    -- placement.bottom = snapshot.placement_bottom
+    -- placement.x = snapshot.placement_x
+    -- placement.y = snapshot.placement_y
 end
 
 ---Pop a snapshot of the cursor, returning it to the last pushed state.

@@ -1,9 +1,6 @@
 local cursor = require("ui.cursor")
 local theme = require("ui.theme")
 local reserve = require("ui.reserve")
-local clickbox = require("ui.sensor.clickbox")
-local dragbox = require("ui.sensor.dragbox")
-local hoverbox = require("ui.sensor.hoverbox")
 local primitive = require("ui.primitive")
 local element = require("ui.element")
 local text = require("ui.text")
@@ -52,7 +49,7 @@ return function(state, min, max, step, format)
     -- center
     cursor.width = center_width
     cursor.place()
-    local dragging = dragbox(state.numeric_input_center)
+    local dragging = nil
 
     -- stop the mouse from reaching the edges of the screen
     if state.numeric_input_center.started_dragging then

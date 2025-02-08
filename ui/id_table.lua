@@ -2,18 +2,6 @@
     ## List of Usable State Table Fields
     Fields that are prefixed with an underscore should be treated as private to the element that's using them.
     All fields are optional
-    
-    * Sensor fields
-    hovering boolean --- True when cursor is hovering. Read only; set automatically by the sensor module
-
-    clicked mouse_button --- The mouse button id that just clicked this element. Keyboard navigation will also set this value on kb_action.activate
-    holding mouse_button --- The mouse button id that is currently holding down this element
-
-    dragging mouse_button --- the mouse button id that is currently dragging this element
-    started_dragging mouse_button --- the mouse button id just started dragging this element
-    stopped_dragging mouse_button --- the mouse button id just stopped dragging this element
-    drag_origin_x number --- the mouse x coordinate where dragging began
-    drag_origin_y number --- the mouse y coordinate where dragging began
 
     * Element data representation
     value number --- contains whatever real numerical data the element may be representing

@@ -13,7 +13,7 @@ keyboard_navigation.op_cell = {
     barrier = -1, -- when encountered, navigation is stopped
     wrap = -2, -- when encountered, navigation is wrapped to the closest wrap or barrier cell in the opposite navigation direction
     tab = -3, -- when encountered, navigation is jumped to the previous or next tab selection
-    redirect = -4, -- when encountered, any navigation movement is cancelled and the arrow key input is redirected to the state table instead
+    action = -4, -- when encountered, any navigation movement is cancelled and the arrow key input is seen as a keyboard action
     page = -5, -- when encountered, navigation is jumped to the previous or next page
 }
 
@@ -34,7 +34,7 @@ end
 keyboard_navigation.wrapping_mode = {
     horizontal = 0x01, -- if grid_x is out of bounds, navigation will see wrap op cells
     line = 0x02, -- if grid_x is out of bounds, navigation will see tab op cells
-    list = 0x04, -- if grid_x is out of bounds, navigation will see redirect op cells
+    list = 0x04, -- if grid_x is out of bounds, navigation will see action op cells
     page = 0x08, -- if grid_x is out of bounds, navigation will see page op cells
     vertical = 0x10, -- if grid_y is out of bounds, navigation will see wrap op cells
 }
@@ -112,7 +112,7 @@ local function get_grid_cell(x, y)
         elseif band(wrapping_mode, wmode.line) > 0 then
             return op_cell.tab
         elseif band(wrapping_mode, wmode.list) > 0 then
-            return op_cell.redirect
+            return op_cell.action
         elseif band(wrapping_mode, wmode.page) > 0 then
             return op_cell.page
         else
@@ -158,6 +158,7 @@ local default_cell
 ---There only needs to be one since the keyboard can only interact with one thing at a time.
 ---@type keyboard_action?
 local last_action
+
 ---The whether the last keyboard action is a repeated one
 ---There only needs to be one since the keyboard can only interact with one thing at a time.
 local last_is_repeat
@@ -474,7 +475,7 @@ local function navigate_grid(action)
         end
     elseif encountered_cell == op_cell.tab then
         tab_navigate(action)
-    elseif encountered_cell == op_cell.redirect then
+    elseif encountered_cell == op_cell.action then
         return action
     elseif encountered_cell == op_cell.page then
         page_navigate(action)
@@ -555,7 +556,8 @@ local function iterate_events()
     return action, is_repeat
 end
 
----Run the navigation logic using keypressed events
+---Run the navigation logic using keypressed events.
+---Should come at the end of the frame since we need to build the grid first.
 function keyboard_navigation.evaluate()
     if cell_index < 1 then
         -- no cells were created

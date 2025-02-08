@@ -25,13 +25,14 @@ local in_scroll = false
 ---@param state table
 ---@return boolean
 function scroll.start(state)
+    if in_scroll then
+        error("nested scrolls are not allowed")
+    end
+
     if cursor.is_degenerate() then
         return false
     end
 
-    if in_scroll then
-        error("nested scrolls are not allowed")
-    end
 
     state.scroll_dist_x = state.scroll_dist_x or 0
     state.scroll_dist_y = state.scroll_dist_y or 0
