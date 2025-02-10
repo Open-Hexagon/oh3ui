@@ -6,7 +6,6 @@ local kba = require("ui.control.keyboard_action")
 local kb_nav = require("ui.control.keyboard_navigation")
 local m_nav = require("ui.control.mouse_navigation")
 
-
 ---Button element with text. Never reshapes the cursor.
 ---@param state table
 ---@param text string
@@ -30,15 +29,13 @@ return function(state, text, font_size)
         (m_nav.is_hovering() or kb_nav.is_selected()) and theme.widget_outline_highlight or theme.widget_outline
     )
 
-    -- draw button internals
-    cursor.push()
-    cursor.change_anchor(0.5, 0.5)
-    primitive.label(text, font_size, "left", false)
-    cursor.pop()
-
     if kb_nav.is_selected() then
         selection_outline()
     end
+
+    -- draw button internals
+    cursor.change_anchor(0.5, 0.5)
+    primitive.label(text, font_size, "left", false)
 
     cursor.restore_placement(pid)
 

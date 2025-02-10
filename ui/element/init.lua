@@ -7,27 +7,22 @@
         -- initialize the element
         -- do state changes
 
-        push() -- (1) push original cursor shape
+        local pid = place -- determine location of element, get pid
+        change_anchor -- anchor/position can be changed here but do_auto_reshape will revert it
+
+        -- draw bottom full-size sub elements: sub-elements that are the same size as this element
+
+        push() -- (1) push the element location
         do
 
-            place -- determine location of element
-            change_anchor -- anchor/position can be changed here but do_auto_reshape will revert it
-
-            -- draw bottom full-size sub elements: sub-elements that are the same size as this element
-
-            push() -- (2) push the element location
-            do
-
-                -- draw other sub elements
-
-            end
-            pop() -- (2) revert back to original element location
-
-            -- draw top full-size sub elements: sub-elements that are the same size as this element
+            -- draw other sub elements
 
         end
-        do_auto_reshape() -- (1) this will revert everything except for width and height if auto_reshape is true
+        pop() -- (1) revert back to original element location
 
+        -- draw top full-size sub elements: sub-elements that are the same size as this element
+
+        restore_placement(pid)
         -- should immediately return
     end
 ]]

@@ -19,7 +19,7 @@ local button = require("ui.element.button")
 -- local icon_cycle_button = require("ui.element.icon_cycle_button")
 -- local numeric_input = require("ui.element.numeric_input")
 -- local slider = require("ui.element.slider")
--- local switch = require("ui.element.switch")
+local switch = require("ui.element.switch")
 local toggle = require("ui.element.toggle")
 local toggle_hex = require("ui.element.toggle_hex")
 
@@ -33,9 +33,10 @@ return function()
     kb_nav.set_wrapping(wmode.list, wmode.vertical)
     kb_nav.set_page_length(2)
 
+    cursor.apply_translation(60, 10)
     cursor.auto_reshape = true
-    cursor.x = 60
-    cursor.y = 10
+    cursor.x = 0
+    cursor.y = 0
     cursor.width = 150
     cursor.height = 50
 
@@ -64,12 +65,12 @@ return function()
     -- primitive.label(string.format("%d/10", id.slider_coarse.value), 16, "left", false)
     -- cursor.shift_down(10)
 
-    -- -- Switch
-    -- cursor.width = 150
-    -- kb_nav.make_cell()
-    -- kb_nav.grid_cell(1, 4)
-    -- switch(id.switch, "a", "b", "c")
-    -- cursor.shift_down(10)
+    -- Switch
+    cursor.width = 150
+    kb_nav.make_cell()
+    kb_nav.grid_cell(1, 4)
+    switch(id.switch, "a", "b", "c")
+    cursor.shift_down(10)
 
     kb_nav.make_cell()
     kb_nav.grid_cell(1, 5)
@@ -121,4 +122,6 @@ return function()
     -- kb_nav.grid_cell(1, 10)
     -- icon_cycle_button(id.icon_cycle_button, 16, "square", "dash-square", "check-square")
     -- cursor.shift_down(10)
+
+    cursor.remove_translation()
 end

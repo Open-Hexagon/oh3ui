@@ -51,7 +51,6 @@ end
 ---@param line_width number? only used in line mode
 function primitive.slot(color, mode, line_width)
     local radius = math.min(cursor.width, cursor.height) / 2
-
     cursor.place()
     draw_queue.rectangle(
         mode or "fill",
@@ -71,7 +70,6 @@ end
 ---@param line_width number?
 function primitive.slot_outline(color, line_width)
     local radius = math.min(cursor.width, cursor.height) / 2
-
     cursor.place()
     draw_queue.rectangle_outline(
         placement.left,

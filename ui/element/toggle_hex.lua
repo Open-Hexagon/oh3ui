@@ -61,15 +61,15 @@ return function(state)
         state.on = not state.on
     end
 
-    -- keyboard selection outline
-    if kb_nav.is_selected() then
-        selection_outline()
-    end
-
     -- save hovering state since we want it to apply for the whole toggle, not just the actuator part
     local hovering = m_nav.is_hovering()
 
     draw_base_shape(state.on and theme.accent_color or theme.widget_background)
+
+    -- keyboard selection outline
+    if kb_nav.is_selected() then
+        selection_outline()
+    end
 
     -- set actuator location
     cursor.change_anchor(0.5, 0.5)
