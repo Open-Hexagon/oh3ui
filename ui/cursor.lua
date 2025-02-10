@@ -4,17 +4,16 @@
 ---Note: parameters that are contained within tables are not saved in snapshots
 local cursor = {}
 
----Edge output table mainly to be used by elements.
+---The placement table is mainly used by elements to determine their location and shape.
 ---This table gets affected by translations so the area it represents will not always coincide with the cursor if a translation is in affect.
----Elements have to be literally placed in their final locations and not transformed by other means
----or else other position related functionality would break.
+---Elements have to be literally placed in their final locations and not transformed by other means or else other position related functionality would break.
 ---Use this if you want to check against a the literal location of a placed element. Such as when comparing against the mouse position.
 cursor.placement = {
     left = 0,
     top = 0,
     right = 0,
     bottom = 0,
-    -- the coordinate points are also affected
+    -- The cursor xy coordinates may also be translated.
     x = 0,
     y = 0,
 }
@@ -88,6 +87,20 @@ local translate_index = 1 -- index of the last pushed translation
 local area_stack = {}
 local area_index = 0 -- index of the last started area
 
+---The table that contains placement record data. A placement record consists of both a cursor and placement table state.
+---There's going to be a lot of placement records so we're going to store them in a 1D table.
+local placement_record_data = {}
+local PLACEMENT_RECORD_SIZE = 13 -- size of each placement record
+
+---The latest created placement id. Placements start at 0. -1 indicates no placements have been made.
+local placement_record_index = -1
+
+---The placement record that is currently represented in the placement table and cursor (if it has not modified since the last place or restore).
+---Making a new placement will update this to the new placement id.
+---Restoring a placement will set this to the restored placement id.
+---nil means no placements have been made yet.
+local current_placement_record
+
 ---Reset manual cursor to default values.
 ---By default cursor width and height are set to reflect the size of the screen.
 ---Explicit width and height can be passed in to override this behavior.
@@ -122,6 +135,8 @@ function cursor.finish()
         print("warning: translation stack was not empty")
         translate_index = 1
     end
+    placement_record_index = -1
+    current_placement_record = nil
 end
 
 --#region snapshotting
@@ -143,14 +158,6 @@ function cursor.push()
     new_snapshot.anchor_x = cursor.anchor_x
     new_snapshot.anchor_y = cursor.anchor_y
     new_snapshot.auto_reshape = cursor.auto_reshape
-
-    -- -- Placement is also saved. Saves the need to place the cursor again after a pop
-    -- new_snapshot.placement_left = placement.left
-    -- new_snapshot.placement_top = placement.top
-    -- new_snapshot.placement_right = placement.right
-    -- new_snapshot.placement_bottom = placement.bottom
-    -- new_snapshot.placement_x = placement.x
-    -- new_snapshot.placement_y = placement.y
 end
 
 ---Peek a snapshot of the cursor, returning it to the last pushed state without dropping it.
@@ -161,23 +168,6 @@ function cursor.peek()
     for k, v in pairs(snapshot_stack[snapshot_index]) do
         cursor[k] = v
     end
-
-    -- local snapshot = snapshot_stack[snapshot_index]
-
-    -- cursor.x = snapshot.x
-    -- cursor.y = snapshot.y
-    -- cursor.width = snapshot.width
-    -- cursor.height = snapshot.height
-    -- cursor.anchor_x = snapshot.anchor_x
-    -- cursor.anchor_y = snapshot.anchor_y
-    -- cursor.auto_reshape = snapshot.auto_reshape
-
-    -- placement.left = snapshot.placement_left
-    -- placement.top = snapshot.placement_top
-    -- placement.right = snapshot.placement_right
-    -- placement.bottom = snapshot.placement_bottom
-    -- placement.x = snapshot.placement_x
-    -- placement.y = snapshot.placement_y
 end
 
 ---Pop a snapshot of the cursor, returning it to the last pushed state.
@@ -192,16 +182,6 @@ function cursor.drop()
         error("cursor snapshot stack underflow", 2)
     end
     snapshot_index = snapshot_index - 1
-end
-
----Undos cursor reshaping for elements if cursor.auto_reshape is false. Requires a corresponding `cursor.push()`.
-function cursor.do_auto_reshape()
-    -- We only want the width and height to change.
-    local width_new, height_new = cursor.width, cursor.height
-    cursor.pop()
-    if cursor.auto_reshape then
-        cursor.width, cursor.height = width_new, height_new
-    end
 end
 
 ---Pushes n snapshots to the stack, such that when popping them,
@@ -405,7 +385,7 @@ end
 --#region translations
 
 ---Apply a translation to the cursor. Translations stack.
----Only affects the edge output table.
+---Only affects the placement output table.
 ---@param x number
 ---@param y number
 function cursor.apply_translation(x, y)
@@ -426,6 +406,11 @@ function cursor.remove_translation()
         error("no more translations to remove")
     end
     translate_index = translate_index - 1
+end
+
+function cursor.get_translation()
+    local t = translate_stack[translate_index]
+    return t[1], t[2]
 end
 
 --#endregion
@@ -492,28 +477,136 @@ end
 
 --#endregion
 
----Places the current cursor down. This will update the cursor edge output table as well as expand areas.
----Translations will be applied to the edge output table.
----Desired width and height are typically used by elements when their contents don't fit the cursor exactly.
----Passing desired width and height will reshape the cursor.
+---Hooks for placement table changes.
+local on_placement_change_hooks = {}
+local on_placement_change_index = 0
+
+---Register a nullary function to be called whenever the placement table gets modified.
+---@param fn function
+function cursor.register_on_placement_change_hook(fn)
+    on_placement_change_index = on_placement_change_index + 1
+    on_placement_change_hooks[on_placement_change_index] = fn
+end
+
+local function run_placement_change_hooks()
+    for i = 1, on_placement_change_index do
+        on_placement_change_hooks[i]()
+    end
+end
+
+---Creates a new placement.
+---
+---A **new placement table**, representing a literal element location, will be written to the placement table.
+---
+---Desired width and height can be used to modify the **new placement table** location for elements that don't fit the cursor exactly.
+---
+---A new *placement record* will be made with a unique integer id. Saved within the *placement record* are the values for:
+--- - The **new placement table** state.
+--- - If `cursor.auto_reshape` is true.
+---   - The reshaped cursor state (i.e the cursor that coincides with the **new placement table** state, ignoring translations).
+--- - Otherwise, if `cursor.auto_reshape` is false.
+---   - The original cursor state (i.e. the state it was in when this function was called).
+---
+---This *placement record* can later be restored.
+---
+---Lastly the cursor is reshaped as to coincide with the **new placement table**. This is so you know where your new element is located.
+---This is done regardless of the value of`cursor.auto_reshape`.
 ---@param desired_width number? if provided, the placement will use this instead of cursor.width
 ---@param desired_height number? if provided, the placement will use this instead of cursor.height
+---@return integer placement_id the new placement id
 function cursor.place(desired_width, desired_height)
-    local width, height = desired_width or cursor.width, desired_height or cursor.height
+    local new_width, new_height = desired_width or cursor.width, desired_height or cursor.height
 
     -- Apply translation
-    placement.x = cursor.x + translate_stack[translate_index][1]
-    placement.y = cursor.y + translate_stack[translate_index][2]
+    local tx, ty = cursor.get_translation()
+    placement.x = cursor.x + tx
+    placement.y = cursor.y + ty
 
     -- Update edges
     placement.left, placement.top, placement.right, placement.bottom =
-        get_edges(placement.x, placement.y, cursor.anchor_x, cursor.anchor_y, width, height)
+        get_edges(placement.x, placement.y, cursor.anchor_x, cursor.anchor_y, new_width, new_height)
 
     -- Expand the current area
-    expand_area(area_stack[area_index], get_edges(cursor.x, cursor.y, cursor.anchor_x, cursor.anchor_y, width, height))
+    expand_area(
+        area_stack[area_index],
+        get_edges(cursor.x, cursor.y, cursor.anchor_x, cursor.anchor_y, new_width, new_height)
+    )
+
+    local auto_cursor_width = cursor.auto_reshape and new_width or cursor.width
+    local auto_cursor_height = cursor.auto_reshape and new_height or cursor.height
+
+    -- make a new placement
+    placement_record_index = placement_record_index + 1
+    local base = placement_record_index * PLACEMENT_RECORD_SIZE
+    for i = 0, PLACEMENT_RECORD_SIZE - 1 do
+        placement_record_data[base + i] = select(
+            i + 1,
+            cursor.x,
+            cursor.y,
+            auto_cursor_width,
+            auto_cursor_height,
+            cursor.anchor_x,
+            cursor.anchor_y,
+            cursor.auto_reshape,
+            placement.left,
+            placement.top,
+            placement.right,
+            placement.bottom,
+            placement.x,
+            placement.y
+        )
+    end
+
+    -- update current placement
+    current_placement_record = placement_record_index
 
     -- reshape the cursor
-    cursor.width, cursor.height = width, height
+    cursor.width, cursor.height = new_width, new_height
+
+    run_placement_change_hooks()
+
+    return placement_record_index
+end
+
+---Restores the cursor and placement table to the state of a previously made placement.
+---If no id is passed, then the current placement is used.
+---@param id integer?
+function cursor.restore_placement(id)
+    if id then
+        if id < 0 or id > placement_record_index then
+            error("bad placement id")
+        end
+    else
+        id = current_placement_record
+    end
+
+    local base = id * PLACEMENT_RECORD_SIZE
+
+    -- stylua: ignore
+    cursor.x,
+    cursor.y,
+    cursor.width,
+    cursor.height,
+    cursor.anchor_x,
+    cursor.anchor_y,
+    cursor.auto_reshape,
+    placement.left,
+    placement.top,
+    placement.right,
+    placement.bottom,
+    placement.x,
+    placement.y = unpack(placement_record_data, base, base + PLACEMENT_RECORD_SIZE - 1)
+
+    current_placement_record = id
+
+    run_placement_change_hooks()
+end
+
+---Gets the currently represented placement
+---@return integer?
+---@nodiscard
+function cursor.get_placement()
+    return current_placement_record
 end
 
 return cursor

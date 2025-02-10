@@ -13,7 +13,7 @@ local m_nav = require("ui.control.mouse_navigation")
 ---@param font_size number
 ---@return integer clicked the "clicked" field of the state table
 return function(state, text, font_size)
-    cursor.place()
+    local pid = cursor.place()
 
     -- draw background and outline
     local button_color
@@ -36,10 +36,11 @@ return function(state, text, font_size)
     primitive.label(text, font_size, "left", false)
     cursor.pop()
 
-    -- selection_outline()
     if kb_nav.is_selected() then
         selection_outline()
     end
+
+    cursor.restore_placement(pid)
 
     return state.clicked
 end

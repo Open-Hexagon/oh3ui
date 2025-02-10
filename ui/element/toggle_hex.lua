@@ -1,15 +1,15 @@
 local cursor = require("ui.cursor")
 local placement = cursor.placement
-local clickbox = require("ui.sensor.clickbox")
 local primitive = require("ui.primitive")
 local element = require("ui.element")
 local theme = require("ui.theme")
 local extmath = require("ui.extmath")
 local draw_queue = require("ui.draw_queue")
-local mb = require("ui.control.mouse_button")
 local effect = require("ui.effect")
 local selection_outline = require("ui.decorator.selection_outline")
+local mb = require("ui.control.mouse_button")
 local kb_nav = require("ui.control.keyboard_navigation")
+local m_nav = require("ui.control.mouse_navigation")
 
 local indiameter = element.toggle_height
 local diameter = extmath.from_inradius(indiameter, 6)
@@ -19,7 +19,6 @@ local radius = diameter * 0.5
 
 local half_radius = radius * 0.5
 local travel_distance = element.toggle_width - diameter
-
 
 local function draw_base_shape(color)
     local x0 = placement.left
@@ -48,48 +47,45 @@ end
 ---@param state table state table
 ---@return boolean on the "on" field of the state table
 return function(state)
+    -- calculate normalized toggle position
+    state._toggle_actuator_position = effect.follow(state._toggle_actuator_position, state.on and 0.5 or -0.5, 25)
+
+    -- establish element size and sensor region
+    local pid = cursor.place(element.toggle_width, element.toggle_height)
+
     if -- toggle state on
-        state.clicked == mb.left -- left click
-        or state.clicked == mb.right -- right click
+        m_nav.get_clicked() == mb.left -- left click
+        or m_nav.get_clicked() == mb.right -- right click
         or (not kb_nav.is_repeat() and kb_nav.get_action()) -- any non-repeated keyboard action
     then
         state.on = not state.on
     end
 
-    -- calculate normalized toggle position
-    state._toggle_actuator_position = effect.follow(state._toggle_actuator_position, state.on and 0.5 or -0.5, 25)
-
-    cursor.push()
-    do
-        -- establish element size and sensor region
-        cursor.place(element.toggle_width, element.toggle_height)
-        clickbox(state)
-
-        cursor.push()
-        do
-            draw_base_shape(state.on and theme.accent_color or theme.widget_background)
-
-            -- draw the actuator
-            cursor.change_anchor(0.5, 0.5)
-            cursor.width = diameter
-            cursor.height = diameter
-            cursor.x = cursor.x + state._toggle_actuator_position * travel_distance
-
-            primitive.circle(theme.widget_actuator, 6)
-            primitive.circle_outline(
-                state.hovering and theme.widget_actuator_outline_highlight or theme.widget_actuator_outline,
-                nil,
-                6
-            )
-        end
-        cursor.pop()
-
-        -- keyboard selection outline
-        if kb_nav.is_selected() then
-            selection_outline()
-        end
+    -- keyboard selection outline
+    if kb_nav.is_selected() then
+        selection_outline()
     end
-    cursor.do_auto_reshape()
+
+    -- save hovering state since we want it to apply for the whole toggle, not just the actuator part
+    local hovering = m_nav.is_hovering()
+
+    draw_base_shape(state.on and theme.accent_color or theme.widget_background)
+
+    -- set actuator location
+    cursor.change_anchor(0.5, 0.5)
+    cursor.width = diameter
+    cursor.height = diameter
+    cursor.x = cursor.x + state._toggle_actuator_position * travel_distance
+
+    -- draw the actuator
+    primitive.circle(theme.widget_actuator, 6)
+    primitive.circle_outline(
+        hovering and theme.widget_actuator_outline_highlight or theme.widget_actuator_outline,
+        nil,
+        6
+    )
+
+    cursor.restore_placement(pid)
 
     return state.on
 end

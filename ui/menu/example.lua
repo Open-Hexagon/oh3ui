@@ -1,6 +1,7 @@
 -- An example menu to figure out what the hell I'm doing
 
 local cursor = require("ui.cursor")
+local placement = cursor.placement
 local id = require("ui.id_table")()
 local theme = require("ui.theme")
 local primitive = require("ui.primitive")
@@ -8,6 +9,7 @@ local mask = require("ui.mask")
 local kb_nav = require("ui.control.keyboard_navigation")
 local m_nav = require("ui.control.mouse_navigation")
 local wmode = kb_nav.wrapping_mode
+local draw_queue = require("ui.draw_queue")
 
 -- Elements
 -- local scroll = require("ui.element.scroll")
@@ -18,8 +20,8 @@ local button = require("ui.element.button")
 -- local numeric_input = require("ui.element.numeric_input")
 -- local slider = require("ui.element.slider")
 -- local switch = require("ui.element.switch")
--- local toggle = require("ui.element.toggle")
--- local toggle_hex = require("ui.element.toggle_hex")
+local toggle = require("ui.element.toggle")
+local toggle_hex = require("ui.element.toggle_hex")
 
 -- local sample_text = [[
 -- Atque et cumque enim fugiat numquam commodi.
@@ -71,22 +73,20 @@ return function()
 
     kb_nav.make_cell()
     kb_nav.grid_cell(1, 5)
-    -- cursor.apply_translation(0, 100)
 
-    -- cursor.x = 100
-    -- cursor.y = 100
-    -- cursor.width = 100
-    -- cursor.height = 50
-    -- mask.push()
-    cursor.x = 100
-    cursor.y = 100
-    cursor.width = 150
-    cursor.height = 50
     button(id.button, "button", 16)
     if m_nav.get_clicked() then
         print("button clicked")
     end
-    -- mask.pop()
+
+    -- nifty trick
+    cursor.width = 75
+    mask.push()
+    if m_nav.get_clicked() then
+        print("left half clicked")
+    end
+    mask.pop()
+
     cursor.shift_down(10)
 
     -- kb_nav.make_cell()
@@ -94,17 +94,23 @@ return function()
     -- cycle_button(id.cycle_button, 16, "square", "triangle", "hexagon")
     -- cursor.shift_down(10)
 
-    -- -- Toggles
-    -- kb_nav.make_cell()
-    -- kb_nav.grid_cell(1, 7)
+    -- Toggles
+    kb_nav.make_cell()
+    kb_nav.grid_cell(1, 7)
+    toggle(id.toggle)
+    if m_nav.get_clicked() then
+        print("toggle clicked")
+    end
 
-    -- toggle(id.toggle)
-    -- cursor.shift_down(10)
+    cursor.shift_down(10)
 
-    -- kb_nav.make_cell()
-    -- kb_nav.grid_cell(1, 8)
-    -- toggle_hex(id.toggle_hex)
-    -- cursor.shift_down(10)
+    kb_nav.make_cell()
+    kb_nav.grid_cell(1, 8)
+    toggle_hex(id.toggle_hex)
+    if m_nav.get_clicked() then
+        print("toggle_hex clicked")
+    end
+    cursor.shift_down(10)
 
     -- kb_nav.make_cell()
     -- kb_nav.grid_cell(1, 9)
@@ -116,5 +122,3 @@ return function()
     -- icon_cycle_button(id.icon_cycle_button, 16, "square", "dash-square", "check-square")
     -- cursor.shift_down(10)
 end
-
-

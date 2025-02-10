@@ -51,6 +51,7 @@ end
 ---@param line_width number? only used in line mode
 function primitive.slot(color, mode, line_width)
     local radius = math.min(cursor.width, cursor.height) / 2
+
     cursor.place()
     draw_queue.rectangle(
         mode or "fill",
@@ -70,6 +71,7 @@ end
 ---@param line_width number?
 function primitive.slot_outline(color, line_width)
     local radius = math.min(cursor.width, cursor.height) / 2
+
     cursor.place()
     draw_queue.rectangle_outline(
         placement.left,
@@ -90,9 +92,9 @@ end
 ---@param rotation number? only useful if the number of sides is small
 ---@param mode string? "fill" or "line" (default is "fill")
 function primitive.circle(color, sides, rotation, mode)
-    cursor.push()
     local diameter = math.min(cursor.width, cursor.height)
     local radius = diameter / 2
+
     cursor.place(diameter, diameter)
     draw_queue.circle(
         mode or "fill",
@@ -103,7 +105,7 @@ function primitive.circle(color, sides, rotation, mode)
         sides,
         rotation
     )
-    cursor.do_auto_reshape()
+    cursor.restore_placement()
 end
 
 ---Circle primitive. Will reshape the cursor if the cursor width and height aren't the same.
@@ -113,9 +115,9 @@ end
 ---@param sides integer? create regular polygons instead
 ---@param rotation number? only useful if the number of sides is small
 function primitive.circle_outline(color, line_width, sides, rotation)
-    cursor.push()
     local diameter = math.min(cursor.width, cursor.height)
     local radius = diameter / 2
+
     cursor.place(diameter, diameter)
     draw_queue.circle_outline(
         placement.left + radius,
@@ -126,7 +128,7 @@ function primitive.circle_outline(color, line_width, sides, rotation)
         sides,
         rotation
     )
-    cursor.do_auto_reshape()
+    cursor.restore_placement()
 end
 
 ---Creates a label. Will reshape the cursor.
@@ -136,8 +138,6 @@ end
 ---@param wrap boolean wrap text
 ---@param color number[]? override text color
 function primitive.label(str, size, align, wrap, color)
-    cursor.push()
-
     -- Scale up
     local wrap_limit = wrap and (cursor.width * ui.scale) or math.huge
 
@@ -157,8 +157,7 @@ function primitive.label(str, size, align, wrap, color)
 
     cursor.place(text_width, text_height)
     draw_queue.text(text_object, placement.left, placement.top, color or theme.text_color)
-
-    cursor.do_auto_reshape()
+    cursor.restore_placement()
 end
 
 ---Creates an icon. Uses "assets/bootstrap-icons.ttf" by default. Will reshape the cursor.
@@ -166,8 +165,6 @@ end
 ---@param size number icon override icon size in pixels (works like a font)
 ---@param color number[]? override text color
 function primitive.icon(icon_name, size, color)
-    cursor.push()
-
     local str = text.get_icon_string(icon_name, theme.icon_font_path)
     local font = text.get_font(size * ui.scale, theme.icon_font_path)
 
@@ -177,8 +174,7 @@ function primitive.icon(icon_name, size, color)
 
     cursor.place(width, height)
     draw_queue.text(text_object, placement.left, placement.top, color or theme.text_color)
-
-    cursor.do_auto_reshape()
+    cursor.restore_placement()
 end
 
 ---Horizontal line primitive. Never reshapes the cursor.

@@ -38,7 +38,7 @@ local mouse_navigation = {
 ---Center of the bubble that decides whether the cursor has moved too much.
 ---Uses screen coordinates since we don't want the bubble changing size based on UI scaling.
 local press_bubble_x, press_bubble_y
-local press_bubble_radius = 4
+local press_bubble_radius = 6
 
 ---@param event_name string
 local function event_filter(event_name)
@@ -60,16 +60,19 @@ function mouse_navigation.evaluate()
     mouse_navigation.started_dragging = nil
     mouse_navigation.stopped_dragging = nil
 
-    -- Search for press and release events and update the left, right, middle, back, and forward tables
-    -- Also update which button was last released and last pressed.
+    -- evaluate global hold/click/drag behavior from mouse events
+    -- record mouse and wheel movement
     for event in events.iterate(event_filter) do
         local name, x, y, a, b, c = unpack(event)
+
         if name == "wheelmoved" then
+            -- Record wheel movement
             mouse_navigation.wheel_dx = mouse_navigation.wheel_dx + x
             mouse_navigation.wheel_dy = mouse_navigation.wheel_dy + y
         elseif name == "mousemoved" then
             local dx, dy, istouch = a, b, c
 
+            -- Transition from clicking to dragging if mouse moves too far
             -- Using L1 distance, so the bubble is not actually a circle, it's a diamond <>.
             if
                 mouse_navigation.holding
@@ -86,20 +89,22 @@ function mouse_navigation.evaluate()
                 mouse_navigation.holding = nil
             end
 
+            -- Record mouse movement
             -- Using the event dx, dy happens to work better if the mouse is being repositioned manually.
             mouse_navigation.dx, mouse_navigation.dy = love.graphics.inverseTransformPoint(dx, dy)
         else
             local button_id, istouch, presses = a, b, c
+
             if name == "mousepressed" then
                 if mouse_navigation.holding then
-                    -- pressing another button while holding cancels it
+                    -- Pressing another button while holding stops holding
                     mouse_navigation.holding = nil
                 elseif mouse_navigation.dragging then
-                    -- pressing another button while dragging cancels it
+                    -- Pressing another button while dragging stops dragging
                     mouse_navigation.stopped_dragging = mouse_navigation.dragging
                     mouse_navigation.dragging = nil
                 else
-                    -- pressing a button starts holding
+                    -- Pressing a button while not already holding or dragging starts holding
                     mouse_navigation.holding = button_id
                     press_bubble_x = mouse_navigation.screen_x
                     press_bubble_y = mouse_navigation.screen_y
@@ -112,7 +117,7 @@ function mouse_navigation.evaluate()
                     end
                     mouse_navigation.holding = nil
                 elseif mouse_navigation.dragging then
-                    -- releasing a button while dragging cancels it
+                    -- Releasing a button while dragging stops dragging
                     mouse_navigation.stopped_dragging = mouse_navigation.dragging
                     mouse_navigation.dragging = nil
                 end
@@ -121,8 +126,17 @@ function mouse_navigation.evaluate()
     end
 end
 
----Gets whether the mouse is hovering the currently placed cursor
-function mouse_navigation.is_hovering()
+---@type boolean?
+local is_hovering
+
+local function invalidate_hovering_cache()
+    is_hovering = nil
+end
+
+cursor.register_on_placement_change_hook(invalidate_hovering_cache)
+mask.register_on_mask_change_hook(invalidate_hovering_cache)
+
+local function calculate_is_hovering()
     if mouse_navigation.dragging then
         return false
     end
@@ -156,6 +170,20 @@ function mouse_navigation.is_hovering()
     return false
 end
 
+---Gets whether the mouse is hovering the current placement.
+---@return boolean
+---@nodiscard
+function mouse_navigation.is_hovering()
+    if is_hovering == nil then
+        is_hovering = calculate_is_hovering()
+    end
+    return is_hovering
+end
+
+---Gets the mouse button that is holding the current placement.
+---(This is not the same as checking the `mouse_navigation.clicked` field directly.)
+---@return mouse_button?
+---@nodiscard
 function mouse_navigation.get_holding()
     if mouse_navigation.is_hovering() then
         return mouse_navigation.holding
@@ -163,6 +191,10 @@ function mouse_navigation.get_holding()
     return nil
 end
 
+---Gets the mouse button that clicked the current placement.
+---(This is not the same as checking the `mouse_navigation.clicked` field directly.)
+---@return mouse_button?
+---@nodiscard
 function mouse_navigation.get_clicked()
     if mouse_navigation.is_hovering() then
         return mouse_navigation.clicked

@@ -8,6 +8,7 @@ local mouse = require("ui.control.mouse")
 local extmath = require("ui.extmath")
 local kba = require("ui.control.keyboard_action")
 local kb_nav = require("ui.control.keyboard_navigation")
+local m_nav = require("ui.control.mouse_navigation")
 local selection_outline = require("ui.decorator.selection_outline")
 
 ---Combination number slider and entry with increment buttons.
@@ -29,13 +30,11 @@ return function(state, min, max, step, format)
         state.initialized = true
     end
 
-    cursor.push() -- (1)
-
     -- set base shape
     local full_width = math.max(element.numeric_input_min_width, cursor.width)
-    cursor.place(full_width, element.numeric_input_height)
+    local pid = cursor.place(full_width, element.numeric_input_height)
 
-    local hovering = state.hovering or kb_nav.is_selected()
+    local hovering = m_nav.is_hovering() or kb_nav.is_selected()
     local center_width = cursor.width - element.numeric_input_lr_button_width * 2
 
     cursor.auto_reshape = false
@@ -143,13 +142,11 @@ return function(state, min, max, step, format)
     state.value = extmath.clamp(state.value, min or -math.huge, max or math.huge)
     primitive.label(string.format(format or "%f", state.value), 16, "left", false)
     primitive.rectangle_outline((hovering or dragging) and theme.widget_outline_highlight or theme.widget_outline)
-    hoverbox(state, "pass")
 
     if kb_nav.is_selected() then
         selection_outline()
     end
 
-    cursor.do_auto_reshape() -- (1)
-
+    cursor.restore_placement(pid)
     return state.value
 end

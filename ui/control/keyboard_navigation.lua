@@ -218,6 +218,7 @@ end
 ---Returns true if the last created cell or specified cell is selected
 ---@param cell_id? integer
 ---@return boolean
+---@nodiscard
 function keyboard_navigation.is_selected(cell_id)
     return (cell_id or cell_index) == selected_cell
 end
@@ -225,6 +226,7 @@ end
 ---Returns the action of the last created cell
 ---@param cell_id? integer
 ---@return keyboard_action?
+---@nodiscard
 function keyboard_navigation.get_action(cell_id)
     if keyboard_navigation.is_selected(cell_id) then
         return last_action
@@ -235,6 +237,7 @@ end
 ---Returns the repeat state of the action on the last created cell
 ---@param cell_id? integer
 ---@return boolean?
+---@nodiscard
 function keyboard_navigation.is_repeat(cell_id)
     if keyboard_navigation.is_selected(cell_id) then
         return last_is_repeat
@@ -245,6 +248,7 @@ end
 ---Returns the holding action of the last created cell
 ---@param cell_id? integer
 ---@return keyboard_action?
+---@nodiscard
 function keyboard_navigation.get_holding(cell_id)
     if keyboard_navigation.is_selected(cell_id) then
         return key_to_action[holding_key]

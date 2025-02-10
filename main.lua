@@ -13,7 +13,7 @@ function love.run()
     -- Target duration of each tick in seconds
     -- ? 240 tps seems a bit excessive for a user interface.
     -- local target_delta = 1 / 240
-    local target_delta = 1 / 60
+    local target_delta = 1 / 120
     local last_time = 0
 
     -- * testing menu
