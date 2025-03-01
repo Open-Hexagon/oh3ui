@@ -10,7 +10,7 @@ local text = require("ui.text")
 local mouse = require("ui.control.mouse")
 local extmath = require("ui.extmath")
 local kba = require("ui.control.keyboard_action")
-local kb_nav = require("ui.control.keyboard_navigation")
+local knav = require("ui.control.keyboard_navigation")
 local selection_outline = require("ui.decorator.selection_outline")
 
 ---Combination number slider and entry with increment buttons.
@@ -38,7 +38,7 @@ return function(state, min, max, step, format)
     local full_width = math.max(element.numeric_input_min_width, cursor.width)
     cursor.place(full_width, element.numeric_input_height)
 
-    local hovering = state.hovering or kb_nav.is_selected()
+    local hovering = state.hovering or knav.is_selected()
     local center_width = cursor.width - element.numeric_input_lr_button_width * 2
 
     cursor.auto_reshape = false
@@ -108,8 +108,8 @@ return function(state, min, max, step, format)
         cursor.width = element.numeric_input_lr_button_width
         cursor.change_anchor(0.5)
 
-        local kb_action = kb_nav.get_action()
-        local kb_holding = kb_nav.get_holding()
+        local kb_action = knav.get_action()
+        local kb_holding = knav.get_holding()
         if not dragging then
             if clickbox(state.numeric_input_left) or kb_action == kba.left then
                 state.value = state.value - step
@@ -148,7 +148,7 @@ return function(state, min, max, step, format)
     primitive.rectangle_outline((hovering or dragging) and theme.widget_outline_highlight or theme.widget_outline)
     hoverbox(state, "pass")
 
-    if kb_nav.is_selected() then
+    if knav.is_selected() then
         selection_outline()
     end
 

@@ -5,7 +5,7 @@ local primitive = require("ui.primitive")
 local selection_outline = require("ui.decorator.selection_outline")
 local mb = require("ui.control.mouse_button")
 local kba = require("ui.control.keyboard_action")
-local kb_nav = require("ui.control.keyboard_navigation")
+local knav = require("ui.control.keyboard_navigation")
 
 ---An icon that cycles between other icons when left or right clicked.
 ---Will reshape the cursor.
@@ -26,8 +26,8 @@ return function(state, size, ...)
         state.initialized = true
     end
 
-    if not kb_nav.is_repeat() then
-        local kb_action = kb_nav.get_action()
+    if not knav.is_repeat() then
+        local kb_action = knav.get_action()
         if state.clicked == mb.left or kb_action == kba.right or kb_action == kba.activate then
             state.position = state.position + 1
             if state.position > positions then
@@ -46,7 +46,7 @@ return function(state, size, ...)
     local button_color
     if state.holding then
         button_color = theme.widget_background_highlight
-    elseif state.hovering or kb_nav.get_holding() == kba.activate then
+    elseif state.hovering or knav.get_holding() == kba.activate then
         button_color = theme.accent_color
     else
         button_color = theme.white
@@ -56,7 +56,7 @@ return function(state, size, ...)
     primitive.icon(select(state.position, ...), size, button_color)
     clickbox(state)
 
-    if kb_nav.is_selected() then
+    if knav.is_selected() then
         selection_outline()
     end
 

@@ -5,7 +5,7 @@ local primitive = require("ui.primitive")
 local selection_outline = require("ui.decorator.selection_outline")
 local mb = require("ui.control.mouse_button")
 local kba = require("ui.control.keyboard_action")
-local kb_nav = require("ui.control.keyboard_navigation")
+local knav = require("ui.control.keyboard_navigation")
 
 ---Button element that cycles between text when left or right clicked.
 ---Never reshapes the cursor.
@@ -27,8 +27,8 @@ return function(state, font_size, ...)
         state.initialized = true
     end
 
-    if not kb_nav.is_repeat() then
-        local kb_action = kb_nav.get_action()
+    if not knav.is_repeat() then
+        local kb_action = knav.get_action()
         if state.clicked == mb.left or kb_action == kba.right or kb_action == kba.activate then
             state.position = state.position + 1
             if state.position > positions then
@@ -46,7 +46,7 @@ return function(state, font_size, ...)
 
     -- draw background and outline
     local button_color
-    if state.holding or kb_nav.get_holding() then
+    if state.holding or knav.get_holding() then
         button_color = theme.widget_background_highlight
     elseif state.hovering then
         button_color = theme.widget_background_brighter
@@ -55,7 +55,7 @@ return function(state, font_size, ...)
     end
     primitive.rectangle(button_color)
     primitive.rectangle_outline(
-        (state.hovering or kb_nav.is_selected()) and theme.widget_outline_highlight or theme.widget_outline
+        (state.hovering or knav.is_selected()) and theme.widget_outline_highlight or theme.widget_outline
     )
 
     -- draw button internals
@@ -64,7 +64,7 @@ return function(state, font_size, ...)
     primitive.label(select(state.position, ...), font_size, "left", false)
     cursor.pop()
 
-    if kb_nav.is_selected() then
+    if knav.is_selected() then
         selection_outline()
     end
 

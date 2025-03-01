@@ -4,7 +4,7 @@ local primitive = require("ui.primitive")
 local element = require("ui.element")
 local theme = require("ui.theme")
 local mb = require("ui.control.mouse_button")
-local kb_nav = require("ui.control.keyboard_navigation")
+local knav = require("ui.control.keyboard_navigation")
 
 local effect = require("ui.effect")
 local selection_outline = require("ui.decorator.selection_outline")
@@ -19,7 +19,7 @@ return function(state)
     if -- toggle state on
         state.clicked == mb.left -- left click
         or state.clicked == mb.right -- right click
-        or (not kb_nav.is_repeat() and kb_nav.get_action()) -- any non-repeated keyboard action
+        or (not knav.is_repeat() and knav.get_action()) -- any non-repeated keyboard action
     then
         state.on = not state.on
     end
@@ -52,7 +52,7 @@ return function(state)
         cursor.pop()
 
         -- keyboard selection outline
-        if kb_nav.is_selected() then
+        if knav.is_selected() then
             selection_outline()
         end
     end

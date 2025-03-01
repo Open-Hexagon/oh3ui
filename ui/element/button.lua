@@ -4,7 +4,7 @@ local clickbox = require("ui.sensor.clickbox")
 local primitive = require("ui.primitive")
 local selection_outline = require("ui.decorator.selection_outline")
 local kba = require("ui.control.keyboard_action")
-local kb_nav = require("ui.control.keyboard_navigation")
+local knav = require("ui.control.keyboard_navigation")
 
 
 ---Button element with text. Never reshapes the cursor.
@@ -17,7 +17,7 @@ return function(state, text, font_size)
 
     -- draw background and outline
     local button_color
-    if state.holding or kb_nav.get_holding() == kba.activate then
+    if state.holding or knav.get_holding() == kba.activate then
         button_color = theme.widget_background_highlight
     elseif state.hovering then
         button_color = theme.widget_background_brighter
@@ -26,7 +26,7 @@ return function(state, text, font_size)
     end
     primitive.rectangle(button_color)
     primitive.rectangle_outline(
-        (state.hovering or kb_nav.is_selected()) and theme.widget_outline_highlight or theme.widget_outline
+        (state.hovering or knav.is_selected()) and theme.widget_outline_highlight or theme.widget_outline
     )
 
     -- draw button internals
@@ -35,7 +35,7 @@ return function(state, text, font_size)
     primitive.label(text, font_size, "left", false)
     cursor.pop()
 
-    if kb_nav.is_selected() then
+    if knav.is_selected() then
         selection_outline()
     end
 
