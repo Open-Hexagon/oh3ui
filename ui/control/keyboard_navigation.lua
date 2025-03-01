@@ -1,9 +1,19 @@
 local events = require("ui.events")
 local bit = require("bit")
-local kba = require("ui.control.keyboard_action")
 local bor, band = bit.bor, bit.band
 
 local keyboard_navigation = {}
+
+---@enum keyboard_action
+keyboard_navigation.action = {
+    activate = 0,
+    left = 1,
+    right = 2,
+    up = 3,
+    down = 4,
+}
+
+local kba = keyboard_navigation.action
 
 ---Operational grid cell values that trigger special actions when navigating with arrow keys.
 ---Normal cell values are strictly positive.

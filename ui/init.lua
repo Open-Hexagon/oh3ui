@@ -1,9 +1,8 @@
 local cursor = require("ui.cursor")
 local events = require("ui.events")
 local draw_queue = require("ui.draw_queue")
-local mouse = require("ui.control.mouse")
 local typing = require("ui.control.typing")
-local sensor = require("ui.sensor")
+local mouse_navigation = require("ui.control.mouse_navigation")
 local keyboard_navigation = require("ui.control.keyboard_navigation")
 
 
@@ -113,8 +112,7 @@ function ui.finish()
     draw_queue.draw()
 
     -- do z-ordered mouse intersection checks
-    mouse.update()
-    sensor.evaluate()
+    mouse_navigation.evaluate()
     keyboard_navigation.evaluate()
     -- typing.update()
 

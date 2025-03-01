@@ -4,17 +4,13 @@
 local events = require("ui.events")
 local cursor = require("ui.cursor")
 local placement = cursor.placement
-local extmath = require("ui.extmath")
-local mask = require("ui.mask")
+local draw_queue = require("ui.draw_queue")
+local sensor = require("ui.control.mouse_navigation.sensor")
 
 local mouse_navigation = {
     -- this frame's mouse position
     x = -1,
     y = -1,
-
-    -- this frame's mouse position (screen coordinates)
-    screen_x = -1,
-    screen_y = -1,
 
     -- change in coordinates from last frame (not screen coordinates)
     dx = 0,
@@ -35,10 +31,87 @@ local mouse_navigation = {
     drag_origin_y = nil,
 }
 
+---@enum mouse_button
+mouse_navigation.button = {
+    left = 1,
+    right = 2,
+    middle = 3,
+    back = 4,
+    forward = 5,
+}
+
 ---Center of the bubble that decides whether the cursor has moved too much.
 ---Uses screen coordinates since we don't want the bubble changing size based on UI scaling.
 local press_bubble_x, press_bubble_y
 local press_bubble_radius = 6
+
+---Holds the id of the last created sensor.
+local sensor_index = 0
+
+---The sensor id that will be used to check for hovering
+local current_sensor_id = 0
+
+---Makes a new sensor element used to detect mouse hovering.
+---Returns a new sensor id and sets the current_sensor_id to the new id
+---@param mode? "block"|"lazy"|"pass" sensor mode
+---@return integer sensor_id sensor id
+function mouse_navigation.make_sensor(mode)
+    cursor.place()
+    sensor_index = sensor_index + 1
+    draw_queue.mouse_sensor(
+        sensor_index,
+        mode or "block",
+        placement.left,
+        placement.top,
+        placement.right,
+        placement.bottom
+    )
+    current_sensor_id = sensor_index
+    return sensor_index
+end
+
+---Changes the current_sensor_id to a new id.
+---Can be used to revert the current_sensor_id back to a previously made sensor
+---@param sensor_id integer
+function mouse_navigation.change_to_sensor(sensor_id)
+    if sensor_id < 1 or sensor_id > sensor_index then
+        error("bad sensor id")
+    end
+    current_sensor_id = sensor_id
+end
+
+---Returns true if the mouse is hovering the sensor with current_sensor_id.
+---@param sensor_id integer?
+---@return boolean?
+---@nodiscard
+function mouse_navigation.is_hovering(sensor_id)
+    return sensor.hover_state[sensor_id or current_sensor_id]
+end
+
+---Gets the mouse button that is holding the sensor with current_sensor_id, if any.
+---@param sensor_id integer?
+---@return mouse_button?
+---@nodiscard
+function mouse_navigation.get_holding(sensor_id)
+    if mouse_navigation.is_hovering(sensor_id) then
+        return mouse_navigation.holding
+    end
+    return nil
+end
+
+---Gets the mouse button that clicked the sensor with current_sensor_id, if any.
+---@param sensor_id integer?
+---@return mouse_button?
+---@nodiscard
+function mouse_navigation.get_clicked(sensor_id)
+    if mouse_navigation.is_hovering(sensor_id) then
+        return mouse_navigation.clicked
+    end
+    return nil
+end
+
+mouse_navigation.hover_off = sensor.disable_intersection_checks
+mouse_navigation.hover_on = sensor.enable_intersection_checks
 
 ---@param event_name string
 local function event_filter(event_name)
@@ -48,9 +121,8 @@ end
 ---Update mouse output. Should be run at the start of a frame.
 function mouse_navigation.evaluate()
     -- Get mouse positions
-    mouse_navigation.screen_x, mouse_navigation.screen_y = love.mouse.getPosition()
-    mouse_navigation.x, mouse_navigation.y =
-        love.graphics.inverseTransformPoint(mouse_navigation.screen_x, mouse_navigation.screen_y)
+    local screen_x, screen_y = love.mouse.getPosition()
+    mouse_navigation.x, mouse_navigation.y = love.graphics.inverseTransformPoint(screen_x, screen_y)
 
     mouse_navigation.dx, mouse_navigation.dy = 0, 0
     mouse_navigation.wheel_dx, mouse_navigation.wheel_dy = 0, 0
@@ -76,9 +148,7 @@ function mouse_navigation.evaluate()
             -- Using L1 distance, so the bubble is not actually a circle, it's a diamond <>.
             if
                 mouse_navigation.holding
-                and math.abs(press_bubble_x - mouse_navigation.screen_x)
-                        + math.abs(press_bubble_y - mouse_navigation.screen_y)
-                    >= press_bubble_radius
+                and math.abs(press_bubble_x - screen_x) + math.abs(press_bubble_y - screen_y) >= press_bubble_radius
             then
                 -- start dragging
                 mouse_navigation.started_dragging = mouse_navigation.holding
@@ -106,8 +176,8 @@ function mouse_navigation.evaluate()
                 else
                     -- Pressing a button while not already holding or dragging starts holding
                     mouse_navigation.holding = button_id
-                    press_bubble_x = mouse_navigation.screen_x
-                    press_bubble_y = mouse_navigation.screen_y
+                    press_bubble_x = screen_x
+                    press_bubble_y = screen_y
                 end
             elseif name == "mousereleased" then
                 if mouse_navigation.holding then
@@ -124,82 +194,10 @@ function mouse_navigation.evaluate()
             end
         end
     end
-end
 
----@type boolean?
-local is_hovering
-
-local function invalidate_hovering_cache()
-    is_hovering = nil
-end
-
-cursor.register_on_placement_change_hook(invalidate_hovering_cache)
-mask.register_on_mask_change_hook(invalidate_hovering_cache)
-
-local function calculate_is_hovering()
-    if mouse_navigation.dragging then
-        return false
-    end
-
-    -- we want to use the placement table since it contains literal element locations
-    local left, top, right, bottom = mask.get()
-
-    if left then
-        ---@cast left number
-        ---@cast top number
-        ---@cast right number
-        ---@cast bottom number
-        left, top, right, bottom = extmath.aligned_rectangle_intersection(
-            placement.left,
-            placement.top,
-            placement.right,
-            placement.bottom,
-            left,
-            top,
-            right,
-            bottom
-        )
-    else
-        left, top, right, bottom = placement.left, placement.top, placement.right, placement.bottom
-    end
-
-    if left then
-        return extmath.point_in_aligned_rectangle(mouse_navigation.x, mouse_navigation.y, left, top, right, bottom)
-    end
-
-    return false
-end
-
----Gets whether the mouse is hovering the current placement.
----@return boolean
----@nodiscard
-function mouse_navigation.is_hovering()
-    if is_hovering == nil then
-        is_hovering = calculate_is_hovering()
-    end
-    return is_hovering
-end
-
----Gets the mouse button that is holding the current placement.
----(This is not the same as checking the `mouse_navigation.clicked` field directly.)
----@return mouse_button?
----@nodiscard
-function mouse_navigation.get_holding()
-    if mouse_navigation.is_hovering() then
-        return mouse_navigation.holding
-    end
-    return nil
-end
-
----Gets the mouse button that clicked the current placement.
----(This is not the same as checking the `mouse_navigation.clicked` field directly.)
----@return mouse_button?
----@nodiscard
-function mouse_navigation.get_clicked()
-    if mouse_navigation.is_hovering() then
-        return mouse_navigation.clicked
-    end
-    return nil
+    -- evaluate update the hover_set
+    sensor.evaluate(screen_x, screen_y)
+    sensor_index = 0
 end
 
 return mouse_navigation
