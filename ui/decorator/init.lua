@@ -1,5 +1,5 @@
 -- Decorators are elements that are meant to decorate other elements.
--- They do not affect the cursor in any way and are ment to be overlaid onto already existing elements.
+-- They do not affect the cursor in any way and are meant to be overlaid onto already existing elements.
 
 local decorator = {}
 

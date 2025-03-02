@@ -1,32 +1,31 @@
 local cursor = require("ui.cursor")
 local theme = require("ui.theme")
-local clickbox = require("ui.sensor.clickbox")
 local primitive = require("ui.primitive")
 local selection_outline = require("ui.decorator.selection_outline")
-local kba = require("ui.control.keyboard_action")
 local knav = require("ui.control.keyboard_navigation")
+local kba = knav.action
+local mnav = require("ui.control.mouse_navigation")
 
 
 ---Button element with text. Never reshapes the cursor.
----@param state table
 ---@param text string
 ---@param font_size number
----@return integer clicked the "clicked" field of the state table
-return function(state, text, font_size)
-    clickbox(state)
+---@return mouse_button? clicked the "clicked" field of the state table
+return function(text, font_size)
+    mnav.make_sensor()
 
     -- draw background and outline
     local button_color
-    if state.holding or knav.get_holding() == kba.activate then
+    if mnav.get_holding() or knav.get_holding() == kba.activate then
         button_color = theme.widget_background_highlight
-    elseif state.hovering then
+    elseif mnav.is_hovering() then
         button_color = theme.widget_background_brighter
     else
         button_color = theme.widget_background
     end
     primitive.rectangle(button_color)
     primitive.rectangle_outline(
-        (state.hovering or knav.is_selected()) and theme.widget_outline_highlight or theme.widget_outline
+        (mnav.is_hovering() or knav.is_selected()) and theme.widget_outline_highlight or theme.widget_outline
     )
 
     -- draw button internals
@@ -39,5 +38,5 @@ return function(state, text, font_size)
         selection_outline()
     end
 
-    return state.clicked
+    return mnav.get_clicked()
 end
