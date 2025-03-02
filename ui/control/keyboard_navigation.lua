@@ -5,7 +5,7 @@ local bor, band = bit.bor, bit.band
 local keyboard_navigation = {}
 
 ---@enum keyboard_action
-keyboard_navigation.action = {
+keyboard_navigation.actions = {
     activate = 0,
     left = 1,
     right = 2,
@@ -13,7 +13,7 @@ keyboard_navigation.action = {
     down = 4,
 }
 
-local kba = keyboard_navigation.action
+local kba = keyboard_navigation.actions
 
 ---Operational grid cell values that trigger special actions when navigating with arrow keys.
 ---Normal cell values are strictly positive.

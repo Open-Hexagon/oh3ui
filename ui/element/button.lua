@@ -3,7 +3,7 @@ local theme = require("ui.theme")
 local primitive = require("ui.primitive")
 local selection_outline = require("ui.decorator.selection_outline")
 local knav = require("ui.control.keyboard_navigation")
-local kba = knav.action
+local kba = knav.actions
 local mnav = require("ui.control.mouse_navigation")
 
 

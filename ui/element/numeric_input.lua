@@ -6,9 +6,9 @@ local element = require("ui.element")
 local extmath = require("ui.extmath")
 local selection_outline = require("ui.decorator.selection_outline")
 local mnav = require("ui.control.mouse_navigation")
-local mb = mnav.button
+local mb = mnav.buttons
 local knav = require("ui.control.keyboard_navigation")
-local kba = knav.action
+local kba = knav.actions
 
 
 ---Combination number slider and entry with increment buttons.
@@ -33,7 +33,7 @@ return function(state, min, max, step, format)
     local full_width = math.max(element.numeric_input_min_width, cursor.width)
     cursor.place(full_width, element.numeric_input_height)
 
-    local everything_sid = mnav.new_sensor_id()
+    local everything_sid = mnav.declare_sensor_id()
     local hovering = mnav.is_hovering(everything_sid) or knav.is_selected()
     local center_width = cursor.width - element.numeric_input_lr_button_width * 2
 

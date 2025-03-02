@@ -1,12 +1,12 @@
 local cursor = require("ui.cursor")
 local placement = cursor.placement
-local clickbox = require("ui.sensor.clickbox")
 local primitive = require("ui.primitive")
 local element = require("ui.element")
 local theme = require("ui.theme")
 local extmath = require("ui.extmath")
 local draw_queue = require("ui.draw_queue")
-local mb = require("ui.control.mouse_button")
+local mnav = require("ui.control.mouse_navigation")
+local mb = mnav.buttons
 local effect = require("ui.effect")
 local selection_outline = require("ui.decorator.selection_outline")
 local knav = require("ui.control.keyboard_navigation")
@@ -19,7 +19,6 @@ local radius = diameter * 0.5
 
 local half_radius = radius * 0.5
 local travel_distance = element.toggle_width - diameter
-
 
 local function draw_base_shape(color)
     local x0 = placement.left
@@ -48,14 +47,6 @@ end
 ---@param state table state table
 ---@return boolean on the "on" field of the state table
 return function(state)
-    if -- toggle state on
-        state.clicked == mb.left -- left click
-        or state.clicked == mb.right -- right click
-        or (not knav.is_repeat() and knav.get_action()) -- any non-repeated keyboard action
-    then
-        state.on = not state.on
-    end
-
     -- calculate normalized toggle position
     state._toggle_actuator_position = effect.follow(state._toggle_actuator_position, state.on and 0.5 or -0.5, 25)
 
@@ -63,7 +54,16 @@ return function(state)
     do
         -- establish element size and sensor region
         cursor.place(element.toggle_width, element.toggle_height)
-        clickbox(state)
+        mnav.make_sensor()
+
+        local clicked = mnav.get_clicked()
+        if -- toggle state on
+            clicked == mb.left -- left click
+            or clicked == mb.right -- right click
+            or (not knav.is_repeat() and knav.get_action()) -- any non-repeated keyboard action
+        then
+            state.on = not state.on
+        end
 
         cursor.push()
         do
@@ -77,7 +77,7 @@ return function(state)
 
             primitive.circle(theme.widget_actuator, 6)
             primitive.circle_outline(
-                state.hovering and theme.widget_actuator_outline_highlight or theme.widget_actuator_outline,
+                mnav.is_hovering() and theme.widget_actuator_outline_highlight or theme.widget_actuator_outline,
                 nil,
                 6
             )

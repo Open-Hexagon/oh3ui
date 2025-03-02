@@ -1,14 +1,14 @@
 local cursor = require("ui.cursor")
 local theme = require("ui.theme")
-local clickbox = require("ui.sensor.clickbox")
 local primitive = require("ui.primitive")
 local element = require("ui.element")
 local mask = require("ui.mask")
 local effect = require("ui.effect")
 local reserve = require("ui.reserve")
 local knav = require("ui.control.keyboard_navigation")
-local kba = require("ui.control.keyboard_action")
-local mb = require("ui.control.mouse_button")
+local kba = knav.actions
+local mnav = require("ui.control.mouse_navigation")
+local mb = mnav.buttons
 local selection_outline = require("ui.decorator.selection_outline")
 
 local selection_highlight_speed = 25
@@ -19,12 +19,10 @@ local selection_highlight_speed = 25
 ---@return integer position the "position" field of the state table
 return function(state, ...)
     local positions = select("#", ...)
+
     if not state.initialized then
         if positions < 2 then
             error("At least 2 positions need to be provided for switch")
-        end
-        for i = 1, positions do
-            state[i] = {}
         end
         state.position = 1
         state.initialized = true
@@ -47,19 +45,18 @@ return function(state, ...)
     local section_width = cursor.h_split(positions)
     for i = 1, positions do
         cursor.pop()
-        local cb_state = state[i]
-        clickbox(cb_state)
-        if cb_state.clicked == mb.left then
+        mnav.make_sensor()
+        if mnav.get_clicked() == mb.left then
             state._switch_selection_highlight_speed = math.abs(state.position - i) * selection_highlight_speed
             state.position = i
         end
 
-        hovering = hovering or cb_state.hovering
+        hovering = hovering or mnav.is_hovering()
 
         local button_color
-        if cb_state.holding == mb.left or i == state.position then
+        if mnav.get_holding() == mb.left or i == state.position then
             button_color = theme.widget_background_highlight
-        elseif cb_state.hovering then
+        elseif mnav.is_hovering() then
             button_color = theme.widget_background_brighter
         else
             button_color = theme.widget_background
@@ -110,10 +107,13 @@ return function(state, ...)
     primitive.rectangle(theme.accent_color)
 
     cursor.pop() -- (2)
+
     primitive.rectangle_outline(hovering and theme.accent_color or theme.widget_outline)
+    mnav.make_sensor("pass") -- this is so external click functions are correct
     if knav.is_selected() then
         selection_outline()
     end
+
     cursor.do_auto_reshape() -- (1)
 
     return state.position

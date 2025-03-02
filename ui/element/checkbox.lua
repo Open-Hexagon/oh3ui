@@ -1,40 +1,65 @@
 local cursor = require("ui.cursor")
-local clickbox = require("ui.sensor.clickbox")
-local primitive = require("ui.primitive")
-local element = require("ui.element")
 local theme = require("ui.theme")
-local effect = require("ui.effect")
+local primitive = require("ui.primitive")
 local selection_outline = require("ui.decorator.selection_outline")
 local knav = require("ui.control.keyboard_navigation")
+local kba = knav.actions
+local mnav = require("ui.control.mouse_navigation")
+local mb = mnav.buttons
 
-
----Checkbox with a intermediate state that can only be accessed by manually setting the position field
----@param state table
-return function(state)
-    cursor.push()
-    cursor.place(element.checkbox_size, element.checkbox_size)
-    clickbox(state)
-
-    -- draw background and outline
-    local button_color
-    if state.holding then
-        button_color = theme.widget_background_highlight
-    elseif state.hovering then
-        button_color = theme.widget_background_brighter
-    else
-        button_color = theme.widget_background
+---Checkbox with a intermediate state that can only be accessed by manually setting the position field.
+---Will reshape the cursor
+---@param state table state table
+---@param size number icon size in pixels
+---@return integer position the "position" field of the state table
+return function(state, size)
+    if not state.initialized then
+        state.position = 1
+        state.initialized = true
     end
-    primitive.rectangle(button_color)
-    primitive.rectangle_outline(
-        (state.hovering or knav.is_selected()) and theme.widget_outline_highlight or theme.widget_outline
-    )
 
-    primitive.icon("three-dots")
-    primitive.icon("three-dots")
+    local sid = mnav.declare_sensor_id()
+
+    if not knav.is_repeat() then
+        local kb_action = knav.get_action()
+        if mnav.get_clicked(sid) == mb.left or kb_action == kba.activate then
+            if state.position > 0 then
+                state.position = 0
+            else
+                state.position = 2
+            end
+        end
+    end
+
+    cursor.push()
+
+    local background_color
+    if state.position == 0 or state.position == 1 then
+        if mnav.is_hovering(sid) then
+            background_color = theme.widget_background_brighter
+        else
+            background_color = theme.widget_background
+        end
+    else
+        background_color = theme.accent_color
+    end
+
+    cursor.auto_reshape = true
+    primitive.icon("square-fill", size, background_color)
+    primitive.icon(
+        "square",
+        size,
+        (mnav.is_hovering() or knav.is_selected()) and theme.widget_outline_highlight or theme.widget_outline
+    )
+    if state.position > 0 then
+        primitive.icon(select(state.position, "stop-fill", "check"), size, theme.white)
+    end
+    mnav.make_sensor("block", sid)
 
     if knav.is_selected() then
         selection_outline()
     end
-    cursor.do_auto_reshape()
 
+    cursor.do_auto_reshape()
+    return state.position
 end

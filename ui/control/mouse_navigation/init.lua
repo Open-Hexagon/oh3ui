@@ -34,7 +34,7 @@ local mouse_navigation = {
 }
 
 ---@enum mouse_button
-mouse_navigation.button = {
+mouse_navigation.buttons = {
     left = 1,
     right = 2,
     middle = 3,
@@ -66,7 +66,7 @@ local current_sensor_id = 0
 ---Returns a new sensor id. Can be used to forward declare sensor ids.
 ---@return integer
 ---@nodiscard
-function mouse_navigation.new_sensor_id()
+function mouse_navigation.declare_sensor_id()
     last_manual_sensor_id = last_manual_sensor_id - 1
     current_sensor_id = last_manual_sensor_id
     return last_manual_sensor_id
@@ -113,10 +113,10 @@ end
 ---The hover set is only accurate to the previous frame but also isn't destroyed until the end of the frame.
 ---Thus, you can access sensor ids from the previous frame that have yet to be created this frame.
 ---@param sensor_id integer?
----@return boolean?
+---@return boolean
 ---@nodiscard
 function mouse_navigation.is_hovering(sensor_id)
-    return sensor.hover_set[sensor_id or current_sensor_id]
+    return sensor.hover_set[sensor_id or current_sensor_id] or false
 end
 
 ---Gets the mouse button that is holding the current sensor, if any.
