@@ -30,13 +30,21 @@ end
 ---@param max number max representable number in state.value
 ---@param positions integer number of valid slider positions
 ---@param show_positions boolean? show position lines; recommended if the slider is coarse.
+---@param kb_step integer? how many positions to move when using keyboard navigation
+---@param kb_fast_step integer? how many positions to move after holding a key for longer than the hold time
+---@param kb_hold_seconds number? how long a key needs to be held before faster movement is activated in seconds
 ---@return number value the "value" field of the state table
 ---@return integer position the "position" field of the state table
-return function(state, min, max, positions, show_positions)
+return function(state, min, max, positions, show_positions, kb_step, kb_fast_step, kb_hold_seconds)
+    kb_step = kb_step or 1
+    kb_fast_step = kb_fast_step or 5
+    kb_hold_seconds = kb_hold_seconds or 1
+
     local divisions = positions - 1
 
     -- first time initialization
     if not state.initialized then
+        state._slider_kb_hold_seconds = 0
         state.position = 0
         state.value = min
         state.initialized = true
@@ -57,12 +65,18 @@ return function(state, min, max, positions, show_positions)
 
     mnav.make_sensor()
 
+    if knav.get_holding() then
+        state._slider_kb_hold_seconds = state._slider_kb_hold_seconds + love.timer.getDelta()
+    else
+        state._slider_kb_hold_seconds = 0
+    end
+
     local kb_action = knav.get_action()
     if kb_action then
         if kb_action == kba.left then
-            state.position = state.position - 1
+            state.position = state.position - (state._slider_kb_hold_seconds > kb_hold_seconds and kb_fast_step or kb_step)
         elseif kb_action == kba.right then
-            state.position = state.position + 1
+            state.position = state.position + (state._slider_kb_hold_seconds > kb_hold_seconds and kb_fast_step or kb_step)
         end
         state.position = extmath.clamp(state.position, 0, divisions)
         state.value = extmath.map(state.position, 0, divisions, min, max)

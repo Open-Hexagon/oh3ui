@@ -5,7 +5,6 @@ local selection_outline = require("ui.decorator.selection_outline")
 local knav = require("ui.control.keyboard_navigation")
 local kba = knav.actions
 local mnav = require("ui.control.mouse_navigation")
-local mb = mnav.buttons
 
 ---An icon that can be clicked.
 ---Will reshape the cursor

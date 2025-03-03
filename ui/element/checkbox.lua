@@ -1,3 +1,4 @@
+local element = require("ui.element")
 local cursor = require("ui.cursor")
 local theme = require("ui.theme")
 local primitive = require("ui.primitive")
@@ -10,9 +11,8 @@ local mb = mnav.buttons
 ---Checkbox with a intermediate state that can only be accessed by manually setting the position field.
 ---Will reshape the cursor
 ---@param state table state table
----@param size number icon size in pixels
 ---@return integer position the "position" field of the state table
-return function(state, size)
+return function(state)
     if not state.initialized then
         state.position = 1
         state.initialized = true
@@ -45,14 +45,14 @@ return function(state, size)
     end
 
     cursor.auto_reshape = true
-    primitive.icon("square-fill", size, background_color)
+    primitive.icon("square-fill", element.checkbox_size, background_color)
     primitive.icon(
         "square",
-        size,
+        element.checkbox_size,
         (mnav.is_hovering() or knav.is_selected()) and theme.widget_outline_highlight or theme.widget_outline
     )
     if state.position > 0 then
-        primitive.icon(select(state.position, "stop-fill", "check"), size, theme.white)
+        primitive.icon(select(state.position, "stop-fill", "check"), element.checkbox_size, theme.white)
     end
     mnav.make_sensor("block", sid)
 

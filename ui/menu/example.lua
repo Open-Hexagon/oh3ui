@@ -6,7 +6,9 @@ local theme = require("ui.theme")
 local primitive = require("ui.primitive")
 local mask = require("ui.mask")
 local mnav = require("ui.control.mouse_navigation")
+local mb = mnav.buttons
 local knav = require("ui.control.keyboard_navigation")
+local kba = knav.actions
 local wmode = knav.wrapping_mode
 
 -- Elements
@@ -36,9 +38,6 @@ return function()
     knav.make_cell()
     knav.grid_cell(1, 1)
     numeric_input(id.numeric, -100, 100, 5, "X = %.2f")
-    if mnav.get_clicked() then
-        print("numeric_input clicked")
-    end
     cursor.shift_down(10)
 
     -- Slider
@@ -53,39 +52,50 @@ return function()
     cursor.width = 150
     knav.make_cell()
     knav.grid_cell(1, 3)
-    slider(id.slider_coarse, 0, 10, 11, true)
+    slider(id.slider_coarse, 1, 3, 5, true)
     cursor.shift_down(10)
-    primitive.label(string.format("%d/10", id.slider_coarse.value), 16, "left", false)
+    if knav.get_action() == kba.activate then
+        require("ui").scale = id.slider_coarse.value
+    end
+
+    primitive.label(string.format("UI Scale: %.1f", id.slider_coarse.value), 16, "left", false)
     cursor.shift_down(10)
+
+    cursor.width = 150
+    knav.make_cell("default")
+    knav.grid_cell(1, 4)
+    button("Apply UI Scale", 16)
+    if mnav.get_clicked() == mb.left or knav.get_action() == kba.activate then
+        require("ui").scale = id.slider_coarse.value
+    end
+    cursor.shift_down(10)
+
 
     -- Switch
     cursor.width = 150
     knav.make_cell()
-    knav.grid_cell(1, 4)
-    switch(id.switch, "a", "b", "c")
-    if mnav.get_clicked() then
-        print("switch clicked")
-    end
-    cursor.shift_down(10)
-
-    knav.make_cell()
     knav.grid_cell(1, 5)
-    button("button", 16)
+    switch(id.switch, "a", "b", "c")
     cursor.shift_down(10)
 
     knav.make_cell()
     knav.grid_cell(1, 6)
+    button("button", 16)
+    cursor.shift_down(10)
+
+    knav.make_cell()
+    knav.grid_cell(1, 7)
     cycle_button(id.cycle_button, 16, "square", "triangle", "hexagon")
     cursor.shift_down(10)
 
     -- Toggles
     knav.make_cell()
-    knav.grid_cell(1, 7)
+    knav.grid_cell(1, 8)
     toggle(id.toggle)
     cursor.shift_down(10)
 
     knav.make_cell()
-    knav.grid_cell(1, 8)
+    knav.grid_cell(1, 9)
     toggle_hex(id.toggle_hex)
     cursor.shift_down(10)
 
@@ -95,18 +105,18 @@ return function()
     cursor.height = 20
 
     knav.make_cell()
-    knav.grid_cell(1, 9)
+    knav.grid_cell(1, 10)
     icon_button(16, "triangle")
     cursor.shift_down(10)
 
     knav.make_cell()
-    knav.grid_cell(1, 10)
+    knav.grid_cell(1, 11)
     icon_cycle_button(id.icon_cycle_button, 16, "square", "dash-square", "check-square")
     cursor.shift_down(10)
 
     knav.make_cell()
-    knav.grid_cell(1, 11)
-    checkbox(id.checkbox, 16)
+    knav.grid_cell(1, 12)
+    checkbox(id.checkbox)
     cursor.shift_down(10)
 end
 

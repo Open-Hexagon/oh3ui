@@ -52,4 +52,6 @@ element.numeric_input_height = 20
 element.numeric_input_lr_button_width = 16
 element.numeric_input_text_size = 16
 
+element.checkbox_size = 22
+
 return element
