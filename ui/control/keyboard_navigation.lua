@@ -23,7 +23,7 @@ keyboard_navigation.op_cell = {
     barrier = -1, -- when encountered, navigation is stopped
     wrap = -2, -- when encountered, navigation is wrapped to the closest wrap or barrier cell in the opposite navigation direction
     tab = -3, -- when encountered, navigation is jumped to the previous or next tab selection
-    redirect = -4, -- when encountered, any navigation movement is cancelled and the arrow key input is redirected to the state table instead
+    redirect = -4, -- when encountered, any navigation movement is cancelled and the arrow key input is saved as the last input instead
     page = -5, -- when encountered, navigation is jumped to the previous or next page
 }
 
@@ -228,7 +228,8 @@ end
 ---@param cell_id? integer
 ---@return boolean
 function keyboard_navigation.is_selected(cell_id)
-    return (cell_id or cell_index) == selected_cell
+    cell_id = cell_id or cell_index
+    return cell_id > 0 and cell_id == selected_cell
 end
 
 ---Returns the action of the last created cell

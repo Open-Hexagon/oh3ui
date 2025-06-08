@@ -2,6 +2,7 @@
 -- can't possibly cover line when luacov hasn't been included yet, so don't mark as miss
 -- local test_menu = require("tests.menu")
 local example_menu = require("ui.menu.example")
+local scroll_example_menu = require("ui.menu.scroll_example")
 
 -- luacov: enable
 local layers = require("ui.layers")
@@ -17,7 +18,8 @@ function love.run()
     local last_time = 0
 
     -- * testing menu
-    layers.push(example_menu)
+    -- layers.push(example_menu)
+    layers.push(scroll_example_menu)
 
     -- keep this always on when using the ui
     love.keyboard.setKeyRepeat(true)
