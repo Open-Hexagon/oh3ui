@@ -49,7 +49,8 @@ local drag_set = {}
 ---Center of the bubble that decides whether the cursor has moved too much.
 ---Uses screen coordinates since we don't want the bubble changing size based on UI scaling.
 local press_bubble_x, press_bubble_y
-local press_bubble_radius = 6
+local press_bubble_radius = 1
+local press_bubble_touch_radius = 6
 
 ---Holds the id of the last created sensor.
 ---Increments as sensors are made.
@@ -208,11 +209,12 @@ function mouse_navigation.evaluate()
         elseif name == "mousemoved" then
             local dx, dy, istouch = a, b, c
 
-            -- Transition from clicking to dragging if mouse moves too far
+            -- Transition from clicking to dragging if mouse moves far enough while holding
             -- Using L1 distance, so the bubble is not actually a circle, it's a diamond <>.
             if
                 mouse_navigation.holding
-                and math.abs(press_bubble_x - screen_x) + math.abs(press_bubble_y - screen_y) >= press_bubble_radius
+                and math.abs(press_bubble_x - screen_x) + math.abs(press_bubble_y - screen_y)
+                    >= (istouch and press_bubble_touch_radius or press_bubble_radius)
             then
                 -- start dragging
                 mouse_navigation.started_dragging = mouse_navigation.holding
@@ -226,6 +228,9 @@ function mouse_navigation.evaluate()
                 end
                 -- stop holding
                 mouse_navigation.holding = nil
+
+                -- disable hover checks while dragging
+                mouse_navigation.hover_off()
             end
 
             -- Record mouse movement
@@ -261,6 +266,9 @@ function mouse_navigation.evaluate()
                     -- Releasing a button while dragging stops dragging
                     mouse_navigation.stopped_dragging = mouse_navigation.dragging
                     mouse_navigation.dragging = nil
+
+                    -- enable hover checks
+                    mouse_navigation.hover_on()
                 end
             end
         end
@@ -271,7 +279,7 @@ function mouse_navigation.evaluate()
         ---If we're holding the button, use press bubble origin instead.
         ---This ensures that if you press on an element and try to drag, your drag will still be
         ---detected even if the cursor leaves the element bounds before it leaves the press bubble.
-        ---This happens when the cursor is very close to the edge of an element. 
+        ---This happens when the cursor is very close to the edge of an element.
         sensor.evaluate(press_bubble_x, press_bubble_y)
     else
         sensor.evaluate(screen_x, screen_y)
