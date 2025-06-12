@@ -117,13 +117,13 @@ end
 local function get_grid_cell(x, y)
     if x < 1 or x > grid_width then
         -- x coordinate exceeds grid size
-        if band(wrapping_mode, wmode.horizontal) > 0 then
+        if band(wrapping_mode, wmode.horizontal) ~= 0 then
             return op_cell.wrap
-        elseif band(wrapping_mode, wmode.line) > 0 then
+        elseif band(wrapping_mode, wmode.line) ~= 0 then
             return op_cell.tab
-        elseif band(wrapping_mode, wmode.list) > 0 then
+        elseif band(wrapping_mode, wmode.list) ~= 0 then
             return op_cell.redirect
-        elseif band(wrapping_mode, wmode.page) > 0 then
+        elseif band(wrapping_mode, wmode.page) ~= 0 then
             return op_cell.page
         else
             return op_cell.barrier

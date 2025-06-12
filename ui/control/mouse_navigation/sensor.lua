@@ -10,39 +10,44 @@
 --[[
 How intersection checking works
 
-The mouse can only interact with:
-    - zero or one blocking sensor
-    - zero or one lazy sensor
-    - zero or more pass sensors
-in one frame.
+While checking sensors in the z_list in order from top to bottom:
+- If there's an intersection then
+    - Add its sensor id to the hover_set
 
-Checking sensors in the z_list in order from top to bottom:
-- If there's an intersection and the sensor is a...
-    - Blocking sensor:
-        - Add its sensor id to the hover_set.
-        - Stop any further checks below.
+    - If the sensor is lazy:
+        - If there was a previous lazy intersection, remove it
 
-    - Lazy sensor:
-        - If there was a previous lazy intersection, remove it from the hover_set.
-        - Add the new sensor id to the hover_set and continue.
-        
-    - Pass sensor:
-        - Add its sensor id to the hover_set and continue.
+    - If the sensor is blocking then
+        - Stop any further checks
 
-
+Hovering
 - Blocking sensors take priority over all other sensors below them.
 - The last lazy sensor encountered will be prioritized over all other lazy sensors.
-- Pass sensors have no priority.
+- Sensors that are neither blocking nor lazy have no priority. They are always counted as hovering.
+- A sensor can both be blocking and lazy.
+
+Dragging
+- Only one sensor can be dragged at a time
+- The sensor that will be dragged will always be previously in the hover set
+- The sensor that is picked uses the same rules of hovering but only within the hover set
+- When determining which sensor will be dragged
+    - All sensors by default behave as if they were lazy (this is cannot be turned off)
+    - Sensors can be spedified to be blocking (using the dblock flag instead of block)
 ]]
 
 local extmath = require("ui.extmath")
+local bit = require("bit")
+local band = bit.band
 
 local sensor = {
     ---Sensor ids contained in this set are considered being hovered by the cursor
     hover_set = {},
+
+    ---The one sensor id that will be dragged if dragging is initiated
+    preemptive_drag_id = nil,
 }
 
--- If false, disables mouse intersection checks. All hovering fields will become false.
+-- If false, disables mouse intersection checks. The hover set will be empty.
 local do_intersections = true
 
 local hover_set = sensor.hover_set
@@ -60,9 +65,17 @@ function sensor.enable_intersection_checks()
     do_intersections = true
 end
 
+local sensor_mode = {
+    block = 0x1,
+    lazy = 0x2,
+    dblock = 0x4,
+}
+
+sensor.sensor_mode = sensor_mode
+
 ---push a sensor to the z-order list
 ---@param sensor_id integer
----@param mode "block"|"lazy"|"pass"
+---@param mode integer
 ---@param left number
 ---@param top number
 ---@param right number
@@ -81,14 +94,16 @@ end
 ---@param mouse_screen_x integer mouse screen coordinates
 ---@param mouse_screen_y integer mouse screen coordinates
 function sensor.evaluate(mouse_screen_x, mouse_screen_y)
-    -- empty the hover set
+    -- reset state
     for k, _ in pairs(hover_set) do
         hover_set[k] = nil
     end
+    sensor.preemptive_drag_id = nil
 
     if do_intersections then
         -- holds the sensor id of the last encountered lazy intersection
         local last_lazy_intersection
+        local dragging_blocked = false
 
         for i = index, 1, -1 do
             -- get sensor id, intersection mode, and bounds
@@ -101,19 +116,25 @@ function sensor.evaluate(mouse_screen_x, mouse_screen_y)
                 -- add to hover set
                 hover_set[sensor_id] = true
 
-                if mode == "lazy" then
+                if not dragging_blocked then
+                    -- Set the preemptive_drag_id. This overwrites the last drag id
+                    sensor.preemptive_drag_id = sensor_id
+                    if band(mode, sensor_mode.dblock) ~= 0 then
+                        dragging_blocked = true
+                    end
+                end
+
+                if band(mode, sensor_mode.lazy) ~= 0 then
                     if last_lazy_intersection then
                         -- remove the last intersection from the hover set
                         hover_set[last_lazy_intersection] = nil
                     end
                     last_lazy_intersection = sensor_id
-                elseif mode == "block" then
+                end
+
+                if band(mode, sensor_mode.block) ~= 0 then
                     -- checking stops if we see a blocking sensor
                     break
-                elseif mode == "pass" then
-                    -- pass doesn't actually need to do anything
-                else
-                    error(string.format("invalid intersection mode `%s`", mode))
                 end
             end
         end

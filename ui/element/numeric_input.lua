@@ -7,6 +7,7 @@ local extmath = require("ui.extmath")
 local selection_outline = require("ui.decorator.selection_outline")
 local mnav = require("ui.control.mouse_navigation")
 local mb = mnav.buttons
+local smode = mnav.sensor_mode
 local knav = require("ui.control.keyboard_navigation")
 local kba = knav.actions
 
@@ -48,7 +49,7 @@ return function(state, min, max, step, format)
     -- center
     cursor.width = center_width
 
-    local center_sid = mnav.make_sensor()
+    local center_sid = mnav.make_sensor(nil, smode.block)
     local dragging = mnav.get_dragging(center_sid)
 
     -- stop the mouse from reaching the edges of the screen
@@ -104,7 +105,7 @@ return function(state, min, max, step, format)
         local kb_action = knav.get_action()
         local kb_holding = knav.get_holding()
         if not dragging then
-            local left_sid = mnav.make_sensor()
+            local left_sid = mnav.make_sensor(nil, smode.block)
             if mnav.get_clicked(left_sid) == mb.left or kb_action == kba.left then
                 state.value = state.value - step
             end
@@ -123,7 +124,7 @@ return function(state, min, max, step, format)
         cursor.change_anchor(0.5)
 
         if not dragging then
-            local right_sid = mnav.make_sensor()
+            local right_sid = mnav.make_sensor(nil, smode.block)
             if mnav.get_clicked(right_sid) == mb.left or kb_action == kba.right then
                 state.value = state.value + step
             end
@@ -141,7 +142,7 @@ return function(state, min, max, step, format)
     state.value = extmath.clamp(state.value, min or -math.huge, max or math.huge)
     primitive.label(string.format(format or "%f", state.value), 16, "left", false)
     primitive.rectangle_outline((hovering or dragging) and theme.widget_outline_highlight or theme.widget_outline)
-    mnav.make_sensor("pass", everything_sid)
+    mnav.make_sensor(everything_sid)
 
     if knav.is_selected() then
         selection_outline()

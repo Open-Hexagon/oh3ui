@@ -9,6 +9,7 @@ local knav = require("ui.control.keyboard_navigation")
 local kba = knav.actions
 local mnav = require("ui.control.mouse_navigation")
 local mb = mnav.buttons
+local smode = mnav.sensor_mode
 local selection_outline = require("ui.decorator.selection_outline")
 
 local selection_highlight_speed = 25
@@ -45,7 +46,7 @@ return function(state, ...)
     local section_width = cursor.h_split(positions)
     for i = 1, positions do
         cursor.pop()
-        mnav.make_sensor()
+        mnav.make_sensor(nil, smode.block)
         if mnav.get_clicked() == mb.left then
             state._switch_selection_highlight_speed = math.abs(state.position - i) * selection_highlight_speed
             state.position = i
@@ -109,7 +110,7 @@ return function(state, ...)
     cursor.pop() -- (2)
 
     primitive.rectangle_outline(hovering and theme.accent_color or theme.widget_outline)
-    mnav.make_sensor("pass") -- this is so external click functions are correct
+    mnav.make_sensor() -- this is so external click functions are correct
     if knav.is_selected() then
         selection_outline()
     end

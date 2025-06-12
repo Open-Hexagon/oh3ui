@@ -6,6 +6,7 @@ local knav = require("ui.control.keyboard_navigation")
 local kba = knav.actions
 local mnav = require("ui.control.mouse_navigation")
 local mb = mnav.buttons
+local smode = mnav.sensor_mode
 
 ---An icon that cycles between other icons when left or right clicked.
 ---Will reshape the cursor.
@@ -59,7 +60,7 @@ return function(state, size, ...)
 
     cursor.auto_reshape = true
     primitive.icon(select(state.position, ...), size, button_color)
-    mnav.make_sensor("block", sid)
+    mnav.make_sensor(sid, smode.block)
 
     if knav.is_selected() then
         selection_outline()

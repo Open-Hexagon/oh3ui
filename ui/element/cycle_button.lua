@@ -6,6 +6,7 @@ local knav = require("ui.control.keyboard_navigation")
 local kba = knav.actions
 local mnav = require("ui.control.mouse_navigation")
 local mb = mnav.buttons
+local smode = mnav.sensor_mode
 
 ---Button element that cycles between text when left or right clicked.
 ---Never reshapes the cursor.
@@ -24,7 +25,7 @@ return function(state, font_size, ...)
         state.initialized = true
     end
 
-    mnav.make_sensor()
+    mnav.make_sensor(nil, smode.block)
 
     if not knav.is_repeat() then
         local kb_action = knav.get_action()

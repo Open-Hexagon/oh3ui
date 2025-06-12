@@ -7,6 +7,8 @@ local knav = require("ui.control.keyboard_navigation")
 local kba = knav.actions
 local mnav = require("ui.control.mouse_navigation")
 local mb = mnav.buttons
+local smode = mnav.sensor_mode
+
 
 ---Checkbox with a intermediate state that can only be accessed by manually setting the position field.
 ---Will reshape the cursor
@@ -54,7 +56,7 @@ return function(state)
     if state.position > 0 then
         primitive.icon(select(state.position, "stop-fill", "check"), element.checkbox_size, theme.white)
     end
-    mnav.make_sensor("block", sid)
+    mnav.make_sensor(sid, smode.block)
 
     if knav.is_selected() then
         selection_outline()

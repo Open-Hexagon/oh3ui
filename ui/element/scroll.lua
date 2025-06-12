@@ -2,16 +2,20 @@ local cursor = require("ui.cursor")
 local extmath = require("ui.extmath")
 local mask = require("ui.mask")
 local mnav = require("ui.control.mouse_navigation")
+local smode = mnav.sensor_mode
 local primitive = require("ui.primitive")
 local placement = cursor.placement
 local theme = require("ui.theme")
+
+---todo
+---keyboard navigation can request to scroll to a specific location
+---dragging on a scroll region will should also scroll like on a touchscreen
 
 local scroll = {}
 
 local scrollbar_thickness = 8
 local scrollbar_thickness_inactive = scrollbar_thickness * 0.5
 local minimum_scrollbar_actuator_length = 8
-local minimum_scrollbar_length = 1.5 * minimum_scrollbar_actuator_length
 local mouse_wheel_scroll_distance = 10
 
 local in_scroll = false
@@ -25,13 +29,11 @@ function scroll.start(state)
         error("nested scrolls are not allowed")
     end
 
-    state.scroll_dist_x = state.scroll_dist_x or 0
-    state.scroll_dist_y = state.scroll_dist_y or 0
-    -- state.at_bottom
-    -- state.at_top
-    -- state.at_left
-    -- state.at_right
-    -- state.is_interacting
+    if not state.initialized then
+        state.scroll_dist_x = 0
+        state.scroll_dist_y = 0
+        state.initialized = true
+    end
 
     -- save the current cursor
     cursor.push()
@@ -101,7 +103,7 @@ function scroll.finish(state)
             cursor.change_anchor(0, 1)
             cursor.height = scrollbar_thickness
 
-            mnav.make_sensor("block", h_bar)
+            mnav.make_sensor(h_bar, smode.block)
 
             -- goto location if the bar is held outside of the actuator
             if mnav.get_holding(h_bar) and not mnav.is_hovering(h_act) then
@@ -124,7 +126,7 @@ function scroll.finish(state)
                 scroll_left
             )
 
-            mnav.make_sensor("pass", h_act)
+            mnav.make_sensor(h_act, smode.dblock)
 
             -- move the scrollbar and region if dragging
             if mnav.get_dragging(h_act) then
@@ -158,6 +160,9 @@ function scroll.finish(state)
                     scroll_limit_left
                 )
             end
+
+            state.at_left = state.scroll_dist_x == scroll_limit_left
+            state.at_right = state.scroll_dist_x == scroll_limit_right
         end
 
         if content_height > scroll_height then
@@ -182,7 +187,7 @@ function scroll.finish(state)
             cursor.change_anchor(1, 0)
             cursor.width = scrollbar_thickness
 
-            mnav.make_sensor("block", v_bar)
+            mnav.make_sensor(v_bar, smode.block)
 
             -- goto location if the bar is held outside of the actuator
             if mnav.get_holding(v_bar) and not mnav.is_hovering(v_act) then
@@ -205,7 +210,7 @@ function scroll.finish(state)
                 scroll_top
             )
 
-            mnav.make_sensor("pass", v_act)
+            mnav.make_sensor(v_act, smode.dblock)
 
             -- move the scrollbar and region if dragging
             if mnav.get_dragging(v_act) then
@@ -239,12 +244,15 @@ function scroll.finish(state)
                     scroll_limit_top
                 )
             end
+
+            state.at_top = state.scroll_dist_y == scroll_limit_top
+            state.at_bottom = state.scroll_dist_y == scroll_limit_bottom
         end
     end
 
     cursor.pop()
 
-    mnav.make_sensor("lazy", scroll_region)
+    mnav.make_sensor(scroll_region, smode.lazy)
 
     in_scroll = false
 end

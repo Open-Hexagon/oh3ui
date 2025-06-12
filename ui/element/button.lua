@@ -5,6 +5,7 @@ local selection_outline = require("ui.decorator.selection_outline")
 local knav = require("ui.control.keyboard_navigation")
 local kba = knav.actions
 local mnav = require("ui.control.mouse_navigation")
+local smode = mnav.sensor_mode
 
 
 ---Button element with text. Never reshapes the cursor.
@@ -12,7 +13,7 @@ local mnav = require("ui.control.mouse_navigation")
 ---@param font_size number
 ---@return mouse_button? clicked the "clicked" field of the state table
 return function(text, font_size)
-    mnav.make_sensor()
+    mnav.make_sensor(nil, smode.block)
 
     -- draw background and outline
     local button_color

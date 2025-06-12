@@ -4,6 +4,7 @@ local element = require("ui.element")
 local theme = require("ui.theme")
 local mnav = require("ui.control.mouse_navigation")
 local mb = mnav.buttons
+local smode = mnav.sensor_mode
 local knav = require("ui.control.keyboard_navigation")
 local effect = require("ui.effect")
 local selection_outline = require("ui.decorator.selection_outline")
@@ -22,7 +23,7 @@ return function(state)
     do
         -- establish element size and sensor region
         cursor.place(element.toggle_width, element.toggle_height)
-        mnav.make_sensor()
+        mnav.make_sensor(nil, smode.block)
 
         local clicked = mnav.get_clicked()
         if -- toggle state on

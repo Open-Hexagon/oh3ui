@@ -6,6 +6,8 @@ local cursor = require("ui.cursor")
 local placement = cursor.placement
 local draw_queue = require("ui.draw_queue")
 local sensor = require("ui.control.mouse_navigation.sensor")
+local bit = require("bit")
+local bor = bit.bor
 
 local mouse_navigation = {
     -- this frame's mouse position
@@ -33,6 +35,8 @@ local mouse_navigation = {
     press_y = nil,
 }
 
+mouse_navigation.sensor_mode = require("ui.control.mouse_navigation.sensor").sensor_mode
+
 ---@enum mouse_button
 mouse_navigation.buttons = {
     left = 1,
@@ -42,9 +46,9 @@ mouse_navigation.buttons = {
     forward = 5,
 }
 
----A set of sensor ids that are being dragged.
----This set is not erased when dragging stops.
-local drag_set = {}
+---The id of the latest dragged sensor.
+---This is not erased when dragging stops.
+local latest_dragging_id
 
 ---Center of the bubble that decides whether the cursor has moved too much.
 ---Uses screen coordinates since we don't want the bubble changing size based on UI scaling.
@@ -75,10 +79,10 @@ end
 
 ---Makes a new sensor element used to detect mouse hovering.
 ---Returns a new sensor id and sets the current_sensor_id to the new id
----@param mode? "block"|"lazy"|"pass" sensor mode
 ---@param sensor_id? integer forces this sensor to be created with a certain id
+---@param ... integer sensor modes
 ---@return integer sensor_id sensor id
-function mouse_navigation.make_sensor(mode, sensor_id)
+function mouse_navigation.make_sensor(sensor_id, ...)
     cursor.place()
     if sensor_id then
         if sensor_id >= 0 then
@@ -91,7 +95,7 @@ function mouse_navigation.make_sensor(mode, sensor_id)
     end
     draw_queue.mouse_sensor(
         current_sensor_id,
-        mode or "block",
+        bor(0, ...),
         placement.left,
         placement.top,
         placement.right,
@@ -147,7 +151,7 @@ end
 ---@return mouse_button?
 ---@nodiscard
 function mouse_navigation.get_dragging(sensor_id)
-    if mouse_navigation.dragging and drag_set[sensor_id or current_sensor_id] then
+    if mouse_navigation.dragging and latest_dragging_id == (sensor_id or current_sensor_id) then
         return mouse_navigation.dragging
     end
     return nil
@@ -158,7 +162,7 @@ end
 ---@return mouse_button?
 ---@nodiscard
 function mouse_navigation.get_started_dragging(sensor_id)
-    if mouse_navigation.started_dragging and drag_set[sensor_id or current_sensor_id] then
+    if mouse_navigation.started_dragging and latest_dragging_id == (sensor_id or current_sensor_id) then
         return mouse_navigation.started_dragging
     end
     return nil
@@ -169,7 +173,7 @@ end
 ---@return mouse_button?
 ---@nodiscard
 function mouse_navigation.get_stopped_dragging(sensor_id)
-    if mouse_navigation.stopped_dragging and drag_set[sensor_id or current_sensor_id] then
+    if mouse_navigation.stopped_dragging and latest_dragging_id == (sensor_id or current_sensor_id) then
         return mouse_navigation.stopped_dragging
     end
     return nil
@@ -219,13 +223,9 @@ function mouse_navigation.evaluate()
                 -- start dragging
                 mouse_navigation.started_dragging = mouse_navigation.holding
                 mouse_navigation.dragging = mouse_navigation.holding
-                -- deep copy the hover set so we remember what we're dragging, even if the mouse unhovers the sensors
-                for k, _ in pairs(drag_set) do
-                    drag_set[k] = nil
-                end
-                for k, _ in pairs(sensor.hover_set) do
-                    drag_set[k] = true
-                end
+                -- Save the preemptive_drag_id from sensor so we remember what we're dragging, even if the mouse unhovers the sensors
+                latest_dragging_id = sensor.preemptive_drag_id
+
                 -- stop holding
                 mouse_navigation.holding = nil
 

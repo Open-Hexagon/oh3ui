@@ -5,6 +5,7 @@ local selection_outline = require("ui.decorator.selection_outline")
 local knav = require("ui.control.keyboard_navigation")
 local kba = knav.actions
 local mnav = require("ui.control.mouse_navigation")
+local smode = mnav.sensor_mode
 
 ---An icon that can be clicked.
 ---Will reshape the cursor
@@ -33,7 +34,7 @@ return function(size, icon_name)
 
     cursor.auto_reshape = true
     primitive.icon(icon_name, size, button_color)
-    mnav.make_sensor("block", sid)
+    mnav.make_sensor(sid, smode.block)
 
     if knav.is_selected() then
         selection_outline()

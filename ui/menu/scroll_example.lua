@@ -32,7 +32,7 @@ return function()
             cursor.h_array(m, 10)
             for j = 1, m do
                 cursor.pop()
-                button(string.format("%d", (i-1) * m + j), 16)
+                button(string.format("%d", (i - 1) * m + j), 16)
             end
         end
 
@@ -40,4 +40,19 @@ return function()
         cursor.outset(5)
         scroll.finish(id.scroll)
     end
+
+    cursor.shift_down(10)
+
+    primitive.label(
+        string.format(
+            "at_left: %s\nat_top: %s\nat_right: %s\nat_bottom: %s",
+            tostring(id.scroll.at_left),
+            tostring(id.scroll.at_top),
+            tostring(id.scroll.at_right),
+            tostring(id.scroll.at_bottom)
+        ),
+        16,
+        "left",
+        false
+    )
 end

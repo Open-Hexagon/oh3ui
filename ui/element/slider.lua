@@ -8,6 +8,7 @@ local knav = require("ui.control.keyboard_navigation")
 local kba = knav.actions
 local mnav = require("ui.control.mouse_navigation")
 local mb = mnav.buttons
+local smode = mnav.sensor_mode
 local selection_outline = require("ui.decorator.selection_outline")
 
 local actuator_radius = element.slider_height / 2
@@ -63,7 +64,7 @@ return function(state, min, max, positions, show_positions, kb_step, kb_fast_ste
 
     cursor.push() -- (2)
 
-    mnav.make_sensor()
+    mnav.make_sensor(nil, smode.block)
 
     if knav.get_holding() then
         state._slider_kb_hold_seconds = state._slider_kb_hold_seconds + love.timer.getDelta()
