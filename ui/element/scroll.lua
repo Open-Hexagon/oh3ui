@@ -70,7 +70,7 @@ function scroll.finish(state)
     local v_act = mnav.declare_sensor_id()
     local v_bar = mnav.declare_sensor_id()
 
-    if mnav.is_hovering(scroll_region) or mnav.get_dragging(h_act) or mnav.get_dragging(v_act) then
+    if mnav.is_hovering(scroll_region) or mnav.get_dragging(scroll_region) or mnav.get_dragging(h_act) or mnav.get_dragging(v_act) then
         -- peek combine to get the size of the content area (must enclose the original scroll area)
         cursor.combine(true)
         local content_width, content_height = cursor.width, cursor.height
@@ -126,7 +126,7 @@ function scroll.finish(state)
                 scroll_left
             )
 
-            mnav.make_sensor(h_act, smode.dblock)
+            mnav.make_sensor(h_act, smode.draggable)
 
             -- move the scrollbar and region if dragging
             if mnav.get_dragging(h_act) then
@@ -156,6 +156,14 @@ function scroll.finish(state)
             if not mnav.get_dragging(h_act) then
                 state.scroll_dist_x = extmath.clamp(
                     state.scroll_dist_x + mnav.wheel_dx * -mouse_wheel_scroll_distance,
+                    scroll_limit_right,
+                    scroll_limit_left
+                )
+            end
+
+            if mnav.get_dragging(scroll_region) then
+                state.scroll_dist_x = extmath.clamp(
+                    state.scroll_dist_x + mnav.dx,
                     scroll_limit_right,
                     scroll_limit_left
                 )
@@ -210,7 +218,7 @@ function scroll.finish(state)
                 scroll_top
             )
 
-            mnav.make_sensor(v_act, smode.dblock)
+            mnav.make_sensor(v_act, smode.draggable)
 
             -- move the scrollbar and region if dragging
             if mnav.get_dragging(v_act) then
@@ -245,6 +253,14 @@ function scroll.finish(state)
                 )
             end
 
+            if mnav.get_dragging(scroll_region) then
+                state.scroll_dist_y = extmath.clamp(
+                    state.scroll_dist_y + mnav.dy,
+                    scroll_limit_bottom,
+                    scroll_limit_top
+                )
+            end
+
             state.at_top = state.scroll_dist_y == scroll_limit_top
             state.at_bottom = state.scroll_dist_y == scroll_limit_bottom
         end
@@ -252,7 +268,7 @@ function scroll.finish(state)
 
     cursor.pop()
 
-    mnav.make_sensor(scroll_region, smode.lazy)
+    mnav.make_sensor(scroll_region, smode.lazy, smode.draggable)
 
     in_scroll = false
 end

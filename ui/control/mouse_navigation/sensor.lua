@@ -28,11 +28,9 @@ Hovering
 
 Dragging
 - Only one sensor can be dragged at a time
-- The sensor that will be dragged will always be previously in the hover set
-- The sensor that is picked uses the same rules of hovering but only within the hover set
-- When determining which sensor will be dragged
-    - All sensors by default behave as if they were lazy (this is cannot be turned off)
-    - Sensors can be spedified to be blocking (using the dblock flag instead of block)
+- The sensor that will be dragged will always have previously been in the hover set
+- Only sensors flagged as draggable can be dragged
+- The lowest (earliest created) sensor will be dragged
 ]]
 
 local extmath = require("ui.extmath")
@@ -68,7 +66,7 @@ end
 local sensor_mode = {
     block = 0x1,
     lazy = 0x2,
-    dblock = 0x4,
+    draggable = 0x4,
 }
 
 sensor.sensor_mode = sensor_mode
@@ -103,7 +101,6 @@ function sensor.evaluate(mouse_screen_x, mouse_screen_y)
     if do_intersections then
         -- holds the sensor id of the last encountered lazy intersection
         local last_lazy_intersection
-        local dragging_blocked = false
 
         for i = index, 1, -1 do
             -- get sensor id, intersection mode, and bounds
@@ -116,12 +113,9 @@ function sensor.evaluate(mouse_screen_x, mouse_screen_y)
                 -- add to hover set
                 hover_set[sensor_id] = true
 
-                if not dragging_blocked then
-                    -- Set the preemptive_drag_id. This overwrites the last drag id
+                -- Set the preemptive_drag_id if draggable. This overwrites the last drag id
+                if band(mode, sensor_mode.draggable) ~= 0 then
                     sensor.preemptive_drag_id = sensor_id
-                    if band(mode, sensor_mode.dblock) ~= 0 then
-                        dragging_blocked = true
-                    end
                 end
 
                 if band(mode, sensor_mode.lazy) ~= 0 then

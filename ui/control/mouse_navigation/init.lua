@@ -235,7 +235,8 @@ function mouse_navigation.evaluate()
 
             -- Record mouse movement
             -- Using the event dx, dy happens to work better if the mouse is being repositioned manually.
-            mouse_navigation.dx, mouse_navigation.dy = love.graphics.inverseTransformPoint(dx, dy)
+            dx, dy = love.graphics.inverseTransformPoint(dx, dy)
+            mouse_navigation.dx, mouse_navigation.dy = mouse_navigation.dx + dx, mouse_navigation.dy + dy
         else
             local button_id, istouch, presses = a, b, c
 

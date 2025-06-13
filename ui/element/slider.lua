@@ -64,7 +64,7 @@ return function(state, min, max, positions, show_positions, kb_step, kb_fast_ste
 
     cursor.push() -- (2)
 
-    mnav.make_sensor(nil, smode.block)
+    mnav.make_sensor(nil, smode.block, smode.draggable)
 
     if knav.get_holding() then
         state._slider_kb_hold_seconds = state._slider_kb_hold_seconds + love.timer.getDelta()

@@ -49,7 +49,7 @@ return function(state, min, max, step, format)
     -- center
     cursor.width = center_width
 
-    local center_sid = mnav.make_sensor(nil, smode.block)
+    local center_sid = mnav.make_sensor(nil, smode.block, smode.draggable)
     local dragging = mnav.get_dragging(center_sid)
 
     -- stop the mouse from reaching the edges of the screen
