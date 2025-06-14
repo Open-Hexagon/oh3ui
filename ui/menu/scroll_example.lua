@@ -6,6 +6,8 @@ local primitive = require("ui.primitive")
 local mask = require("ui.mask")
 local mnav = require("ui.control.mouse_navigation")
 local mb = mnav.buttons
+local knav = require("ui.control.keyboard_navigation")
+local wmode = knav.wrapping_mode
 
 local button = require("ui.element.button")
 
@@ -15,6 +17,10 @@ return function()
     cursor.y = 50
     cursor.width = 150
     cursor.height = 150
+
+    cursor.apply_translation(100, 0)
+
+    knav.set_wrapping(wmode.line, wmode.vertical)
 
     if scroll.start(id.scroll) then
         cursor.begin_area()
@@ -32,6 +38,9 @@ return function()
             cursor.h_array(m, 10)
             for j = 1, m do
                 cursor.pop()
+
+                knav.make_cell()
+                knav.grid_cell(j, i)
                 button(string.format("%d", (i - 1) * m + j), 16)
             end
         end
@@ -40,6 +49,8 @@ return function()
         cursor.outset(5)
         scroll.finish(id.scroll)
     end
+
+    cursor.remove_translation()
 
     cursor.shift_down(10)
 

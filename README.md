@@ -13,7 +13,7 @@ Area is now a part of the cursor module. It's now merely another cursor helper f
 The functionality of scissor stack and area cutouts have been merged. Masking will now affect both draw operations and mouse detection. This required the mouse detection to happen after the draw queue runs which causes mouse detection information to be delayed by one frame. This isn't really a problem though.
 
 ### Mouse detection
-Mouse detection is now accurate and reflects the behavior of real GUIs. Proper Z-layering is implemented, so overlapping mouse detection regions are handled properly. This comes along with new invisible sensor elements so mouse detection regions can be precisely calculated.
+Mouse detection is now accurate and better reflects the behavior of real GUIs. Proper Z-layering is implemented, so overlapping mouse detection regions are handled properly. A special mouse sensor element is used to specify regions on the screen that can detect mouse input.
 
 ### UI Scaling
 UI scaling is now perfectly accurate (with a few minor exceptions). There's no need to pass every coordinate point through `transformPoint` anymore. This came with the loss of some features such as element rotation.
@@ -25,7 +25,16 @@ Scrolling is very different now. All of it's functionality is contained in one m
 Features that will not be implemented to make development of the UI system easier.
 
 - There will be no system to backpropagate the size of elements. If something doesn't fit where it needs to go, it will have to either spill out of bounds or get cut off. It is up to the developer to ensure that there is enough space for elements or make special cases when elements can't fit.
-- There will be no universal method to get the size of an element before it gets rendered. Dear ImGui doesn't do this so why should ours? 
+- There will be no universal method to get the size of an element before it gets rendered (elements will not neccessarily fit the cursor). Dear ImGui doesn't do this so why should ours? (one exception is text but in that case it is actually important)
+- Nested scroll regions will not be allowed. This vastly simplifies things as there's no need to keep track of arbitrarily-deep, nested scroll regions.
+- Elements do not need to behave like primitive elements when calling them and shouldn't be used as sub elements. Some duplicated behavior between elements is okay.
+
+## Assumptions
+Notable assumptions that the UI makes without enforcing them with error checking
+
+- Scroll regions expect that all cursor data structures have returned to their original states from when scroll.start was called when scroll.finish is called. Not honoring this assumption is undefined behavior.
+- Keyboard navigation cell and mouse sensor IDs need to remain assigned to the same elements between frames for keyboard and mouse interaction to function. (This may be a problem when the layout of a page suddenly changes, but the error will only last one frame.)
+  - A good practive is to make elements always use the same amount of cell and sensor IDs even if they don't actually need them all. 
 
 ## Requirements
 
@@ -38,9 +47,8 @@ Features that will not be implemented to make development of the UI system easie
    1. This creates too many state tables
    2. The same functions to get mouse/keyboard navigation outputs should be used everywhere.
       1. These functions will only be accurate to the latest created placement/cell, respectively.
-3. Mouse navigation should be done during a frame?
-   1. I mean should it? Keyboard navigation doesn't do this.
-   2. *We could leverage the cell ids that keyboard navigation uses to help with mouse navigation as well.*
+3. Mouse navigation is done at the end of the frame.
+   1. Same as keyboard navigation.
 4. A cursor which can be used to align and place elements.
    1. Support elements that don't fit the cursor.
    2. Cursor can be set to auto-reshape which will reshape itself to exactly surround an element that doesn't fit the cursor. 
@@ -48,24 +56,6 @@ Features that will not be implemented to make development of the UI system easie
    4. Cursor shall be agnostic to any external factors such as UI scale. 
 5. Elements can be masked which cuts off drawing and mouse interaction.
    1. Masking should work even if the cursor is translated.
-   2. To satisfy requirement 2, masking operations cannot take reservations. They must be called in order.
-      1. Doing this comes with a caveat though:
-         ```
-         Don't take a reservation that came before any newly made scissor operation.
-         This makes an element think it has the new scissor, but it will get drawn using the previous scissor which probably isn't what you want! 
-         
-         i.e. Don't do this:
-            make reservation 1
-            push scissor
-            take reservation 1
-         
-         This is okay though:
-            make reservation 1
-            push scissor
-            ...
-            pop scissor
-            take reservation 1
-         ```
 
 6. Checking for clicking and keyboard should work for entire elements, even after they're created. For example, this should work as you'd expect:
    ```lua
@@ -77,6 +67,3 @@ Features that will not be implemented to make development of the UI system easie
    1. For more complex elements with multiple interactable regions, it should behave as if the entire element is one whole button.
 7. Mouse dragging needs some way to know which specific element it is dragging. It can't just be what's under the mouse.
    1. Still not sure how to go about this yet. (With keyboard navigation, this is easy since every element gets it's own cell id.)
-8. Sub-elements?
-   1. You can call elements inside of other elements.
-   2. Actually... probably remove this.

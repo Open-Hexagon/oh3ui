@@ -6,9 +6,8 @@ local cursor = {}
 
 ---Edge output table mainly to be used by elements.
 ---This table gets affected by translations so the area it represents will not always coincide with the cursor if a translation is in affect.
----Elements have to be literally placed in their final locations and not transformed by other means
----or else other position related functionality would break.
----Use this if you want to check against a the literal location of a placed element. Such as when comparing against the mouse position.
+---Elements have to be literally placed in their final locations and not transformed by other means or else other position related functionality would break.
+---Use this if you want to check against a the literal location of a placed element, such as when comparing against the mouse position.
 cursor.placement = {
     left = 0,
     top = 0,
@@ -467,6 +466,15 @@ function cursor.end_area()
     area_index = area_index - 1
 end
 
+local do_area_expansion = true
+
+function cursor.area_expansion_off()
+    do_area_expansion = false
+end
+
+function cursor.area_expansion_on()
+    do_area_expansion = true
+end
 --#endregion
 
 ---Places the current cursor down. This will update the cursor edge output table as well as expand areas.
@@ -487,8 +495,12 @@ function cursor.place(desired_width, desired_height)
         get_edges(placement.x, placement.y, cursor.anchor_x, cursor.anchor_y, width, height)
 
     -- Expand the current area
-    expand_area(area_stack[area_index], get_edges(cursor.x, cursor.y, cursor.anchor_x, cursor.anchor_y, width, height))
-
+    if do_area_expansion then
+        expand_area(
+            area_stack[area_index],
+            get_edges(cursor.x, cursor.y, cursor.anchor_x, cursor.anchor_y, width, height)
+        )
+    end
     -- reshape the cursor
     cursor.width, cursor.height = width, height
 end

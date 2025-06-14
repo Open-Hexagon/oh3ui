@@ -1,15 +1,15 @@
 local cursor = require("ui.cursor")
+local placement = cursor.placement
 local extmath = require("ui.extmath")
 local mask = require("ui.mask")
 local mnav = require("ui.control.mouse_navigation")
 local smode = mnav.sensor_mode
 local primitive = require("ui.primitive")
-local placement = cursor.placement
 local theme = require("ui.theme")
+local effect = require("ui.effect")
 
 ---todo
 ---keyboard navigation can request to scroll to a specific location
----dragging on a scroll region will should also scroll like on a touchscreen
 
 local scroll = {}
 
@@ -56,6 +56,41 @@ local function get_actuator_size(content_size, scroll_size)
     return math.max(scroll_size * scroll_size / content_size, minimum_scrollbar_actuator_length)
 end
 
+local view_request_speed = 10
+
+local view_request = {
+    mode = 0,
+
+    x_speed = nil,
+    x_target = nil,
+    y_speed = nil,
+    y_target = nil,
+
+    left = nil,
+    top = nil,
+    right = nil,
+    bottom = nil,
+}
+
+---Makes a request for the current scroll region to put the current cursor into view
+function scroll.scroll_into_view()
+    -- don't do anything if a scroll region isn't active
+    if not in_scroll then
+        return
+    end
+
+    cursor.area_expansion_off()
+    cursor.place()
+    cursor.area_expansion_on()
+
+    view_request.left = placement.left
+    view_request.top = placement.top
+    view_request.right = placement.right
+    view_request.bottom = placement.bottom
+
+    view_request.mode = 1
+end
+
 function scroll.finish(state)
     if not in_scroll then
         error("scroll.finish called with no active scroll")
@@ -70,7 +105,12 @@ function scroll.finish(state)
     local v_act = mnav.declare_sensor_id()
     local v_bar = mnav.declare_sensor_id()
 
-    if mnav.is_hovering(scroll_region) or mnav.get_dragging(scroll_region) or mnav.get_dragging(h_act) or mnav.get_dragging(v_act) then
+    if
+        mnav.is_hovering(scroll_region)
+        or mnav.get_dragging(scroll_region)
+        or mnav.get_dragging(h_act)
+        or mnav.get_dragging(v_act)
+    then
         -- peek combine to get the size of the content area (must enclose the original scroll area)
         cursor.combine(true)
         local content_width, content_height = cursor.width, cursor.height
@@ -128,10 +168,10 @@ function scroll.finish(state)
 
             mnav.make_sensor(h_act, smode.draggable)
 
-            -- move the scrollbar and region if dragging
+            -- move the scrollbar and scroll region if dragging
             if mnav.get_dragging(h_act) then
                 if mnav.get_started_dragging(h_act) then
-                    state._mouse_offset_x = (mnav.press_x - (placement.left + half_actuator_size))
+                    state._mouse_offset_x = mnav.press_x - (placement.left + half_actuator_size)
                 end
                 state.scroll_dist_x = extmath.map(
                     extmath.clamp(mnav.x - state._mouse_offset_x, mouse_limit_left, mouse_limit_right),
@@ -161,15 +201,13 @@ function scroll.finish(state)
                 )
             end
 
+            -- scroll if dragging on the scroll region
             if mnav.get_dragging(scroll_region) then
                 if mnav.get_started_dragging(scroll_region) then
                     state._mouse_offset_x = mnav.press_x - state.scroll_dist_x
                 end
-                state.scroll_dist_x = extmath.clamp(
-                    mnav.x - state._mouse_offset_x,
-                    scroll_limit_right,
-                    scroll_limit_left
-                )
+                state.scroll_dist_x =
+                    extmath.clamp(mnav.x - state._mouse_offset_x, scroll_limit_right, scroll_limit_left)
             end
 
             state.at_left = state.scroll_dist_x == scroll_limit_left
@@ -256,15 +294,13 @@ function scroll.finish(state)
                 )
             end
 
+            -- scroll if dragging on the scroll region
             if mnav.get_dragging(scroll_region) then
                 if mnav.get_started_dragging(scroll_region) then
                     state._mouse_offset_y = mnav.press_y - state.scroll_dist_y
                 end
-                state.scroll_dist_y = extmath.clamp(
-                    mnav.y - state._mouse_offset_y,
-                    scroll_limit_bottom,
-                    scroll_limit_top
-                )
+                state.scroll_dist_y =
+                    extmath.clamp(mnav.y - state._mouse_offset_y, scroll_limit_bottom, scroll_limit_top)
             end
 
             state.at_top = state.scroll_dist_y == scroll_limit_top
@@ -273,6 +309,53 @@ function scroll.finish(state)
     end
 
     cursor.pop()
+
+    cursor.place()
+    if view_request.mode > 0 then
+        if view_request.mode == 1 then
+            local move_distance
+
+            if view_request.left < placement.left then
+                move_distance = placement.left - view_request.left
+                view_request.x_speed = move_distance * view_request_speed
+                view_request.x_target = state.scroll_dist_x + move_distance
+            elseif view_request.right > placement.right then
+                move_distance = view_request.right - placement.right
+                view_request.x_speed = move_distance * view_request_speed
+                view_request.x_target = state.scroll_dist_x - move_distance
+            end
+
+            if view_request.top < placement.top then
+                move_distance = placement.top - view_request.top
+                view_request.y_speed = move_distance * view_request_speed
+                view_request.y_target = state.scroll_dist_y + move_distance
+            elseif view_request.bottom > placement.bottom then
+                move_distance = view_request.bottom - placement.bottom
+                view_request.y_speed = move_distance * view_request_speed
+                view_request.y_target = state.scroll_dist_y - move_distance
+            end
+
+            view_request.mode = 2
+        end
+
+        if view_request.x_target then
+            state.scroll_dist_x = effect.follow(state.scroll_dist_x, view_request.x_target, view_request.x_speed)
+            if state.scroll_dist_x == view_request.x_target then
+                view_request.x_target = nil
+            end
+        end
+
+        if view_request.y_target then
+            state.scroll_dist_y = effect.follow(state.scroll_dist_y, view_request.y_target, view_request.y_speed)
+            if state.scroll_dist_y == view_request.y_target then
+                view_request.y_target = nil
+            end
+        end
+
+        if not (view_request.x_target or view_request.y_target) then
+            view_request.mode = 0
+        end
+    end
 
     mnav.make_sensor(scroll_region, smode.lazy, smode.draggable)
 

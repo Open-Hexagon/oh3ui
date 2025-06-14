@@ -28,13 +28,17 @@ return function(state, min, max, step, format)
         state.initialized = true
     end
 
+    local everything_sid = mnav.declare_sensor_id()
+    local left_sid = mnav.declare_sensor_id()
+    local center_sid = mnav.declare_sensor_id()
+    local right_sid = mnav.declare_sensor_id()
+
     cursor.push() -- (1)
 
     -- set base shape
     local full_width = math.max(element.numeric_input_min_width, cursor.width)
     cursor.place(full_width, element.numeric_input_height)
 
-    local everything_sid = mnav.declare_sensor_id()
     local hovering = mnav.is_hovering(everything_sid) or knav.is_selected()
     local center_width = cursor.width - element.numeric_input_lr_button_width * 2
 
@@ -49,7 +53,7 @@ return function(state, min, max, step, format)
     -- center
     cursor.width = center_width
 
-    local center_sid = mnav.make_sensor(nil, smode.block, smode.draggable)
+    mnav.make_sensor(center_sid, smode.block, smode.draggable)
     local dragging = mnav.get_dragging(center_sid)
 
     -- stop the mouse from reaching the edges of the screen
@@ -105,7 +109,7 @@ return function(state, min, max, step, format)
         local kb_action = knav.get_action()
         local kb_holding = knav.get_holding()
         if not dragging then
-            local left_sid = mnav.make_sensor(nil, smode.block)
+            mnav.make_sensor(left_sid, smode.block)
             if mnav.get_clicked(left_sid) == mb.left or kb_action == kba.left then
                 state.value = state.value - step
             end
@@ -124,7 +128,7 @@ return function(state, min, max, step, format)
         cursor.change_anchor(0.5)
 
         if not dragging then
-            local right_sid = mnav.make_sensor(nil, smode.block)
+            mnav.make_sensor(right_sid, smode.block)
             if mnav.get_clicked(right_sid) == mb.left or kb_action == kba.right then
                 state.value = state.value + step
             end

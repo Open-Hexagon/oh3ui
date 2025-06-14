@@ -12,7 +12,6 @@ local kba = knav.actions
 local wmode = knav.wrapping_mode
 
 -- Elements
--- local scroll = require("ui.element.scroll")
 local button = require("ui.element.button")
 local cycle_button = require("ui.element.cycle_button")
 local icon_button = require("ui.element.icon_button")
@@ -53,10 +52,10 @@ return function()
     knav.make_cell()
     knav.grid_cell(1, 3)
     slider(id.slider_coarse, 1, 3, 5, true)
-    cursor.shift_down(10)
     if knav.get_action() == kba.activate then
         require("ui").scale = id.slider_coarse.value
     end
+    cursor.shift_down(10)
 
     primitive.label(string.format("UI Scale: %.1f", id.slider_coarse.value), 16, "left", false)
     cursor.shift_down(10)

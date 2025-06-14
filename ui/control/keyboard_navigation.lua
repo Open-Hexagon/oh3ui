@@ -2,7 +2,9 @@ local events = require("ui.events")
 local bit = require("bit")
 local bor, band = bit.bor, bit.band
 
-local keyboard_navigation = {}
+local keyboard_navigation = {
+    selection_has_changed = false
+}
 
 ---@enum keyboard_action
 keyboard_navigation.actions = {
@@ -573,10 +575,9 @@ function keyboard_navigation.evaluate()
         return
     end
 
-    local action, is_repeat = iterate_events()
-
-    last_action = action
-    last_is_repeat = is_repeat
+    local old_selection = selected_cell
+    last_action, last_is_repeat = iterate_events()
+    keyboard_navigation.selection_has_changed = old_selection ~= selected_cell
 
     -- reset everything
     erase_grid()
