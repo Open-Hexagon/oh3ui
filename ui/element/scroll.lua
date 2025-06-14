@@ -131,10 +131,10 @@ function scroll.finish(state)
             -- move the scrollbar and region if dragging
             if mnav.get_dragging(h_act) then
                 if mnav.get_started_dragging(h_act) then
-                    state._mouse_offset = (mnav.x - (placement.left + half_actuator_size))
+                    state._mouse_offset_x = (mnav.x - (placement.left + half_actuator_size))
                 end
                 state.scroll_dist_x = extmath.map(
-                    extmath.clamp(mnav.x - state._mouse_offset, mouse_limit_left, mouse_limit_right),
+                    extmath.clamp(mnav.x - state._mouse_offset_x, mouse_limit_left, mouse_limit_right),
                     mouse_limit_left,
                     mouse_limit_right,
                     scroll_limit_left,
@@ -162,8 +162,11 @@ function scroll.finish(state)
             end
 
             if mnav.get_dragging(scroll_region) then
+                if mnav.get_started_dragging(scroll_region) then
+                    state._mouse_offset_x = mnav.x - state.scroll_dist_x
+                end
                 state.scroll_dist_x = extmath.clamp(
-                    state.scroll_dist_x + mnav.dx,
+                    mnav.x - state._mouse_offset_x,
                     scroll_limit_right,
                     scroll_limit_left
                 )
@@ -223,10 +226,10 @@ function scroll.finish(state)
             -- move the scrollbar and region if dragging
             if mnav.get_dragging(v_act) then
                 if mnav.get_started_dragging(v_act) then
-                    state._mouse_offset = (mnav.y - (placement.top + half_actuator_size))
+                    state._mouse_offset_y = (mnav.y - (placement.top + half_actuator_size))
                 end
                 state.scroll_dist_y = extmath.map(
-                    extmath.clamp(mnav.y - state._mouse_offset, mouse_limit_top, mouse_limit_bottom),
+                    extmath.clamp(mnav.y - state._mouse_offset_y, mouse_limit_top, mouse_limit_bottom),
                     mouse_limit_top,
                     mouse_limit_bottom,
                     scroll_limit_top,
@@ -254,8 +257,11 @@ function scroll.finish(state)
             end
 
             if mnav.get_dragging(scroll_region) then
+                if mnav.get_started_dragging(scroll_region) then
+                    state._mouse_offset_y = mnav.y - state.scroll_dist_y
+                end
                 state.scroll_dist_y = extmath.clamp(
-                    state.scroll_dist_y + mnav.dy,
+                    mnav.y - state._mouse_offset_y,
                     scroll_limit_bottom,
                     scroll_limit_top
                 )
