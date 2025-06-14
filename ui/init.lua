@@ -116,6 +116,10 @@ function ui.finish()
     keyboard_navigation.evaluate()
     -- typing.update()
 
+    -- if mouse_navigation.dx ~= 0 or mouse_navigation.dy ~= 0 then
+    --     print(mouse_navigation.dx, mouse_navigation.dy)
+    -- end
+
     -- undo scaling
     love.graphics.pop()
 

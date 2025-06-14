@@ -131,7 +131,7 @@ function scroll.finish(state)
             -- move the scrollbar and region if dragging
             if mnav.get_dragging(h_act) then
                 if mnav.get_started_dragging(h_act) then
-                    state._mouse_offset_x = (mnav.x - (placement.left + half_actuator_size))
+                    state._mouse_offset_x = (mnav.press_x - (placement.left + half_actuator_size))
                 end
                 state.scroll_dist_x = extmath.map(
                     extmath.clamp(mnav.x - state._mouse_offset_x, mouse_limit_left, mouse_limit_right),
@@ -163,7 +163,7 @@ function scroll.finish(state)
 
             if mnav.get_dragging(scroll_region) then
                 if mnav.get_started_dragging(scroll_region) then
-                    state._mouse_offset_x = mnav.x - state.scroll_dist_x
+                    state._mouse_offset_x = mnav.press_x - state.scroll_dist_x
                 end
                 state.scroll_dist_x = extmath.clamp(
                     mnav.x - state._mouse_offset_x,
@@ -226,7 +226,7 @@ function scroll.finish(state)
             -- move the scrollbar and region if dragging
             if mnav.get_dragging(v_act) then
                 if mnav.get_started_dragging(v_act) then
-                    state._mouse_offset_y = (mnav.y - (placement.top + half_actuator_size))
+                    state._mouse_offset_y = (mnav.press_y - (placement.top + half_actuator_size))
                 end
                 state.scroll_dist_y = extmath.map(
                     extmath.clamp(mnav.y - state._mouse_offset_y, mouse_limit_top, mouse_limit_bottom),
@@ -258,7 +258,7 @@ function scroll.finish(state)
 
             if mnav.get_dragging(scroll_region) then
                 if mnav.get_started_dragging(scroll_region) then
-                    state._mouse_offset_y = mnav.y - state.scroll_dist_y
+                    state._mouse_offset_y = mnav.press_y - state.scroll_dist_y
                 end
                 state.scroll_dist_y = extmath.clamp(
                     mnav.y - state._mouse_offset_y,
