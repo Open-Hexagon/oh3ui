@@ -6,10 +6,12 @@ local theme = require("ui.theme")
 local primitive = require("ui.primitive")
 local mask = require("ui.mask")
 local mnav = require("ui.control.mouse_navigation")
+local smode = mnav.sensor_mode
 local mb = mnav.buttons
 local knav = require("ui.control.keyboard_navigation")
 local kba = knav.actions
 local wmode = knav.wrapping_mode
+-- local typing = require("ui.control.typing")
 
 -- Elements
 local button = require("ui.element.button")
@@ -22,7 +24,7 @@ local switch = require("ui.element.switch")
 local toggle = require("ui.element.toggle")
 local toggle_hex = require("ui.element.toggle_hex")
 local checkbox = require("ui.element.checkbox")
-
+local text_entry = require("ui.element.text_entry")
 
 return function()
     knav.set_wrapping(wmode.list, wmode.vertical)
@@ -36,7 +38,7 @@ return function()
 
     knav.make_cell()
     knav.grid_cell(1, 1)
-    numeric_input(id.numeric, -100, 100, 5, "X = %.2f")
+    numeric_input(id.numeric, -100, 100, 5, "X = %.2f", 1)
     cursor.shift_down(10)
 
     -- Slider
@@ -68,7 +70,6 @@ return function()
         require("ui").scale = id.slider_coarse.value
     end
     cursor.shift_down(10)
-
 
     -- Switch
     cursor.width = 150
@@ -117,6 +118,14 @@ return function()
     knav.grid_cell(1, 12)
     checkbox(id.checkbox)
     cursor.shift_down(10)
+
+
+    cursor.width = 100
+    cursor.height = 50
+
+    -- primitive.rectangle(theme.red, "line")
+    mnav.make_sensor(nil, smode.block)
+    text_entry(id.text_entry, 24, "Search")
+    -- primitive.rectangle(theme.green, "line")
+
 end
-
-

@@ -5,7 +5,7 @@ local placement = cursor.placement
 local theme = require("ui.theme")
 local draw_queue = require("ui.draw_queue")
 local text = require("ui.text")
-local ui = require("ui")
+local settings = require("ui.settings")
 
 local primitive = {}
 
@@ -135,13 +135,14 @@ end
 ---@param align love.AlignMode alignment mode
 ---@param wrap boolean wrap text
 ---@param color number[]? override text color
-function primitive.label(str, size, align, wrap, color)
+---@param font_path string? override font
+function primitive.label(str, size, align, wrap, color, font_path)
     cursor.push()
 
     -- Scale up
-    local wrap_limit = wrap and (cursor.width * ui.scale) or math.huge
+    local wrap_limit = wrap and (cursor.width * settings.scale) or math.huge
 
-    local font = text.get_font(size * ui.scale, theme.font_path)
+    local font = text.get_font(size * settings.scale, font_path or theme.font_path)
 
     -- get a new text object
     local text_object = text.get_text_object(font, str, wrap_limit, align)
@@ -169,7 +170,7 @@ function primitive.icon(icon_name, size, color)
     cursor.push()
 
     local str = text.get_icon_string(icon_name, theme.icon_font_path)
-    local font = text.get_font(size * ui.scale, theme.icon_font_path)
+    local font = text.get_font(size * settings.scale, theme.icon_font_path)
 
     local text_object = text.get_text_object(font, str, math.huge, "left")
 

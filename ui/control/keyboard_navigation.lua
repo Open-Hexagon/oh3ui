@@ -2,6 +2,8 @@ local events = require("ui.events")
 local bit = require("bit")
 local bor, band = bit.bor, bit.band
 
+local is_editing_text = require("ui.control.typing").is_editing_text
+
 local keyboard_navigation = {
     selection_has_changed = false
 }

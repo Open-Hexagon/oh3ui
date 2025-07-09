@@ -45,12 +45,15 @@ theme.icon_font_path = text.icon_font.default
 -- primitive colors
 theme.black = { 0, 0, 0, 1 }
 theme.red = { 1, 0, 0, 1 }
+theme.yellow = { 1, 1, 0, 1 }
 theme.green = { 0, 1, 0, 1 }
+theme.cyan = { 0, 1, 1, 1 }
 theme.blue = { 0, 0, 1, 1 }
+theme.magenta = { 1, 0, 1, 1 }
 theme.white = { 1, 1, 1, 1 }
 
 -- standard colors
-theme.default = { 0.2, 0.2, 0.2, 1 } -- default color of primitives
+theme.default = theme.magenta -- default color of primitives
 theme.text_color = theme.white -- default text color
 -- theme.accent_color = i2c(0x3daee9)
 theme.accent_color = i2c(0xff7321)
@@ -63,6 +66,7 @@ theme.widget_background_highlight = mix(theme.widget_background, theme.widget_ou
 theme.widget_actuator = { 0.8, 0.8, 0.8, 1 }
 theme.widget_actuator_outline = theme.white
 theme.widget_actuator_outline_highlight = theme.accent_color
+
 
 theme.scrollbar = { 1, 1, 1, 0.35 }
 theme.grabbed_scrollbar = { 1, 1, 1, 0.6 }

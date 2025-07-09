@@ -8,8 +8,6 @@ local scroll_example_menu = require("ui.menu.scroll_example")
 local layers = require("ui.layers")
 local ui = require("ui")
 
-ui.scale = os.getenv("SCALE") or 1
-
 function love.run()
     -- Target duration of each tick in seconds
     -- ? 240 tps seems a bit excessive for a user interface.
@@ -18,8 +16,8 @@ function love.run()
     local last_time = 0
 
     -- * testing menu
-    -- layers.push(example_menu)
-    layers.push(scroll_example_menu)
+    layers.push(example_menu)
+    -- layers.push(scroll_example_menu)
 
     -- keep this always on when using the ui
     love.keyboard.setKeyRepeat(true)
@@ -34,9 +32,6 @@ function love.run()
             -- print(name, a, b, c, d, e, f)
             ui.push_event(name, a, b, c, d, e, f)
         end
-
-        -- ui.scale = (math.sin(love.timer.getTime() * 10) + 1) * 0.2 + 0.8
-        -- ui.scale = math.floor(ui.scale * 10) / 10
 
         if love.graphics.isActive() then
             -- reset everything

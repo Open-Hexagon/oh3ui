@@ -1,15 +1,11 @@
 local cursor = require("ui.cursor")
 local events = require("ui.events")
 local draw_queue = require("ui.draw_queue")
-local typing = require("ui.control.typing")
-local mouse_navigation = require("ui.control.mouse_navigation")
-local keyboard_navigation = require("ui.control.keyboard_navigation")
+local control = require("ui.control")
+local settings = require("ui.settings")
 
 
-local ui = {
-    -- this is set using an environment variable, changing it here will do nothing
-    scale = 1,
-}
+local ui = {}
 
 ---Push a love event to the event sequence.
 ---All love events should be pushed at the very beginning of a frame.
@@ -65,7 +61,7 @@ function ui.start()
 
     -- scale immediately so that screen space positions can be accounted for in any transforms and inverseTransforms
     love.graphics.push()
-    love.graphics.scale(ui.scale)
+    love.graphics.scale(settings.scale)
     cursor.reset()
 
     ---The green grid shows scaled space.
@@ -112,9 +108,7 @@ function ui.finish()
     draw_queue.draw()
 
     -- do z-ordered mouse intersection checks
-    mouse_navigation.evaluate()
-    keyboard_navigation.evaluate()
-    -- typing.update()
+    control.evaluate()
 
     -- if mouse_navigation.dx ~= 0 or mouse_navigation.dy ~= 0 then
     --     print(mouse_navigation.dx, mouse_navigation.dy)
@@ -131,13 +125,13 @@ end
 ---get the width of the ui adjusted for scale
 ---@return number
 function ui.get_width()
-    return love.graphics.getWidth() / ui.scale
+    return love.graphics.getWidth() / settings.scale
 end
 
 ---get the height of the ui adjusted for scale
 ---@return number
 function ui.get_height()
-    return love.graphics.getHeight() / ui.scale
+    return love.graphics.getHeight() / settings.scale
 end
 
 return ui

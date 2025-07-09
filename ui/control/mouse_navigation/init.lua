@@ -10,13 +10,13 @@ local bit = require("bit")
 local bor = bit.bor
 
 local mouse_navigation = {
-    -- this frame's mouse position
+    -- this frame's mouse position (not screen coordinates)
     x = -1,
     y = -1,
 
-    -- change in coordinates from last frame (not screen coordinates)
-    dx = 0,
-    dy = 0,
+    -- change in coordinates from last frame (screen coordinates)
+    screen_dx = 0,
+    screen_dy = 0,
 
     -- wheel movement
     wheel_dx = 0,
@@ -193,7 +193,7 @@ function mouse_navigation.evaluate()
     local screen_x, screen_y = love.mouse.getPosition()
     mouse_navigation.x, mouse_navigation.y = love.graphics.inverseTransformPoint(screen_x, screen_y)
 
-    mouse_navigation.dx, mouse_navigation.dy = 0, 0
+    mouse_navigation.screen_dx, mouse_navigation.screen_dy = 0, 0
     mouse_navigation.wheel_dx, mouse_navigation.wheel_dy = 0, 0
 
     -- these fields only survive for 1 frame
@@ -235,8 +235,7 @@ function mouse_navigation.evaluate()
 
             -- Record mouse movement
             -- Using the event dx, dy happens to work better if the mouse is being repositioned manually.
-            dx, dy = love.graphics.inverseTransformPoint(dx, dy)
-            mouse_navigation.dx, mouse_navigation.dy = mouse_navigation.dx + dx, mouse_navigation.dy + dy
+            mouse_navigation.screen_dx, mouse_navigation.screen_dy = mouse_navigation.screen_dx + dx, mouse_navigation.screen_dy + dy
         else
             local button_id, istouch, presses = a, b, c
 

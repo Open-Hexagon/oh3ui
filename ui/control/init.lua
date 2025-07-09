@@ -1,3 +1,4 @@
+local mouse_navigation = require("ui.control.mouse_navigation")
 local keyboard_navigation = require("ui.control.keyboard_navigation")
 
 
@@ -18,9 +19,12 @@ if the default keyboard cell is a text entry pressing any key will immediately a
 ---A module that oversees which control method is being used
 local control = {}
 
+
+
+
 function control.evaluate()
-
-
+    mouse_navigation.evaluate()
+    -- keyboard_navigation.evaluate()
 end
 
 

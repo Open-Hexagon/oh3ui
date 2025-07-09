@@ -34,7 +34,7 @@ Notable assumptions that the UI makes without enforcing them with error checking
 
 - Scroll regions expect that all cursor data structures have returned to their original states from when scroll.start was called when scroll.finish is called. Not honoring this assumption is undefined behavior.
 - Keyboard navigation cell and mouse sensor IDs need to remain assigned to the same elements between frames for keyboard and mouse interaction to function. (This may be a problem when the layout of a page suddenly changes, but the error will only last one frame.)
-  - A good practive is to make elements always use the same amount of cell and sensor IDs even if they don't actually need them all. 
+  - A good practice is to make elements always use the same amount of cell and sensor IDs even if they don't actually need them all. 
 
 ## Requirements
 

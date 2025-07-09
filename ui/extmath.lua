@@ -85,7 +85,6 @@ function extmath.map(t, a, b, c, d)
     return c + ((d - c) / (b - a)) * (t - a)
 end
 
-
 ---Cubic bezier function
 ---@param x0 number
 ---@param y0 number
@@ -199,6 +198,16 @@ function extmath.aligned_rectangle_intersection(x1, y1, x2, y2, x3, y3, x4, y4)
     else
         return nil, 0, 0, 0 -- No intersection
     end
+end
+
+---rounds a number
+---@param n number number
+---@param p integer number of decimal places
+---@return number
+---@nodiscard
+function extmath.round(n, p)
+    local exp = 10 ^ p
+    return math.floor(n * exp + 0.5) / exp
 end
 
 return extmath

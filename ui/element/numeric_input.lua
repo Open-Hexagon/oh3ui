@@ -11,7 +11,6 @@ local smode = mnav.sensor_mode
 local knav = require("ui.control.keyboard_navigation")
 local kba = knav.actions
 
-
 ---Combination number slider and entry with increment buttons.
 ---This element will reshape the cursor.
 ---TODO add manual keyboard input when element is clicked.
@@ -19,9 +18,10 @@ local kba = knav.actions
 ---@param min number min representable number in state.value
 ---@param max number max representable number in state.value
 ---@param step number step size for the increment and decrement buttons
----@param format string format string for the number display
+---@param format string? format string for the number display
+---@param decimals integer? Number of decimals of precision. Default is 0, 2 means the smallest step is 0.01, -1 means the smallest step is 10.
 ---@return number value the "value" field of the state table
-return function(state, min, max, step, format)
+return function(state, min, max, step, format, decimals)
     -- first time initialization
     if not state.initialized then
         state.value = 0
@@ -86,7 +86,8 @@ return function(state, min, max, step, format)
         cursor.width = full_width
         primitive.rectangle(theme.widget_background_highlight)
 
-        state.value = state.value + mnav.dx
+        decimals = decimals or 0
+        state.value = state.value + mnav.screen_dx * 10 ^ -decimals
     else
         -- normal background
         cursor.width = full_width
