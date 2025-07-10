@@ -5,24 +5,31 @@ local settings = require("ui.settings")
 local typing = {}
 
 local target
+local character_whitelist
 
+---Returns true if the user is editing text
+---@return boolean
+---@nodiscard
 function typing.is_editing_text()
-    return true
+    -- convert to boolean
+    return not not target
 end
 
----comment
+---Starts editing text for a state table. Cursor will by default be placed at the end of the line.
 ---@param entry_state table
----@param use_last_text_position boolean?
-function typing.set_target(entry_state, use_last_text_position)
-    entry_state.text = entry_state.text or ""
+---@param char_wl string? Pattern to match whitelisted characters. Must match single characters.
+---@param use_last_text_position boolean? If true, using a specific target will put the cursor in its last position for that target.
+function typing.set_target(entry_state, char_wl, use_last_text_position)
     if use_last_text_position then
         entry_state._text_position = entry_state._text_position or 0
     else
         entry_state._text_position = #entry_state.text
     end
     target = entry_state
+    character_whitelist = char_wl or "."
 end
 
+---Stops editing text the current target
 function typing.unset_target()
     target = nil
 end
@@ -32,6 +39,7 @@ end
 ---@param i integer
 ---@param j integer
 ---@return string
+---@nodiscard
 local function utf8_sub(str, i, j)
     i = utf8.offset(str, i) or #str + 1
     if j > 0 then
@@ -40,7 +48,7 @@ local function utf8_sub(str, i, j)
     return str:sub(i, j)
 end
 
----comment
+---Evaluates typing events
 function typing.evaluate()
     if not target then
         return
@@ -53,8 +61,10 @@ function typing.evaluate()
     for event in events.iterate("^[tk]e") do
         local name = event[1]
         if name == "textinput" then
-            text = utf8_sub(text, 1, text_pos) .. event[2] .. utf8_sub(text, text_pos + 1, -1)
-            text_pos = text_pos + 1
+            if string.find(event[2], character_whitelist) then
+                text = utf8_sub(text, 1, text_pos) .. event[2] .. utf8_sub(text, text_pos + 1, -1)
+                text_pos = text_pos + 1
+            end
         elseif name == "keypressed" then
             local key = event[3]
             if key == "left" then
@@ -91,15 +101,14 @@ function typing.evaluate()
     end
 end
 
----comment
----@param font love.Font
+---Gets the +x value for where the cursor should go
+---@param font love.Font should be the font being used
 ---@return number?
 ---@nodiscard
 function typing.get_cursor_position(font)
     if not target then
         return
     end
-
     return font:getWidth(utf8_sub(target.text, 1, target._text_position)) / settings.scale
 end
 

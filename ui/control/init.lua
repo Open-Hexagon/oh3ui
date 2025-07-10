@@ -1,5 +1,6 @@
 local mouse_navigation = require("ui.control.mouse_navigation")
 local keyboard_navigation = require("ui.control.keyboard_navigation")
+local typing = require("ui.control.typing")
 
 
 --[[
@@ -25,6 +26,7 @@ local control = {}
 function control.evaluate()
     mouse_navigation.evaluate()
     -- keyboard_navigation.evaluate()
+    typing.evaluate()
 end
 
 

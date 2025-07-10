@@ -13,11 +13,15 @@ local mnav = require("ui.control.mouse_navigation")
 ---@param state table
 ---@param size number font size in pixels
 ---@param hint string? dim background text that shows when there's no text in the entry
+---@param char_wl string? Pattern to match whitelisted characters. Must match single characters.
+---@param use_last_text_position boolean? If true, using a specific target will put the cursor in its last position for that target.
 ---@param text_color number[]? override text color
 ---@param hint_color number[]? override hint text color
 ---@param sensor_id integer? use a specific sensor id
 ---@param font_path string? override font path
-return function(state, size, hint, text_color, hint_color, sensor_id, font_path)
+return function(state, size, hint, char_wl, use_last_text_position, text_color, hint_color, sensor_id, font_path)
+    state.text = state.text or ""
+
     cursor.push()
     cursor.auto_reshape = false
 
@@ -31,12 +35,14 @@ return function(state, size, hint, text_color, hint_color, sensor_id, font_path)
         end
     end
 
-    if mnav.get_clicked(sensor_id) then
-        typing.set_target(state)
-    end
-
-    if mnav.clicked and not hovering then
-        typing.unset_target()
+    if typing.is_editing_text() then
+        if not hovering and mnav.holding then
+            typing.unset_target()
+        end
+    else
+        if mnav.get_clicked(sensor_id) then
+            typing.set_target(state, char_wl, use_last_text_position)
+        end
     end
 
     local font = text.get_font(size * settings.scale, font_path or theme.font_path)

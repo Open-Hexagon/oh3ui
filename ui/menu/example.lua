@@ -11,6 +11,7 @@ local mb = mnav.buttons
 local knav = require("ui.control.keyboard_navigation")
 local kba = knav.actions
 local wmode = knav.wrapping_mode
+local settings = require("ui.settings")
 -- local typing = require("ui.control.typing")
 
 -- Elements
@@ -55,7 +56,7 @@ return function()
     knav.grid_cell(1, 3)
     slider(id.slider_coarse, 1, 3, 5, true)
     if knav.get_action() == kba.activate then
-        require("ui").scale = id.slider_coarse.value
+        settings.scale = id.slider_coarse.value
     end
     cursor.shift_down(10)
 
@@ -67,7 +68,7 @@ return function()
     knav.grid_cell(1, 4)
     button("Apply UI Scale", 16)
     if mnav.get_clicked() == mb.left or knav.get_action() == kba.activate then
-        require("ui").scale = id.slider_coarse.value
+        settings.scale = id.slider_coarse.value
     end
     cursor.shift_down(10)
 
@@ -123,9 +124,6 @@ return function()
     cursor.width = 100
     cursor.height = 50
 
-    -- primitive.rectangle(theme.red, "line")
     mnav.make_sensor(nil, smode.block)
-    text_entry(id.text_entry, 24, "Search")
-    -- primitive.rectangle(theme.green, "line")
-
+    text_entry(id.text_entry, 24, "Search", "[0-9%.]")
 end
