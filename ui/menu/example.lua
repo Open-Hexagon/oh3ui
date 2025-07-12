@@ -121,9 +121,10 @@ return function()
     cursor.shift_down(10)
 
 
-    cursor.width = 100
+    cursor.width = 200
     cursor.height = 50
 
+    primitive.rectangle(theme.green, "line")
     mnav.make_sensor(nil, smode.block)
-    text_entry(id.text_entry, 24, "Search", "[0-9%.]")
+    text_entry(id.text_entry, 24, "Search", nil, true)
 end
