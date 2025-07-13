@@ -65,7 +65,7 @@ local last_sensor_id = 0
 local last_manual_sensor_id = 0
 
 ---The sensor id that will be used to check for hovering.
----Sensor id 0 is special in that it will never be assigned.
+---Sensor id 0 will never be assigned normally
 local current_sensor_id = 0
 
 ---Returns a new sensor id. Can be used to forward declare sensor ids.
@@ -85,7 +85,7 @@ end
 function mouse_navigation.make_sensor(sensor_id, ...)
     cursor.place()
     if sensor_id then
-        if sensor_id >= 0 then
+        if sensor_id > 0 then
             error(string.format("sensor id %d cannot be used", sensor_id))
         end
         current_sensor_id = sensor_id
@@ -106,12 +106,17 @@ end
 
 ---Changes the currently recognized sensor to a new id.
 ---Can be used to revert the current sensor back to a previously made sensor
+---
 ---@param sensor_id integer
 function mouse_navigation.change_to_sensor(sensor_id)
     if sensor_id < last_manual_sensor_id or sensor_id > last_sensor_id then
         error("bad sensor id")
     end
     current_sensor_id = sensor_id
+end
+
+function mouse_navigation.get_current_sensor()
+    return current_sensor_id
 end
 
 ---Returns true if the mouse is hovering the current sensor.

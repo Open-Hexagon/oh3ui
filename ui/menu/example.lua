@@ -25,6 +25,7 @@ local switch = require("ui.element.switch")
 local toggle = require("ui.element.toggle")
 local toggle_hex = require("ui.element.toggle_hex")
 local checkbox = require("ui.element.checkbox")
+local selection_outline = require("ui.decorator.selection_outline")
 local text_entry = require("ui.element.text_entry")
 
 return function()
@@ -120,11 +121,15 @@ return function()
     checkbox(id.checkbox)
     cursor.shift_down(10)
 
-
     cursor.width = 200
     cursor.height = 50
 
+    local text_entry_cell = knav.make_cell("default")
+    knav.grid_cell(1, 13)
+    local text_entry_sensor = mnav.make_sensor(nil, smode.block)
     primitive.rectangle(theme.green, "line")
-    mnav.make_sensor(nil, smode.block)
-    text_entry(id.text_entry, 24, "Search", nil, true)
+    if knav.is_selected() then
+        selection_outline()
+    end
+    text_entry(id.text_entry, text_entry_sensor, text_entry_cell, 24, "Search")
 end

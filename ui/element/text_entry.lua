@@ -8,18 +8,19 @@ local settings = require("ui.settings")
 local primitive = require("ui.primitive")
 local mask = require("ui.mask")
 local mnav = require("ui.control.mouse_navigation")
+local knav = require("ui.control.keyboard_navigation")
+local kba = knav.actions
 
 ---Text entry element. Doesn't resize the cursor. Requires a mouse sensor.
 ---@param state table
+---@param sensor_id integer mouse sensor id for activating/deactivating this text entry
+---@param cell_id integer keyboard navigation cell id for activating/deactivating this text entry
 ---@param size number font size in pixels
 ---@param hint string? dim background text that appears when there's no text in the entry
----@param char_wl string? Pattern to match whitelisted characters. Must match single characters.
----@param use_last_text_position boolean? If true, using a specific text entry will put the cursor in its last position for that entry.
----@param sensor_id integer? use a specific mouse sensor id for activating this text entry
 ---@param text_color number[]? override text color
 ---@param hint_color number[]? override hint text color
 ---@param font_path string? override font path
-return function(state, size, hint, char_wl, use_last_text_position, sensor_id, text_color, hint_color, font_path)
+return function(state, sensor_id, cell_id, size, hint, text_color, hint_color, font_path)
     state.text = state.text or ""
 
     -- used to offset the entry text in case there's too much text to fit in view
@@ -34,13 +35,14 @@ return function(state, size, hint, char_wl, use_last_text_position, sensor_id, t
     local text_cursor_height = (font:getBaseline() - font:getDescent()) / settings.scale
 
     if typing.is_editing_text() then
-        typing.update_font(font)
+        typing.update_evaluation_info(font, cell_id)
         if not hovering and mnav.holding then
             typing.unset_target()
         end
     else
-        if mnav.get_clicked(sensor_id) then
-            typing.set_target(state, char_wl, use_last_text_position)
+        knav.configure_cell_as_text_input(cell_id, state)
+        if mnav.get_clicked(sensor_id) or knav.get_action(cell_id) == kba.activate then
+            typing.set_target(state)
         end
     end
 

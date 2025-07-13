@@ -45,9 +45,7 @@ return function()
             end
         end
 
-        cursor.end_area()
-        cursor.outset(5)
-        scroll.finish(id.scroll)
+        scroll.finish(id.scroll, 5)
     end
 
     cursor.remove_translation()

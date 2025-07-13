@@ -19,6 +19,9 @@ local view_request_padding = scrollbar_thickness * 1.5
 local in_scroll = false
 local scroll_region, h_act, h_bar, v_act, v_bar
 
+---Starts a scroll region
+---@param state table
+---@return boolean is_viewable True if the scroll area has non-zero area. Can be used to skip evaluating elements inside the scroll region. 
 function scroll.start(state)
     if cursor.is_degenerate() then
         return false
@@ -47,6 +50,8 @@ function scroll.start(state)
     )
 
     in_scroll = true
+
+    cursor.begin_area()
 
     return true
 end
@@ -96,7 +101,7 @@ local function cancel_view_request()
     view_request.show_sb_cooldown = 0
 end
 
----Move the scroll area for a view request 
+---Move the scroll area for a view request
 ---@param state table
 ---@param placement_left number
 ---@param placement_top number
@@ -318,10 +323,17 @@ local function get_actuator_size(content_size, scroll_size)
     return math.max(scroll_size * scroll_size / content_size, minimum_scrollbar_actuator_length)
 end
 
-function scroll.finish(state)
+
+---Finishes the current scroll region
+---@param state table This must be the same table as the coresponding scroll.start
+---@param padding number scroll area padding
+function scroll.finish(state, padding)
     if not in_scroll then
         error("scroll.finish called with no active scroll")
     end
+
+    cursor.end_area()
+    cursor.outset(padding)
 
     mask.pop()
     cursor.remove_translation()
