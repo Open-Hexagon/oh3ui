@@ -34,7 +34,7 @@ return function(state, sensor_id, cell_id, size, hint, text_color, hint_color, f
     local font = text.get_font(size * settings.scale, font_path or theme.font_path)
     local text_cursor_height = (font:getBaseline() - font:getDescent()) / settings.scale
 
-    if typing.is_editing_text() then
+    if typing.is_editing_this_text(state) then
         typing.update_evaluation_info(font, cell_id)
         if not hovering and mnav.holding then
             typing.unset_target()
@@ -60,7 +60,7 @@ return function(state, sensor_id, cell_id, size, hint, text_color, hint_color, f
 
     local text_object = text.get_text_object(font, state.text, math.huge, "left")
 
-    if typing.is_editing_text() then
+    if typing.is_editing_this_text(state) then
         -- cursor distance from leftmost character
         local cursor_distance = typing.get_cursor_distance(font)
 

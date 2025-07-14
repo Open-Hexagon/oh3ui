@@ -32,9 +32,18 @@ end
 ---Returns true if the user is editing text
 ---@return boolean
 ---@nodiscard
-function typing.is_editing_text()
+function typing.is_editing_any_text()
     -- convert to boolean
     return not not target
+end
+
+---Returns true if the user is editing text
+---@param state table
+---@return boolean
+---@nodiscard
+function typing.is_editing_this_text(state)
+    -- convert to boolean
+    return target == state
 end
 
 ---Starts editing text for a state table. Cursor will be placed at the end of the line.
@@ -70,11 +79,11 @@ local function get_cursor_distance(font, text, char_position)
 end
 
 ---Evaluates typing events
----@return integer? goto_keyboard_selection contains the text entry keyboard navigation cell id if, after evaluation, the target was unset
----@return boolean tabbed_out true if the tab key was used to unset the target
+---@return integer? goto_cell contains the text entry keyboard navigation cell id if, after evaluation, the target was unset
+---@return integer tab_direction true if the tab key was used to unset the target
 function typing.evaluate()
     if not target then
-        return nil, false
+        return nil, 0
     end
 
     -- change text and text pos based on events
@@ -110,14 +119,18 @@ function typing.evaluate()
             elseif key == "delete" then
                 target.text = utf8_sub(target.text, 1, target._text_entry_char_position)
                     .. utf8_sub(target.text, target._text_entry_char_position + 2, -1)
-            elseif key == "escape" or key == "return" then
+            elseif key == "escape" then
                 -- unsets the target but doesn't move the keyboard selection
                 typing.unset_target()
-                return target_cell_id, false
-            elseif key == "tab" then
+                return target_cell_id, 0
+                -- unsets the target and reverse tabs the keyboard selection
+            elseif key == "up" then
+                typing.unset_target()
+                return target_cell_id, -1
+            elseif key == "tab" or key == "return" or key == "down" then
                 -- unsets the target and tabs the keyboard selection
                 typing.unset_target()
-                return target_cell_id, true
+                return target_cell_id, 1
             elseif key == "home" or key == "pageup" then
                 target._text_entry_char_position = 0
             elseif key == "end" or key == "pagedown" then
@@ -130,7 +143,7 @@ function typing.evaluate()
         end
     end
 
-    return nil, false
+    return nil, 0
 end
 
 ---Gets the +x value for where the cursor should go for the current target

@@ -132,4 +132,15 @@ return function()
         selection_outline()
     end
     text_entry(id.text_entry, text_entry_sensor, text_entry_cell, 24, "Search")
+
+    cursor.shift_down(10)
+
+    local text_entry_cell2 = knav.make_cell()
+    knav.grid_cell(1, 14)
+    local text_entry_sensor2 = mnav.make_sensor(nil, smode.block)
+    primitive.rectangle(theme.green, "line")
+    if knav.is_selected() then
+        selection_outline()
+    end
+    text_entry(id.text_entry2, text_entry_sensor2, text_entry_cell2, 24, "Search2")
 end

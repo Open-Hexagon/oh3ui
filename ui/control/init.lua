@@ -18,12 +18,14 @@ local control = {}
 
 function control.evaluate()
     mouse_navigation.evaluate()
-    if typing.is_editing_text() then
-        local goto_keyboard_selection, tabbed_out = typing.evaluate()
-        if goto_keyboard_selection then
-            keyboard_navigation.jump_to_cell(goto_keyboard_selection)
-            if tabbed_out then
+    if typing.is_editing_any_text() then
+        local goto_cell, tab_direction = typing.evaluate()
+        if goto_cell then
+            keyboard_navigation.jump_to_cell(goto_cell)
+            if tab_direction == 1 then
                 keyboard_navigation.jump_forward()
+            elseif tab_direction == -1 then
+                keyboard_navigation.jump_backwards()
             end
         end
         keyboard_navigation.evaluate_without_events()
