@@ -13,7 +13,6 @@ local kba = knav.actions
 
 ---Combination number slider and entry with increment buttons.
 ---This element will reshape the cursor.
----TODO add manual keyboard input when element is clicked.
 ---@param state table state table
 ---@param min number min representable number in state.value
 ---@param max number max representable number in state.value
@@ -28,6 +27,7 @@ return function(state, min, max, step, format, decimals)
         state.initialized = true
     end
 
+    -- make sensor ids
     local everything_sid = mnav.declare_sensor_id()
     local left_sid = mnav.declare_sensor_id()
     local center_sid = mnav.declare_sensor_id()
@@ -44,9 +44,6 @@ return function(state, min, max, step, format, decimals)
 
     cursor.auto_reshape = false
     cursor.change_anchor(0.5)
-
-    -- reserve background for later
-    local bg_res_id = reserve.allocate(1)
 
     cursor.push() -- (2)
 
@@ -79,8 +76,8 @@ return function(state, min, max, step, format, decimals)
         love.mouse.setPosition(love.graphics.transformPoint(mnav.press_x, mnav.press_y))
     end
 
-    -- draw background
-    reserve.take(bg_res_id)
+    -- #region Draw Background
+
     if dragging == mb.left then
         -- highlighted background
         cursor.width = full_width
@@ -95,21 +92,26 @@ return function(state, min, max, step, format, decimals)
         cursor.width = center_width
 
         -- brighter center
-        if mnav.is_hovering(center_sid) then
+        if mnav.is_hovering(center_sid) then -- and not is_editing_this_text(state)
             primitive.rectangle(theme.widget_background_brighter)
         end
     end
 
-    if hovering or dragging == mb.left then
-        -- left arrow
+    -- #endregion
+
+    -- ## Arrows
+    if hovering or dragging == mb.left then -- and not is_editing_this_text(state)
+        local kb_action, kb_holding
+
+        -- #region Left Arrow
         cursor.peek()
         cursor.change_anchor(0)
         cursor.width = element.numeric_input_lr_button_width
         cursor.change_anchor(0.5)
 
-        local kb_action = knav.get_action()
-        local kb_holding = knav.get_holding()
         if not dragging then
+            kb_action = knav.get_action()
+            kb_holding = knav.get_holding()
             mnav.make_sensor(left_sid, smode.block)
             if mnav.get_clicked(left_sid) == mb.left or kb_action == kba.left then
                 state.value = state.value - step
@@ -121,8 +123,9 @@ return function(state, min, max, step, format, decimals)
             end
         end
         primitive.icon("chevron-left", element.numeric_input_text_size)
+        -- #endregion
 
-        -- right arrow
+        -- #region right arrow
         cursor.peek()
         cursor.change_anchor(1, 0)
         cursor.width = element.numeric_input_lr_button_width
@@ -140,12 +143,27 @@ return function(state, min, max, step, format, decimals)
             end
         end
         primitive.icon("chevron-right", element.numeric_input_text_size)
+        -- #endregion
     end
 
     cursor.pop() -- (2)
 
     state.value = extmath.clamp(state.value, min or -math.huge, max or math.huge)
+
+    -- local started_typing, stopped_typing = text_entry(state, element.numeric_input_text_size, "input", true, center_sid, nil)
+    -- if stopped_typing then
+    --     local n = tonumber(state.text)
+    --     print(n)
+    --     if n then
+    --         state.value = n
+    --     end
+
+    --     state.text = ""
+    --     -- state.value = extmath.clamp(state.value, min or -math.huge, max or math.huge)
+    -- end
+    -- if not is_editing_this_text(state) then
     primitive.label(string.format(format or "%f", state.value), 16, "left", false)
+    -- end
     primitive.rectangle_outline((hovering or dragging) and theme.widget_outline_highlight or theme.widget_outline)
     mnav.make_sensor(everything_sid)
 

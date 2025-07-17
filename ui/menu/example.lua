@@ -12,7 +12,7 @@ local knav = require("ui.control.keyboard_navigation")
 local kba = knav.actions
 local wmode = knav.wrapping_mode
 local settings = require("ui.settings")
--- local typing = require("ui.control.typing")
+local typing = require("ui.control.typing")
 
 -- Elements
 local button = require("ui.element.button")
@@ -26,7 +26,6 @@ local toggle = require("ui.element.toggle")
 local toggle_hex = require("ui.element.toggle_hex")
 local checkbox = require("ui.element.checkbox")
 local selection_outline = require("ui.decorator.selection_outline")
-local text_entry = require("ui.element.text_entry")
 
 return function()
     knav.set_wrapping(wmode.list, wmode.vertical)
@@ -127,20 +126,28 @@ return function()
     local text_entry_cell = knav.make_cell("default")
     knav.grid_cell(1, 13)
     local text_entry_sensor = mnav.make_sensor(nil, smode.block)
+
     primitive.rectangle(theme.green, "line")
     if knav.is_selected() then
         selection_outline()
     end
-    text_entry(id.text_entry, text_entry_sensor, text_entry_cell, 24, "Search")
+
+    typing.make_text_entry(id.text_entry, text_entry_sensor, text_entry_cell)
+
+    typing.draw_text_entry(24, "Search")
 
     cursor.shift_down(10)
 
     local text_entry_cell2 = knav.make_cell()
     knav.grid_cell(1, 14)
     local text_entry_sensor2 = mnav.make_sensor(nil, smode.block)
+
     primitive.rectangle(theme.green, "line")
     if knav.is_selected() then
         selection_outline()
     end
-    text_entry(id.text_entry2, text_entry_sensor2, text_entry_cell2, 24, "Search2")
+
+    typing.make_text_entry(id.text_entry2, text_entry_sensor2, text_entry_cell2)
+
+    typing.draw_text_entry(36, "Search2")
 end

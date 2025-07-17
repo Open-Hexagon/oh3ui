@@ -1,6 +1,7 @@
 local events = require("ui.events")
 local bit = require("bit")
 local bor, band = bit.bor, bit.band
+local shared = require("ui.control.shared")
 
 local keyboard_navigation = {
     selection_has_changed = false,
@@ -155,10 +156,6 @@ local cell_list = {}
 ---Is also the length of the cell list.
 local cell_index = 0
 
----The cell id that is used to check for selection and actions
----The cell id 0 will never be assigned normally.
-local current_cell_id = 0
-
 ---The index of the currently selected cell.
 ---0 indicates no selection.
 local selected_cell = 0
@@ -226,9 +223,24 @@ function keyboard_navigation.make_cell(mode)
         default_cell = cell_index
     end
 
-    current_cell_id = cell_index
+    shared.current_cell_id = cell_index
 
-    return current_cell_id
+    return cell_index
+end
+
+---Informs keyboard navigation that a cell is meant for a text entry and thus certain actions should behave differently when interacting with this cell.
+---If 0 is passed in as the cell id, it is silently ignored.
+---@param cell_id integer
+---@param state table
+function keyboard_navigation.configure_cell_as_text_input(cell_id, state)
+    if cell_id < 0 or cell_id > cell_index then
+        error("bad sensor id")
+    end
+    if cell_id == 0 then
+        return
+    end
+    local cell = cell_list[cell_id]
+    cell.text_input_state = state
 end
 
 ---Changes the currently recognized cell id.
@@ -239,7 +251,7 @@ function keyboard_navigation.change_to_cell(cell_id)
     if cell_id < 0 or cell_id > cell_index then
         error("bad sensor id")
     end
-    current_cell_id = cell_id
+    shared.current_cell_id = cell_id
 end
 
 --#region Conditions
@@ -249,14 +261,16 @@ end
 ---Returns true if the last created cell or specified cell is selected
 ---@param cell_id? integer
 ---@return boolean
+---@nodiscard
 function keyboard_navigation.is_selected(cell_id)
-    cell_id = cell_id or current_cell_id
+    cell_id = cell_id or shared.current_cell_id
     return cell_id > 0 and cell_id == selected_cell
 end
 
 ---Returns the action of the last created cell
 ---@param cell_id? integer
 ---@return keyboard_action?
+---@nodiscard
 function keyboard_navigation.get_action(cell_id)
     if keyboard_navigation.is_selected(cell_id) then
         return last_action
@@ -267,6 +281,7 @@ end
 ---Returns the repeat state of the action on the last created cell
 ---@param cell_id? integer
 ---@return boolean?
+---@nodiscard
 function keyboard_navigation.is_repeat(cell_id)
     if keyboard_navigation.is_selected(cell_id) then
         return last_is_repeat
@@ -277,6 +292,7 @@ end
 ---Returns the holding action of the last created cell
 ---@param cell_id? integer
 ---@return keyboard_action?
+---@nodiscard
 function keyboard_navigation.get_holding(cell_id)
     if keyboard_navigation.is_selected(cell_id) then
         return key_to_action[holding_key]
@@ -320,21 +336,6 @@ function keyboard_navigation.grid_cell(x, y, col_span, row_span)
 end
 
 --#endregion
-
----Informs keyboard navigation that a cell is meant for a text entry and thus certain actions should behave differently when interacting with this cell.
----If 0 is passed in as the cell id, it is silently ignored.
----@param cell_id integer
----@param state table
-function keyboard_navigation.configure_cell_as_text_input(cell_id, state)
-    if cell_id < 0 or cell_id > cell_index then
-        error("bad sensor id")
-    end
-    if cell_id == 0 then
-        return
-    end
-    local cell = cell_list[cell_id]
-    cell.text_input_state = state
-end
 
 --#region Selection Jumping
 
@@ -549,13 +550,13 @@ end
 
 ---Iterates through keyboard events and returns an action and whether it was a from a repeated keyboard input.
 ---Also updates the `holding_key` variable.
----@return keyboard_action|nil action Keyboard action. Nil if there was none.
+---@return keyboard_action? action Keyboard action. Nil if there was none.
 ---@return boolean is_repeat True if the returned keyboard action is a repeat
----@return table|nil set_typing_target If the text entry associated with this cell should be set as the typing target, this is its state table
----@return string|nil text Text to be immediately appended to the text entry should set_typing_target be set
+---@return table? typing_target If the text entry associated with this cell should be set as the typing target, this is its state table
+---@return string? typing_action typing action if to perform when typing has started
 local function iterate_events()
     local action, is_repeat = nil, false
-    local set_typing_target, text
+    local typing_target, typing_action
 
     for event in events.iterate("^[tk]e") do
         local name, key = event[1], event[2]
@@ -607,6 +608,16 @@ local function iterate_events()
                 else
                     keyboard_navigation.page_forward()
                 end
+            elseif key == "backspace" or key == "delete" then
+                if selected_cell == 0 then
+                    typing_target = default_cell and cell_list[default_cell].text_input_state
+                else
+                    typing_target = cell_list[selected_cell].text_input_state
+                end
+                if typing_target then
+                    typing_action = key
+                    break
+                end
             end
         elseif name == "keyreleased" then
             -- clear the holding_key field if that key was released.
@@ -615,16 +626,16 @@ local function iterate_events()
             end
         elseif name == "textinput" then
             if selected_cell == 0 then
-                set_typing_target = default_cell and cell_list[default_cell].text_input_state
-                if set_typing_target then
+                typing_target = default_cell and cell_list[default_cell].text_input_state
+                if typing_target then
                     keyboard_navigation.jump_to_cell(default_cell)
-                    text = key
+                    typing_action = key
                     break
                 end
             else
-                set_typing_target = cell_list[selected_cell].text_input_state
-                if set_typing_target then
-                    text = key
+                typing_target = cell_list[selected_cell].text_input_state
+                if typing_target then
+                    typing_action = key
                     break
                 end
             end
@@ -633,20 +644,22 @@ local function iterate_events()
         end
     end
 
-    return action, is_repeat, set_typing_target, text
+    return action, is_repeat, typing_target, typing_action
 end
 
 ---Run the navigation logic using keypressed events
+---@return table? typing_target
+---@return string? typing_action
 function keyboard_navigation.evaluate()
     if cell_index < 1 then
         -- no cells were created
         return
     end
 
-    local set_typing_target, text
+    local typing_target, typing_action
 
     local old_selection = selected_cell
-    last_action, last_is_repeat, set_typing_target, text = iterate_events()
+    last_action, last_is_repeat, typing_target, typing_action = iterate_events()
     keyboard_navigation.selection_has_changed = old_selection ~= selected_cell
 
     -- reset everything
@@ -655,7 +668,7 @@ function keyboard_navigation.evaluate()
     default_cell = nil
     escape_cell = nil
 
-    return set_typing_target, text
+    return typing_target, typing_action
 end
 
 ---Does the usual evaluation cleanup without iterating through the events
