@@ -36,7 +36,7 @@ local mouse_navigation = {
     press_y = nil,
 }
 
-mouse_navigation.sensor_mode = require("ui.control.mouse_navigation.sensor").sensor_mode
+mouse_navigation.sensor_mode = sensor.sensor_mode
 
 ---@enum mouse_button
 mouse_navigation.buttons = {

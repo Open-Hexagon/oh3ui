@@ -39,7 +39,7 @@ return function()
 
     knav.make_cell()
     knav.grid_cell(1, 1)
-    numeric_input(id.numeric, -100, 100, 5, "X = %.2f", 1)
+    numeric_input(id.numeric, -100, 100, 5, 1, "X = %.2f")
     cursor.shift_down(10)
 
     -- Slider

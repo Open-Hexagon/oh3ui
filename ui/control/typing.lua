@@ -5,9 +5,27 @@ local shared = require("ui.control.shared")
 
 local typing = {}
 
+---@type table
+local current_typing_state
+local last_interaction_method
+local started_editing_state
+local stopped_editing_state
+
 local target
 local target_font
 local target_cell_id
+
+local cursor_flash_timer = 0
+
+---@enum typing_stop_methods
+typing.stop_methods = {
+    click_out = 0,
+    escape = 1,
+    tab_up = 2,
+    tab_down = 3,
+}
+
+local stop_methods = typing.stop_methods
 
 ---string.sub but using utf8 chars instead of bytes for the indices
 ---@param str string
@@ -30,27 +48,32 @@ end
 --#region Immediate text edit functions
 
 ---Inserts a character into the target
+---@param state table
 ---@param char string
-function typing.insert_target(char)
-    target.text = utf8_sub(target.text, 1, target._text_entry_char_position)
+function typing.insert_character(state, char)
+    state.text = utf8_sub(state.text, 1, state._text_entry_char_position)
         .. char
-        .. utf8_sub(target.text, target._text_entry_char_position + 1, -1)
-    target._text_entry_char_position = target._text_entry_char_position + 1
+        .. utf8_sub(state.text, state._text_entry_char_position + 1, -1)
+    state._text_entry_char_position = state._text_entry_char_position + 1
 end
 
 ---Deletes all text in the target
-function typing.truncate_target()
-    target.text = ""
-    target._text_entry_char_position = 0
+---@param state table
+function typing.truncate(state)
+    state.text = ""
+    state._text_entry_char_position = 0
 end
 
 ---Uses backspace on the target
-function typing.baskspace_target()
-    target.text = utf8_sub(target.text, 1, target._text_entry_char_position - 1)
-        .. utf8_sub(target.text, target._text_entry_char_position + 1, -1)
-    target._text_entry_char_position = target._text_entry_char_position - 1
+---@param state table
+function typing.backspace_character(state)
+    if state._text_entry_char_position > 0 then
+        state.text = utf8_sub(state.text, 1, state._text_entry_char_position - 1)
+            .. utf8_sub(state.text, state._text_entry_char_position + 1, -1)
+        state._text_entry_char_position = state._text_entry_char_position - 1
 
-    target._text_entry_text_offset = 0
+        state._text_entry_text_offset = 0
+    end
 end
 
 --#endregion
@@ -68,7 +91,24 @@ end
 ---@return boolean
 ---@nodiscard
 function typing.is_editing(state)
-    return target == (state or shared.current_typing_state)
+    return target == (state or current_typing_state)
+end
+
+---Returns true if user has started editing current or given state
+---@param state table
+---@return boolean
+function typing.started_editing(state)
+    return started_editing_state == (state or current_typing_state)
+end
+
+---Returns the method that was used to stop editing text if text input was exited
+---@param state table
+---@return typing_stop_methods?
+function typing.stopped_editing(state)
+    if stopped_editing_state == (state or current_typing_state) then
+        return last_interaction_method
+    end
+    return nil
 end
 
 ---Starts editing text for a state table. Cursor will be placed at the end of the line.
@@ -76,27 +116,31 @@ end
 function typing.set_target(entry_state)
     entry_state._text_entry_char_position = utf8.len(entry_state.text)
     target = entry_state
+    started_editing_state = entry_state
+    cursor_flash_timer = 0
 end
 
----Stops editing text the current target
-function typing.unset_target()
+---Stops editing text for the current target
+---@param method typing_stop_methods
+local function unset_target(method)
+    last_interaction_method = method
+    stopped_editing_state = target
     target = nil
 end
 
-typing.TAB_BACKWARDS = -1
-typing.NO_TAB = 0
-typing.TAB_FORWARDS = 1
-
 ---Evaluates typing events
 ---@return integer? goto_cell contains the text entry keyboard navigation cell id if, after evaluation, the target was unset
----@return integer tab_direction true if the tab key was used to unset the target
+---@return typing_stop_methods tab_direction direction to tab if needed
 function typing.evaluate()
+    started_editing_state = nil
+    stopped_editing_state = nil
+
     if target then
         -- change text and text pos based on events
         for event in events.iterate("^[tk]e") do
             local name = event[1]
             if name == "textinput" then
-                typing.insert_target(event[2])
+                typing.insert_character(target, event[2])
             elseif name == "keypressed" then
                 local key = event[3]
                 if key == "left" then
@@ -143,16 +187,16 @@ function typing.evaluate()
                     end
                 elseif key == "escape" then
                     -- unsets the target but doesn't move the keyboard selection
-                    typing.unset_target()
+                    unset_target(stop_methods.escape)
                     break
                 elseif key == "up" then
                     -- unsets the target and reverse tabs the keyboard selection
-                    typing.unset_target()
-                    return target_cell_id, typing.TAB_BACKWARDS
+                    unset_target(stop_methods.tab_up)
+                    return target_cell_id, stop_methods.tab_up
                 elseif key == "tab" or key == "return" or key == "down" then
                     -- unsets the target and tabs the keyboard selection
-                    typing.unset_target()
-                    return target_cell_id, typing.TAB_FORWARDS
+                    unset_target(stop_methods.tab_down)
+                    return target_cell_id, stop_methods.tab_down
                 elseif key == "home" or key == "pageup" then
                     target._text_entry_char_position = 0
                 elseif key == "end" or key == "pagedown" then
@@ -166,7 +210,12 @@ function typing.evaluate()
         end
     end
 
-    return nil, typing.NO_TAB
+    return nil, stop_methods.escape
+end
+
+function typing.evaluate_without_events()
+    started_editing_state = nil
+    stopped_editing_state = nil
 end
 
 do
@@ -183,14 +232,14 @@ do
 
     ---Sets up a text entry. Uses the current sensor and cell ids for interaction.
     ---@param state table
-    ---@param sensor_id integer use a specific sensor id
-    ---@param cell_id integer use a specific cell id
+    ---@param sensor_id integer? use a specific sensor id
+    ---@param cell_id integer? use a specific cell id
     function typing.make_text_entry(state, sensor_id, cell_id)
         state.text = state.text or ""
         -- used to offset the entry text in case there's too much text to fit in view
         state._text_entry_text_offset = state._text_entry_text_offset or 0
 
-        shared.current_typing_state = state
+        current_typing_state = state
 
         sensor_id = sensor_id or shared.current_sensor_id
         cell_id = cell_id or shared.current_cell_id
@@ -198,7 +247,7 @@ do
         if typing.is_editing(state) then
             target_cell_id = cell_id
             if not mnav.is_hovering(sensor_id) and mnav.holding then
-                typing.unset_target()
+                unset_target(stop_methods.click_out)
             end
         else
             -- tell keyboard navigation that this cell is a text entry
@@ -229,7 +278,7 @@ do
         cursor.place()
 
         -- draw the hint text only if there is no text in the entry
-        if hint and (not shared.current_typing_state.text or #shared.current_typing_state.text == 0) then
+        if hint and (not current_typing_state.text or #current_typing_state.text == 0) then
             local hint_text_object = text.get_text_object(font, hint, math.huge, "left")
             draw_queue.text(
                 hint_text_object,
@@ -239,7 +288,7 @@ do
             )
         end
 
-        local text_object = text.get_text_object(font, shared.current_typing_state.text, math.huge, "left")
+        local text_object = text.get_text_object(font, current_typing_state.text, math.huge, "left")
 
         if typing.is_editing() then
             -- keep the target font updated because backspace uses get_cursor_distance
@@ -249,31 +298,39 @@ do
             local cursor_distance = get_cursor_distance(target_font, target.text, target._text_entry_char_position)
 
             -- cursor distance from left edge of placement
-            local cursor_offset = shared.current_typing_state._text_entry_text_offset + cursor_distance
+            local cursor_offset = current_typing_state._text_entry_text_offset + cursor_distance
 
             -- the furthest amount the cursor can be offset
             local cursor_offset_limit = cursor.width - 1
 
             -- correct state._text_entry_text_offset to make sure cursor is within view
             if cursor_offset < 0 then
-                shared.current_typing_state._text_entry_text_offset = shared.current_typing_state._text_entry_text_offset
+                current_typing_state._text_entry_text_offset = current_typing_state._text_entry_text_offset
                     - cursor_offset
             elseif cursor_offset > cursor_offset_limit then
-                shared.current_typing_state._text_entry_text_offset = shared.current_typing_state._text_entry_text_offset
+                current_typing_state._text_entry_text_offset = current_typing_state._text_entry_text_offset
                     - (cursor_offset - cursor_offset_limit)
             end
 
             -- draw the text
             draw_queue.text(
                 text_object,
-                placement.left + shared.current_typing_state._text_entry_text_offset,
+                placement.left + current_typing_state._text_entry_text_offset,
                 placement.top,
                 text_color or theme.text_color
             )
 
+            -- cursor flash
+            cursor_flash_timer = cursor_flash_timer + love.timer.getDelta()
+            if cursor_flash_timer > 1 then
+                cursor_flash_timer = cursor_flash_timer - 1
+            end
+
             -- draw the text cursor
-            cursor.x = cursor.x + cursor_offset
-            primitive.vline(theme.white, 1)
+            if cursor_flash_timer < 0.5 then
+                cursor.x = cursor.x + cursor_offset
+                primitive.vline(theme.white, 1)
+            end
         else
             draw_queue.text(text_object, placement.left, placement.top, text_color or theme.text_color)
         end

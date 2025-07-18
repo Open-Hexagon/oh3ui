@@ -585,7 +585,7 @@ local function iterate_events()
                     action = kba.activate
                 end
 
-                -- The below keys do not trigger actions. They only navigate
+            -- The below keys do not trigger actions. They only navigate
             elseif key == "tab" then
                 if love.keyboard.isDown("lshift", "rshift") then
                     keyboard_navigation.jump_backwards()

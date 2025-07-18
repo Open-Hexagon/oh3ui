@@ -1,6 +1,5 @@
 local cursor = require("ui.cursor")
 local theme = require("ui.theme")
-local reserve = require("ui.reserve")
 local primitive = require("ui.primitive")
 local element = require("ui.element")
 local extmath = require("ui.extmath")
@@ -10,6 +9,7 @@ local mb = mnav.buttons
 local smode = mnav.sensor_mode
 local knav = require("ui.control.keyboard_navigation")
 local kba = knav.actions
+local typing = require("ui.control.typing")
 
 ---Combination number slider and entry with increment buttons.
 ---This element will reshape the cursor.
@@ -17,10 +17,10 @@ local kba = knav.actions
 ---@param min number min representable number in state.value
 ---@param max number max representable number in state.value
 ---@param step number step size for the increment and decrement buttons
+---@param decimals integer Number of decimals of precision. Default is 0, 2 means the smallest step is 0.01, -1 means the smallest step is 10.
 ---@param format string? format string for the number display
----@param decimals integer? Number of decimals of precision. Default is 0, 2 means the smallest step is 0.01, -1 means the smallest step is 10.
 ---@return number value the "value" field of the state table
-return function(state, min, max, step, format, decimals)
+return function(state, min, max, step, decimals, format)
     -- first time initialization
     if not state.initialized then
         state.value = 0
@@ -33,13 +33,15 @@ return function(state, min, max, step, format, decimals)
     local center_sid = mnav.declare_sensor_id()
     local right_sid = mnav.declare_sensor_id()
 
+    typing.make_text_entry(state, center_sid)
+    local is_editing = typing.is_editing(state)
+
     cursor.push() -- (1)
 
     -- set base shape
     local full_width = math.max(element.numeric_input_min_width, cursor.width)
     cursor.place(full_width, element.numeric_input_height)
 
-    local hovering = mnav.is_hovering(everything_sid) or knav.is_selected()
     local center_width = cursor.width - element.numeric_input_lr_button_width * 2
 
     cursor.auto_reshape = false
@@ -51,29 +53,37 @@ return function(state, min, max, step, format, decimals)
     cursor.width = center_width
 
     mnav.make_sensor(center_sid, smode.block, smode.draggable)
-    local dragging = mnav.get_dragging(center_sid)
 
-    -- stop the mouse from reaching the edges of the screen
-    if mnav.get_started_dragging(center_sid) == mb.left then
-        love.mouse.setRelativeMode(true)
-    elseif mnav.get_stopped_dragging(center_sid) == mb.left then
-        love.mouse.setRelativeMode(false)
-    end
+    local hovering = false
+    local dragging = nil
+    local center_hovering = false
 
-    -- change the mouse cursor to <-> when hovering the center
-    local center_hovering = mnav.is_hovering(center_sid)
-    if state._numeric_input_center_hover_prev ~= center_hovering then
-        state._numeric_input_center_hover_prev = center_hovering
-        if center_hovering then
-            love.mouse.setCursor(love.mouse.getSystemCursor("sizewe"))
-        else
-            love.mouse.setCursor()
+    if not is_editing then
+        hovering = mnav.is_hovering(everything_sid) or knav.is_selected()
+        dragging = mnav.get_dragging(center_sid)
+        center_hovering = mnav.is_hovering(center_sid)
+
+        -- stop the mouse from reaching the edges of the screen
+        if mnav.get_started_dragging(center_sid) == mb.left then
+            love.mouse.setRelativeMode(true)
+        elseif mnav.get_stopped_dragging(center_sid) == mb.left then
+            love.mouse.setRelativeMode(false)
+        end
+
+        -- change the mouse cursor to <-> when hovering the center
+        if state._numeric_input_center_hover_prev ~= center_hovering then
+            state._numeric_input_center_hover_prev = center_hovering
+            if center_hovering then
+                love.mouse.setCursor(love.mouse.getSystemCursor("sizewe"))
+            else
+                love.mouse.setCursor()
+            end
         end
     end
 
-    -- prevent the mouse from moving when dragging
-    if dragging == mb.left then
-        love.mouse.setPosition(love.graphics.transformPoint(mnav.press_x, mnav.press_y))
+    if typing.started_editing(state) then
+        love.mouse.setCursor()
+        love.mouse.setRelativeMode(false)
     end
 
     -- #region Draw Background
@@ -83,8 +93,11 @@ return function(state, min, max, step, format, decimals)
         cursor.width = full_width
         primitive.rectangle(theme.widget_background_highlight)
 
-        decimals = decimals or 0
+        -- increment/decrement value
         state.value = state.value + mnav.screen_dx * 10 ^ -decimals
+
+        -- prevent the mouse from moving when dragging
+        love.mouse.setPosition(love.graphics.transformPoint(mnav.press_x, mnav.press_y))
     else
         -- normal background
         cursor.width = full_width
@@ -92,7 +105,7 @@ return function(state, min, max, step, format, decimals)
         cursor.width = center_width
 
         -- brighter center
-        if mnav.is_hovering(center_sid) then -- and not is_editing_this_text(state)
+        if center_hovering then
             primitive.rectangle(theme.widget_background_brighter)
         end
     end
@@ -100,7 +113,7 @@ return function(state, min, max, step, format, decimals)
     -- #endregion
 
     -- ## Arrows
-    if hovering or dragging == mb.left then -- and not is_editing_this_text(state)
+    if hovering or dragging == mb.left then
         local kb_action, kb_holding
 
         -- #region Left Arrow
@@ -148,23 +161,24 @@ return function(state, min, max, step, format, decimals)
 
     cursor.pop() -- (2)
 
-    state.value = extmath.clamp(state.value, min or -math.huge, max or math.huge)
+    if typing.stopped_editing(state) then
+        local n = tonumber(state.text)
+        if n then
+            state.value = n
+        end
+        typing.truncate(state)
+    end
 
-    -- local started_typing, stopped_typing = text_entry(state, element.numeric_input_text_size, "input", true, center_sid, nil)
-    -- if stopped_typing then
-    --     local n = tonumber(state.text)
-    --     print(n)
-    --     if n then
-    --         state.value = n
-    --     end
+    state.value = extmath.clamp(extmath.round(state.value, decimals), min or -math.huge, max or math.huge)
 
-    --     state.text = ""
-    --     -- state.value = extmath.clamp(state.value, min or -math.huge, max or math.huge)
-    -- end
-    -- if not is_editing_this_text(state) then
-    primitive.label(string.format(format or "%f", state.value), 16, "left", false)
-    -- end
-    primitive.rectangle_outline((hovering or dragging) and theme.widget_outline_highlight or theme.widget_outline)
+    if is_editing then
+        typing.draw_text_entry(element.numeric_input_text_size, "input")
+    else
+        primitive.label(string.format(format or "%f", state.value), element.numeric_input_text_size, "left", false)
+    end
+    primitive.rectangle_outline(
+        (hovering or dragging or is_editing) and theme.widget_outline_highlight or theme.widget_outline
+    )
     mnav.make_sensor(everything_sid)
 
     if knav.is_selected() then
