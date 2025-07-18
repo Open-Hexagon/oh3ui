@@ -234,6 +234,9 @@ function mouse_navigation.evaluate()
             -- Using the event dx, dy happens to work better if the mouse is being repositioned manually.
             mouse_navigation.screen_dx, mouse_navigation.screen_dy =
                 mouse_navigation.screen_dx + dx, mouse_navigation.screen_dy + dy
+
+            -- Any mouse movement sets makes the cursor visible
+            love.mouse.setVisible(true)
         else
             local button_id, istouch, presses = a, b, c
 

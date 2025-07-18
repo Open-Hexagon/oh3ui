@@ -1,17 +1,9 @@
 local mouse_navigation = require("ui.control.mouse_navigation")
 local keyboard_navigation = require("ui.control.keyboard_navigation")
 local typing = require("ui.control.typing")
-local shared = require("ui.control.shared")
 
 local typing_tab_up = typing.stop_methods.tab_up
 local typing_tab_down = typing.stop_methods.tab_down
-
---[[
-TODO
-
-if a navigation key is pressed, hide the mouse cursor
-
-]]
 
 ---A module that oversees which control method is being used
 local control = {}

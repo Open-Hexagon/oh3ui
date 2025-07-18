@@ -564,6 +564,10 @@ local function iterate_events()
         if name == "keypressed" then
             is_repeat = event[4]
             if key == "right" or key == "left" or key == "down" or key == "up" then
+                -- only the arrow keys set the mouse to be invisible
+                -- since if you're using the arrow keys you're probably going to keep on using the keyboard
+                love.mouse.setVisible(false)
+
                 action = navigate_grid(key_to_action[key])
                 if action then
                     holding_key = key

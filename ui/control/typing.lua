@@ -5,18 +5,7 @@ local shared = require("ui.control.shared")
 
 local typing = {}
 
----@type table
-local current_typing_state
-local last_interaction_method
-local started_editing_state
-local stopped_editing_state
-
-local target
-local target_font
-local target_cell_id
-
-local cursor_flash_timer = 0
-
+---Numbered methods that can be used to stop editing text
 ---@enum typing_stop_methods
 typing.stop_methods = {
     click_out = 0,
@@ -24,8 +13,25 @@ typing.stop_methods = {
     tab_up = 2,
     tab_down = 3,
 }
-
 local stop_methods = typing.stop_methods
+
+---The currently active typing state. This used like a sensor or cell id.
+---@type table
+local current_typing_state
+
+---The last method used to exit the text edit state
+---@type typing_stop_methods
+local last_interaction_method
+
+local started_editing_state
+local stopped_editing_state
+
+local target
+local target_font
+local target_cell_id
+
+---Timer used to animate the flashing cursor
+local cursor_flash_timer = 0
 
 ---string.sub but using utf8 chars instead of bytes for the indices
 ---@param str string
@@ -41,13 +47,17 @@ local function utf8_sub(str, i, j)
     return str:sub(i, j)
 end
 
+---Gets the +x pixel offset for the cursor
+---@param font love.Font
+---@param text string
+---@param char_position integer
 local function get_cursor_distance(font, text, char_position)
     return font:getWidth(utf8_sub(text, 1, char_position)) / settings.scale
 end
 
 --#region Immediate text edit functions
 
----Inserts a character into the target
+---Inserts a character into the state
 ---@param state table
 ---@param char string
 function typing.insert_character(state, char)
@@ -57,14 +67,14 @@ function typing.insert_character(state, char)
     state._text_entry_char_position = state._text_entry_char_position + 1
 end
 
----Deletes all text in the target
+---Deletes all text in the state
 ---@param state table
 function typing.truncate(state)
     state.text = ""
     state._text_entry_char_position = 0
 end
 
----Uses backspace on the target
+---Uses backspace on the state
 ---@param state table
 function typing.backspace_character(state)
     if state._text_entry_char_position > 0 then
@@ -135,78 +145,80 @@ function typing.evaluate()
     started_editing_state = nil
     stopped_editing_state = nil
 
-    if target then
-        -- change text and text pos based on events
-        for event in events.iterate("^[tk]e") do
-            local name = event[1]
-            if name == "textinput" then
-                typing.insert_character(target, event[2])
-            elseif name == "keypressed" then
-                local key = event[3]
-                if key == "left" then
-                    if target._text_entry_char_position > 0 then
-                        target._text_entry_char_position = target._text_entry_char_position - 1
-                    end
-                elseif key == "right" then
-                    if target._text_entry_char_position < utf8.len(target.text) then
-                        target._text_entry_char_position = target._text_entry_char_position + 1
-                    end
-                elseif key == "backspace" then
-                    -- backspace will modify target._text_entry_text_offset to try to keep the text cursor still
-                    -- this prevents the cursor from moving to the far left side of the text entry, which makes it so you can't see what you're deleting
-                    if target._text_entry_char_position > 0 then
-                        if love.keyboard.isDown("lctrl", "rctrl") then
-                            target.text = utf8_sub(target.text, target._text_entry_char_position + 1, -1)
-                            target._text_entry_char_position = 0
-                        else
-                            local old_cursor_dist =
-                                get_cursor_distance(target_font, target.text, target._text_entry_char_position)
+    if not target then
+        return nil, stop_methods.escape
+    end
 
-                            target.text = utf8_sub(target.text, 1, target._text_entry_char_position - 1)
-                                .. utf8_sub(target.text, target._text_entry_char_position + 1, -1)
-                            target._text_entry_char_position = target._text_entry_char_position - 1
-
-                            local new_cursor_dist =
-                                get_cursor_distance(target_font, target.text, target._text_entry_char_position)
-
-                            target._text_entry_text_offset = target._text_entry_text_offset
-                                + (old_cursor_dist - new_cursor_dist)
-                            if target._text_entry_text_offset > 0 then
-                                target._text_entry_text_offset = 0
-                            end
-                        end
-                    end
-                elseif key == "delete" then
-                    if target._text_entry_char_position < utf8.len(target.text) then
-                        if love.keyboard.isDown("lctrl", "rctrl") then
-                            target.text = utf8_sub(target.text, 1, target._text_entry_char_position)
-                        else
-                            target.text = utf8_sub(target.text, 1, target._text_entry_char_position)
-                                .. utf8_sub(target.text, target._text_entry_char_position + 2, -1)
-                        end
-                    end
-                elseif key == "escape" then
-                    -- unsets the target but doesn't move the keyboard selection
-                    unset_target(stop_methods.escape)
-                    break
-                elseif key == "up" then
-                    -- unsets the target and reverse tabs the keyboard selection
-                    unset_target(stop_methods.tab_up)
-                    return target_cell_id, stop_methods.tab_up
-                elseif key == "tab" or key == "return" or key == "down" then
-                    -- unsets the target and tabs the keyboard selection
-                    unset_target(stop_methods.tab_down)
-                    return target_cell_id, stop_methods.tab_down
-                elseif key == "home" or key == "pageup" then
-                    target._text_entry_char_position = 0
-                elseif key == "end" or key == "pagedown" then
-                    target._text_entry_char_position = utf8.len(target.text)
+    -- change text and text pos based on events
+    for event in events.iterate("^[tk]e") do
+        local name = event[1]
+        if name == "textinput" then
+            typing.insert_character(target, event[2])
+        elseif name == "keypressed" then
+            local key = event[3]
+            if key == "left" then
+                if target._text_entry_char_position > 0 then
+                    target._text_entry_char_position = target._text_entry_char_position - 1
                 end
-            -- these events are matched by the filter but are unused
-            elseif name == "keyreleased" then
-            elseif name == "textedited" then
-                -- I don't know what this one does.
+            elseif key == "right" then
+                if target._text_entry_char_position < utf8.len(target.text) then
+                    target._text_entry_char_position = target._text_entry_char_position + 1
+                end
+            elseif key == "backspace" then
+                -- backspace will modify target._text_entry_text_offset to try to keep the text cursor still
+                -- this prevents the cursor from moving to the far left side of the text entry, which makes it so you can't see what you're deleting
+                if target._text_entry_char_position > 0 then
+                    if love.keyboard.isDown("lctrl", "rctrl") then
+                        target.text = utf8_sub(target.text, target._text_entry_char_position + 1, -1)
+                        target._text_entry_char_position = 0
+                    else
+                        local old_cursor_dist =
+                            get_cursor_distance(target_font, target.text, target._text_entry_char_position)
+
+                        target.text = utf8_sub(target.text, 1, target._text_entry_char_position - 1)
+                            .. utf8_sub(target.text, target._text_entry_char_position + 1, -1)
+                        target._text_entry_char_position = target._text_entry_char_position - 1
+
+                        local new_cursor_dist =
+                            get_cursor_distance(target_font, target.text, target._text_entry_char_position)
+
+                        target._text_entry_text_offset = target._text_entry_text_offset
+                            + (old_cursor_dist - new_cursor_dist)
+                        if target._text_entry_text_offset > 0 then
+                            target._text_entry_text_offset = 0
+                        end
+                    end
+                end
+            elseif key == "delete" then
+                if target._text_entry_char_position < utf8.len(target.text) then
+                    if love.keyboard.isDown("lctrl", "rctrl") then
+                        target.text = utf8_sub(target.text, 1, target._text_entry_char_position)
+                    else
+                        target.text = utf8_sub(target.text, 1, target._text_entry_char_position)
+                            .. utf8_sub(target.text, target._text_entry_char_position + 2, -1)
+                    end
+                end
+            elseif key == "escape" then
+                -- unsets the target but doesn't move the keyboard selection
+                unset_target(stop_methods.escape)
+                break
+            elseif key == "up" then
+                -- unsets the target and reverse tabs the keyboard selection
+                unset_target(stop_methods.tab_up)
+                return target_cell_id, stop_methods.tab_up
+            elseif key == "tab" or key == "return" or key == "down" then
+                -- unsets the target and tabs the keyboard selection
+                unset_target(stop_methods.tab_down)
+                return target_cell_id, stop_methods.tab_down
+            elseif key == "home" or key == "pageup" then
+                target._text_entry_char_position = 0
+            elseif key == "end" or key == "pagedown" then
+                target._text_entry_char_position = utf8.len(target.text)
             end
+            -- these events are matched by the filter but are unused
+        elseif name == "keyreleased" then
+        elseif name == "textedited" then
+            -- I don't know what this one does.
         end
     end
 
