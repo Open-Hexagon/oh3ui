@@ -1,11 +1,11 @@
+local element = require("ui.element")
 local primitive = require("ui.primitive")
 local cursor = require("ui.cursor")
 local theme = require("ui.theme")
-local decorator = require("ui.decorator")
 local knav = require("ui.control.keyboard_navigation")
-local scroll = require("ui.element.scroll")
+local scroll = require("ui.element.area.scroll")
 
-local outset, line_width = decorator.selection_outline_outset, decorator.selection_outline_line_width
+local outset, line_width = element.selection_outline_outset, element.selection_outline_line_width
 
 ---A rectangular outline that is outset from the cursor
 ---Does not modify the cursor in any way

@@ -54,4 +54,7 @@ element.numeric_input_text_size = 16
 
 element.checkbox_size = 22
 
+element.selection_outline_outset = 4
+element.selection_outline_line_width = 2
+
 return element

@@ -123,6 +123,10 @@ function cursor.finish()
         print("warning: translation stack was not empty")
         translate_index = 1
     end
+    if area_index ~= 0 then
+        print("warning: area stack was not empty")
+        snapshot_index = 0
+    end
 end
 
 --#region snapshotting
@@ -429,7 +433,7 @@ local function expand_area(area, left, top, right, bottom)
 end
 
 ---Begins a new area.
-function cursor.begin_area()
+function cursor.start_area()
     -- Add a new area to the stack
     area_index = area_index + 1
     local new_area = area_stack[area_index]
@@ -458,7 +462,7 @@ end
 
 ---Ends the last started area.
 ---The cursor will be set to that area.
-function cursor.end_area()
+function cursor.finish_area()
     if area_index == 0 then
         error("no areas to end")
     end

@@ -42,6 +42,7 @@ end
 function scissor_stack.finish()
     if index ~= 0 then
         print("warning: scissor stack was not empty")
+        love.graphics.setScissor()
         index = 0
     end
 end

@@ -1,4 +1,4 @@
-local background = require("ui.area.background")
+local background = require("ui.element.area.background")
 local rectangle = require("ui.element.rectangle")
 local theme = require("ui.theme")
 local state = require("ui.state")

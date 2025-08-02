@@ -1,7 +1,7 @@
 local events = require("ui.events")
 local utf8 = require("utf8")
 local settings = require("ui.settings")
-local shared = require("ui.control.shared")
+local control_data = require("ui.shared_data").control
 
 local typing = {}
 
@@ -215,7 +215,7 @@ function typing.evaluate()
             elseif key == "end" or key == "pagedown" then
                 target._text_entry_char_position = utf8.len(target.text)
             end
-            -- these events are matched by the filter but are unused
+        -- these events are matched by the filter but are unused
         elseif name == "keyreleased" then
         elseif name == "textedited" then
             -- I don't know what this one does.
@@ -253,8 +253,8 @@ do
 
         current_typing_state = state
 
-        sensor_id = sensor_id or shared.current_sensor_id
-        cell_id = cell_id or shared.current_cell_id
+        sensor_id = sensor_id or control_data.current_sensor_id
+        cell_id = cell_id or control_data.current_cell_id
 
         if typing.is_editing(state) then
             target_cell_id = cell_id

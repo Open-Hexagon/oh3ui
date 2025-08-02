@@ -16,18 +16,18 @@ local minimum_scrollbar_actuator_length = 8
 local mouse_wheel_scroll_distance = 10
 local view_request_padding = scrollbar_thickness * 1.5
 
-local in_scroll = false
+local current_state
 local scroll_region, h_act, h_bar, v_act, v_bar
 
 ---Starts a scroll region
 ---@param state table
----@return boolean is_viewable True if the scroll area has non-zero area. Can be used to skip evaluating elements inside the scroll region. 
+---@return boolean is_viewable True if the scroll area has non-zero area. Can be used to skip evaluating elements inside the scroll region.
 function scroll.start(state)
     if cursor.is_degenerate() then
         return false
     end
 
-    if in_scroll then
+    if current_state then
         error("nested scrolls are not allowed")
     end
 
@@ -49,9 +49,9 @@ function scroll.start(state)
         state.scroll_dist_y -- positive values scroll up
     )
 
-    in_scroll = true
+    current_state = state
 
-    cursor.begin_area()
+    cursor.start_area()
 
     return true
 end
@@ -80,7 +80,7 @@ local view_request = {
 ---Only the latest made request is honored
 function scroll.scroll_into_view()
     -- don't do anything if a scroll region isn't active
-    if not in_scroll then
+    if not current_state then
         return
     end
 
@@ -323,16 +323,15 @@ local function get_actuator_size(content_size, scroll_size)
     return math.max(scroll_size * scroll_size / content_size, minimum_scrollbar_actuator_length)
 end
 
-
 ---Finishes the current scroll region
 ---@param state table This must be the same table as the coresponding scroll.start
 ---@param padding number scroll area padding
 function scroll.finish(state, padding)
-    if not in_scroll then
+    if not current_state then
         error("scroll.finish called with no active scroll")
     end
 
-    cursor.end_area()
+    cursor.finish_area()
     cursor.outset(padding)
 
     mask.pop()
@@ -483,7 +482,7 @@ function scroll.finish(state, padding)
 
     mnav.make_sensor(scroll_region, smode.lazy, smode.draggable)
 
-    in_scroll = false
+    current_state = nil
 end
 
 return scroll

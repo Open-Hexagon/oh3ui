@@ -1,4 +1,4 @@
-local scroll = require("ui.area.scroll")
+local scroll = require("ui.element.area.scroll")
 local rectangle = require("ui.element.rectangle")
 local state = require("ui.state")
 local utils = require("tests.utils")

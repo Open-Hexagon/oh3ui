@@ -1,4 +1,4 @@
-local collapse = require("ui.area.collapse")
+local collapse = require("ui.element.area.collapse")
 local rectangle = require("ui.element.rectangle")
 local state = require("ui.state")
 local area = require("ui.area")

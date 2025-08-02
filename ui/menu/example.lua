@@ -25,7 +25,7 @@ local switch = require("ui.element.switch")
 local toggle = require("ui.element.toggle")
 local toggle_hex = require("ui.element.toggle_hex")
 local checkbox = require("ui.element.checkbox")
-local selection_outline = require("ui.decorator.selection_outline")
+local selection_outline = require("ui.element.decorator.selection_outline")
 
 return function()
     knav.set_wrapping(wmode.list, wmode.vertical)

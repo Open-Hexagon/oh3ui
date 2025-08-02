@@ -92,10 +92,10 @@ function draw_queue.take_reservation(res_id)
     local res = res_list[res_id]
 
     if not res then
-        error("Bad reservation id")
+        error("bad reservation id")
     end
     if res.next == res.stop then
-        error("Reservation is full")
+        error("reservation is full")
     end
 
     res.next = res.next + 1
@@ -170,11 +170,25 @@ end
 ---@param y number
 ---@param radius number
 ---@param color number[]
+---@param line_width number
 ---@param segments integer? number of sides
 ---@param rotation number? only useful if the number of segments is low
-function draw_queue.circle(mode, x, y, radius, color, segments, rotation)
+function draw_queue.circle(mode, x, y, radius, color, line_width, segments, rotation)
     rotation = rotation or 0
-    push_operation(op_ids.circle, mode, x, y, radius, color[1], color[2], color[3], color[4], rotation, segments)
+    push_operation(
+    op_ids.circle,
+        mode,
+        x,
+        y,
+        radius,
+        color[1],
+        color[2],
+        color[3],
+        color[4],
+        line_width,
+        rotation,
+        segments
+    )
 end
 
 ---Add a circle outline to the queue. Can also be used to make regular polygons.
@@ -298,7 +312,8 @@ function draw_queue.draw()
                     ry
                 )
             elseif id == op_ids.circle then
-                local mode, x, y, radius, r, g, b, a, rotation, segments = unpack(item, 2)
+                local mode, x, y, radius, r, g, b, a, line_width, rotation, segments = unpack(item, 2)
+                love.graphics.setLineWidth(line_width)
                 love.graphics.setColor(r, g, b, a)
                 if rotation == 0 then
                     love.graphics.circle(mode, x, y, radius, segments)

@@ -1,7 +1,7 @@
 local events = require("ui.events")
 local bit = require("bit")
 local bor, band = bit.bor, bit.band
-local shared = require("ui.control.shared")
+local control_data = require("ui.shared_data").control
 
 local keyboard_navigation = {
     selection_has_changed = false,
@@ -223,7 +223,7 @@ function keyboard_navigation.make_cell(mode)
         default_cell = cell_index
     end
 
-    shared.current_cell_id = cell_index
+    control_data.current_cell_id = cell_index
 
     return cell_index
 end
@@ -251,7 +251,7 @@ function keyboard_navigation.change_to_cell(cell_id)
     if cell_id < 0 or cell_id > cell_index then
         error("bad sensor id")
     end
-    shared.current_cell_id = cell_id
+    control_data.current_cell_id = cell_id
 end
 
 --#region Conditions
@@ -263,7 +263,7 @@ end
 ---@return boolean
 ---@nodiscard
 function keyboard_navigation.is_selected(cell_id)
-    cell_id = cell_id or shared.current_cell_id
+    cell_id = cell_id or control_data.current_cell_id
     return cell_id > 0 and cell_id == selected_cell
 end
 

@@ -8,7 +8,7 @@ local draw_queue = require("ui.draw_queue")
 local sensor = require("ui.control.mouse_navigation.sensor")
 local bit = require("bit")
 local bor = bit.bor
-local shared = require("ui.control.shared")
+local control_data = require("ui.shared_data").control
 
 local mouse_navigation = {
     -- this frame's mouse position (not screen coordinates)
@@ -70,7 +70,7 @@ local last_manual_sensor_id = 0
 ---@nodiscard
 function mouse_navigation.declare_sensor_id()
     last_manual_sensor_id = last_manual_sensor_id - 1
-    shared.current_sensor_id = last_manual_sensor_id
+    control_data.current_sensor_id = last_manual_sensor_id
     return last_manual_sensor_id
 end
 
@@ -85,20 +85,20 @@ function mouse_navigation.make_sensor(sensor_id, ...)
         if sensor_id >= 0 then
             error(string.format("sensor id %d cannot be used", sensor_id))
         end
-        shared.current_sensor_id = sensor_id
+        control_data.current_sensor_id = sensor_id
     else
         last_sensor_id = last_sensor_id + 1
-        shared.current_sensor_id = last_sensor_id
+        control_data.current_sensor_id = last_sensor_id
     end
     draw_queue.mouse_sensor(
-        shared.current_sensor_id,
+        control_data.current_sensor_id,
         bor(0, ...),
         placement.left,
         placement.top,
         placement.right,
         placement.bottom
     )
-    return shared.current_sensor_id
+    return control_data.current_sensor_id
 end
 
 ---Changes the currently recognized sensor to a new id.
@@ -108,7 +108,7 @@ function mouse_navigation.change_to_sensor(sensor_id)
     if sensor_id < last_manual_sensor_id or sensor_id > last_sensor_id then
         error("bad sensor id")
     end
-    shared.current_sensor_id = sensor_id
+    control_data.current_sensor_id = sensor_id
 end
 
 ---Returns true if the mouse is hovering the current sensor.
@@ -118,7 +118,7 @@ end
 ---@return boolean
 ---@nodiscard
 function mouse_navigation.is_hovering(sensor_id)
-    return sensor.hover_set[sensor_id or shared.current_sensor_id] or false
+    return sensor.hover_set[sensor_id or control_data.current_sensor_id] or false
 end
 
 ---Gets the mouse button that is holding the current sensor, if any.
@@ -148,7 +148,7 @@ end
 ---@return mouse_button?
 ---@nodiscard
 function mouse_navigation.get_dragging(sensor_id)
-    if mouse_navigation.dragging and latest_dragging_id == (sensor_id or shared.current_sensor_id) then
+    if mouse_navigation.dragging and latest_dragging_id == (sensor_id or control_data.current_sensor_id) then
         return mouse_navigation.dragging
     end
     return nil
@@ -159,7 +159,7 @@ end
 ---@return mouse_button?
 ---@nodiscard
 function mouse_navigation.get_started_dragging(sensor_id)
-    if mouse_navigation.started_dragging and latest_dragging_id == (sensor_id or shared.current_sensor_id) then
+    if mouse_navigation.started_dragging and latest_dragging_id == (sensor_id or control_data.current_sensor_id) then
         return mouse_navigation.started_dragging
     end
     return nil
@@ -170,7 +170,7 @@ end
 ---@return mouse_button?
 ---@nodiscard
 function mouse_navigation.get_stopped_dragging(sensor_id)
-    if mouse_navigation.stopped_dragging and latest_dragging_id == (sensor_id or shared.current_sensor_id) then
+    if mouse_navigation.stopped_dragging and latest_dragging_id == (sensor_id or control_data.current_sensor_id) then
         return mouse_navigation.stopped_dragging
     end
     return nil

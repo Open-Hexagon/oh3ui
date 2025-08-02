@@ -1,4 +1,4 @@
-local scroll = require("ui.element.scroll")
+local scroll = require("ui.element.area.scroll")
 local cursor = require("ui.cursor")
 local id = require("ui.id_table")()
 local theme = require("ui.theme")
@@ -8,6 +8,8 @@ local mnav = require("ui.control.mouse_navigation")
 local mb = mnav.buttons
 local knav = require("ui.control.keyboard_navigation")
 local wmode = knav.wrapping_mode
+
+local background = require("ui.element.area.background")
 
 local button = require("ui.element.button")
 
@@ -23,7 +25,8 @@ return function()
     knav.set_wrapping(wmode.line, wmode.vertical)
 
     if scroll.start(id.scroll) then
-        cursor.begin_area()
+
+        background.start()
 
         cursor.x = 55
         cursor.y = 55
@@ -44,6 +47,8 @@ return function()
                 button(string.format("%d", (i - 1) * m + j), 16)
             end
         end
+
+        background.finish(0, theme.blue)
 
         scroll.finish(id.scroll, 5)
     end

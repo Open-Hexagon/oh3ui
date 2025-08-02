@@ -4,7 +4,6 @@ local draw_queue = require("ui.draw_queue")
 local control = require("ui.control")
 local settings = require("ui.settings")
 
-
 local ui = {}
 
 ---Push a love event to the event sequence.
@@ -93,26 +92,15 @@ function ui.start()
         love.graphics.transformPoint(x, y)
         love.graphics.circle("line", x, y, 4)
     end
-
-    -- scroll_interaction.reset()
-    -- love.keyboard.setKeyRepeat(text_interaction.is_interacting_with_text)
-    -- love.keyboard.setTextInput(text_interaction.is_interacting_with_text)
-    -- text_interaction.reset()
-
 end
 
 ---Do ui finalization and cleanup
 function ui.finish()
-
     -- draw in order
     draw_queue.draw()
 
-    -- do z-ordered mouse intersection checks
+    -- evaluate control methods
     control.evaluate()
-
-    -- if mouse_navigation.dx ~= 0 or mouse_navigation.dy ~= 0 then
-    --     print(mouse_navigation.dx, mouse_navigation.dy)
-    -- end
 
     -- undo scaling
     love.graphics.pop()

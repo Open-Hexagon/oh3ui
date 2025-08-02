@@ -89,7 +89,8 @@ end
 ---@param sides integer? create regular polygons instead
 ---@param rotation number? only useful if the number of sides is small
 ---@param mode string? "fill" or "line" (default is "fill")
-function primitive.circle(color, sides, rotation, mode)
+---@param line_width number?
+function primitive.circle(color, sides, rotation, mode, line_width)
     cursor.push()
     local diameter = math.min(cursor.width, cursor.height)
     local radius = diameter / 2
@@ -100,6 +101,7 @@ function primitive.circle(color, sides, rotation, mode)
         placement.top + radius,
         radius,
         color or theme.default,
+        line_width or 1,
         sides,
         rotation
     )

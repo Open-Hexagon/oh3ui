@@ -22,16 +22,7 @@ local cursor_color = { 1, 0.5, 0.5, 0.5 }
 local cursor_radius = 3
 
 function utils.fake_mouse_cursor()
-    draw_queue.rectangle(
-        "line",
-        utils.mouse_x - cursor_radius,
-        utils.mouse_y - cursor_radius,
-        utils.mouse_x + cursor_radius,
-        utils.mouse_y + cursor_radius,
-        cursor_color,
-        cursor_radius,
-        cursor_radius
-    )
+    draw_queue.circle("line", utils.mouse_x, utils.mouse_y, cursor_radius, cursor_color, 1)
 end
 
 local touches = {}
@@ -100,16 +91,7 @@ local touch_cursor_radius = 6
 
 function utils.fake_touch_cursors()
     for i = 1, #touches do
-        draw_queue.rectangle(
-            "line",
-            touches[i].x - touch_cursor_radius,
-            touches[i].y - touch_cursor_radius,
-            touches[i].x + touch_cursor_radius,
-            touches[i].y + touch_cursor_radius,
-            touch_cursor_color,
-            touch_cursor_radius,
-            touch_cursor_radius
-        )
+        draw_queue.circle("line", touches[i].x, touches[i].y, touch_cursor_radius, touch_cursor_color, 1)
     end
 end
 

@@ -1,3 +1,5 @@
+--- Utilities for replacing/reverting functions
+
 local monkeypatch = {}
 
 local original_functions = {}

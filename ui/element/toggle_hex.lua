@@ -9,7 +9,7 @@ local mnav = require("ui.control.mouse_navigation")
 local mb = mnav.buttons
 local smode = mnav.sensor_mode
 local effect = require("ui.effect")
-local selection_outline = require("ui.decorator.selection_outline")
+local selection_outline = require("ui.element.decorator.selection_outline")
 local knav = require("ui.control.keyboard_navigation")
 
 local indiameter = element.toggle_height
