@@ -108,6 +108,8 @@ function ui.finish()
     -- clean up
     events.clear()
     cursor.finish()
+
+    -- TODO: massage the volatile data so it's ready for the next frame. 
 end
 
 ---get the width of the ui adjusted for scale

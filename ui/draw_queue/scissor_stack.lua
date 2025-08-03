@@ -27,11 +27,12 @@ end
 
 ---Pop an area from the stack
 function scissor_stack.pop()
-    if index == 0 then
-        error("scissor stack underflow")
-    end
     index = index - 1
-    if index == 0 then
+    scissor_stack.revert(index)
+end
+
+function scissor_stack.revert(n)
+    if n == 0 then
         love.graphics.setScissor()
     else
         love.graphics.setScissor(unpack(snapshot[index]))

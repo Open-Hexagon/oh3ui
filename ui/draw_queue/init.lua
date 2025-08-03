@@ -15,6 +15,8 @@ local op_ids = {
     push_scissor = 0,
     pop_scissor = 1,
     mouse_sensor = 2,
+    revert_scissor = 3,
+    unused_reservation = 4,
 
     -- operations that draw stuff
     rectangle = 100,
@@ -80,7 +82,20 @@ function draw_queue.reserve(n)
         res_list[res_index] = res
     end
 
-    -- just increment the op_index, maybe leaving a gap
+    -- fill in the gap that the reservation leaves
+    -- these slots are set up to be detected when drawing if they're not taken
+    for i = 1, n do
+        local slot = op_list[op_index + i]
+        if slot then
+            slot[1] = op_ids.unused_reservation
+            slot[2] = res_index
+            slot[3] = i
+        else
+            slot = { op_ids.unused_reservation, res_index, i }
+        end
+    end
+
+    -- set the op_index to the end of the reservation
     op_index = stop
 
     return res_index
@@ -89,11 +104,12 @@ end
 ---The next operation will fill in a slot in a reservation
 ---@param res_id integer the reservation id to fill
 function draw_queue.take_reservation(res_id)
-    local res = res_list[res_id]
-
-    if not res then
+    if not (res_id > 0 and res_id <= res_index) then
         error("bad reservation id")
     end
+
+    local res = res_list[res_id]
+
     if res.next == res.stop then
         error("reservation is full")
     end
@@ -120,6 +136,10 @@ end
 ---Add a pop to the scissor stack
 function draw_queue.pop_scissor()
     push_operation(op_ids.pop_scissor)
+end
+
+function draw_queue.revert_scissor(n)
+    push_operation(op_ids.revert_scissor, n)
 end
 
 ---Add a mouse sensor to the draw queue.
@@ -176,7 +196,7 @@ end
 function draw_queue.circle(mode, x, y, radius, color, line_width, segments, rotation)
     rotation = rotation or 0
     push_operation(
-    op_ids.circle,
+        op_ids.circle,
         mode,
         x,
         y,
@@ -285,10 +305,6 @@ function draw_queue.draw()
     for i = 1, op_index do
         local item = op_list[i]
 
-        if not item then
-            error("Encountered a gap in the draw queue caused by bad reservation management")
-        end
-
         local id = item[1]
         -- id may be nil if a placeholder was left in / nothing was appended
         if id then
@@ -390,6 +406,12 @@ function draw_queue.draw()
                     -- push if there is no active scissor
                     sensor.push(sensor_id, mode, x1, y1, x2, y2)
                 end
+            elseif id == op_ids.revert_scissor then
+                scissor_stack.revert(item[2])
+            elseif id == op_ids.unused_reservation then
+                io.stderr:write(string.format("warning: unused reservation slot with res_id: %d, slot number: %d\n", item[2], item[3]))
+            else
+                error(string.format("unknown draw queue op id %d", id))
             end
         end
     end

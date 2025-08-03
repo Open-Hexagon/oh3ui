@@ -1,6 +1,7 @@
 ---Shared data that is used across the ui. Because sometimes being able to see everything is useful.
 
 local shared_data = {}
+
 shared_data.control = {
     ---The cell id that is used to check for selection and actions
     ---The cell id 0 will never be assigned normally
@@ -13,27 +14,37 @@ shared_data.control = {
     current_sensor_id = 0,
 }
 
-shared_data.stacks = {
+-- data that shouldn't survive between frames
+shared_data.volatile = {
+    -- cursor snapshots
     cursor_stack = {},
     cursor_index = 0, -- index of the last pushed snapshot
     cursor_base_index = 0,
 
+    -- cursor translations
     translate_stack = { { 0, 0 } }, -- the do-nothing translation is always here
     translate_index = 1, -- index of the last pushed translation
     translate_base_index = 1,
 
+    -- cursor areas
     area_stack = {},
     area_index = 0, -- index of the last started area
     area_base_index = 0,
 
-    layer_stack = {},
-    layer_index = 0,
-    layer_base_index = 0,
-
-    mask_index = 0,
+    -- keeps track of how many masks have been applied
+    -- applying masks while making the ui doesn't need to store any information so there's no stack here
+    mask_index = 0, -- number of masks applied
     mask_base_index = 0,
 
-    area_balance_stack = {}
+    -- area element balance stack for two-part area elements
+    aeb_stack = {},
+    aeb_index = 0,
+    aeb_base_index = 0,
+}
+
+-- stacks that survive between frames
+shared_data.static = {
+
 }
 
 return shared_data
