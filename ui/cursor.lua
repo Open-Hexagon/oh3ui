@@ -1,6 +1,8 @@
 ---The cursor represents a rectangular area on screen and is used as
 ---a tool for positioning and aligning ui elements.
 
+local volatile_data = require("ui.shared_data").volatile
+
 ---Note: parameters that are contained within tables are not saved in snapshots
 local cursor = {}
 
@@ -78,14 +80,9 @@ setmetatable(cursor, {
 
 --#endregion
 
-local snapshot_stack = {}
-local snapshot_index = 0 -- index of the last pushed snapshot
-
-local translate_stack = { { 0, 0 } } -- the do-nothing translation is always here
-local translate_index = 1 -- index of the last pushed translation
-
-local area_stack = {}
-local area_index = 0 -- index of the last started area
+local cursor_stack = volatile_data.cursor_stack
+local translate_stack = volatile_data.translate_stack
+local area_stack = volatile_data.area_stack
 
 ---Reset manual cursor to default values.
 ---By default cursor width and height are set to reflect the size of the screen.
@@ -115,17 +112,17 @@ cursor.reset()
 
 ---Should be run at the end of a frame to clean up all stacks
 function cursor.finish()
-    if snapshot_index ~= 0 then
+    if volatile_data.cursor_index ~= 0 then
         print("warning: cursor stack was not empty")
-        snapshot_index = 0
+        volatile_data.cursor_index = 0
     end
-    if translate_index ~= 1 then
+    if volatile_data.translate_index ~= 1 then
         print("warning: translation stack was not empty")
-        translate_index = 1
+        volatile_data.translate_index = 1
     end
-    if area_index ~= 0 then
+    if volatile_data.area_index ~= 0 then
         print("warning: area stack was not empty")
-        snapshot_index = 0
+        volatile_data.cursor_index = 0
     end
 end
 
@@ -133,12 +130,12 @@ end
 
 ---Push a snapshot of the cursor, saving its current state for later.
 function cursor.push()
-    snapshot_index = snapshot_index + 1
+    volatile_data.cursor_index = volatile_data.cursor_index + 1
 
-    local new_snapshot = snapshot_stack[snapshot_index]
+    local new_snapshot = cursor_stack[volatile_data.cursor_index]
     if not new_snapshot then
         new_snapshot = {}
-        snapshot_stack[snapshot_index] = new_snapshot
+        cursor_stack[volatile_data.cursor_index] = new_snapshot
     end
 
     new_snapshot.x = cursor.x
@@ -152,10 +149,10 @@ end
 
 ---Peek a snapshot of the cursor, returning it to the last pushed state without dropping it.
 function cursor.peek()
-    if snapshot_index == 0 then
+    if volatile_data.cursor_index == volatile_data.cursor_base_index then
         error("cursor snapshot stack underflow", 2)
     end
-    for k, v in pairs(snapshot_stack[snapshot_index]) do
+    for k, v in pairs(cursor_stack[volatile_data.cursor_index]) do
         cursor[k] = v
     end
 end
@@ -163,15 +160,15 @@ end
 ---Pop a snapshot of the cursor, returning it to the last pushed state.
 function cursor.pop()
     cursor.peek()
-    snapshot_index = snapshot_index - 1
+    volatile_data.cursor_index = volatile_data.cursor_index - 1
 end
 
 ---Drops the last snapshot of the cursor
 function cursor.drop()
-    if snapshot_index == 0 then
+    if volatile_data.cursor_index == volatile_data.cursor_base_index then
         error("cursor snapshot stack underflow", 2)
     end
-    snapshot_index = snapshot_index - 1
+    volatile_data.cursor_index = volatile_data.cursor_index - 1
 end
 
 ---Undos cursor reshaping for elements if cursor.auto_reshape is false. Requires a corresponding `cursor.push()`.
@@ -193,7 +190,7 @@ function cursor.h_array(n, padding)
     padding = padding or 0
     for i = n - 1, 0, -1 do
         cursor.push()
-        snapshot_stack[snapshot_index].x = cursor.x + (cursor.width + padding) * i
+        cursor_stack[volatile_data.cursor_index].x = cursor.x + (cursor.width + padding) * i
     end
 end
 
@@ -206,7 +203,7 @@ function cursor.v_array(n, padding)
     padding = padding or 0
     for i = n - 1, 0, -1 do
         cursor.push()
-        snapshot_stack[snapshot_index].y = cursor.y + (cursor.height + padding) * i
+        cursor_stack[volatile_data.cursor_index].y = cursor.y + (cursor.height + padding) * i
     end
 end
 
@@ -223,8 +220,10 @@ function cursor.h_split(n, padding)
 
     for i = n - 1, 0, -1 do
         cursor.push()
-        snapshot_stack[snapshot_index].x = left_edge + (section_width + padding) * i + section_width * cursor.anchor_x
-        snapshot_stack[snapshot_index].width = section_width
+        cursor_stack[volatile_data.cursor_index].x = left_edge
+            + (section_width + padding) * i
+            + section_width * cursor.anchor_x
+        cursor_stack[volatile_data.cursor_index].width = section_width
     end
 
     return section_width
@@ -243,8 +242,10 @@ function cursor.v_split(n, padding)
 
     for i = n - 1, 0, -1 do
         cursor.push()
-        snapshot_stack[snapshot_index].y = top_edge + (section_height + padding) * i + section_height * cursor.anchor_y
-        snapshot_stack[snapshot_index].height = section_height
+        cursor_stack[volatile_data.cursor_index].y = top_edge
+            + (section_height + padding) * i
+            + section_height * cursor.anchor_y
+        cursor_stack[volatile_data.cursor_index].height = section_height
     end
 
     return section_height
@@ -255,11 +256,11 @@ end
 ---If the anchor is in the top-left then it will stay in the top-left after the operation, even if the cursor x, y had to move.
 ---@param peek? boolean If true, will not drop the top snapshot
 function cursor.combine(peek)
-    if snapshot_index == 0 then
+    if volatile_data.cursor_index == volatile_data.cursor_base_index then
         error("cursor snapshot stack underflow", 2)
     end
 
-    local s = snapshot_stack[snapshot_index]
+    local s = cursor_stack[volatile_data.cursor_index]
 
     local new_left, new_top, new_right, new_bottom = get_edges(s.x, s.y, s.anchor_x, s.anchor_y, s.width, s.height)
     local left, top, right, bottom =
@@ -276,7 +277,7 @@ function cursor.combine(peek)
     cursor.y = top + cursor.anchor_y * cursor.height
 
     if not peek then
-        snapshot_index = snapshot_index - 1
+        volatile_data.cursor_index = volatile_data.cursor_index - 1
     end
 end
 
@@ -389,23 +390,23 @@ end
 ---@param x number
 ---@param y number
 function cursor.apply_translation(x, y)
-    local prev_x, prev_y = unpack(translate_stack[translate_index])
-    translate_index = translate_index + 1
+    local prev_x, prev_y = unpack(translate_stack[volatile_data.translate_index])
+    volatile_data.translate_index = volatile_data.translate_index + 1
 
-    if translate_stack[translate_index] then
-        translate_stack[translate_index][1] = prev_x + x
-        translate_stack[translate_index][2] = prev_y + y
+    if translate_stack[volatile_data.translate_index] then
+        translate_stack[volatile_data.translate_index][1] = prev_x + x
+        translate_stack[volatile_data.translate_index][2] = prev_y + y
     else
-        translate_stack[translate_index] = { prev_x + x, prev_y + y }
+        translate_stack[volatile_data.translate_index] = { prev_x + x, prev_y + y }
     end
 end
 
 ---Removes the last applied translation
 function cursor.remove_translation()
-    if translate_index == 1 then
+    if volatile_data.translate_index == volatile_data.cursor_base_index then
         error("no more translations to remove")
     end
-    translate_index = translate_index - 1
+    volatile_data.translate_index = volatile_data.translate_index - 1
 end
 
 --#endregion
@@ -417,6 +418,8 @@ end
 -- When an area is ended, it's representation is put into the cursor.
 -- Ending an area does not expand the area below. Use a cursor.place immediately after an area is finished to do that.
 
+local do_area_expansion = true
+
 ---expands a specified area
 ---@param area table
 ---@param left number
@@ -424,7 +427,7 @@ end
 ---@param right number
 ---@param bottom number
 local function expand_area(area, left, top, right, bottom)
-    if area then
+    if area and do_area_expansion then
         area.left = area.left == nil and left or math.min(area.left, left)
         area.top = area.top == nil and top or math.min(area.top, top)
         area.right = area.right == nil and right or math.max(area.right, right)
@@ -435,22 +438,22 @@ end
 ---Begins a new area.
 function cursor.start_area()
     -- Add a new area to the stack
-    area_index = area_index + 1
-    local new_area = area_stack[area_index]
+    volatile_data.area_index = volatile_data.area_index + 1
+    local new_area = area_stack[volatile_data.area_index]
     if new_area then
         new_area.left = nil
         new_area.top = nil
         new_area.right = nil
         new_area.bottom = nil
     else
-        area_stack[area_index] = {}
+        area_stack[volatile_data.area_index] = {}
     end
 end
 
 ---Puts the current area representation into the cursor.
 ---If the area contains no objects, this function does nothing.
 function cursor.put_area()
-    local this_area = area_stack[area_index]
+    local this_area = area_stack[volatile_data.area_index]
     -- There might be nothing to put if no placements have been made
     if this_area.left then
         cursor.width = this_area.right - this_area.left
@@ -463,14 +466,26 @@ end
 ---Ends the last started area.
 ---The cursor will be set to that area.
 function cursor.finish_area()
-    if area_index == 0 then
+    if volatile_data.area_index == volatile_data.area_base_index then
         error("no areas to end")
     end
-    cursor.put_area()
-    area_index = area_index - 1
-end
 
-local do_area_expansion = true
+    local this_area = area_stack[volatile_data.area_index]
+    -- There might be nothing to put if no placements have been made
+    if this_area.left then
+        cursor.width = this_area.right - this_area.left
+        cursor.height = this_area.bottom - this_area.top
+        cursor.x = this_area.left + cursor.anchor_x * cursor.width
+        cursor.y = this_area.top + cursor.anchor_y * cursor.height
+
+        expand_area(
+            area_stack[volatile_data.area_index - 1],
+            get_edges(cursor.x, cursor.y, cursor.anchor_x, cursor.anchor_y, cursor.width, cursor.height)
+        )
+    end
+
+    volatile_data.area_index = volatile_data.area_index - 1
+end
 
 function cursor.area_expansion_off()
     do_area_expansion = false
@@ -491,20 +506,19 @@ function cursor.place(desired_width, desired_height)
     local width, height = desired_width or cursor.width, desired_height or cursor.height
 
     -- Apply translation
-    placement.x = cursor.x + translate_stack[translate_index][1]
-    placement.y = cursor.y + translate_stack[translate_index][2]
+    placement.x = cursor.x + translate_stack[volatile_data.translate_index][1]
+    placement.y = cursor.y + translate_stack[volatile_data.translate_index][2]
 
     -- Update edges
     placement.left, placement.top, placement.right, placement.bottom =
         get_edges(placement.x, placement.y, cursor.anchor_x, cursor.anchor_y, width, height)
 
     -- Expand the current area
-    if do_area_expansion then
-        expand_area(
-            area_stack[area_index],
-            get_edges(cursor.x, cursor.y, cursor.anchor_x, cursor.anchor_y, width, height)
-        )
-    end
+    expand_area(
+        area_stack[volatile_data.area_index],
+        get_edges(cursor.x, cursor.y, cursor.anchor_x, cursor.anchor_y, width, height)
+    )
+
     -- reshape the cursor
     cursor.width, cursor.height = width, height
 end

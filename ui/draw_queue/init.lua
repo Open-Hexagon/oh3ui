@@ -85,14 +85,12 @@ function draw_queue.reserve(n)
     -- fill in the gap that the reservation leaves
     -- these slots are set up to be detected when drawing if they're not taken
     for i = 1, n do
+        op_list[op_index + i] = op_list[op_index + i] or {}
         local slot = op_list[op_index + i]
-        if slot then
-            slot[1] = op_ids.unused_reservation
-            slot[2] = res_index
-            slot[3] = i
-        else
-            slot = { op_ids.unused_reservation, res_index, i }
-        end
+        slot[1] = op_ids.unused_reservation
+        slot[2] = res_index
+        slot[3] = i
+        slot[4] = n
     end
 
     -- set the op_index to the end of the reservation
@@ -409,7 +407,14 @@ function draw_queue.draw()
             elseif id == op_ids.revert_scissor then
                 scissor_stack.revert(item[2])
             elseif id == op_ids.unused_reservation then
-                io.stderr:write(string.format("warning: unused reservation slot with res_id: %d, slot number: %d\n", item[2], item[3]))
+                io.stderr:write(
+                    string.format(
+                        "warning: unused reservation slot with res_id %d, slot number %d of %d\n",
+                        item[2],
+                        item[3],
+                        item[4]
+                    )
+                )
             else
                 error(string.format("unknown draw queue op id %d", id))
             end

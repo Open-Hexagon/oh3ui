@@ -10,9 +10,6 @@ local ui = {}
 ---All love events should be pushed at the very beginning of a frame.
 ui.push_event = events.add
 
----Grid to show screen and scaled coordinate systems
-local debug_grid = tonumber(os.getenv("GRID"))
-
 --[[
     UI update process
 
@@ -35,7 +32,7 @@ local debug_grid = tonumber(os.getenv("GRID"))
 ---reset ui state and set scale
 function ui.start()
     -- The red grid shows screen space
-    if debug_grid then
+    if settings.debug_grid then
         love.graphics.setLineWidth(2)
         love.graphics.setColor(1, 0, 0, 0.2)
 
@@ -44,7 +41,7 @@ function ui.start()
         local x = 0
         while x < width do
             love.graphics.line(x, 0, x, height)
-            x = x + debug_grid
+            x = x + settings.debug_grid
         end
         x = width
         love.graphics.line(x, 0, x, height)
@@ -52,7 +49,7 @@ function ui.start()
         local y = 0
         while y < height do
             love.graphics.line(0, y, width, y)
-            y = y + debug_grid
+            y = y + settings.debug_grid
         end
         y = height
         love.graphics.line(0, y, width, y)
@@ -65,7 +62,7 @@ function ui.start()
 
     ---The green grid shows scaled space.
     ---This is where drawn graphics end up, but not everything is affected by graphics transforms.
-    if debug_grid then
+    if settings.debug_grid then
         love.graphics.setLineWidth(2)
         love.graphics.setColor(0, 1, 0, 0.2)
 
@@ -74,7 +71,7 @@ function ui.start()
         local x = 0
         while x < width do
             love.graphics.line(x, 0, x, height)
-            x = x + debug_grid
+            x = x + settings.debug_grid
         end
         x = width
         love.graphics.line(x, 0, x, height)
@@ -82,7 +79,7 @@ function ui.start()
         local y = 0
         while y < height do
             love.graphics.line(0, y, width, y)
-            y = y + debug_grid
+            y = y + settings.debug_grid
         end
         y = height
         love.graphics.line(0, y, width, y)
@@ -109,7 +106,7 @@ function ui.finish()
     events.clear()
     cursor.finish()
 
-    -- TODO: massage the volatile data so it's ready for the next frame. 
+    -- TODO: massage the volatile data so it's ready for the next frame.
 end
 
 ---get the width of the ui adjusted for scale

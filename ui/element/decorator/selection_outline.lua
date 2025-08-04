@@ -7,8 +7,9 @@ local scroll = require("ui.element.area.scroll")
 
 local outset, line_width = element.selection_outline_outset, element.selection_outline_line_width
 
----A rectangular outline that is outset from the cursor
----Does not modify the cursor in any way
+---A rectangular outline that is outset from the cursor.
+---Does not modify the cursor or areas in any way.
+---Has a special purpose: It requests scroll elements to move to show this element.
 return function()
     cursor.push()
     cursor.outset(outset)

@@ -4,7 +4,6 @@ local cursor = require("ui.cursor")
 local id = require("ui.id_table")()
 local theme = require("ui.theme")
 local primitive = require("ui.primitive")
-local mask = require("ui.mask")
 local mnav = require("ui.control.mouse_navigation")
 local smode = mnav.sensor_mode
 local mb = mnav.buttons

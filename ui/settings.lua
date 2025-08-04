@@ -1,7 +1,6 @@
 local settings = {
-    scale = 1,
+    scale = nil,
+    debug_grid = nil,
 }
-
-settings.scale = tonumber(os.getenv("SCALE")) or 1
 
 return settings

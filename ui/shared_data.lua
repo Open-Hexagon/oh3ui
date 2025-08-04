@@ -40,9 +40,12 @@ shared_data.volatile = {
     aeb_stack = {},
     aeb_index = 0,
     aeb_base_index = 0,
+
+    record_stack = {},
+    record_stack_index = 0,
 }
 
--- stacks that survive between frames
+-- data that survives between frames
 shared_data.static = {
 
 }
