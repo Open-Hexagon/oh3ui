@@ -13,19 +13,19 @@ local area_behavior = require("ui.menu.area_behavior")
 local layers = require("ui.layers")
 local ui = require("ui")
 
-local print_events
+local enable_event_printing
 
 local function load(args)
-    local parser = argparse.new_parser()
-    parser:add_argument("-s", "--ui-scale", 1, true, nil, 1)
-    parser:add_argument("-e", "--print-events", 0, false, "store_true", false)
-    parser:add_argument("-g", "--grid", "?", true, "store_const", nil, 50)
+    local parser = argparse.new_parser("ohce", "open hexagon community edition")
+    parser:add_argument("-e", "--print-events", "enable printing of events", 0, false, "store_true", false)
+    parser:add_argument("-s", "--ui-scale", "starting ui scale", 1, true, nil, 1)
+    parser:add_argument("-g", "--grid", "enable grid and set its size", "?", true, "store_const", nil, 50)
 
     local arg_values = parser:parse_args(args)
 
     ui_settings.scale = arg_values.ui_scale
     ui_settings.debug_grid = arg_values.grid
-    print_events = arg_values.print_events
+    enable_event_printing = arg_values.print_events
 end
 
 function love.run()
@@ -51,7 +51,7 @@ function love.run()
             if name == "quit" then
                 return a or 0
             end
-            if print_events then
+            if enable_event_printing then
                 print(name, a, b, c, d, e, f)
             end
             ui.push_event(name, a, b, c, d, e, f)

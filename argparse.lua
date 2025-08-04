@@ -1,22 +1,41 @@
 ---Module that creates a parser for command line arguments
 ---Somewhat inspired by python's argparse module
 
+---@class ArgumentEntry
+---@field name1 string
+---@field name2 string?
+---@field help string
+---@field nargs integer|"?"
+---@field is_number boolean
+---@field action "store_true"|"store_false"|"store_const"|"help"|nil
+---@field default any
+---@field const any
+---@field dest string
+---@field is_positional boolean
+
 ---@class Parser
----@field private arguments table
+---@field private prog string
+---@field private desc string
 ---@field private positional_arg_count integer
+---@field private argument_table ArgumentEntry[]
+---@field private argument_list ArgumentEntry[]
 local Parser = {}
 Parser.__index = Parser
 
 ---Adds an argument to the parser
 ---@param name1 string Argument name. If name starts with "-", it's a flag, else it's positional.
 ---@param name2 string? Optional secondary argument name. Takes priority when determining the argument destination.
+---@param help string? Help text for this argument
 ---@param nargs integer|"?" Number of arguments. Ignored if argument is positional. Can be 0. "?" means 1 or 0 arguments.
 ---@param is_number boolean Parser should convert the argument value into a number. If unable, parser will throw an error.
----@param action? "store_true"|"store_false"|"store_const"|"help" An action performed when this argument is encountered. Values provided by nargs have priority. Ignored if argument is positional.
+---@param action "store_true"|"store_false"|"store_const"|"help"|nil An action performed when this argument is encountered. Values provided by nargs have priority. Ignored if argument is positional.
 ---@param default any This argument's default value if nothing gets assigned. Ignored if argument is positional. Not type checked.
 ---@param const any This argument is assigned if the "store_const" action is used.
-function Parser:add_argument(name1, name2, nargs, is_number, action, default, const)
+function Parser:add_argument(name1, name2, help, nargs, is_number, action, default, const)
     local new_entry = {
+        name1 = name1,
+        name2 = name2,
+        help = help,
         nargs = nargs,
         is_number = is_number,
         action = action,
@@ -24,7 +43,7 @@ function Parser:add_argument(name1, name2, nargs, is_number, action, default, co
         const = const,
     }
 
-    local function add(name)
+    local function add_name_to_argument_table(name)
         -- filter any invalid characters
         if name:find("[^%w_%-]") then
             error(string.format("`%s` cannot be used as an argument name or flag", name))
@@ -34,35 +53,131 @@ function Parser:add_argument(name1, name2, nargs, is_number, action, default, co
             -- name starts with a hyphen -> flag
             new_entry.dest = name:gsub("^%-*", ""):gsub("%-", "%_")
 
-            if self.arguments[name] then
+            if self.argument_table[name] then
                 error(string.format("argument flag `%s` already exists", name))
             end
-            self.arguments[name] = new_entry
+            self.argument_table[name] = new_entry
+
+            return false
         else
             -- name doesn't start with a hyphen -> positional
             new_entry.dest = name:gsub("%-", "%_")
 
             self.positional_arg_count = self.positional_arg_count + 1
-            self.arguments[self.positional_arg_count] = new_entry
+            self.argument_table[self.positional_arg_count] = new_entry
+
+            return true
         end
     end
 
-    add(name1)
-    if name2 then
-        add(name2)
+    local name1_is_positional, name2_is_positional
+    name1_is_positional = add_name_to_argument_table(name1)
+    if name1_is_positional then
+        if name2 then
+            error("positional arguments cannot have a name2")
+        end
+        new_entry.is_positional = true
+    else
+        if name2 then
+            name2_is_positional = add_name_to_argument_table(name2)
+            if name2_is_positional then
+                error("a flag argument cannot have a name2 that's positional")
+            end
+        end
+        new_entry.is_positional = false
     end
+
+    ---@cast new_entry ArgumentEntry
+    table.insert(self.argument_list, new_entry)
 end
 
 ---Prints the help text
 function Parser:print_help_text()
-    -- TODO not very helpful right now
-    for k, v in pairs(self.arguments) do
-        io.write(k)
-        io.write(" = { ")
-        for k2, v2 in pairs(v) do
-            io.write(string.format("%s = %s, ", k2, v2))
+    ---@type ArgumentEntry[]
+    local positional_entries = {}
+    ---@type ArgumentEntry[]
+    local flag_entries = {}
+
+    for i = 1, #self.argument_list do
+        local entry = self.argument_list[i]
+        if entry.is_positional then
+            table.insert(positional_entries, entry)
+        else
+            table.insert(flag_entries, entry)
         end
-        io.write("}\n")
+    end
+
+    local flag_entries_count = #flag_entries
+    local positional_entries_count = #positional_entries
+
+    do
+        io.write("usage: ", self.prog, " ")
+
+        for i = 1, flag_entries_count do
+            local entry = flag_entries[i]
+            io.write("[", entry.name1, " ")
+            if entry.nargs == "?" then
+                io.write("[", string.upper(entry.dest), "] ")
+            else
+                for _ = 1, entry.nargs do
+                    io.write(string.upper(entry.dest), " ")
+                end
+            end
+            io.write("\b] ")
+        end
+
+        for i = 1, positional_entries_count do
+            local entry = positional_entries[i]
+            io.write("[", string.upper(entry.dest), " ")
+        end
+        io.write("\b")
+        io.write(string.rep("]", positional_entries_count))
+    end
+
+    io.write("\n\ndescription:\n  ", self.desc, "\n")
+
+    if positional_entries_count > 0 then
+        io.write("\npositional arguments:\n")
+        for i = 1, positional_entries_count do
+            local entry = positional_entries[i]
+            io.write("  ", string.upper(entry.dest), "\n")
+            if entry.help and #entry.help > 0 then
+                io.write("    ", entry.help, "\n")
+            end
+        end
+    end
+
+    if flag_entries_count > 0 then
+        io.write("\noptions:\n")
+        for i = 1, flag_entries_count do
+            local entry = flag_entries[i]
+
+            io.write("  ", entry.name1, " ")
+            if entry.nargs == "?" then
+                io.write("[", string.upper(entry.dest), "] ")
+            else
+                for _ = 1, entry.nargs do
+                    io.write(string.upper(entry.dest), " ")
+                end
+            end
+
+            if entry.name2 then
+                io.write("  ", entry.name2, " ")
+
+                if entry.nargs == "?" then
+                    io.write("[", string.upper(entry.dest), "] ")
+                else
+                    for _ = 1, entry.nargs do
+                        io.write(string.upper(entry.dest), " ")
+                    end
+                end
+            end
+
+            io.write("\n")
+            if entry.help and #entry.help > 0 then
+                io.write("    ", entry.help, "\n")
+            end
+        end
     end
 end
 
@@ -74,7 +189,7 @@ function Parser:parse_args(args)
     local output = {}
 
     -- set up defaults
-    for _, entry in pairs(self.arguments) do
+    for _, entry in pairs(self.argument_table) do
         output[entry.dest] = entry.default
     end
 
@@ -90,7 +205,7 @@ function Parser:parse_args(args)
         else
             if not force_positional and arg_str:find("^%-") then
                 -- argument is a flag
-                local entry = self.arguments[arg_str]
+                local entry = self.argument_table[arg_str]
                 if not entry then
                     error(string.format("unrecognized flag argument `%s`", arg_str))
                 end
@@ -183,7 +298,7 @@ function Parser:parse_args(args)
                 end
             else
                 -- argument is positional
-                local entry = self.arguments[positional_arg_num]
+                local entry = self.argument_table[positional_arg_num]
                 if not entry then
                     error(string.format("too many positional arguments at `%s`", arg_str))
                 end
@@ -211,15 +326,20 @@ end
 local argparse = {}
 
 ---Makes a new parser
+---@param prog string
+---@param desc string
 ---@return Parser
 ---@nodiscard
-function argparse.new_parser()
+function argparse.new_parser(prog, desc)
     ---@type Parser
     local new_inst = setmetatable({
+        prog = prog,
+        desc = desc,
         positional_arg_count = 0,
-        arguments = {},
+        argument_table = {},
+        argument_list = {},
     }, Parser)
-    new_inst:add_argument("-h", nil, 0, false, "help", nil)
+    new_inst:add_argument("-h", nil, "show this text", 0, false, "help", nil)
     return new_inst
 end
 
