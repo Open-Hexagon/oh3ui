@@ -5,11 +5,8 @@ local argparse = require("argparse")
 local ui_settings = require("ui.settings")
 local unittest = require("tests.unittest")
 
--- local test_menu = require("tests.menu")
 local example_menu = require("ui.menu.example")
 local scroll_example_menu = require("ui.menu.scroll_example")
-local area_behavior = require("ui.menu.area_behavior")
-local translate_behavior = require("ui.menu.translate_behavior")
 
 -- luacov: enable
 local layers = require("ui.layers")
@@ -51,9 +48,8 @@ function love.run()
         return unittest.main
     end
 
-    -- layers.push(example_menu)
+    layers.push(example_menu)
     -- layers.push(area_behavior)
-    layers.push(translate_behavior)
 
     return function()
         -- Process events

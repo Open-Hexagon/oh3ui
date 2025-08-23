@@ -387,7 +387,7 @@ end
 
 ---Removes the last applied translation
 function cursor.remove_translation()
-    if volatile_data.translate_index == volatile_data.cursor_base_index then
+    if volatile_data.translate_index == volatile_data.translate_base_index then
         error("no more translations to remove")
     end
     volatile_data.translate_index = volatile_data.translate_index - 1

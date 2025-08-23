@@ -27,16 +27,16 @@ end
 
 ---Pop an area from the stack
 function scissor_stack.pop()
-    index = index - 1
-    scissor_stack.revert(index)
+    scissor_stack.revert(index - 1)
 end
 
 function scissor_stack.revert(n)
     if n == 0 then
         love.graphics.setScissor()
     else
-        love.graphics.setScissor(unpack(snapshot[index]))
+        love.graphics.setScissor(unpack(snapshot[n]))
     end
+    index = n
 end
 
 ---Outputs a warning and clears the stack if it was not empty.
