@@ -23,12 +23,12 @@ local Parser = {}
 Parser.__index = Parser
 
 ---Adds an argument to the parser
----@param name1 string Argument name. If name starts with "-", it's a flag, else it's positional.
+---@param name1 string Argument name. If name starts with "-", it's an option, else it's a positional option.
 ---@param name2 string? Optional secondary argument name. Takes priority when determining the argument destination.
----@param help string? Help text for this argument
+---@param help string? Help text for this argument.
 ---@param nargs integer|"?" Number of arguments. Ignored if argument is positional. Can be 0. "?" means 1 or 0 arguments.
 ---@param is_number boolean Parser should convert the argument value into a number. If unable, parser will throw an error.
----@param action "store_true"|"store_false"|"store_const"|"help"|nil An action performed when this argument is encountered. Values provided by nargs have priority. Ignored if argument is positional.
+---@param action "store_true"|"store_false"|"store_const"|"help"|nil An action performed when this argument is encountered. Explicit values provided by the user take priority over this. Ignored if argument is positional.
 ---@param default any This argument's default value if nothing gets assigned. Ignored if argument is positional. Not type checked.
 ---@param const any This argument is assigned if the "store_const" action is used.
 function Parser:add_argument(name1, name2, help, nargs, is_number, action, default, const)

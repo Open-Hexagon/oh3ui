@@ -110,22 +110,6 @@ end
 -- first cursor setup
 cursor.reset()
 
----Should be run at the end of a frame to clean up all stacks
-function cursor.finish()
-    if volatile_data.cursor_index ~= 0 then
-        print("warning: cursor stack was not empty")
-        volatile_data.cursor_index = 0
-    end
-    if volatile_data.translate_index ~= 1 then
-        print("warning: translation stack was not empty")
-        volatile_data.translate_index = 1
-    end
-    if volatile_data.area_index ~= 0 then
-        print("warning: area stack was not empty")
-        volatile_data.cursor_index = 0
-    end
-end
-
 --#region snapshotting
 
 ---Push a snapshot of the cursor, saving its current state for later.

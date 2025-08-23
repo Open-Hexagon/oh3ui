@@ -1,4 +1,4 @@
----A module that manages stacks that are used across the module 
+---A module that manages stacks that are used across the module
 
 local volatile_data = require("ui.shared_data").volatile
 local record_stack = volatile_data.record_stack
