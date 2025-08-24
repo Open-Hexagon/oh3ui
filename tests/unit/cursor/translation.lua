@@ -26,9 +26,7 @@ function T.tear_down()
 end
 
 function T.test_stack_underflow()
-    unittest.assert_error(function()
-        cursor.remove_translation()
-    end, "we should be at the bottom of the stack")
+    unittest.assert_error(cursor.remove_translation, "we should be at the bottom of the stack")
 end
 
 function T.test_translate()
@@ -77,9 +75,7 @@ function T.test_translate_rollback()
 
     stack_manager.push_record()
 
-    unittest.assert_error(function()
-        cursor.remove_translation()
-    end, "we should be at the bottom of the stack")
+    unittest.assert_error(cursor.remove_translation, "we should be at the bottom of the stack")
 
     cursor.apply_translation(0, 50)
     cursor.apply_translation(0, 50)

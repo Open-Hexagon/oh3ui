@@ -100,9 +100,7 @@ function T.test_area_rollback()
     cursor.place()
 
     stack_manager.push_record()
-    unittest.assert_error(function()
-        cursor.finish_area()
-    end, "we should be at the bottom of the stack")
+    unittest.assert_error(cursor.finish_area, "we should be at the bottom of the stack")
 
     cursor.start_area()
 
@@ -131,9 +129,7 @@ function T.test_area_rollback()
 end
 
 function T.test_area_underflow()
-    unittest.assert_error(function()
-        cursor.finish_area()
-    end, "we should be at the bottom of the stack")
+    unittest.assert_error(cursor.finish_area, "we should be at the bottom of the stack")
 end
 
 function T.test_put_area()

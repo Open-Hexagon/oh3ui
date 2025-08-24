@@ -19,8 +19,8 @@ function mask.pop()
     if volatile_data.mask_index == volatile_data.mask_base_index then
         error("scissor stack underflow")
     end
-    volatile_data.mask_index = volatile_data.mask_index + 1
     draw_queue.pop_scissor()
+    volatile_data.mask_index = volatile_data.mask_index - 1
 end
 
 return mask

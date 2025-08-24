@@ -131,9 +131,7 @@ function T.test_aeb_index()
 end
 
 function T.test_record_underflow()
-    unittest.assert_error(function()
-        stack_manager.pop_record()
-    end, "record stack should be at the bottom")
+    unittest.assert_error(stack_manager.pop_record, "record stack should be at the bottom")
 end
 
 return T

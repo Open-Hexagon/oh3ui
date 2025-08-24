@@ -1,41 +1,45 @@
 -- luacov: disable
--- can't possibly cover line when luacov hasn't been included yet, so don't mark as miss
+-- disable coverage while parsing arguments
 
+local unittest = require("tests.unittest")
 local argparse = require("argparse")
 local ui_settings = require("ui.settings")
-local unittest = require("tests.unittest")
+
+local parser = argparse.new_parser("ohce", "open hexagon community edition")
+parser:add_argument("-e", "--print-events", "enable printing of events", 0, false, "store_true", false)
+parser:add_argument("-s", "--ui-scale", "starting ui scale", 1, true, nil, 1)
+parser:add_argument("-g", "--grid", "enable grid and set its size", "?", true, "store_const", nil, 50)
+parser:add_argument("-u", "--unittest", "start unittest mode", 0, false, "store_true", false)
+parser:add_argument("-v", "--verbose", "verbose output in unittest mode", 0, false, "store_true", false)
+parser:add_argument("-c", "--coverage", "enable coverage in unittest mode", 0, false, "store_true", false)
+
+local arg_values = parser:parse_args(love.arg.parseGameArguments(arg))
+
+ui_settings.scale = arg_values.ui_scale
+ui_settings.debug_grid = arg_values.grid
+local enable_event_printing = arg_values.print_events
+local unittest_mode = arg_values.unittest
+unittest.verbose = arg_values.verbose
+
+if arg_values.unittest and arg_values.coverage then
+    require("luacov")
+end
+
+-- luacov: enable
 
 local example_menu = require("ui.menu.example")
 local scroll_example_menu = require("ui.menu.scroll_example")
 
--- luacov: enable
 local layers = require("ui.layers")
 local ui = require("ui")
 
-local enable_event_printing
-local unittest_mode
-
-local function load(args)
-    local parser = argparse.new_parser("ohce", "open hexagon community edition")
-    parser:add_argument("-e", "--print-events", "enable printing of events", 0, false, "store_true", false)
-    parser:add_argument("-s", "--ui-scale", "starting ui scale", 1, true, nil, 1)
-    parser:add_argument("-g", "--grid", "enable grid and set its size", "?", true, "store_const", nil, 50)
-    parser:add_argument("-u", "--unittest", "start unittest mode", 0, false, "store_true", false)
-    parser:add_argument("-v", "--verbose", "verbose output in unittest mode", 0, false, "store_true", false)
-
-    local arg_values = parser:parse_args(args)
-
-    ui_settings.scale = arg_values.ui_scale
-    ui_settings.debug_grid = arg_values.grid
-    enable_event_printing = arg_values.print_events
-    unittest_mode = arg_values.unittest
-    unittest.verbose = arg_values.verbose
-end
-
 function love.run()
-    ---this function exists
-    ---@diagnostic disable-next-line: undefined-field
-    load(love.arg.parseGameArguments(arg))
+    if unittest_mode then
+        return unittest.main
+    end
+
+    -- luacov: disable
+    -- Coverage can only be active when unit tesing. Anything past this point is never reached.
 
     -- Target duration of each tick in seconds
     local target_delta = 1 / 60
@@ -43,10 +47,6 @@ function love.run()
 
     -- keep this always on when using the ui
     love.keyboard.setKeyRepeat(true)
-
-    if unittest_mode then
-        return unittest.main
-    end
 
     layers.push(example_menu)
     -- layers.push(area_behavior)
@@ -85,4 +85,6 @@ function love.run()
         love.timer.sleep(target_delta - (love.timer.getTime() - last_time))
         last_time = last_time + target_delta
     end
+
+    -- luacov: enable
 end

@@ -1,5 +1,7 @@
 ---Unit testing fixture
 
+-- require("luacov")
+
 local unittest = {
     verbose = false,
 }

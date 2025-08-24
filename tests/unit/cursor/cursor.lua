@@ -90,9 +90,7 @@ function T.test_cursor_stack_push_pop()
 end
 
 function T.test_cursor_stack_underflow()
-    unittest.assert_error(function()
-        cursor.pop()
-    end)
+    unittest.assert_error(cursor.pop)
 end
 
 function T.test_cursor_stack_rollback()
@@ -104,9 +102,7 @@ function T.test_cursor_stack_rollback()
     cursor.push()
     do
         stack_manager.push_record()
-        unittest.assert_error(function()
-            cursor.pop()
-        end)
+        unittest.assert_error(cursor.pop)
 
         cursor.x, cursor.y = 90, 325
         cursor.width, cursor.height = 410, 35
@@ -143,9 +139,7 @@ function T.test_cursor_stack_rollback()
 end
 
 function T.test_cursor_stack_peek()
-    unittest.assert_error(function()
-        cursor.peek()
-    end, "peeking an empty stack should cause error")
+    unittest.assert_error(cursor.peek, "peeking an empty stack should cause error")
 
     cursor.x, cursor.y = 30, 70
     cursor.width, cursor.height = 50, 80
@@ -184,15 +178,11 @@ function T.test_cursor_stack_peek()
     unittest.assert(cursor.anchor_y == 0.5)
     unittest.assert(cursor.auto_reshape == false)
 
-    unittest.assert_error(function()
-        cursor.pop()
-    end, "we should be at the bottom of the stack")
+    unittest.assert_error(cursor.pop, "we should be at the bottom of the stack")
 end
 
 function T.test_cursor_stack_drop()
-    unittest.assert_error(function()
-        cursor.drop()
-    end, "dropping an empty stack should cause error")
+    unittest.assert_error(cursor.drop, "dropping an empty stack should cause error")
 
     cursor.x, cursor.y = 30, 70
     cursor.width, cursor.height = 50, 80
@@ -216,9 +206,7 @@ function T.test_cursor_stack_drop()
     unittest.assert(cursor.anchor_y == 0)
     unittest.assert(cursor.auto_reshape == false)
 
-    unittest.assert_error(function()
-        cursor.pop()
-    end, "we should be at the bottom of the stack")
+    unittest.assert_error(cursor.pop, "we should be at the bottom of the stack")
 end
 
 function T.test_cursor_swizzling()
@@ -235,6 +223,13 @@ function T.test_cursor_swizzling()
     unittest.assert(b == cursor.x + (1 - cursor.anchor_x) * cursor.width)
     unittest.assert(c == cursor.y - cursor.anchor_y * cursor.height)
     unittest.assert(d == cursor.y + (1 - cursor.anchor_y) * cursor.height)
+end
+
+function T.test_invalid_swizzling()
+    -- this has to be wrapped or it causes an actual error
+    unittest.assert_error(function()
+        cursor.g()
+    end)
 end
 
 function T.test_do_auto_reshape()
@@ -261,9 +256,7 @@ function T.test_do_auto_reshape()
         unittest.assert(cursor.anchor_y == 0.5)
         unittest.assert(cursor.auto_reshape == true)
 
-        unittest.assert_error(function()
-            cursor.pop()
-        end, "we should be at the bottom of the stack")
+        unittest.assert_error(cursor.pop, "we should be at the bottom of the stack")
     end
 
     do
@@ -289,9 +282,7 @@ function T.test_do_auto_reshape()
         unittest.assert(cursor.anchor_y == 0.5)
         unittest.assert(cursor.auto_reshape == false)
 
-        unittest.assert_error(function()
-            cursor.pop()
-        end, "we should be at the bottom of the stack")
+        unittest.assert_error(cursor.pop, "we should be at the bottom of the stack")
     end
 end
 
@@ -310,9 +301,7 @@ function T.test_h_array()
         unittest.assert(cursor.height == 10)
     end
 
-    unittest.assert_error(function()
-        cursor.pop()
-    end, "we should be at the bottom of the stack")
+    unittest.assert_error(cursor.pop, "we should be at the bottom of the stack")
 end
 
 function T.test_v_array()
@@ -330,9 +319,7 @@ function T.test_v_array()
         unittest.assert(cursor.height == 10)
     end
 
-    unittest.assert_error(function()
-        cursor.pop()
-    end, "we should be at the bottom of the stack")
+    unittest.assert_error(cursor.pop, "we should be at the bottom of the stack")
 end
 
 function T.test_h_split()
@@ -350,9 +337,7 @@ function T.test_h_split()
         unittest.assert(cursor.height == 70)
     end
 
-    unittest.assert_error(function()
-        cursor.pop()
-    end, "we should be at the bottom of the stack")
+    unittest.assert_error(cursor.pop, "we should be at the bottom of the stack")
 end
 
 function T.test_v_split()
@@ -370,9 +355,7 @@ function T.test_v_split()
         unittest.assert(cursor.height == 10)
     end
 
-    unittest.assert_error(function()
-        cursor.pop()
-    end, "we should be at the bottom of the stack")
+    unittest.assert_error(cursor.pop, "we should be at the bottom of the stack")
 end
 
 function T.test_combine()
@@ -396,9 +379,7 @@ function T.test_combine()
     unittest.assert(cursor.anchor_x == 0.5)
     unittest.assert(cursor.anchor_y == 0.5)
 
-    unittest.assert_error(function()
-        cursor.pop()
-    end, "we should be at the bottom of the stack")
+    unittest.assert_error(cursor.pop, "we should be at the bottom of the stack")
 end
 
 function T.test_peek_combine()
@@ -431,9 +412,11 @@ function T.test_peek_combine()
     unittest.assert(cursor.anchor_x == 0.5)
     unittest.assert(cursor.anchor_y == 0.5)
 
-    unittest.assert_error(function()
-        cursor.pop()
-    end, "we should be at the bottom of the stack")
+    unittest.assert_error(cursor.pop, "we should be at the bottom of the stack")
+end
+
+function T.test_combine_underflow()
+    unittest.assert_error(cursor.combine)
 end
 
 function T.test_change_anchor()
