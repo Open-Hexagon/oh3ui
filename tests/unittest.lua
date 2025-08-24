@@ -109,6 +109,9 @@ function unittest.skip(reason)
     coroutine.yield(YK_SKIPPED, reason, string.format("%s:%s:", loc_info.short_src, loc_info.currentline))
 end
 
+---skips a test if condition is true
+---@param cond any
+---@param reason string?
 function unittest.skip_if(cond, reason)
     if cond then
         local loc_info = debug.getinfo(2, "Sl")
@@ -116,11 +119,7 @@ function unittest.skip_if(cond, reason)
     end
 end
 
----Runs a test case
----@param test_case table
-local function run_test_case(test_case)
-    local test_success, success, kind, msg, loc
-
+local function extract_tests(test_case)
     local tests, num_tests = {}, 0
     for fn_name, fn in pairs(test_case) do
         if type(fn) == "function" then
@@ -148,22 +147,34 @@ local function run_test_case(test_case)
             end
         end
     end
+    return tests, num_tests
+end
 
+---Runs a test case
+---@param test_case table
+local function run_test_case(test_case)
+    local test_success, success, kind, msg, loc
+
+    local tests, num_tests = extract_tests(test_case)
     if num_tests == 0 and unittest.verbose then
         io.stderr:write(string.format("\x1b[34m[note] %s has no tests\x1b[0m\n", test_case._file_path))
         return
     end
-
     total_tests = total_tests + num_tests
 
-    if test_case.set_up_case then
-        success, msg = pcall(test_case.set_up_case)
-        if not success then
-            for i = 1, num_tests do
-                add_skip(string.format("%s (in set up case of %s)", msg or "(no description)", tests[i][1]))
-            end
-            return
+    ---@param fn function? a set up or tear down function
+    ---@return boolean success true if the function succeeds or doesn't exist
+    local function try_call(fn)
+        if fn then
+            success, msg = pcall(fn)
+            return success
         end
+        return true
+    end
+
+    if not try_call(test_case.set_up_case) and unittest.verbose then
+        io.stderr:write(string.format("\x1b[31m[error] %s (in set_up_case; all tests skipped)\x1b[0m\n", msg))
+        return
     end
 
     -- using goto to replicate continue, because otherwise this is a nightmare
@@ -171,23 +182,17 @@ local function run_test_case(test_case)
         local fn_name, fn, fn_def_loc = unpack(tests[i])
 
         -- test set_up
-        if test_case.set_up then
-            success, msg = pcall(test_case.set_up)
-            if not success then
-                add_error(string.format("%s (in set up of %s)", msg or "(no description)", fn_name))
-                goto continue
-            end
+        if not try_call(test_case.set_up) then
+            add_error(string.format("%s (in set_up of %s)", msg or "(no description)", fn_name))
+            goto continue
         end
 
         test_success, kind, msg, loc = coroutine.resume(fn)
 
         -- tear_down always gets called if set_up succeeds
-        if test_case.tear_down then
-            success, msg = pcall(test_case.tear_down)
-            if not success then
-                add_error(string.format("%s (in tear down of %s)", msg or "(no description)", fn_name))
-                goto continue
-            end
+        if not try_call(test_case.tear_down) then
+            add_error(string.format("%s (in tear_down of %s)", msg or "(no description)", fn_name))
+            goto continue
         end
 
         -- record test data
@@ -206,11 +211,9 @@ local function run_test_case(test_case)
         ::continue::
     end
 
-    if test_case.tear_down_case and not pcall(test_case.tear_down_case) then
-        success, msg = pcall(test_case.tear_down_case)
-        if not success and unittest.verbose then
-            io.stderr:write("\x1b[31m", msg, " (in tear down case)\x1b[0m\n")
-        end
+    if not try_call(test_case.tear_down_case) and unittest.verbose then
+        io.stderr:write(string.format("\x1b[31m[error] %s (in tear_down_case)\x1b[0m\n", msg))
+        return
     end
 end
 
