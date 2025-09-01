@@ -87,7 +87,7 @@ end
 function unittest.assert(v, msg)
     if not v then
         local loc_info = debug.getinfo(2, "Sl")
-        coroutine.yield(YK_FAILED_ASSERT, msg, string.format("%s:%s", loc_info.short_src, loc_info.currentline))
+        coroutine.yield(YK_FAILED_ASSERT, msg, string.format("%s:%s:", loc_info.short_src, loc_info.currentline))
     end
 end
 
@@ -101,6 +101,63 @@ function unittest.assert_error(fn, msg, ...)
         coroutine.yield(YK_FAILED_ASSERT, msg, string.format("%s:%s:", loc_info.short_src, loc_info.currentline))
     end
 end
+
+---asserts that lists are equal
+---@param t1 table
+---@param t2 table
+function unittest.assert_equal_lists(t1, t2)
+    local l1 = #t1
+    local l2 = #t2
+    if l1 ~= l2 then
+        local loc_info = debug.getinfo(2, "Sl")
+        coroutine.yield(
+            YK_FAILED_ASSERT,
+            string.format("table lengths are not equal #t1 == %d, #t2 == %d", l1, l2),
+            string.format("%s:%s:", loc_info.short_src, loc_info.currentline)
+        )
+    end
+    for i = 1, l1 do
+        if t1[i] ~= t2[i] then
+            local loc_info = debug.getinfo(2, "Sl")
+            coroutine.yield(
+                YK_FAILED_ASSERT,
+                string.format("table items at index %d are not equal", i),
+                string.format("%s:%s:", loc_info.short_src, loc_info.currentline)
+            )
+        end
+    end
+end
+
+---checks if two numbers are close
+---@param a number
+---@param b number
+---@param msg string?
+---@param epsilon number?
+function unittest.assert_almost_equals(a, b, msg, epsilon)
+    epsilon = epsilon or 1e-6
+    if not (a - epsilon <= b and b <= a + epsilon) then
+        local loc_info = debug.getinfo(2, "Sl")
+        coroutine.yield(YK_FAILED_ASSERT, msg, string.format("%s:%s:", loc_info.short_src, loc_info.currentline))
+    end
+end
+
+-- function unittest.assert_writes(fn, msg, ...)
+
+--     local orig_stderr = io.stderr
+--     local orig_stdout = io.stdout
+
+--     local tmp_file = io.tmpfile()
+--     tmp_file:setvbuf("no")
+
+--     io.stderr = tmp_file
+--     io.stdout = tmp_file
+
+--     fn(...)
+
+--     tmp_file:seek("set", 0)
+--     local s, _ =  tmp_file:read("*L")
+
+-- end
 
 ---skips a test
 ---@param reason string?

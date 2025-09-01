@@ -32,7 +32,8 @@ shared_data.volatile = {
     area_base_index = 0,
 
     -- keeps track of how many masks have been applied
-    -- applying masks while making the ui doesn't need to store any information so there's no stack here
+    mask_stack = {}, -- this only gets used when draw_queue.draw is called
+    -- this has overloaded funcionality as both mask.lua and scissor_stack.lua use this
     mask_index = 0, -- number of masks applied
     mask_base_index = 0,
 

@@ -12,6 +12,7 @@ parser:add_argument("-g", "--grid", "enable grid and set its size", "?", true, "
 parser:add_argument("-u", "--unittest", "start unittest mode", 0, false, "store_true", false)
 parser:add_argument("-v", "--verbose", "verbose output in unittest mode", 0, false, "store_true", false)
 parser:add_argument("-c", "--coverage", "enable coverage in unittest mode", 0, false, "store_true", false)
+parser:add_argument("-S", "--strict", "warnings become errors", 0, false, "store_true", false)
 
 local arg_values = parser:parse_args(love.arg.parseGameArguments(arg))
 
@@ -19,6 +20,7 @@ ui_settings.scale = arg_values.ui_scale
 ui_settings.debug_grid = arg_values.grid
 local enable_event_printing = arg_values.print_events
 local unittest_mode = arg_values.unittest
+ui_settings.strict = unittest_mode or arg_values.strict
 unittest.verbose = arg_values.verbose
 
 if arg_values.unittest and arg_values.coverage then

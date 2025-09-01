@@ -4,6 +4,7 @@ local draw_queue = require("ui.draw_queue")
 local control = require("ui.control")
 local settings = require("ui.settings")
 local volatile_data = require("ui.shared_data").volatile
+local warning = require("ui.warning")
 
 local ui = {}
 
@@ -108,32 +109,33 @@ function ui.finish()
 
     -- TODO: massage the volatile data so it's ready for the next frame.
     if volatile_data.cursor_index > 0 then
-        io.stderr:write("warning: cursor stack was not empty")
+        warning("cursor stack was not empty")
         volatile_data.cursor_index = 0
         volatile_data.cursor_base_index = 0
     end
     if volatile_data.translate_index > 1 then
-        io.stderr:write("warning: translation stack was not empty")
+        warning("translation stack was not empty")
         volatile_data.translate_index = 1
         volatile_data.translate_base_index = 1
     end
     if volatile_data.area_index > 0 then
-        io.stderr:write("warning: area stack was not empty")
+        warning("area stack was not empty")
         volatile_data.area_index = 0
         volatile_data.area_base_index = 0
     end
     if volatile_data.mask_index > 0 then
-        io.stderr:write("warning: not all masks were removed")
+        warning("not all masks were removed")
         volatile_data.mask_index = 0
         volatile_data.mask_base_index = 0
     end
     if volatile_data.aeb_index > 0 then
-        io.stderr:write("warning: an area element wasn't finished")
+        warning("an area element wasn't finished")
         volatile_data.aeb_index = 0
         volatile_data.aeb_base_index = 0
     end
     if volatile_data.record_stack_index > 0 then
-        error("the record stack wasn't empty at the end of frame")
+        warning("the record stack wasn't empty at the end of frame")
+        volatile_data.record_stack_index = 0
     end
 end
 

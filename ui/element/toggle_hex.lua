@@ -33,7 +33,7 @@ local function draw_base_shape(color)
 
     -- stylua: ignore
     draw_queue.polygon(
-        "fill", color,
+        "fill", color, 1,
         x0, y1,
         x1, y0,
         x2, y0,

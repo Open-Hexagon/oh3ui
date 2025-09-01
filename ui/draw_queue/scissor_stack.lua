@@ -2,11 +2,9 @@
 ---Draw operations will only act upon the intersection of all areas
 ---Operates on screen space coordinates
 
-local scissor_stack = {}
+local volatile_data = require("ui.shared_data").volatile
 
--- A stack of scissor snapshots
-local snapshot = {}
-local index = 0
+local scissor_stack = {}
 
 ---Push an area on the stack
 ---@param x number
@@ -17,34 +15,37 @@ function scissor_stack.push(x, y, width, height)
     love.graphics.intersectScissor(x, y, width, height)
 
     -- save a snapshot of what the scissor is like now
-    index = index + 1
-    if snapshot[index] then
-        snapshot[index][1], snapshot[index][2], snapshot[index][3], snapshot[index][4] = love.graphics.getScissor()
+    volatile_data.mask_index = volatile_data.mask_index + 1
+    local snapshot = volatile_data.mask_stack[volatile_data.mask_index]
+    if snapshot then
+        snapshot[1], snapshot[2], snapshot[3], snapshot[4] = love.graphics.getScissor()
     else
-        snapshot[index] = { love.graphics.getScissor() }
+        snapshot = { love.graphics.getScissor() }
     end
+    volatile_data.mask_stack[volatile_data.mask_index] = snapshot
 end
 
 ---Pop an area from the stack
 function scissor_stack.pop()
-    scissor_stack.revert(index - 1)
+    scissor_stack.revert(volatile_data.mask_index - 1)
 end
 
+---@param n integer
 function scissor_stack.revert(n)
     if n == 0 then
         love.graphics.setScissor()
     else
-        love.graphics.setScissor(unpack(snapshot[n]))
+        love.graphics.setScissor(unpack(volatile_data.mask_stack[n]))
     end
-    index = n
+    volatile_data.mask_index = n
 end
 
 ---Outputs a warning and clears the stack if it was not empty.
 function scissor_stack.finish()
-    if index ~= 0 then
+    if volatile_data.mask_index ~= 0 then
         print("warning: scissor stack was not empty")
         love.graphics.setScissor()
-        index = 0
+        volatile_data.mask_index = 0
     end
 end
 

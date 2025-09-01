@@ -7,6 +7,7 @@
 local scissor_stack = require("ui.draw_queue.scissor_stack")
 local extmath = require("ui.extmath")
 local sensor = require("ui.control.mouse_navigation.sensor")
+local warning = require("ui.warning")
 
 local draw_queue = {}
 
@@ -136,6 +137,7 @@ function draw_queue.pop_scissor()
     push_operation(op_ids.pop_scissor)
 end
 
+---@param n integer
 function draw_queue.revert_scissor(n)
     push_operation(op_ids.revert_scissor, n)
 end
@@ -237,9 +239,10 @@ end
 ---Add a polygon to the queue
 ---@param mode string
 ---@param color number[]
+---@param line_width number
 ---@param ... number
-function draw_queue.polygon(mode, color, ...)
-    push_operation(op_ids.polygon, mode, color[1], color[2], color[3], color[4], ...)
+function draw_queue.polygon(mode, color, line_width, ...)
+    push_operation(op_ids.polygon, mode, line_width, color[1], color[2], color[3], color[4], ...)
 end
 
 ---Add text to the queue
@@ -294,7 +297,7 @@ end
     - Transforms are completely accurate.
 
     Downsides:
-    - calling graphics transformations has no affect while building the queue.
+    - calling graphics transformations has no effect while building the queue.
 ]]
 
 ---Execute all queued commands.
@@ -364,8 +367,10 @@ function draw_queue.draw()
                 love.graphics.setColor(r, g, b, a)
                 love.graphics.line(unpack(item, 7))
             elseif id == op_ids.polygon then
-                love.graphics.setColor(item[3], item[4], item[5], item[6])
-                love.graphics.polygon(item[2], unpack(item, 7))
+                local mode, line_width, r, g, b, a = unpack(item, 2, 7)
+                love.graphics.setLineWidth(line_width)
+                love.graphics.setColor(r, g, b, a)
+                love.graphics.polygon(mode, unpack(item, 8))
             elseif id == op_ids.text then
                 local text_object, x, y, r, g, b, a = unpack(item, 2)
                 love.graphics.setColor(r, g, b, a)
@@ -407,7 +412,7 @@ function draw_queue.draw()
             elseif id == op_ids.revert_scissor then
                 scissor_stack.revert(item[2])
             elseif id == op_ids.unused_reservation then
-                io.stderr:write(
+                warning(
                     string.format(
                         "warning: unused reservation slot with res_id %d, slot number %d of %d\n",
                         item[2],
@@ -416,7 +421,10 @@ function draw_queue.draw()
                     )
                 )
             else
+                -- luacov: disable
+                -- should be unreachable
                 error(string.format("unknown draw queue op id %d", id))
+                -- luacov: enable
             end
         end
     end
