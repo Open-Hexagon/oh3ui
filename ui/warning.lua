@@ -1,5 +1,6 @@
 local ui_settings = require("ui.settings")
 
+---Prints a warning to stderr. Throws an error if in strict mode
 ---@param message string
 return function(message)
     if ui_settings.strict then

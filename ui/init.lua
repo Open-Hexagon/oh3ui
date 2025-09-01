@@ -34,6 +34,7 @@ ui.push_event = events.add
 ---reset ui state and set scale
 function ui.start()
     -- The red grid shows screen space
+    -- luacov: disable
     if settings.debug_grid then
         love.graphics.setLineWidth(2)
         love.graphics.setColor(1, 0, 0, 0.2)
@@ -56,6 +57,7 @@ function ui.start()
         y = height
         love.graphics.line(0, y, width, y)
     end
+    -- luacov: enable
 
     -- scale immediately so that screen space positions can be accounted for in any transforms and inverseTransforms
     love.graphics.push()
@@ -64,6 +66,7 @@ function ui.start()
 
     ---The green grid shows scaled space.
     ---This is where drawn graphics end up, but not everything is affected by graphics transforms.
+    -- luacov: disable
     if settings.debug_grid then
         love.graphics.setLineWidth(2)
         love.graphics.setColor(0, 1, 0, 0.2)
@@ -91,10 +94,41 @@ function ui.start()
         love.graphics.transformPoint(x, y)
         love.graphics.circle("line", x, y, 4)
     end
+    -- luacov: enable
 end
 
 ---Do ui finalization and cleanup
 function ui.finish()
+    if volatile_data.cursor_index > 0 then
+        volatile_data.cursor_index = 0
+        volatile_data.cursor_base_index = 0
+        warning("cursor stack was not empty")
+    end
+    if volatile_data.translate_index > 1 then
+        volatile_data.translate_index = 1
+        volatile_data.translate_base_index = 1
+        warning("translation stack was not empty")
+    end
+    if volatile_data.area_index > 0 then
+        volatile_data.area_index = 0
+        volatile_data.area_base_index = 0
+        warning("area stack was not empty")
+    end
+    if volatile_data.mask_index > 0 then
+        volatile_data.mask_index = 0
+        volatile_data.mask_base_index = 0
+        warning("not all masks were removed")
+    end
+    if volatile_data.aeb_index > 0 then
+        volatile_data.aeb_index = 0
+        volatile_data.aeb_base_index = 0
+        warning("an area element wasn't finished")
+    end
+    if volatile_data.record_stack_index > 0 then
+        volatile_data.record_stack_index = 0
+        warning("the record stack wasn't empty at the end of frame")
+    end
+
     -- draw in order
     draw_queue.draw()
 
@@ -106,49 +140,7 @@ function ui.finish()
 
     -- clean up
     events.clear()
-
-    -- TODO: massage the volatile data so it's ready for the next frame.
-    if volatile_data.cursor_index > 0 then
-        warning("cursor stack was not empty")
-        volatile_data.cursor_index = 0
-        volatile_data.cursor_base_index = 0
-    end
-    if volatile_data.translate_index > 1 then
-        warning("translation stack was not empty")
-        volatile_data.translate_index = 1
-        volatile_data.translate_base_index = 1
-    end
-    if volatile_data.area_index > 0 then
-        warning("area stack was not empty")
-        volatile_data.area_index = 0
-        volatile_data.area_base_index = 0
-    end
-    if volatile_data.mask_index > 0 then
-        warning("not all masks were removed")
-        volatile_data.mask_index = 0
-        volatile_data.mask_base_index = 0
-    end
-    if volatile_data.aeb_index > 0 then
-        warning("an area element wasn't finished")
-        volatile_data.aeb_index = 0
-        volatile_data.aeb_base_index = 0
-    end
-    if volatile_data.record_stack_index > 0 then
-        warning("the record stack wasn't empty at the end of frame")
-        volatile_data.record_stack_index = 0
-    end
-end
-
----get the width of the ui adjusted for scale
----@return number
-function ui.get_width()
-    return love.graphics.getWidth() / settings.scale
-end
-
----get the height of the ui adjusted for scale
----@return number
-function ui.get_height()
-    return love.graphics.getHeight() / settings.scale
+    love.graphics.setScissor()
 end
 
 return ui

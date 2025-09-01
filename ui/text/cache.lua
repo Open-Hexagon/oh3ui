@@ -53,6 +53,7 @@ local update_interval = 0.5 -- seconds
 ---@param wraplimit number
 ---@param align love.AlignMode
 ---@return love.Text
+---@nodiscard
 function text_cache.get(font, text, wraplimit, align)
     -- update cache in case the update interval has passed
     local time = love.timer.getTime()

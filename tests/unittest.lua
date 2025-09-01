@@ -54,6 +54,16 @@ local function add_pass(msg)
     end
 end
 
+local function add_empty(msg)
+    -- empty tests have technically passed
+    tests_passed = tests_passed + 1
+    if unittest.verbose then
+        io.stderr:write("\x1b[2m[EMPTY]\x1b[0m ", msg, "\n")
+    else
+        io.stderr:write("_")
+    end
+end
+
 local function add_fail(msg)
     tests_failed = tests_failed + 1
     if unittest.verbose then
@@ -81,10 +91,13 @@ local function add_error(msg)
     end
 end
 
+local has_assertions = false
+
 ---Assert for unit testing. Lets us distinguish assertions from actual errors.
 ---@param v any
 ---@param msg string?
 function unittest.assert(v, msg)
+    has_assertions = true
     if not v then
         local loc_info = debug.getinfo(2, "Sl")
         coroutine.yield(YK_FAILED_ASSERT, msg, string.format("%s:%s:", loc_info.short_src, loc_info.currentline))
@@ -96,6 +109,7 @@ end
 ---@param msg string?
 ---@param ... any
 function unittest.assert_error(fn, msg, ...)
+    has_assertions = true
     if pcall(fn, ...) then
         local loc_info = debug.getinfo(2, "Sl")
         coroutine.yield(YK_FAILED_ASSERT, msg, string.format("%s:%s:", loc_info.short_src, loc_info.currentline))
@@ -106,6 +120,7 @@ end
 ---@param t1 table
 ---@param t2 table
 function unittest.assert_equal_lists(t1, t2)
+    has_assertions = true
     local l1 = #t1
     local l2 = #t2
     if l1 ~= l2 then
@@ -134,30 +149,13 @@ end
 ---@param msg string?
 ---@param epsilon number?
 function unittest.assert_almost_equals(a, b, msg, epsilon)
+    has_assertions = true
     epsilon = epsilon or 1e-6
     if not (a - epsilon <= b and b <= a + epsilon) then
         local loc_info = debug.getinfo(2, "Sl")
         coroutine.yield(YK_FAILED_ASSERT, msg, string.format("%s:%s:", loc_info.short_src, loc_info.currentline))
     end
 end
-
--- function unittest.assert_writes(fn, msg, ...)
-
---     local orig_stderr = io.stderr
---     local orig_stdout = io.stdout
-
---     local tmp_file = io.tmpfile()
---     tmp_file:setvbuf("no")
-
---     io.stderr = tmp_file
---     io.stdout = tmp_file
-
---     fn(...)
-
---     tmp_file:seek("set", 0)
---     local s, _ =  tmp_file:read("*L")
-
--- end
 
 ---skips a test
 ---@param reason string?
@@ -244,6 +242,7 @@ local function run_test_case(test_case)
             goto continue
         end
 
+        has_assertions = false
         test_success, kind, msg, loc = coroutine.resume(fn)
 
         -- tear_down always gets called if set_up succeeds
@@ -254,7 +253,9 @@ local function run_test_case(test_case)
 
         -- record test data
         if test_success then
-            if kind == YK_FAILED_ASSERT then
+            if not has_assertions then
+                add_empty(string.format("%s %s", fn_def_loc, fn_name))
+            elseif kind == YK_FAILED_ASSERT then
                 add_fail(string.format("%s %s %s", loc, fn_name, msg or "(no message given)"))
             elseif kind == YK_SKIPPED then
                 add_skip(string.format("%s %s %s", loc, fn_name, msg or "(no reason given)"))

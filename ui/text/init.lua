@@ -24,6 +24,7 @@ local font_cache = {}
 ---@param size number
 ---@param font_path string
 ---@return love.Font
+---@nodiscard
 function text.get_font(size, font_path)
     font_cache[font_path] = font_cache[font_path] or {}
     local font = font_cache[font_path][size]
@@ -47,6 +48,7 @@ local icon_font_table_cache = {}
 ---@param icon_name string
 ---@param font_path string
 ---@return string
+---@nodiscard
 function text.get_icon_string(icon_name, font_path)
     -- try to find the table in the cache
     local icon_table = icon_font_table_cache[font_path]

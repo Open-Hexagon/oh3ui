@@ -40,13 +40,4 @@ function scissor_stack.revert(n)
     volatile_data.mask_index = n
 end
 
----Outputs a warning and clears the stack if it was not empty.
-function scissor_stack.finish()
-    if volatile_data.mask_index ~= 0 then
-        print("warning: scissor stack was not empty")
-        love.graphics.setScissor()
-        volatile_data.mask_index = 0
-    end
-end
-
 return scissor_stack
