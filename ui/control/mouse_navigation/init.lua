@@ -285,6 +285,8 @@ function mouse_navigation.evaluate()
     else
         sensor.evaluate(screen_x, screen_y)
     end
+
+    sensor.clear()
     last_sensor_id = 0
     last_manual_sensor_id = 0
 end

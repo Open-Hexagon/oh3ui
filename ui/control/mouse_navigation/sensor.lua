@@ -113,17 +113,20 @@ function sensor.evaluate(mouse_screen_x, mouse_screen_y)
                 -- add to hover set
                 hover_set[sensor_id] = true
 
-                -- Set the preemptive_drag_id if draggable. This overwrites the last drag id
-                if band(mode, sensor_mode.draggable) ~= 0 then
-                    sensor.preemptive_drag_id = sensor_id
-                end
-
                 if band(mode, sensor_mode.lazy) ~= 0 then
                     if last_lazy_intersection then
                         -- remove the last intersection from the hover set
+                        if last_lazy_intersection == sensor.preemptive_drag_id then
+                            sensor.preemptive_drag_id = nil
+                        end
                         hover_set[last_lazy_intersection] = nil
                     end
                     last_lazy_intersection = sensor_id
+                end
+
+                -- Set the preemptive_drag_id if draggable. This overwrites the last drag id
+                if band(mode, sensor_mode.draggable) ~= 0 then
+                    sensor.preemptive_drag_id = sensor_id
                 end
 
                 if band(mode, sensor_mode.block) ~= 0 then
@@ -133,8 +136,9 @@ function sensor.evaluate(mouse_screen_x, mouse_screen_y)
             end
         end
     end
+end
 
-    -- restart z_list
+function sensor.clear()
     index = 0
 end
 
