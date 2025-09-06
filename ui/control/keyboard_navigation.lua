@@ -172,11 +172,11 @@ end
 ---An ordered list of created cells
 local cell_list = {}
 
+---Holds the index of the first interactable cell.
+---This is nil whenever non-interactable layers are running.
 local first_cell_id
 
 ---Holds the index of the last created cell.
----Only starts counting up after suppress_controls becomes false
----! Must accurately represent the length of the cell list
 local last_cell_id = 0
 
 ---The index of the currently selected cell.

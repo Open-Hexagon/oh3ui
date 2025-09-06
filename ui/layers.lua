@@ -55,7 +55,6 @@ local stack = {}
 
 local PUSH = 0
 local POP = 1
--- local
 
 local task_id
 ---@type function
