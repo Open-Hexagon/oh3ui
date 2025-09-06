@@ -13,6 +13,7 @@ parser:add_argument("-u", "--unittest", "start unittest mode", 0, false, "store_
 parser:add_argument("-v", "--verbose", "verbose output in unittest mode", 0, false, "store_true", false)
 parser:add_argument("-c", "--coverage", "enable coverage in unittest mode", 0, false, "store_true", false)
 parser:add_argument("-S", "--strict", "warnings become errors", 0, false, "store_true", false)
+parser:add_argument("-T", "--tickrate", "number of ticks per second (default is 60)", 1, true, nil, 60)
 
 local arg_values = parser:parse_args(love.arg.parseGameArguments(arg))
 
@@ -30,9 +31,6 @@ end
 -- luacov: enable
 
 local example_menu = require("ui.menu.example")
-local scroll_example_menu = require("ui.menu.scroll_example")
-
-local layers = require("ui.layers")
 local ui = require("ui")
 
 function love.run()
@@ -44,14 +42,13 @@ function love.run()
     -- Coverage can only be active when unit tesing. Anything past this point is never reached.
 
     -- Target duration of each tick in seconds
-    local target_delta = 1 / 60
+    local target_delta = 1 / arg_values.tickrate
     local last_time = 0
 
     -- keep this always on when using the ui
     love.keyboard.setKeyRepeat(true)
 
-    layers.push(example_menu)
-    -- layers.push(area_behavior)
+    ui.init(example_menu)
 
     return function()
         -- Process events
@@ -72,9 +69,7 @@ function love.run()
             love.graphics.origin()
             love.graphics.clear(0, 0, 0, 1)
 
-            ui.start()
-            layers.run()
-            ui.finish()
+            ui.evaluate()
 
             -- draw the fps
             love.graphics.setColor(1, 1, 1, 1)

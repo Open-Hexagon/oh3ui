@@ -2,6 +2,18 @@
 
 local shared_data = {}
 
+shared_data.enums = {}
+
+---@enum control_methods
+local control_methods = {
+    none = 0,
+    mouse = 1,
+    keyboard = 2,
+    typing = 3,
+}
+
+shared_data.enums.control_method = control_methods
+
 shared_data.control = {
     ---The cell id that is used to check for selection and actions
     ---The cell id 0 will never be assigned normally
@@ -9,9 +21,16 @@ shared_data.control = {
     current_cell_id = 0,
 
     ---The sensor id that will be used to check for hovering.
-    ---Sensor id 0 will never be assigned normally
+    ---The sensor id 0 will never be assigned normally
     ---@type integer
     current_sensor_id = 0,
+
+    ---@type control_methods
+    last_used_control_method = control_methods.none,
+
+    ---Used to disable control functions on inactive layers.
+    ---@type boolean
+    suppress_controls = false,
 }
 
 -- data that shouldn't survive between frames
@@ -47,8 +66,6 @@ shared_data.volatile = {
 }
 
 -- data that survives between frames
-shared_data.static = {
-
-}
+shared_data.static = {}
 
 return shared_data

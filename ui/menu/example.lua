@@ -12,6 +12,9 @@ local kba = knav.actions
 local wmode = knav.wrapping_mode
 local settings = require("ui.settings")
 local typing = require("ui.control.typing")
+local layers = require("ui.layers")
+local scroll_example_menu = require("ui.menu.scroll_example")
+local shared_data = require("ui.shared_data")
 
 -- Elements
 local button = require("ui.element.button")
@@ -26,7 +29,14 @@ local toggle_hex = require("ui.element.toggle_hex")
 local checkbox = require("ui.element.checkbox")
 local selection_outline = require("ui.element.decorator.selection_outline")
 
+local counter = 0
+
 return function()
+    cursor.change_anchor(0.5)
+    primitive.label(string.format("%02d", counter), 400, "center", false, { 1, 1, 1, 0.1 })
+    counter = (counter + 1) % 60
+    cursor.change_anchor(0)
+
     knav.set_wrapping(wmode.list, wmode.vertical)
     knav.set_page_length(2)
 
@@ -149,4 +159,30 @@ return function()
     typing.make_text_entry(id.text_entry2, text_entry_sensor2, text_entry_cell2)
 
     typing.draw_text_entry(36, "Search2")
+
+    cursor.shift_down(10)
+
+    cursor.width = 150
+    cursor.height = 20
+    knav.make_cell()
+    knav.grid_cell(1, 15)
+    button("open scroll example", 16)
+    if mnav.get_clicked() == mb.left or knav.get_action() == kba.activate then
+        layers.push(scroll_example_menu)
+    end
+
+    cursor.shift_down(10)
+    primitive.label(
+        string.format(
+            [[
+last_used_control_method %d
+is_editing_any_text %s
+]],
+            shared_data.control.last_used_control_method,
+            typing.is_editing_any_text()
+        ),
+        16,
+        "left",
+        false
+    )
 end

@@ -1,6 +1,9 @@
 local mouse_navigation = require("ui.control.mouse_navigation")
 local keyboard_navigation = require("ui.control.keyboard_navigation")
 local typing = require("ui.control.typing")
+local shared_data = require("ui.shared_data")
+local control_data = shared_data.control
+local control_method = shared_data.enums.control_method
 
 local typing_tab_up = typing.stop_methods.tab_up
 local typing_tab_down = typing.stop_methods.tab_down
@@ -16,6 +19,8 @@ function control.evaluate()
 
         -- do immediate keyboard navigation
         if goto_cell then
+            control_data.last_used_control_method = control_method.keyboard
+
             keyboard_navigation.jump_to_cell(goto_cell)
             if tab_direction == typing_tab_down then
                 keyboard_navigation.jump_forward()
@@ -34,6 +39,8 @@ function control.evaluate()
 
         -- do immediate text editing
         if typing_target then
+            control_data.last_used_control_method = control_method.typing
+
             typing.set_target(typing_target)
             if typing_action == "backspace" then
                 if love.keyboard.isDown("lctrl", "rctrl") then

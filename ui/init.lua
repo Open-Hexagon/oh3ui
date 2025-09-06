@@ -1,10 +1,10 @@
-local cursor = require("ui.cursor")
 local events = require("ui.events")
 local draw_queue = require("ui.draw_queue")
 local control = require("ui.control")
 local settings = require("ui.settings")
 local volatile_data = require("ui.shared_data").volatile
 local warning = require("ui.warning")
+local layers = require("ui.layers")
 
 local ui = {}
 
@@ -31,8 +31,10 @@ ui.push_event = events.add
     - these won't be seen until the next frame
 ]]
 
+ui.init = layers.init
+
 ---reset ui state and set scale
-function ui.start()
+function ui.evaluate()
     -- The red grid shows screen space
     -- luacov: disable
     if settings.debug_grid then
@@ -62,7 +64,6 @@ function ui.start()
     -- scale immediately so that screen space positions can be accounted for in any transforms and inverseTransforms
     love.graphics.push()
     love.graphics.scale(settings.scale)
-    cursor.reset()
 
     ---The green grid shows scaled space.
     ---This is where drawn graphics end up, but not everything is affected by graphics transforms.
@@ -95,10 +96,9 @@ function ui.start()
         love.graphics.circle("line", x, y, 4)
     end
     -- luacov: enable
-end
 
----Do ui finalization and cleanup
-function ui.finish()
+    layers.run()
+
     if volatile_data.cursor_index > 0 then
         volatile_data.cursor_index = 0
         volatile_data.cursor_base_index = 0

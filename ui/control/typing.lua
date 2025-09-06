@@ -1,7 +1,9 @@
 local events = require("ui.events")
 local utf8 = require("utf8")
 local settings = require("ui.settings")
-local control_data = require("ui.shared_data").control
+local shared_data = require("ui.shared_data")
+local control_data = shared_data.control
+local control_methods = shared_data.enums.control_method
 
 local typing = {}
 
@@ -151,10 +153,12 @@ function typing.evaluate()
 
     -- change text and text pos based on events
     for event in events.iterate("^[tk]e") do
-        local name = event[1]
+        local name, is_repeat = event[1], event[4]
         if name == "textinput" then
+            control_data.last_used_control_method = control_methods.typing
             typing.insert_character(target, event[2])
         elseif name == "keypressed" then
+            control_data.last_used_control_method = control_methods.typing
             local key = event[3]
             if key == "left" then
                 if target._text_entry_char_position > 0 then
@@ -206,10 +210,17 @@ function typing.evaluate()
                 -- unsets the target and reverse tabs the keyboard selection
                 unset_target(stop_methods.tab_up)
                 return target_cell_id, stop_methods.tab_up
-            elseif key == "tab" or key == "return" or key == "down" then
+            elseif key == "tab" or key == "down" then
                 -- unsets the target and tabs the keyboard selection
                 unset_target(stop_methods.tab_down)
                 return target_cell_id, stop_methods.tab_down
+            elseif key == "return" then
+                -- not spammable
+                if not is_repeat then
+                    -- unsets the target and tabs the keyboard selection
+                    unset_target(stop_methods.tab_down)
+                    return target_cell_id, stop_methods.tab_down
+                end
             elseif key == "home" or key == "pageup" then
                 target._text_entry_char_position = 0
             elseif key == "end" or key == "pagedown" then
@@ -258,6 +269,7 @@ do
 
         if typing.is_editing(state) then
             target_cell_id = cell_id
+            -- ! if a click happens within a single frame, this won't trigger
             if not mnav.is_hovering(sensor_id) and mnav.holding then
                 unset_target(stop_methods.click_out)
             end

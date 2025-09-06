@@ -8,7 +8,9 @@ local draw_queue = require("ui.draw_queue")
 local sensor = require("ui.control.mouse_navigation.sensor")
 local bit = require("bit")
 local bor = bit.bor
-local control_data = require("ui.shared_data").control
+local shared_data = require("ui.shared_data")
+local control_data = shared_data.control
+local control_method = shared_data.enums.control_method
 
 local mouse_navigation = {
     -- this frame's mouse position (not screen coordinates)
@@ -90,14 +92,16 @@ function mouse_navigation.make_sensor(sensor_id, ...)
         last_sensor_id = last_sensor_id + 1
         control_data.current_sensor_id = last_sensor_id
     end
-    draw_queue.mouse_sensor(
-        control_data.current_sensor_id,
-        bor(0, ...),
-        placement.left,
-        placement.top,
-        placement.right,
-        placement.bottom
-    )
+    if not control_data.suppress_controls then
+        draw_queue.mouse_sensor(
+            control_data.current_sensor_id,
+            bor(0, ...),
+            placement.left,
+            placement.top,
+            placement.right,
+            placement.bottom
+        )
+    end
     return control_data.current_sensor_id
 end
 
@@ -110,6 +114,9 @@ function mouse_navigation.change_to_sensor(sensor_id)
     end
     control_data.current_sensor_id = sensor_id
 end
+
+---Restarts navigation for layer transitions
+mouse_navigation.lt_restart = sensor.clear
 
 ---Returns true if the mouse is hovering the current sensor.
 ---The hover set is only accurate to the previous frame but also isn't destroyed until the end of the frame.
@@ -204,10 +211,17 @@ function mouse_navigation.evaluate()
         local name, x, y, a, b, c = unpack(event)
 
         if name == "wheelmoved" then
+            -- Scrolling updates the last used method
+            control_data.last_used_control_method = control_method.mouse
+
             -- Record wheel movement
             mouse_navigation.wheel_dx = mouse_navigation.wheel_dx + x
             mouse_navigation.wheel_dy = mouse_navigation.wheel_dy + y
         elseif name == "mousemoved" then
+            -- Any mouse movement sets makes the cursor visible
+            love.mouse.setVisible(true)
+            mouse_navigation.hover_on()
+
             local dx, dy, istouch = a, b, c
 
             -- Transition from clicking to dragging if mouse moves far enough while holding
@@ -234,13 +248,13 @@ function mouse_navigation.evaluate()
             -- Using the event dx, dy happens to work better if the mouse is being repositioned manually.
             mouse_navigation.screen_dx, mouse_navigation.screen_dy =
                 mouse_navigation.screen_dx + dx, mouse_navigation.screen_dy + dy
-
-            -- Any mouse movement sets makes the cursor visible
-            love.mouse.setVisible(true)
         else
             local button_id, istouch, presses = a, b, c
 
             if name == "mousepressed" then
+                -- Pressing updates the last used method
+                control_data.last_used_control_method = control_method.mouse
+
                 if mouse_navigation.holding then
                     -- Pressing another button while holding stops holding
                     mouse_navigation.holding = nil
@@ -257,6 +271,9 @@ function mouse_navigation.evaluate()
                     mouse_navigation.press_y = mouse_navigation.y
                 end
             elseif name == "mousereleased" then
+                -- Releasing updates the last used method
+                control_data.last_used_control_method = control_method.mouse
+
                 if mouse_navigation.holding then
                     -- Releasing the same button that is being held is a click. If not then holding is stopped.
                     if button_id == mouse_navigation.holding then

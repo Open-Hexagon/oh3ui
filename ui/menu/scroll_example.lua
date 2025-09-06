@@ -3,17 +3,20 @@ local cursor = require("ui.cursor")
 local id = require("ui.id_table")()
 local theme = require("ui.theme")
 local primitive = require("ui.primitive")
-local mask = require("ui.mask")
 local mnav = require("ui.control.mouse_navigation")
 local mb = mnav.buttons
 local knav = require("ui.control.keyboard_navigation")
 local wmode = knav.wrapping_mode
+local layers = require("ui.layers")
+local kba = knav.actions
 
 local background = require("ui.element.area.background")
 
 local button = require("ui.element.button")
 
 return function()
+    primitive.rectangle({ 0, 0, 0, 0.8 })
+
     cursor.auto_reshape = true
     cursor.x = 50
     cursor.y = 50
@@ -25,7 +28,6 @@ return function()
     knav.set_wrapping(wmode.line, wmode.vertical)
 
     if scroll.start(id.scroll) then
-
         background.start()
 
         cursor.x = 55
@@ -69,4 +71,15 @@ return function()
         "left",
         false
     )
+
+    cursor.shift_down(10)
+
+    knav.make_cell()
+    knav.grid_cell(1, 11)
+    cursor.height = 25
+    button("back", 16)
+
+    if mnav.get_clicked() == mb.left or knav.get_action() == kba.activate then
+        layers.pop()
+    end
 end
