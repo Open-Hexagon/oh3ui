@@ -257,7 +257,8 @@ do
     ---@param state table
     ---@param sensor_id integer? use a specific sensor id
     ---@param cell_id integer? use a specific cell id
-    function typing.make_text_entry(state, sensor_id, cell_id)
+    ---@param global boolean? if true, makes this text entry accessible from anywhere by keyboard nav, even if a different non-text-entry element is already selected 
+    function typing.make_text_entry(state, sensor_id, cell_id, global)
         state.text = state.text or ""
         -- used to offset the entry text in case there's too much text to fit in view
         state._text_entry_text_offset = state._text_entry_text_offset or 0
@@ -275,7 +276,7 @@ do
             end
         else
             -- tell keyboard navigation that this cell is a text entry
-            knav.configure_cell_as_text_input(cell_id, state)
+            knav.configure_cell_as_text_input(cell_id, state, global)
             if mnav.get_clicked(sensor_id) or knav.get_action(cell_id) == kba.activate then
                 typing.set_target(state)
             end

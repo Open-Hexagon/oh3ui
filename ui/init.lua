@@ -33,8 +33,7 @@ ui.push_event = events.add
 
 ui.init = layers.init
 
----reset ui state and set scale
-function ui.evaluate()
+local function start()
     -- The red grid shows screen space
     -- luacov: disable
     if settings.debug_grid then
@@ -96,9 +95,9 @@ function ui.evaluate()
         love.graphics.circle("line", x, y, 4)
     end
     -- luacov: enable
+end
 
-    layers.run()
-
+local function finish()
     if volatile_data.cursor_index > 0 then
         volatile_data.cursor_index = 0
         volatile_data.cursor_base_index = 0
@@ -141,6 +140,13 @@ function ui.evaluate()
     -- clean up
     events.clear()
     love.graphics.setScissor()
+end
+
+---reset ui state and set scale
+function ui.run()
+    start()
+    layers.run()
+    finish()
 end
 
 return ui

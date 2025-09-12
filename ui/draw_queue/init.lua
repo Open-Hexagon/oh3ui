@@ -40,10 +40,16 @@ local res_index = 0
 ---If set, the next push_operation will be written at the index this variable contains
 local take_reservation = nil
 
+local enable_pushing = true
+
 ---Pushes an operation to the current group. The first value should be an operation id.
 ---This operation id can be nil which will cause the operation to be ignored.
 ---@param ... any
 local function push_operation(...)
+    if not enable_pushing then
+        return
+    end
+
     local slot_index
 
     if take_reservation then
@@ -66,6 +72,10 @@ end
 ---@return integer res_id use this reference id to later fill in reservation slots
 ---@nodiscard
 function draw_queue.reserve(n)
+    if not enable_pushing then
+        return 0
+    end
+
     if n < 1 then
         error("can't reserve less than 1 slot")
     end
@@ -103,6 +113,10 @@ end
 ---The next operation will fill in a slot in a reservation
 ---@param res_id integer the reservation id to fill
 function draw_queue.take_reservation(res_id)
+    if not enable_pushing then
+        return
+    end
+
     if not (res_id > 0 and res_id <= res_index) then
         error("bad reservation id")
     end
@@ -300,6 +314,13 @@ end
     - calling graphics transformations has no effect while building the queue.
 ]]
 
+---Tells the draw_queue that we're done drawing for this frame.
+---Any further operations are not added to the queue.
+---Operations are enabled again after draw is called.
+function draw_queue.done()
+    enable_pushing = false
+end
+
 ---Execute all queued commands.
 ---This will also reset everything related to the queue
 function draw_queue.draw()
@@ -433,6 +454,7 @@ function draw_queue.draw()
     op_index = 0
     res_index = 0
     take_reservation = nil
+    enable_pushing = true
 end
 
 return draw_queue

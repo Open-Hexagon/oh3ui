@@ -172,10 +172,6 @@ end
 ---An ordered list of created cells
 local cell_list = {}
 
----Holds the index of the first interactable cell.
----This is nil whenever non-interactable layers are running.
-local first_cell_id
-
 ---Holds the index of the last created cell.
 local last_cell_id = 0
 
@@ -184,10 +180,11 @@ local last_cell_id = 0
 ---Usually survives between frames
 local selected_cell_id = 0
 
----The index of the cell that gets activated if escape is pressed.
+---The id of the cell that gets activated if escape is pressed.
 ---nil means there was no cell set.
 local escape_cell_id
----The index of the cell that gets activated if enter is pressed while nothing is selected
+
+---The id of the cell that gets activated if enter is pressed while nothing is selected
 ---nil means there was no cell set.
 local default_cell_id
 
@@ -195,62 +192,39 @@ local default_cell_id
 ---There only needs to be one since the keyboard can only interact with one thing at a time.
 ---@type keyboard_action?
 local last_action
+
 ---The whether the last keyboard action is a repeated one
 ---There only needs to be one since the keyboard can only interact with one thing at a time.
-local last_is_repeat
+---@type boolean
+local last_is_repeat = false
 
 ---The key name that is currently being held down. Only the latest pressed key is considered "held".
 ---@type string?
 local held_action_key
 
----The secondary default cell that is kept track of when suppress_controls is true.
----Generally, this is the default cell of the layer below the top one.
-local secondary_default
-
 local function is_valid_cell_id(cell_id)
-    if first_cell_id then
-        return cell_id == 0 or (cell_id >= first_cell_id and cell_id <= last_cell_id)
-    end
-    return cell_id == 0
+    return cell_id >= 0 and cell_id <= last_cell_id
 end
 
 ---Resets all data. Gets ready for the next frame
-local function reset_all()
+function keyboard_navigation.reset()
     erase_grid()
-    first_cell_id = nil
     last_cell_id = 0
     control_data.current_cell_id = 0
-    default_cell_id = nil
     escape_cell_id = nil
-    secondary_default = nil
-end
-
---#region Layer Transition stuff
-
----Restarts navigation for layer transitions
-function keyboard_navigation.lt_restart()
-    erase_grid()
-    control_data.current_cell_id = 0
-    first_cell_id = nil
     default_cell_id = nil
-    escape_cell_id = nil
 end
 
 ---This gets called when a layer transitions happens. Finds the best cell to select
 function keyboard_navigation.lt_select_best_cell()
-    -- clear this
     held_action_key = nil
+    keyboard_navigation.selection_has_changed = true
     if default_cell_id then
         keyboard_navigation.jump_to_cell(default_cell_id)
-    elseif secondary_default then
-        selected_cell_id = secondary_default
-        grid_x, grid_y = nil, nil
     else
         keyboard_navigation.jump_to_first()
     end
 end
-
---#endregion
 
 ---Create a keyboard navigation cell which can be selected. The order in which these are called determines the tab order.
 ---@param mode?
@@ -259,18 +233,11 @@ end
 ---|"both" make this cell both the default and escape cell
 ---@return integer cell_id id number of this cell
 function keyboard_navigation.make_cell(mode)
-    last_cell_id = last_cell_id + 1
-
-    if control_data.suppress_controls then
-        if mode == "default" or mode == "both" then
-            secondary_default = last_cell_id
-        end
+    if not control_data.current_layer_is_active then
         return 0
     end
 
-    if not first_cell_id then
-        first_cell_id = last_cell_id
-    end
+    last_cell_id = last_cell_id + 1
 
     local cell = cell_list[last_cell_id]
     if cell then
@@ -282,12 +249,12 @@ function keyboard_navigation.make_cell(mode)
         cell_list[last_cell_id] = {}
     end
 
-    if mode == "escape" or mode == "both" then
-        escape_cell_id = last_cell_id
-    end
-
     if mode == "default" or mode == "both" then
         default_cell_id = last_cell_id
+    end
+
+    if mode == "escape" or mode == "both" then
+        escape_cell_id = last_cell_id
     end
 
     control_data.current_cell_id = last_cell_id
@@ -299,7 +266,8 @@ end
 ---If 0 is passed in as the cell id, it is silently ignored.
 ---@param cell_id integer
 ---@param state table
-function keyboard_navigation.configure_cell_as_text_input(cell_id, state)
+---@param global boolean?
+function keyboard_navigation.configure_cell_as_text_input(cell_id, state, global)
     if not is_valid_cell_id(cell_id) then
         error(string.format("bad cell id %d", cell_id))
     end
@@ -308,6 +276,8 @@ function keyboard_navigation.configure_cell_as_text_input(cell_id, state)
     end
     local cell = cell_list[cell_id]
     cell.text_input_state = state
+
+    -- TODO add global typing
 end
 
 ---Changes the currently recognized cell id.
@@ -393,22 +363,21 @@ function keyboard_navigation.fill_grid(cell_value, x, y, col_span, row_span)
     fill_grid(cell_value, x, y, x + col_span - 1, y + row_span - 1)
 end
 
----Fills a rectangle in the grid with the current cell id and sets that cell's location.
+---Fills a rectangle in the grid with the latest created cell id and sets that cell's location. (The latest created cell id is not necessarily the current cell id!)
 ---That cell's grid position is then defined as the top-left corner of the rectangle.
 ---If this function isn't run after a make_cell call, then that cell can be tabbed to but not selected via navigating the grid.
----A current cell id of 0 is silently ignored
 ---@param x integer
 ---@param y integer
 ---@param col_span? integer
 ---@param row_span? integer
 function keyboard_navigation.grid_cell(x, y, col_span, row_span)
-    local ci = control_data.current_cell_id
-    if ci == 0 then
+    if last_cell_id == 0 then
         return
     end
-    keyboard_navigation.fill_grid(ci, x, y, col_span, row_span)
-    cell_list[ci].x = x
-    cell_list[ci].y = y
+
+    cell_list[last_cell_id].x = x
+    cell_list[last_cell_id].y = y
+    keyboard_navigation.fill_grid(last_cell_id, x, y, col_span, row_span)
 end
 
 --#endregion
@@ -438,7 +407,7 @@ end
 
 ---Moves the selection to the first in the tab order list.
 function keyboard_navigation.jump_to_first()
-    keyboard_navigation.jump_to_cell(first_cell_id)
+    keyboard_navigation.jump_to_cell(1)
 end
 
 ---Moves the selection to the first in the tab order list.
@@ -457,7 +426,7 @@ end
 
 ---Jumps 1 backwards in the tab order. Wraps around if the beginning is reached.
 function keyboard_navigation.jump_backwards()
-    if selected_cell_id <= first_cell_id then
+    if selected_cell_id <= 1 then
         keyboard_navigation.jump_to_last()
     else
         keyboard_navigation.jump_to_cell(selected_cell_id - 1)
@@ -478,12 +447,12 @@ end
 
 ---Jumps 1 page backwards in the tab order. Does not wrap.
 function keyboard_navigation.page_backwards()
-    if selected_cell_id == first_cell_id then
+    if selected_cell_id == 1 then
         return
     end
     selected_cell_id = selected_cell_id - page_length
-    if selected_cell_id < first_cell_id then
-        selected_cell_id = first_cell_id
+    if selected_cell_id < 1 then
+        selected_cell_id = 1
     end
     keyboard_navigation.jump_to_cell(selected_cell_id)
 end
@@ -767,7 +736,7 @@ function keyboard_navigation.evaluate()
     last_action, last_is_repeat, typing_target, typing_action = iterate_events()
     keyboard_navigation.selection_has_changed = old_selection ~= selected_cell_id
 
-    reset_all()
+    keyboard_navigation.reset()
 
     return typing_target, typing_action
 end
@@ -776,7 +745,7 @@ end
 function keyboard_navigation.evaluate_without_events()
     last_action, last_is_repeat = nil, false
     keyboard_navigation.selection_has_changed = false
-    reset_all()
+    keyboard_navigation.reset()
 end
 
 return keyboard_navigation

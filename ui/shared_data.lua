@@ -30,7 +30,8 @@ shared_data.control = {
 
     ---Used to disable control functions on inactive layers.
     ---@type boolean
-    suppress_controls = false,
+    current_layer_is_active = false,
+    current_layer = 0,
 }
 
 -- data that shouldn't survive between frames

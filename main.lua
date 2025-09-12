@@ -69,7 +69,7 @@ function love.run()
             love.graphics.origin()
             love.graphics.clear(0, 0, 0, 1)
 
-            ui.evaluate()
+            ui.run()
 
             -- draw the fps
             love.graphics.setColor(1, 1, 1, 1)

@@ -39,6 +39,8 @@ Notable assumptions that the UI makes without enforcing them with error checking
 ## Requirements
 
 1. Minimize the use of cyclic dependencies.
+   1. Requires should all be at the top of the file.
+   2. Don't use requires inside functions unless it really makes sense to do so.
 2. A draw queue that can be built out-of-order.
    1. Out-of-order building is achived with reservations
       1. Draw queue slots can be reserved and filled in later.

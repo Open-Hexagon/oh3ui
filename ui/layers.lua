@@ -6,6 +6,7 @@ local mnav = require("ui.control.mouse_navigation")
 local shared_data = require("ui.shared_data")
 local control_data = shared_data.control
 local control_method = shared_data.enums.control_method
+local draw_queue = require("ui.draw_queue")
 
 --[=[
 Layer changing
@@ -52,93 +53,105 @@ local layers = {}
 
 -- Higher index layers will show up on top of lower index layers
 local stack = {}
+local length = 0
+
+-- TODO: add queueing system for layers
 
 local PUSH = 0
 local POP = 1
 
-local task_id
----@type function
-local task_layer
+local schedule_index = 0
+local scheduled_tasks = {}
+local scheduled_layers = {}
 
-function layers.init(layer)
-    stack[1] = layer
+---Initialize the stack with some layers
+---@param ... function
+function layers.init(...)
+    length = select("#", ...)
+    for i = 1, length do
+        stack[i] = select(i, ...)
+    end
 end
 
 ---Put a layer on top of the stack
 ---@param layer function
 function layers.push(layer)
-    if control_data.suppress_controls then
-        error("layer stack can only be modified by the topmost layer")
-    end
-    if task_id then
-        error("two layer operations cannot be made in one frame")
-    end
-    task_id = PUSH
-    task_layer = layer
+    schedule_index = schedule_index + 1
+    scheduled_tasks[schedule_index] = PUSH
+    scheduled_layers[schedule_index] = layer
 end
 
 ---Remove the topmost layer from the stack
 function layers.pop()
-    if control_data.suppress_controls then
-        error("layer stack can only be modified by the topmost layer")
+    if scheduled_tasks[schedule_index] == PUSH then
+        -- if the latest scheduled task is a push, then we can just remove it to save some work later.
+        scheduled_tasks[schedule_index] = nil
+        scheduled_layers[schedule_index] = nil
+        schedule_index = schedule_index - 1
+    else
+        schedule_index = schedule_index + 1
+        scheduled_tasks[schedule_index] = POP
     end
-    if task_id then
-        error("two layer operations cannot be made in one frame")
+end
+
+local function reconfigure_layers()
+    if schedule_index == 0 then
+        return
     end
-    task_id = POP
+
+    for i = 1, schedule_index do
+        if scheduled_tasks[i] == PUSH then
+            length = length + 1
+            stack[length] = scheduled_layers[i]
+        elseif scheduled_tasks[i] == POP then
+            stack[length] = nil
+            length = length - 1
+        else
+            error("invalid layer schedule task")
+        end
+    end
+    schedule_index = 0
+
+    -- TODO Scroll regions are not updated on layer changes
+
+    if control_data.last_used_control_method == control_method.keyboard then
+        -- if keyboard navigation was used we need to find the best cell to select on the new top layer
+        control_data.current_layer_is_active = true
+        knav.reset()
+        stack[length]()
+        knav.lt_select_best_cell()
+    else
+        -- deactivate keyboard nav if something else was used
+        knav.deselect()
+    end
 end
 
 ---Run the functions for all the layers
 function layers.run()
-    -- run suppressed layers
-    control_data.suppress_controls = true
+    -- check if layer 1 exists
+    if length > 0 then
+        -- run inactive layers
+        for i = 1, length - 1 do
+            cursor.reset()
+            control_data.current_layer = i
+            stack[i]()
+        end
 
-    local i = 1
-    while stack[i + 1] do
+        control_data.current_layer_is_active = true
+        -- make the top layer active
         cursor.reset()
-        stack[i]()
-        i = i + 1
+        control_data.current_layer = length
+        stack[length]()
     end
 
-    -- We only want the topmost layer to be interactable
-    control_data.suppress_controls = false
-    task_id = nil
+    -- turn off the draw queue
+    -- this also disable the addition of new mouse sensors
+    draw_queue.done()
 
-    cursor.reset()
-    stack[i]()
+    reconfigure_layers()
 
-    if task_id == PUSH then
-        -- restart navigation
-        mnav.lt_restart()
-        knav.lt_restart()
-
-        -- run the new layer
-        task_layer()
-
-        -- handle keyboard stuff
-        if control_data.last_used_control_method == control_method.keyboard then
-            knav.lt_select_best_cell()
-        else
-            knav.deselect()
-        end
-
-        -- add to the stack
-        stack[i + 1] = task_layer
-    elseif task_id == POP then
-        if i == 1 then
-            error("cannot pop the bottommost layer")
-        end
-
-        stack[i] = nil
-
-        -- handle keyboard stuff
-        knav.lt_restart()
-        if control_data.last_used_control_method == control_method.keyboard then
-            knav.lt_select_best_cell()
-        else
-            knav.deselect()
-        end
-    end
+    -- set this back to it's default
+    control_data.current_layer_is_active = false
 end
 
 return layers

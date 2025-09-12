@@ -92,7 +92,7 @@ function mouse_navigation.make_sensor(sensor_id, ...)
         last_sensor_id = last_sensor_id + 1
         control_data.current_sensor_id = last_sensor_id
     end
-    if not control_data.suppress_controls then
+    if control_data.current_layer_is_active then
         draw_queue.mouse_sensor(
             control_data.current_sensor_id,
             bor(0, ...),
@@ -114,9 +114,6 @@ function mouse_navigation.change_to_sensor(sensor_id)
     end
     control_data.current_sensor_id = sensor_id
 end
-
----Restarts navigation for layer transitions
-mouse_navigation.lt_restart = sensor.clear
 
 ---Returns true if the mouse is hovering the current sensor.
 ---The hover set is only accurate to the previous frame but also isn't destroyed until the end of the frame.
