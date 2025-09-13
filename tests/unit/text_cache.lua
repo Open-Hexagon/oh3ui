@@ -7,6 +7,7 @@ local T = {}
 local time = 0
 
 function T.set_up_case()
+    unittest.skip_if(os.getenv("HEADLESS"), "this test cannot be run in headless mode")
     love.timer.getTime = monkeypatch.replace(love.timer.getTime, function()
         return time
     end)

@@ -4,6 +4,10 @@ local volatile_data = require("ui.shared_data").volatile
 
 local T = {}
 
+function T.set_up_case()
+    unittest.skip_if(os.getenv("HEADLESS"), "this test cannot be run in headless mode")
+end
+
 function T.test_all()
     ss.push(0, 0, 100, 100)
 

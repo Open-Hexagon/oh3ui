@@ -9,6 +9,8 @@ local te = require("tests.transform_emulator")
 local T = {}
 
 function T.set_up_case()
+    unittest.skip_if(os.getenv("HEADLESS"), "this test cannot be run in headless mode")
+
     -- patch functions to intercept arguments
 
     love.graphics.setLineWidth = history.patch(love.graphics.setLineWidth, "lw")

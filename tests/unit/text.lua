@@ -3,6 +3,10 @@ local text = require("ui.text")
 
 local T = {}
 
+function T.set_up_case()
+    unittest.skip_if(os.getenv("HEADLESS"), "this test cannot be run in headless mode")
+end
+
 function T.test_get_font()
     unittest.assert_error(text.get_font, nil, 16, "none")
 

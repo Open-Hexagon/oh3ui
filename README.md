@@ -41,26 +41,27 @@ Notable assumptions that the UI makes without enforcing them with error checking
 1. Minimize the use of cyclic dependencies.
    1. Requires should all be at the top of the file.
    2. Don't use requires inside functions unless it really makes sense to do so.
-2. A draw queue that can be built out-of-order.
+2. The debug library shouldn't be used.
+   1. Except in unit tests.
+3. A draw queue that can be built out-of-order.
    1. Out-of-order building is achived with reservations
       1. Draw queue slots can be reserved and filled in later.
       2. Multiple reservations can be made at a time which can be filled in-order.
       3. Reservations take on the location of the placement: **\[when the reservation was taken\]** / when the reservation was made.
-3. Recording keyboard and mouse navigation should not be put in state tables.
+4. Recording keyboard and mouse navigation should not be put in state tables.
    1. This creates too many state tables
    2. The same functions to get mouse/keyboard navigation outputs should be used everywhere.
       1. These functions will only be accurate to the latest created placement/cell, respectively.
-4. Mouse navigation is done at the end of the frame.
+5. Mouse navigation is done at the end of the frame.
    1. Same as keyboard navigation.
-5. A cursor which can be used to align and place elements.
+6. A cursor which can be used to align and place elements.
    1. Support elements that don't fit the cursor.
    2. Cursor can be set to auto-reshape which will reshape itself to exactly surround an element that doesn't fit the cursor. 
    3. Support translating elements (no rotating).
    4. Cursor shall be agnostic to any external factors such as UI scale. 
-6. Elements can be masked which cuts off drawing and mouse interaction.
+7. Elements can be masked which cuts off drawing and mouse interaction.
    1. Masking should work even if the cursor is translated.
-
-7. Checking for clicking and keyboard should work for entire elements, even after they're created. For example, this should work as you'd expect:
+8. Checking for clicking and keyboard should work for entire elements, even after they're created. For example, this should work as you'd expect:
    ```lua
    button("a button")
    if m_nav.get_clicked() or kb_nav.get_action() then
@@ -68,5 +69,7 @@ Notable assumptions that the UI makes without enforcing them with error checking
    end
    ``` 
    1. For more complex elements with multiple interactable regions, it should behave as if the entire element is one whole button.
-8. Mouse dragging needs some way to know which specific element it is dragging. It can't just be what's under the mouse.
-   1. Still not sure how to go about this yet. (With keyboard navigation, this is easy since every element gets it's own cell id.)
+9.  Mouse dragging needs some way to know which specific element it is dragging. It can't just be what's under the mouse.
+   1. Mouse sensors have to be marked as draggable.
+   2. The mouse can only drag one sensor at a time.
+   3. The sensor that is dragged is the earliest created hovered sensor that's marked as draggable. 

@@ -134,4 +134,41 @@ function T.test_record_underflow()
     unittest.assert_error(stack_manager.pop_record, "record stack should be at the bottom")
 end
 
+function T.test_clean_up()
+    volatile_data.cursor_index = 1
+    volatile_data.cursor_base_index = 1
+    unittest.assert_error(stack_manager.clean_up)
+    unittest.assert(volatile_data.cursor_index == 0)
+    unittest.assert(volatile_data.cursor_base_index == 0)
+
+    volatile_data.translate_index = 2
+    volatile_data.translate_base_index = 2
+    unittest.assert_error(stack_manager.clean_up)
+    unittest.assert(volatile_data.translate_index == 1)
+    unittest.assert(volatile_data.translate_base_index == 1)
+
+    volatile_data.area_index = 1
+    volatile_data.area_base_index = 1
+    unittest.assert_error(stack_manager.clean_up)
+    unittest.assert(volatile_data.area_index == 0)
+    unittest.assert(volatile_data.area_base_index == 0)
+
+    volatile_data.mask_index = 1
+    volatile_data.mask_base_index = 1
+    unittest.assert_error(stack_manager.clean_up)
+    unittest.assert(volatile_data.mask_index == 0)
+    unittest.assert(volatile_data.mask_base_index == 0)
+    unittest.assert(last_revert_scissor_value == 0)
+
+    volatile_data.aeb_index = 1
+    volatile_data.aeb_base_index = 1
+    unittest.assert_error(stack_manager.clean_up)
+    unittest.assert(volatile_data.aeb_index == 0)
+    unittest.assert(volatile_data.aeb_base_index == 0)
+
+    volatile_data.record_stack_index = 1
+    unittest.assert_error(stack_manager.clean_up)
+    unittest.assert(volatile_data.record_stack_index == 0)
+end
+
 return T

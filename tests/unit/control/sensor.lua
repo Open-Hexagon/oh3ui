@@ -27,6 +27,7 @@ Position:                 1    2    3    4
 ]]
 
 function T.set_up()
+    sensor.enable_intersection_checks()
     sensor.push(1, 0, 0, 0, 40, 10)
     sensor.push(2, smode.block, 20, 0, 30, 10)
     sensor.push(3, bor(smode.block, smode.lazy), 20, 0, 30, 10)

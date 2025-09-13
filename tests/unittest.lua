@@ -1,7 +1,5 @@
 ---Unit testing fixture
 
--- require("luacov")
-
 local unittest = {
     verbose = false,
 }
@@ -9,8 +7,7 @@ local unittest = {
 local YK_FAILED_ASSERT = 0x7977a0ab
 local YK_SKIPPED = 0xaddd85fa
 
----Build and return a list of tests from a directory, files may implement certain functions to run tests
----The list is flat
+---Build and return a list of tests from a directory, files may implement certain functions to run tests. The list is flat.
 ---@param test_cases table
 ---@param start_dir string starting directory to begin discovery
 ---@param name_pattern string a file's name has to match this pattern to be included (%.lua is automatically appended)
@@ -174,8 +171,13 @@ function unittest.skip_if(cond, reason)
     end
 end
 
+---@param test_case table
+---@return table
+---@return integer
+---@return thread? co_set_up_case the set_up_case function becomes a coroutine
 local function extract_tests(test_case)
     local tests, num_tests = {}, 0
+    local co_set_up_case
     for fn_name, fn in pairs(test_case) do
         if type(fn) == "function" then
             local fn_info = debug.getinfo(fn, "S")
@@ -183,14 +185,15 @@ local function extract_tests(test_case)
                 num_tests = num_tests + 1
                 tests[num_tests] =
                     { fn_name, coroutine.create(fn), string.format("%s:%s:", fn_info.short_src, fn_info.linedefined) }
-            elseif
-                not (
-                    fn_name == "set_up_case"
-                    or fn_name == "set_up"
-                    or fn_name == "tear_down"
-                    or fn_name == "tear_down_case"
-                ) and unittest.verbose
-            then
+            elseif fn_name == "set_up_case" then
+                co_set_up_case = coroutine.create(fn)
+            elseif fn_name == "set_up" then
+                -- doesn't become a coroutine
+            elseif fn_name == "tear_down" then
+                -- doesn't become a coroutine
+            elseif fn_name == "tear_down_case" then
+                -- doesn't become a coroutine
+            elseif unittest.verbose then
                 io.stderr:write(
                     string.format(
                         "\x1b[33m[warning] %s:%s: extraneous function `%s` in test case\x1b[0m\n",
@@ -202,7 +205,7 @@ local function extract_tests(test_case)
             end
         end
     end
-    return tests, num_tests
+    return tests, num_tests, co_set_up_case
 end
 
 ---Runs a test case
@@ -210,7 +213,7 @@ end
 local function run_test_case(test_case)
     local test_success, success, kind, msg, loc
 
-    local tests, num_tests = extract_tests(test_case)
+    local tests, num_tests, co_set_up_case = extract_tests(test_case)
     if num_tests == 0 and unittest.verbose then
         io.stderr:write(string.format("\x1b[34m[note] %s has no tests\x1b[0m\n", test_case._file_path))
         return
@@ -227,12 +230,39 @@ local function run_test_case(test_case)
         return true
     end
 
-    if not try_call(test_case.set_up_case) and unittest.verbose then
-        io.stderr:write(string.format("\x1b[31m[error] %s (in set_up_case; all tests skipped)\x1b[0m\n", msg))
-        return
+    -- set_up_case is run as a coroutine since if a skip is made in that function, we should skip the entire test case
+    if co_set_up_case then
+        ::again::
+        success, kind, msg, loc = coroutine.resume(co_set_up_case)
+        if success then
+            if kind == YK_FAILED_ASSERT then
+                -- ignore assertions
+                goto again
+            elseif kind == YK_SKIPPED then
+                io.stderr:write(
+                    string.format(
+                        "\x1b[33m[SKIPPED] %s %s (entire test case skipped; +%d skipped)\x1b[0m\n",
+                        loc,
+                        msg or "(no reason given)",
+                        num_tests
+                    )
+                )
+                tests_skipped = tests_skipped + num_tests
+                return
+            end
+        else
+            io.stderr:write(
+                string.format(
+                    "\x1b[31m[error] %s (in set_up_case; all tests skipped; +%d errors)\x1b[0m\n",
+                    kind,
+                    num_tests
+                )
+            )
+            tests_errored = tests_errored + num_tests
+            return
+        end
     end
 
-    -- using goto to replicate continue, because otherwise this is a nightmare
     for i = 1, num_tests do
         local fn_name, fn, fn_def_loc = unpack(tests[i])
 
@@ -247,18 +277,19 @@ local function run_test_case(test_case)
 
         -- tear_down always gets called if set_up succeeds
         if not try_call(test_case.tear_down) then
+            -- if this fails, report as an error
             add_error(string.format("%s (in tear_down of %s)", msg or "(no description)", fn_name))
             goto continue
         end
 
         -- record test data
         if test_success then
-            if not has_assertions then
-                add_empty(string.format("%s %s", fn_def_loc, fn_name))
-            elseif kind == YK_FAILED_ASSERT then
+            if kind == YK_FAILED_ASSERT then
                 add_fail(string.format("%s %s %s", loc, fn_name, msg or "(no message given)"))
             elseif kind == YK_SKIPPED then
                 add_skip(string.format("%s %s %s", loc, fn_name, msg or "(no reason given)"))
+            elseif not has_assertions then
+                add_empty(string.format("%s %s", fn_def_loc, fn_name))
             else
                 add_pass(string.format("%s %s OK", fn_def_loc, fn_name))
             end
@@ -270,15 +301,20 @@ local function run_test_case(test_case)
     end
 
     if not try_call(test_case.tear_down_case) and unittest.verbose then
-        io.stderr:write(string.format("\x1b[31m[error] %s (in tear_down_case)\x1b[0m\n", msg))
+        io.stderr:write(
+            string.format("\x1b[31m[error] %s (in tear_down_case; errors may cascade to later tests)\x1b[0m\n", msg)
+        )
         return
     end
 end
 
 function unittest.main()
+    love.event.pump()
+
     local test_cases = {}
     discover_tests(test_cases, "tests/unit", ".*")
 
+    -- The order in which tests cases are run may change between executions
     for i = 1, #test_cases do
         run_test_case(test_cases[i])
     end
