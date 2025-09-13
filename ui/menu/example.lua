@@ -37,7 +37,7 @@ return function()
     counter = (counter + 1) % 60
     cursor.change_anchor(0)
 
-    knav.set_wrapping(wmode.list, wmode.vertical)
+    knav.set_wrapping(wmode.redirect, wmode.vertical)
     knav.set_page_length(2)
 
     cursor.auto_reshape = true

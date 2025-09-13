@@ -23,9 +23,9 @@ function control.evaluate()
 
             keyboard_navigation.jump_to_cell(goto_cell)
             if tab_direction == typing_tab_down then
-                keyboard_navigation.jump_forward()
+                keyboard_navigation.tab_forward()
             elseif tab_direction == typing_tab_up then
-                keyboard_navigation.jump_backwards()
+                keyboard_navigation.tab_backwards()
             end
         end
 

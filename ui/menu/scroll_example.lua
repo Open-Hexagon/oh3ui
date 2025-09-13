@@ -25,7 +25,7 @@ return function()
 
     cursor.apply_translation(100, 0)
 
-    knav.set_wrapping(wmode.line, wmode.vertical)
+    knav.set_wrapping(wmode.tab, wmode.vertical)
 
     if scroll.start(id.scroll) then
         background.start()

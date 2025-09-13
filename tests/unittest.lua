@@ -27,9 +27,17 @@ local function discover_tests(test_cases, start_dir, name_pattern)
             if found then
                 local require_path = start_dir:gsub("/", "%.") .. "." .. name
                 local test_case = require(require_path)
-                assert(type(test_case) == "table", string.format("test file `%s` didn't return a table", full_path))
-                test_case._file_path = full_path
-                table.insert(test_cases, test_case)
+                if type(test_case) == "table" then
+                    test_case._file_path = full_path
+                    table.insert(test_cases, test_case)
+                elseif unittest.verbose then
+                    io.stderr:write(
+                        string.format(
+                            "\x1b[34m[note] ignoring test file `%s` that didn't return a table\x1b[0m\n",
+                            full_path
+                        )
+                    )
+                end
             end
         end
     end
@@ -239,25 +247,33 @@ local function run_test_case(test_case)
                 -- ignore assertions
                 goto again
             elseif kind == YK_SKIPPED then
-                io.stderr:write(
-                    string.format(
-                        "\x1b[33m[SKIPPED] %s %s (entire test case skipped; +%d skipped)\x1b[0m\n",
-                        loc,
-                        msg or "(no reason given)",
-                        num_tests
+                if unittest.verbose then
+                    io.stderr:write(
+                        string.format(
+                            "\x1b[33m[skipped] %s %s (entire test case skipped; +%d skipped)\x1b[0m\n",
+                            loc,
+                            msg or "(no reason given)",
+                            num_tests
+                        )
                     )
-                )
+                else
+                    io.stderr:write("\x1b[33m", string.rep("s", num_tests), "\x1b[39m")
+                end
                 tests_skipped = tests_skipped + num_tests
                 return
             end
         else
-            io.stderr:write(
-                string.format(
-                    "\x1b[31m[error] %s (in set_up_case; all tests skipped; +%d errors)\x1b[0m\n",
-                    kind,
-                    num_tests
+            if unittest.verbose then
+                io.stderr:write(
+                    string.format(
+                        "\x1b[31m[error] %s (in set_up_case; all tests skipped; +%d errors)\x1b[0m\n",
+                        kind,
+                        num_tests
+                    )
                 )
-            )
+            else
+                io.stderr:write("\x1b[31m", string.rep("e", num_tests), "\x1b[39m")
+            end
             tests_errored = tests_errored + num_tests
             return
         end
@@ -315,12 +331,29 @@ function unittest.main()
     discover_tests(test_cases, "tests/unit", ".*")
 
     -- The order in which tests cases are run may change between executions
+    local group_state, last_total = false, total_tests
     for i = 1, #test_cases do
         run_test_case(test_cases[i])
+
+        -- highlight certain characters to hint at test groups
+        if not unittest.verbose and total_tests > last_total then
+            if group_state then
+                io.stderr:write("\x1b[27m")
+            else
+                io.stderr:write("\x1b[7m")
+            end
+            last_total = total_tests
+            group_state = not group_state
+
+            if total_tests > 80 then
+                io.stderr:write("\n")
+            end
+        end
     end
 
     -- print footer
     if not unittest.verbose then
+        io.stderr:write("\x1b[0m")
         io.stderr:write("\n")
     end
     io.stderr:write(string.rep("-", 10), "\n")

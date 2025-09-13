@@ -60,8 +60,8 @@ end
 ---@enum wrapping_mode
 keyboard_navigation.wrapping_mode = {
     horizontal = 0x01, -- if grid_x is out of bounds, navigation will see wrap op cells
-    line = 0x02, -- if grid_x is out of bounds, navigation will see tab op cells
-    list = 0x04, -- if grid_x is out of bounds, navigation will see redirect op cells
+    tab = 0x02, -- if grid_x is out of bounds, navigation will see tab op cells
+    redirect = 0x04, -- if grid_x is out of bounds, navigation will see redirect op cells
     page = 0x08, -- if grid_x is out of bounds, navigation will see page op cells
     vertical = 0x10, -- if grid_y is out of bounds, navigation will see wrap op cells
 }
@@ -140,9 +140,9 @@ local function get_grid_cell(x, y)
         -- x coordinate exceeds grid size
         if band(wrapping_mode, wmode.horizontal) ~= 0 then
             return op_cell.wrap
-        elseif band(wrapping_mode, wmode.line) ~= 0 then
+        elseif band(wrapping_mode, wmode.tab) ~= 0 then
             return op_cell.tab
-        elseif band(wrapping_mode, wmode.list) ~= 0 then
+        elseif band(wrapping_mode, wmode.redirect) ~= 0 then
             return op_cell.redirect
         elseif band(wrapping_mode, wmode.page) ~= 0 then
             return op_cell.page
@@ -192,6 +192,10 @@ local default_cell_id
 ---nil means no cells exist on the grid
 local first_gridded_cell_id
 
+---The id of the last cell that has a actual grid position.
+---nil means no cells exist on the grid
+local last_gridded_cell_id
+
 ---The last performed keyboard action. Nil if there was no action.
 ---There only needs to be one since the keyboard can only interact with one thing at a time.
 ---@type keyboard_action?
@@ -218,6 +222,7 @@ function keyboard_navigation.reset()
     escape_cell_id = nil
     default_cell_id = nil
     first_gridded_cell_id = nil
+    last_gridded_cell_id = nil
 end
 
 ---Forces for 1 frame to say that the selection has changed.
@@ -392,6 +397,8 @@ function keyboard_navigation.grid_cell(x, y, col_span, row_span)
         first_gridded_cell_id = last_cell_id
     end
 
+    last_gridded_cell_id = last_cell_id
+
     cell_list[last_cell_id].x = x
     cell_list[last_cell_id].y = y
     keyboard_navigation.fill_grid(last_cell_id, x, y, col_span, row_span)
@@ -433,8 +440,8 @@ function keyboard_navigation.jump_to_last()
 end
 
 ---Jumps 1 forward in the tab order. Wraps around if the end is reached.
-function keyboard_navigation.jump_forward()
-    if selected_cell_id >= last_cell_id or selected_cell_id == 0 then
+function keyboard_navigation.tab_forward()
+    if selected_cell_id >= last_cell_id then
         keyboard_navigation.jump_to_first()
     else
         keyboard_navigation.jump_to_cell(selected_cell_id + 1)
@@ -442,7 +449,7 @@ function keyboard_navigation.jump_forward()
 end
 
 ---Jumps 1 backwards in the tab order. Wraps around if the beginning is reached.
-function keyboard_navigation.jump_backwards()
+function keyboard_navigation.tab_backwards()
     if selected_cell_id <= 1 then
         keyboard_navigation.jump_to_last()
     else
@@ -529,9 +536,9 @@ end
 ---@param action keyboard_action
 local function tab_navigate(action)
     if action == kba.right or action == kba.down then
-        keyboard_navigation.jump_forward()
+        keyboard_navigation.tab_forward()
     elseif action == kba.left or action == kba.up then
-        keyboard_navigation.jump_backwards()
+        keyboard_navigation.tab_backwards()
     else
         error("bad navigation action")
     end
@@ -549,6 +556,16 @@ local function page_navigate(action)
     end
 end
 
+local function enter_grid(action)
+    if action == kba.right or action == kba.down then
+        keyboard_navigation.jump_to_cell(first_gridded_cell_id)
+    elseif action == kba.left or action == kba.up then
+        keyboard_navigation.jump_to_cell(last_gridded_cell_id)
+    else
+        error("bad navigation action")
+    end
+end
+
 --#endregion
 
 ---Navigates the grid given a directional keyboard action
@@ -558,7 +575,7 @@ local function navigate_grid(action)
     -- if nothing is selected and something is in the grid then go to the first one
     if selected_cell_id == 0 then
         if first_gridded_cell_id then
-            keyboard_navigation.jump_to_cell(first_gridded_cell_id)
+            enter_grid(action)
         end
         return nil
     end
@@ -686,9 +703,9 @@ local function iterate_events()
             -- The below keys do not trigger actions. They only navigate
             elseif key == "tab" then
                 if love.keyboard.isDown("lshift", "rshift") then
-                    keyboard_navigation.jump_backwards()
+                    keyboard_navigation.tab_backwards()
                 else
-                    keyboard_navigation.jump_forward()
+                    keyboard_navigation.tab_forward()
                 end
             elseif key == "home" then
                 keyboard_navigation.jump_to_first()
