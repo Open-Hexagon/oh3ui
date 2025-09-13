@@ -57,6 +57,8 @@ function control.evaluate()
             end
         end
     end
+
+    keyboard_navigation.reset()
 end
 
 return control

@@ -1,7 +1,7 @@
 local settings = {
     scale = nil,
     debug_grid = nil,
-    strict = nil
+    strict = nil,
 }
 
 return settings

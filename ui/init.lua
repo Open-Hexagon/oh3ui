@@ -3,7 +3,7 @@ local draw_queue = require("ui.draw_queue")
 local control = require("ui.control")
 local settings = require("ui.settings")
 local volatile_data = require("ui.shared_data").volatile
-local warning = require("ui.warning")
+local stack_manager = require("ui.stack_manager")
 local layers = require("ui.layers")
 
 local ui = {}
@@ -98,36 +98,6 @@ local function start()
 end
 
 local function finish()
-    if volatile_data.cursor_index > 0 then
-        volatile_data.cursor_index = 0
-        volatile_data.cursor_base_index = 0
-        warning("cursor stack was not empty")
-    end
-    if volatile_data.translate_index > 1 then
-        volatile_data.translate_index = 1
-        volatile_data.translate_base_index = 1
-        warning("translation stack was not empty")
-    end
-    if volatile_data.area_index > 0 then
-        volatile_data.area_index = 0
-        volatile_data.area_base_index = 0
-        warning("area stack was not empty")
-    end
-    if volatile_data.mask_index > 0 then
-        volatile_data.mask_index = 0
-        volatile_data.mask_base_index = 0
-        warning("not all masks were removed")
-    end
-    if volatile_data.aeb_index > 0 then
-        volatile_data.aeb_index = 0
-        volatile_data.aeb_base_index = 0
-        warning("an area element wasn't finished")
-    end
-    if volatile_data.record_stack_index > 0 then
-        volatile_data.record_stack_index = 0
-        warning("the record stack wasn't empty at the end of frame")
-    end
-
     -- draw in order
     draw_queue.draw()
 
@@ -139,7 +109,6 @@ local function finish()
 
     -- clean up
     events.clear()
-    love.graphics.setScissor()
 end
 
 ---reset ui state and set scale

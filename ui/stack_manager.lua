@@ -3,6 +3,7 @@
 local volatile_data = require("ui.shared_data").volatile
 local record_stack = volatile_data.record_stack
 local draw_queue = require("ui.draw_queue")
+local warning = require("ui.warning")
 
 local stack_manager = {}
 
@@ -58,6 +59,39 @@ function stack_manager.pop_record()
         volatile_data.aeb_base_index = slot[5]
 
         volatile_data.record_stack_index = index - 1
+    end
+end
+
+function stack_manager.clean_up()
+    if volatile_data.cursor_index > 0 then
+        volatile_data.cursor_index = 0
+        volatile_data.cursor_base_index = 0
+        warning("cursor stack was not empty")
+    end
+    if volatile_data.translate_index > 1 then
+        volatile_data.translate_index = 1
+        volatile_data.translate_base_index = 1
+        warning("translation stack was not empty")
+    end
+    if volatile_data.area_index > 0 then
+        volatile_data.area_index = 0
+        volatile_data.area_base_index = 0
+        warning("area stack was not empty")
+    end
+    if volatile_data.mask_index > 0 then
+        volatile_data.mask_index = 0
+        volatile_data.mask_base_index = 0
+        draw_queue.revert_scissor(0)
+        warning("not all masks were removed")
+    end
+    if volatile_data.aeb_index > 0 then
+        volatile_data.aeb_index = 0
+        volatile_data.aeb_base_index = 0
+        warning("an area element wasn't finished")
+    end
+    if volatile_data.record_stack_index > 0 then
+        volatile_data.record_stack_index = 0
+        warning("the record stack wasn't empty at the end of frame")
     end
 end
 

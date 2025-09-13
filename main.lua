@@ -31,6 +31,7 @@ end
 -- luacov: enable
 
 local example_menu = require("ui.menu.example")
+local empty_grid = require("ui.menu.empty_grid")
 local ui = require("ui")
 
 function love.run()
@@ -48,7 +49,7 @@ function love.run()
     -- keep this always on when using the ui
     love.keyboard.setKeyRepeat(true)
 
-    ui.init(example_menu)
+    ui.init(empty_grid)
 
     return function()
         -- Process events

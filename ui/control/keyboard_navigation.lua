@@ -188,6 +188,10 @@ local escape_cell_id
 ---nil means there was no cell set.
 local default_cell_id
 
+---The id of the first cell that has a actual grid position.
+---nil means no cells exist on the grid
+local first_gridded_cell_id
+
 ---The last performed keyboard action. Nil if there was no action.
 ---There only needs to be one since the keyboard can only interact with one thing at a time.
 ---@type keyboard_action?
@@ -213,18 +217,25 @@ function keyboard_navigation.reset()
     control_data.current_cell_id = 0
     escape_cell_id = nil
     default_cell_id = nil
+    first_gridded_cell_id = nil
 end
 
----This gets called when a layer transitions happens. Finds the best cell to select
-function keyboard_navigation.lt_select_best_cell()
+---Forces for 1 frame to say that the selection has changed.
+---Used to trigger a scroll view request when a layer transition happens
+local force_selection_has_changed = false
+
+---This only gets called when a layer transitions happens. Finds the best cell to select.
+function keyboard_navigation.finish_layer_transition()
     held_action_key = nil
-    keyboard_navigation.selection_has_changed = true
+    force_selection_has_changed = true
     if default_cell_id then
         keyboard_navigation.jump_to_cell(default_cell_id)
     else
         keyboard_navigation.jump_to_first()
     end
 end
+
+--#region Cell Controls
 
 ---Create a keyboard navigation cell which can be selected. The order in which these are called determines the tab order.
 ---@param mode?
@@ -290,6 +301,8 @@ function keyboard_navigation.change_to_cell(cell_id)
     end
     control_data.current_cell_id = cell_id
 end
+
+--#endregion
 
 --#region Conditions
 
@@ -373,6 +386,10 @@ end
 function keyboard_navigation.grid_cell(x, y, col_span, row_span)
     if last_cell_id == 0 then
         return
+    end
+
+    if not first_gridded_cell_id then
+        first_gridded_cell_id = last_cell_id
     end
 
     cell_list[last_cell_id].x = x
@@ -538,11 +555,20 @@ end
 ---@param action keyboard_action keyboard direction action number
 ---@return keyboard_action? redirected_action action number if navigation was redirected
 local function navigate_grid(action)
-    -- if nothing is selected or selection position is undefined, use tab ordering
-    if selected_cell_id == 0 or not grid_x then
+    -- if nothing is selected and something is in the grid then go to the first one
+    if selected_cell_id == 0 then
+        if first_gridded_cell_id then
+            keyboard_navigation.jump_to_cell(first_gridded_cell_id)
+        end
+        return nil
+    end
+
+    -- if something is selected but it doesn't have a grid position then use tab navigation
+    if not grid_x then
         tab_navigate(action)
         return nil
     end
+
     local original_selection = get_grid_cell(grid_x, grid_y)
     -- if the grid cursor is not on a proper cell, jump to the first cell
     if original_selection < 1 then
@@ -734,9 +760,13 @@ function keyboard_navigation.evaluate()
 
     local old_selection = selected_cell_id
     last_action, last_is_repeat, typing_target, typing_action = iterate_events()
-    keyboard_navigation.selection_has_changed = old_selection ~= selected_cell_id
 
-    keyboard_navigation.reset()
+    if force_selection_has_changed then
+        keyboard_navigation.selection_has_changed = true
+        force_selection_has_changed = false
+    else
+        keyboard_navigation.selection_has_changed = old_selection ~= selected_cell_id
+    end
 
     return typing_target, typing_action
 end
@@ -744,8 +774,13 @@ end
 ---Does the usual evaluation cleanup without iterating through the events
 function keyboard_navigation.evaluate_without_events()
     last_action, last_is_repeat = nil, false
-    keyboard_navigation.selection_has_changed = false
-    keyboard_navigation.reset()
+
+    if force_selection_has_changed then
+        keyboard_navigation.selection_has_changed = true
+        force_selection_has_changed = false
+    else
+        keyboard_navigation.selection_has_changed = false
+    end
 end
 
 return keyboard_navigation

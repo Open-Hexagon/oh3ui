@@ -2,11 +2,11 @@
 
 local cursor = require("ui.cursor")
 local knav = require("ui.control.keyboard_navigation")
-local mnav = require("ui.control.mouse_navigation")
 local shared_data = require("ui.shared_data")
 local control_data = shared_data.control
 local control_method = shared_data.enums.control_method
 local draw_queue = require("ui.draw_queue")
+local stack_manager = require("ui.stack_manager")
 
 --[=[
 Layer changing
@@ -55,8 +55,6 @@ local layers = {}
 local stack = {}
 local length = 0
 
--- TODO: add queueing system for layers
-
 local PUSH = 0
 local POP = 1
 
@@ -104,6 +102,9 @@ local function reconfigure_layers()
             length = length + 1
             stack[length] = scheduled_layers[i]
         elseif scheduled_tasks[i] == POP then
+            if length == 0 then
+                error("cannot pop layer: reached bottom of layer stack")
+            end
             stack[length] = nil
             length = length - 1
         else
@@ -112,14 +113,13 @@ local function reconfigure_layers()
     end
     schedule_index = 0
 
-    -- TODO Scroll regions are not updated on layer changes
-
     if control_data.last_used_control_method == control_method.keyboard then
         -- if keyboard navigation was used we need to find the best cell to select on the new top layer
         control_data.current_layer_is_active = true
         knav.reset()
         stack[length]()
-        knav.lt_select_best_cell()
+        knav.finish_layer_transition()
+        stack_manager.clean_up()
     else
         -- deactivate keyboard nav if something else was used
         knav.deselect()
@@ -135,6 +135,7 @@ function layers.run()
             cursor.reset()
             control_data.current_layer = i
             stack[i]()
+            stack_manager.clean_up()
         end
 
         control_data.current_layer_is_active = true
@@ -142,6 +143,7 @@ function layers.run()
         cursor.reset()
         control_data.current_layer = length
         stack[length]()
+        stack_manager.clean_up()
     end
 
     -- turn off the draw queue
