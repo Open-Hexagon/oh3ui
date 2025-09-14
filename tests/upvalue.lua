@@ -3,20 +3,28 @@
 
 local upvalue = {}
 
-function upvalue.get_by_name(f, name)
-    local name2, value
+function upvalue.get_by_name(f, ...)
+    local len = select("#", ...)
+    local out = {}
+
+    local name, value
     local i = 1
+
     while true do
-        name2, value = debug.getupvalue(f, i)
-        if not name2 then
+        name, value = debug.getupvalue(f, i)
+        if not name then
             break
         end
-        if name == name2 then
-            return value
+
+        for j = 1, len do
+            if name == select(j, ...) then
+                out[j] = value
+            end
         end
         i = i + 1
     end
-    error(string.format("upvalue %s doesn't exist", name2), 2)
+
+    return unpack(out)
 end
 
 function upvalue.set_by_name(f, name, value)

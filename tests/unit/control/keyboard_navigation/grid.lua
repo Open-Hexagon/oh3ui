@@ -6,7 +6,6 @@ local events = require("ui.events")
 local shared_data = require("ui.shared_data")
 local control_data = shared_data.control
 local unittest = require("tests.unittest")
-local monkeypatch = require("tests.monkeypatch")
 
 local T = {}
 
@@ -52,6 +51,7 @@ end
 
 function T.tear_down_case()
     knav.reset()
+    enable_intersection_checks()
 end
 
 function T.set_up()
@@ -59,7 +59,6 @@ function T.set_up()
 end
 
 function T.tear_down()
-    enable_intersection_checks()
     knav.deselect()
     events.clear()
     knav.set_page_length(1)

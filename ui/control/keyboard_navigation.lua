@@ -540,7 +540,9 @@ local function tab_navigate(action)
     elseif action == kba.left or action == kba.up then
         keyboard_navigation.tab_backwards()
     else
+        -- luacov: disable
         error("bad navigation action")
+        -- luacov: enable
     end
 end
 
@@ -552,7 +554,9 @@ local function page_navigate(action)
     elseif action == kba.left or action == kba.up then
         keyboard_navigation.page_backwards()
     else
+        -- luacov: disable
         error("bad navigation action")
+        -- luacov: enable
     end
 end
 
@@ -562,7 +566,9 @@ local function enter_grid(action)
     elseif action == kba.left or action == kba.up then
         keyboard_navigation.jump_to_cell(last_gridded_cell_id)
     else
+        -- luacov: disable
         error("bad navigation action")
+        -- luacov: enable
     end
 end
 
@@ -604,7 +610,9 @@ local function navigate_grid(action)
     elseif action == kba.up then
         dx, dy = 0, -1
     else
+        -- luacov: disable
         error("bad navigation action")
+        -- luacov: enable
     end
 
     -- Search for the border of our current cell region

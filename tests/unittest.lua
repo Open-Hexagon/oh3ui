@@ -331,7 +331,7 @@ function unittest.main()
     discover_tests(test_cases, "tests/unit", ".*")
 
     -- The order in which tests cases are run may change between executions
-    local group_state, last_total = false, total_tests
+    local group_state, last_total, next_lf = false, total_tests, 80
     for i = 1, #test_cases do
         run_test_case(test_cases[i])
 
@@ -345,8 +345,9 @@ function unittest.main()
             last_total = total_tests
             group_state = not group_state
 
-            if total_tests > 80 then
+            if total_tests > next_lf then
                 io.stderr:write("\n")
+                next_lf = next_lf + 80
             end
         end
     end
