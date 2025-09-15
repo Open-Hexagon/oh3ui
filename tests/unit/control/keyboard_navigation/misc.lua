@@ -1,8 +1,9 @@
 local upvalue = require("tests.upvalue")
 local knav = require("ui.control.keyboard_navigation")
 local wmode = knav.wrapping_mode
-local enable_intersection_checks = require("ui.control.mouse_navigation.sensor").enable_intersection_checks
 local events = require("ui.events")
+local enable_intersection_checks = require("ui.control.mouse_navigation.sensor").enable_intersection_checks
+local common = require("tests.unit.control.keyboard_navigation.common")
 local shared_data = require("ui.shared_data")
 local control_data = shared_data.control
 local unittest = require("tests.unittest")
@@ -22,15 +23,8 @@ function T.tear_down_case()
     love.mouse.setVisible = monkeypatch.get_original(love.mouse.setVisible)
 end
 
-function T.set_up()
-    knav.set_wrapping()
-end
-
 function T.tear_down()
-    enable_intersection_checks()
-    knav.reset()
-    events.clear()
-    knav.set_page_length(1)
+    common.reset_all()
 end
 
 local function get_selected_cell_id()
@@ -140,6 +134,92 @@ function T.test_jump_to_cell()
     unittest.assert(id == 0)
     unittest.assert(x == nil)
     unittest.assert(y == nil)
+end
+
+function T.test_wrapping_reencounter()
+    control_data.current_layer_is_active = true
+
+    knav.make_cell()
+    knav.grid_cell(1, 1)
+
+    knav.make_cell()
+    knav.grid_cell(2, 1)
+
+    knav.make_cell()
+    knav.grid_cell(1, 2, 2, 1)
+
+    control_data.current_layer_is_active = false
+
+    knav.set_wrapping(wmode.horizontal)
+    knav.jump_to_cell(2)
+
+    events.add("keypressed", "down")
+    -- ! we are at grid position (2,2) in between these two events
+    events.add("keypressed", "right")
+    knav.evaluate()
+
+    local id, x, y
+    id, x, y = get_selected_cell_id()
+    unittest.assert(id == 3)
+    -- ! reencountering the same cell when wrapping doesn't actually move the grid position
+    unittest.assert(x == 2)
+    unittest.assert(y == 2)
+end
+
+function T.test_wrapping_points()
+    --[[
+    grid setup:
+    X changes throughout the test
+    ... -1 | 0 0 X 0 1 1 0 2 0 -2 | -1 ...
+    ]]
+
+    control_data.current_layer_is_active = true
+
+    knav.make_cell()
+    knav.grid_cell(5, 1, 2, 1)
+
+    knav.make_cell()
+    knav.grid_cell(8, 1)
+
+    knav.fill_grid(knav.op_cell.wrap, 10, 1)
+
+    control_data.current_layer_is_active = false
+
+    local id, x, y
+
+    events.add("keypressed", "right")
+
+    knav.fill_grid(knav.op_cell.barrier, 3, 1)
+    knav.jump_to_cell(2)
+    knav.evaluate()
+    id, x, y = get_selected_cell_id()
+    unittest.assert(id == 1)
+    unittest.assert(x == 5)
+    unittest.assert(y == 1)
+
+    knav.fill_grid(knav.op_cell.page, 3, 1)
+    knav.jump_to_cell(2)
+    knav.evaluate()
+    id, x, y = get_selected_cell_id()
+    unittest.assert(id == 1)
+    unittest.assert(x == 5)
+    unittest.assert(y == 1)
+
+    knav.fill_grid(knav.op_cell.redirect, 3, 1)
+    knav.jump_to_cell(2)
+    knav.evaluate()
+    id, x, y = get_selected_cell_id()
+    unittest.assert(id == 1)
+    unittest.assert(x == 5)
+    unittest.assert(y == 1)
+
+    knav.fill_grid(knav.op_cell.tab, 3, 1)
+    knav.jump_to_cell(2)
+    knav.evaluate()
+    id, x, y = get_selected_cell_id()
+    unittest.assert(id == 1)
+    unittest.assert(x == 5)
+    unittest.assert(y == 1)
 end
 
 return T

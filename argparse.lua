@@ -46,15 +46,15 @@ function Parser:add_argument(name1, name2, help, nargs, is_number, action, defau
     local function add_name_to_argument_table(name)
         -- filter any invalid characters
         if name:find("[^%w_%-]") then
-            error(string.format("`%s` cannot be used as an argument name or flag", name))
+            error(string.format("`%s` cannot be used as a positional argument or option name", name))
         end
 
         if name:find("^%-") then
-            -- name starts with a hyphen -> flag
+            -- name starts with a hyphen -> option
             new_entry.dest = name:gsub("^%-*", ""):gsub("%-", "%_")
 
             if self.argument_table[name] then
-                error(string.format("argument flag `%s` already exists", name))
+                error(string.format("option `%s` already exists", name))
             end
             self.argument_table[name] = new_entry
 
@@ -81,7 +81,7 @@ function Parser:add_argument(name1, name2, help, nargs, is_number, action, defau
         if name2 then
             name2_is_positional = add_name_to_argument_table(name2)
             if name2_is_positional then
-                error("a flag argument cannot have a name2 that's positional")
+                error("an option cannot have a name2 that's positional")
             end
         end
         new_entry.is_positional = false
@@ -96,25 +96,25 @@ function Parser:print_help_text()
     ---@type ArgumentEntry[]
     local positional_entries = {}
     ---@type ArgumentEntry[]
-    local flag_entries = {}
+    local option_entries = {}
 
     for i = 1, #self.argument_list do
         local entry = self.argument_list[i]
         if entry.is_positional then
             table.insert(positional_entries, entry)
         else
-            table.insert(flag_entries, entry)
+            table.insert(option_entries, entry)
         end
     end
 
-    local flag_entries_count = #flag_entries
+    local option_entries_count = #option_entries
     local positional_entries_count = #positional_entries
 
     do
         io.write("usage: ", self.prog, " ")
 
-        for i = 1, flag_entries_count do
-            local entry = flag_entries[i]
+        for i = 1, option_entries_count do
+            local entry = option_entries[i]
             io.write("[", entry.name1, " ")
             if entry.nargs == "?" then
                 io.write("[", string.upper(entry.dest), "] ")
@@ -147,10 +147,10 @@ function Parser:print_help_text()
         end
     end
 
-    if flag_entries_count > 0 then
+    if option_entries_count > 0 then
         io.write("\noptions:\n")
-        for i = 1, flag_entries_count do
-            local entry = flag_entries[i]
+        for i = 1, option_entries_count do
+            local entry = option_entries[i]
 
             io.write("  ", entry.name1, " ")
             if entry.nargs == "?" then
@@ -204,10 +204,10 @@ function Parser:parse_args(args)
             force_positional = true
         else
             if not force_positional and arg_str:find("^%-") then
-                -- argument is a flag
+                -- argument is an option
                 local entry = self.argument_table[arg_str]
                 if not entry then
-                    error(string.format("unrecognized flag argument `%s`", arg_str))
+                    error(string.format("unrecognized option `%s`", arg_str))
                 end
 
                 local dest = entry.dest
@@ -250,12 +250,12 @@ function Parser:parse_args(args)
                     if entry.nargs == 1 then
                         local value = args[arg_index + 1]
                         if not value then
-                            error(string.format("argument `%s %s` requires 1 parameter", arg_str, string.upper(dest)))
+                            error(string.format("option `%s %s` requires 1 parameter", arg_str, string.upper(dest)))
                         end
                         if entry.is_number then
                             local n = tonumber(value)
                             if not n then
-                                error(string.format("argument `%s %s` isn't a number", arg_str, string.upper(dest)))
+                                error(string.format("option `%s %s` isn't a number", arg_str, string.upper(dest)))
                             end
                             output[dest] = n
                         else
@@ -268,7 +268,7 @@ function Parser:parse_args(args)
                             if not value then
                                 error(
                                     string.format(
-                                        "`%s %s...` requires %d parameters",
+                                        "option `%s %s...` requires %d parameters",
                                         arg_str,
                                         string.upper(dest),
                                         entry.nargs
@@ -280,7 +280,7 @@ function Parser:parse_args(args)
                                 if not n then
                                     error(
                                         string.format(
-                                            "parameter %d of argument `%s %s...` isn't a number",
+                                            "parameter %d of option `%s %s...` isn't a number",
                                             i,
                                             arg_str,
                                             string.upper(dest)

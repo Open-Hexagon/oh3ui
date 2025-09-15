@@ -210,6 +210,10 @@ local last_is_repeat = false
 ---@type string?
 local held_action_key
 
+---Forces for 1 frame to say that the selection has changed.
+---Used to trigger a scroll view request when a layer transition happens
+local force_selection_has_changed = false
+
 local function is_valid_cell_id(cell_id)
     return cell_id >= 0 and cell_id <= last_cell_id
 end
@@ -224,10 +228,6 @@ function keyboard_navigation.reset()
     first_gridded_cell_id = nil
     last_gridded_cell_id = nil
 end
-
----Forces for 1 frame to say that the selection has changed.
----Used to trigger a scroll view request when a layer transition happens
-local force_selection_has_changed = false
 
 ---This only gets called when a layer transitions happens. Finds the best cell to select.
 function keyboard_navigation.finish_layer_transition()
@@ -257,7 +257,7 @@ function keyboard_navigation.make_cell(mode)
 
     local cell = cell_list[last_cell_id]
     if cell then
-        --erase old fields
+        -- erase old fields
         cell.x = nil
         cell.y = nil
         cell.text_input_state = nil

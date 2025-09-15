@@ -28,10 +28,10 @@ function upvalue.get_by_name(f, ...)
 end
 
 function upvalue.set_by_name(f, name, value)
-    local name2, _
+    local name2
     local i = 1
     while true do
-        name2, _ = debug.getupvalue(f, i)
+        name2 = debug.getupvalue(f, i)
         if not name2 then
             break
         end

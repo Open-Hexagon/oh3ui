@@ -2,6 +2,7 @@
 
 local unittest = {
     verbose = false,
+    pattern = nil,
 }
 
 local YK_FAILED_ASSERT = 0x7977a0ab
@@ -28,8 +29,10 @@ local function discover_tests(test_cases, start_dir, name_pattern)
                 local require_path = start_dir:gsub("/", "%.") .. "." .. name
                 local test_case = require(require_path)
                 if type(test_case) == "table" then
-                    test_case._file_path = full_path
-                    table.insert(test_cases, test_case)
+                    if not test_case.unittest_ignore then
+                        test_case._file_path = full_path
+                        table.insert(test_cases, test_case)
+                    end
                 elseif unittest.verbose then
                     io.stderr:write(
                         string.format(
@@ -328,7 +331,7 @@ function unittest.main()
     love.event.pump()
 
     local test_cases = {}
-    discover_tests(test_cases, "tests/unit", ".*")
+    discover_tests(test_cases, "tests/unit", unittest.pattern)
 
     -- The order in which tests cases are run may change between executions
     local group_state, last_total, next_lf = false, total_tests, 80
