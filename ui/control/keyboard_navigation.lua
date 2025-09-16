@@ -196,6 +196,25 @@ local first_gridded_cell_id
 ---nil means no cells exist on the grid
 local last_gridded_cell_id
 
+--[[
+    Action behavior:
+
+    A = some action
+    _ = no action or false
+    T = true
+    P = press event
+    p = repeated press event
+    . = OS key-repeat delay
+    R = release event
+
+    (Not to scale. Illustrative purposes only)
+    events           P......p p p p p p p p p pR
+    held_action     __AAAAAAAAAAAAAAAAAAAAAAAAAA__
+    last_action     __A______A_A_A_A_A_A_A_A_A_A__
+    last_is_repeat  _________T_T_T_T_T_T_T_T_T_T__
+                    frames -->
+]]
+
 ---The last performed keyboard action. Nil if there was no action.
 ---There only needs to be one since the keyboard can only interact with one thing at a time.
 ---@type keyboard_action?
@@ -206,9 +225,13 @@ local last_action
 ---@type boolean
 local last_is_repeat = false
 
----The key name that is currently being held down. Only the latest pressed key is considered "held".
 ---@type string?
-local held_action_key
+-- local held_action_key
+
+---The action that is currently being held down. Only the latest made action is considered "held".
+---The held action is not reasserted on repeated keypresses.
+---@type keyboard_action?
+local held_action
 
 ---Forces for 1 frame to say that the selection has changed.
 ---Used to trigger a scroll view request when a layer transition happens
@@ -231,7 +254,7 @@ end
 
 ---This only gets called when a layer transitions happens. Finds the best cell to select.
 function keyboard_navigation.finish_layer_transition()
-    held_action_key = nil
+    held_action = nil
     force_selection_has_changed = true
     if default_cell_id then
         keyboard_navigation.jump_to_cell(default_cell_id)
@@ -300,7 +323,7 @@ end
 ---Can be used to revert the current cell back to a previously made cell.
 ---Setting the current cell to 0 prevents elements from being selected
 ---@param cell_id integer
-function keyboard_navigation.change_to_cell(cell_id)
+function keyboard_navigation.change_current_cell(cell_id)
     if not is_valid_cell_id(cell_id) then
         error("bad cell id")
     end
@@ -353,7 +376,7 @@ end
 ---@nodiscard
 function keyboard_navigation.get_holding(cell_id)
     if keyboard_navigation.is_selected(cell_id) then
-        return key_to_action[held_action_key]
+        return held_action
     end
     return nil
 end
@@ -683,14 +706,14 @@ local function iterate_events()
 
                 action = navigate_grid(key_to_action[key])
 
-                ---held action is not asserted on repeated keypresses
+                -- held action is not asserted on repeated keypresses
                 if action and not is_repeat then
-                    held_action_key = key
+                    held_action = action
                 end
             elseif key == "return" or key == "space" then
                 -- not spammable
                 if not is_repeat then
-                    held_action_key = key
+                    held_action = key_to_action[key]
                     if selected_cell_id == 0 then
                         if default_cell_id then
                             keyboard_navigation.jump_to_cell(default_cell_id)
@@ -701,9 +724,11 @@ local function iterate_events()
                     end
                 end
             elseif key == "escape" then
-                -- not spammable
-                if escape_cell_id and not is_repeat then
-                    held_action_key = key
+                if
+                    not is_repeat -- not spammable
+                    and escape_cell_id
+                then
+                    held_action = key_to_action[key]
                     keyboard_navigation.jump_to_cell(escape_cell_id)
                     action = kba.activate
                 end
@@ -745,8 +770,8 @@ local function iterate_events()
         elseif name == "keyreleased" then
             control_data.last_used_control_method = control_method.keyboard
             -- clear the holding_key field if that key was released.
-            if key == held_action_key then
-                held_action_key = nil
+            if key_to_action[key] == held_action then
+                held_action = nil
             end
         elseif name == "textinput" then
             if selected_cell_id == 0 then
@@ -763,9 +788,12 @@ local function iterate_events()
                     break
                 end
             end
+
+        -- luacov: disable
         elseif name == "textedited" then
             -- I don't know what this one does.
         end
+        -- luacov: enable
     end
 
     return action, is_repeat, typing_target, typing_action
@@ -799,6 +827,7 @@ end
 ---Does the usual evaluation cleanup without iterating through the events
 function keyboard_navigation.evaluate_without_events()
     last_action, last_is_repeat = nil, false
+    held_action = nil
 
     if force_selection_has_changed then
         keyboard_navigation.selection_has_changed = true

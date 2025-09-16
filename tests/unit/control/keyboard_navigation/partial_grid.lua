@@ -1,7 +1,4 @@
-local upvalue = require("tests.upvalue")
 local knav = require("ui.control.keyboard_navigation")
-local wmode = knav.wrapping_mode
-local enable_intersection_checks = require("ui.control.mouse_navigation.sensor").enable_intersection_checks
 local events = require("ui.events")
 local shared_data = require("ui.shared_data")
 local control_data = shared_data.control
@@ -209,6 +206,32 @@ function T.test_end()
     knav.jump_to_cell(5)
     knav.evaluate()
     unittest.assert(common.get_selected_cell_info() == 9)
+end
+
+function T.test_using_arrow_keys_on_cell_with_no_grid_position()
+    knav.jump_to_cell(5)
+    events.add("keypressed", "right")
+    knav.evaluate()
+    unittest.assert(common.get_selected_cell_info() == 6)
+    events.clear()
+
+    knav.jump_to_cell(5)
+    events.add("keypressed", "down")
+    knav.evaluate()
+    unittest.assert(common.get_selected_cell_info() == 6)
+    events.clear()
+
+    knav.jump_to_cell(5)
+    events.add("keypressed", "left")
+    knav.evaluate()
+    unittest.assert(common.get_selected_cell_info() == 4)
+    events.clear()
+
+    knav.jump_to_cell(5)
+    events.add("keypressed", "up")
+    knav.evaluate()
+    unittest.assert(common.get_selected_cell_info() == 4)
+    events.clear()
 end
 
 return T

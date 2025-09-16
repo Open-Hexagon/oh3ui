@@ -222,7 +222,7 @@ end
 ---Runs a test case
 ---@param test_case table
 local function run_test_case(test_case)
-    local test_success, success, kind, msg, loc
+    local test_success, test_msg, success, kind, msg, loc
 
     local tests, num_tests, co_set_up_case = extract_tests(test_case)
     if num_tests == 0 and unittest.verbose then
@@ -292,7 +292,7 @@ local function run_test_case(test_case)
         end
 
         has_assertions = false
-        test_success, kind, msg, loc = coroutine.resume(fn)
+        test_success, kind, test_msg, loc = coroutine.resume(fn)
 
         -- tear_down always gets called if set_up succeeds
         if not try_call(test_case.tear_down) then
@@ -304,9 +304,9 @@ local function run_test_case(test_case)
         -- record test data
         if test_success then
             if kind == YK_FAILED_ASSERT then
-                add_fail(string.format("%s %s %s", loc, fn_name, msg or "(no message given)"))
+                add_fail(string.format("%s %s %s", loc, fn_name, test_msg or "(no message given)"))
             elseif kind == YK_SKIPPED then
-                add_skip(string.format("%s %s %s", loc, fn_name, msg or "(no reason given)"))
+                add_skip(string.format("%s %s %s", loc, fn_name, test_msg or "(no reason given)"))
             elseif not has_assertions then
                 add_empty(string.format("%s %s", fn_def_loc, fn_name))
             else

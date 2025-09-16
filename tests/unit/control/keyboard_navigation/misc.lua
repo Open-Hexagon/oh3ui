@@ -1,5 +1,6 @@
 local upvalue = require("tests.upvalue")
 local knav = require("ui.control.keyboard_navigation")
+local kba = knav.actions
 local wmode = knav.wrapping_mode
 local events = require("ui.events")
 local enable_intersection_checks = require("ui.control.mouse_navigation.sensor").enable_intersection_checks
@@ -12,6 +13,7 @@ local monkeypatch = require("tests.monkeypatch")
 local T = {}
 
 local mouse_is_visible
+local id, x, y
 
 function T.set_up_case()
     love.mouse.setVisible = monkeypatch.replace(love.mouse.setVisible, function(a)
@@ -115,8 +117,6 @@ function T.test_jump_to_cell()
 
     control_data.current_layer_is_active = false
 
-    local id, x, y
-
     knav.jump_to_cell(1)
     id, x, y = get_selected_cell_id()
     unittest.assert(id == 1)
@@ -158,7 +158,6 @@ function T.test_wrapping_reencounter()
     events.add("keypressed", "right")
     knav.evaluate()
 
-    local id, x, y
     id, x, y = get_selected_cell_id()
     unittest.assert(id == 3)
     -- ! reencountering the same cell when wrapping doesn't actually move the grid position
@@ -184,8 +183,6 @@ function T.test_wrapping_points()
     knav.fill_grid(knav.op_cell.wrap, 10, 1)
 
     control_data.current_layer_is_active = false
-
-    local id, x, y
 
     events.add("keypressed", "right")
 
@@ -220,6 +217,43 @@ function T.test_wrapping_points()
     unittest.assert(id == 1)
     unittest.assert(x == 5)
     unittest.assert(y == 1)
+end
+
+function T.test_evaluate_with_no_cells_or_events()
+    knav.selection_has_changed = true
+    upvalue.set_by_name(knav.evaluate_without_events, "last_action", kba.activate)
+    upvalue.set_by_name(knav.evaluate_without_events, "last_is_repeat", true)
+    upvalue.set_by_name(knav.evaluate_without_events, "held_action", kba.activate)
+
+    knav.evaluate()
+
+    local a, b, c = upvalue.get_by_name(knav.evaluate_without_events, "last_action", "last_is_repeat", "held_action")
+
+    unittest.assert(a == nil)
+    unittest.assert(b == false)
+    unittest.assert(c == nil)
+end
+
+function T.test_invalid_grid_position()
+    control_data.current_layer_is_active = true
+
+    knav.make_cell()
+    knav.grid_cell(4, 2)
+
+    control_data.current_layer_is_active = false
+
+    knav.jump_to_cell(1)
+
+    upvalue.set_by_name(knav.deselect, "grid_x", -1)
+    upvalue.set_by_name(knav.deselect, "grid_y", -1)
+
+    events.add("keypressed", "right")
+    knav.evaluate()
+
+    id, x, y = get_selected_cell_id()
+    unittest.assert(id == 1)
+    unittest.assert(x == 4)
+    unittest.assert(y == 2)
 end
 
 return T
