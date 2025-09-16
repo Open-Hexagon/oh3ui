@@ -256,4 +256,29 @@ function T.test_invalid_grid_position()
     unittest.assert(y == 2)
 end
 
+function T.test_selection_has_changed()
+    control_data.current_layer_is_active = true
+
+    knav.make_cell()
+    knav.grid_cell(1, 1)
+    knav.make_cell()
+    knav.grid_cell(2, 1)
+
+    control_data.current_layer_is_active = false
+
+    knav.selection_has_changed = false
+
+    knav.jump_to_cell(1)
+
+    events.add("keypressed", "right")
+    knav.evaluate()
+    events.clear()
+
+    unittest.assert(knav.selection_has_changed == true)
+
+    knav.evaluate()
+
+    unittest.assert(knav.selection_has_changed == false)
+end
+
 return T

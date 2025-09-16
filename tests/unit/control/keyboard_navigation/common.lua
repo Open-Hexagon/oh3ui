@@ -17,9 +17,10 @@ function common.reset_all()
     knav.set_wrapping()
     knav.set_page_length(1)
 
-    -- need both for complete reset
+    -- need all for complete reset
     knav.reset()
     knav.deselect()
+    knav.evaluate_without_events()
 end
 
 function common.get_selected_cell_info()

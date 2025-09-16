@@ -173,9 +173,6 @@ end
 function T.test_get_holding()
     knav.jump_to_cell(1)
 
-    -- ! this clears any junk that's in the held_action variable
-    knav.evaluate_without_events()
-
     unittest.assert(knav.get_holding(2) == nil)
     unittest.assert(knav.get_holding(1) == nil)
 
