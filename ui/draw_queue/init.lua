@@ -37,7 +37,7 @@ local op_index = 0
 local res_list = {}
 ---Holds the index of the last created reservation
 local res_index = 0
----If set, the next push_operation will be written at the index this variable contains
+---Contains the reservation table that the next operation will use, nil otherwise
 local take_reservation = nil
 
 local enable_pushing = true
@@ -54,7 +54,14 @@ local function push_operation(...)
 
     if take_reservation then
         -- take a reservation
-        slot_index = take_reservation
+
+        if take_reservation.next == take_reservation.stop then
+            error("reservation is full")
+        end
+
+        take_reservation.next = take_reservation.next + 1
+        slot_index = take_reservation.next
+
         take_reservation = nil
     else
         op_index = op_index + 1
@@ -110,7 +117,8 @@ function draw_queue.reserve(n)
     return res_index
 end
 
----The next operation will fill in a slot in a reservation
+---The next operation will fill in a slot in a reservation.
+---Calling this multiple times in a row will only make the next draw operation take the last given res_id.
 ---@param res_id integer the reservation id to fill
 function draw_queue.take_reservation(res_id)
     if not enable_pushing then
@@ -121,14 +129,7 @@ function draw_queue.take_reservation(res_id)
         error("bad reservation id")
     end
 
-    local res = res_list[res_id]
-
-    if res.next == res.stop then
-        error("reservation is full")
-    end
-
-    res.next = res.next + 1
-    take_reservation = res.next
+    take_reservation = res_list[res_id]
 end
 
 ---Add a no-operation to the queue.
@@ -435,7 +436,7 @@ function draw_queue.draw()
             elseif id == op_ids.unused_reservation then
                 warning(
                     string.format(
-                        "warning: unused reservation slot with res_id %d, slot number %d of %d\n",
+                        "unused reservation slot with res_id %d, slot number %d of %d\n",
                         item[2],
                         item[3],
                         item[4]

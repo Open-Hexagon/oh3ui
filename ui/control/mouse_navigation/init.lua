@@ -108,7 +108,7 @@ end
 ---Changes the currently recognized sensor to a new id.
 ---Can be used to revert the current sensor back to a previously made sensor
 ---@param sensor_id integer
-function mouse_navigation.change_to_sensor(sensor_id)
+function mouse_navigation.change_current_sensor(sensor_id)
     if sensor_id < last_manual_sensor_id or sensor_id > last_sensor_id then
         error("bad sensor id")
     end
@@ -299,10 +299,13 @@ function mouse_navigation.evaluate()
     else
         sensor.evaluate(screen_x, screen_y)
     end
+end
 
+function mouse_navigation.reset()
     sensor.clear()
     last_sensor_id = 0
     last_manual_sensor_id = 0
+    control_data.current_sensor_id = 0
 end
 
 return mouse_navigation

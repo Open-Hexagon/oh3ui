@@ -225,9 +225,6 @@ local last_action
 ---@type boolean
 local last_is_repeat = false
 
----@type string?
--- local held_action_key
-
 ---The action that is currently being held down. Only the latest made action is considered "held".
 ---The held action is not reasserted on repeated keypresses.
 ---@type keyboard_action?
@@ -789,11 +786,9 @@ local function iterate_events()
                 end
             end
 
-        -- luacov: disable
-        elseif name == "textedited" then
+            -- elseif name == "textedited" then
             -- I don't know what this one does.
         end
-        -- luacov: enable
     end
 
     return action, is_repeat, typing_target, typing_action

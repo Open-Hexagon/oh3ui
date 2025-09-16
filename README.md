@@ -47,7 +47,7 @@ Notable assumptions that the UI makes without enforcing them with error checking
    1. Out-of-order building is achived with reservations
       1. Draw queue slots can be reserved and filled in later.
       2. Multiple reservations can be made at a time which can be filled in-order.
-      3. Reservations take on the location of the placement: **\[when the reservation was taken\]** / when the reservation was made.
+      3. Reservations take on the location of the placement when the reservation was taken.
 4. Recording keyboard and mouse navigation should not be put in state tables.
    1. This creates too many state tables
    2. The same functions to get mouse/keyboard navigation outputs should be used everywhere.

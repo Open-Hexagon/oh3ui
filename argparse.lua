@@ -221,7 +221,8 @@ function Parser:parse_args(args)
                         output[dest] = entry.const
                     elseif entry.action == "help" then
                         self:print_help_text()
-                        love.event.quit(0)
+                        io.flush()
+                        os.exit(0, true)
                     else
                         error("invalid argument action")
                     end

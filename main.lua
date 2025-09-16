@@ -9,7 +9,7 @@ local parser = argparse.new_parser("ohce", "open hexagon community edition")
 parser:add_argument("-e", "--print-events", "enable printing of events", 0, false, "store_true", false)
 parser:add_argument("-s", "--ui-scale", "starting ui scale", 1, true, nil, 1)
 parser:add_argument("-g", "--grid", "enable grid and set its size", "?", true, "store_const", nil, 50)
-parser:add_argument("-u", "--unittest", "start unittest mode", "?", false, "store_const", nil, ".*")
+parser:add_argument("-u", "--unittest", "start unittest mode; optionally provide a filter", "?", false, "store_const", nil, ".*")
 parser:add_argument("-v", "--verbose", "verbose output in unittest mode", 0, false, "store_true", false)
 parser:add_argument("-c", "--coverage", "enable coverage in unittest mode", 0, false, "store_true", false)
 parser:add_argument("-S", "--strict", "warnings become errors", 0, false, "store_true", false)
@@ -50,7 +50,8 @@ function love.run()
     -- keep this always on when using the ui
     love.keyboard.setKeyRepeat(true)
 
-    ui.init(empty_grid)
+    -- ui.init(empty_grid)
+    ui.init(example_menu)
 
     return function()
         -- Process events
