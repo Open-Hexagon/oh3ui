@@ -73,3 +73,35 @@ Notable assumptions that the UI makes without enforcing them with error checking
    1. Mouse sensors have to be marked as draggable.
    2. The mouse can only drag one sensor at a time.
    3. The sensor that is dragged is the earliest created hovered sensor that's marked as draggable. 
+
+## Tips for performance
+1. Always use locals.
+2. Storing lists of structured data. Example, many coordinate points:
+   ```
+   -- ok
+   polyline = {
+      {x = 1, y = 2},
+      {x = 3, y = 4},
+      {x = 5, y = 6},
+      ...
+   }
+
+   -- better
+   polyline = {
+      {1, 2},
+      {3, 4},
+      {5, 6},
+      ...
+   }
+
+   -- even better
+   polyline = {
+      {1, 3, 5, ...}
+      {2, 4, 6, ...}
+   }
+
+   -- best
+   polyline = {
+      1, 2, 3, 4, 5, 6, ...
+   }
+   ```

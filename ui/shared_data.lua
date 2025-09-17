@@ -42,9 +42,9 @@ shared_data.volatile = {
     cursor_base_index = 0,
 
     -- cursor translations
-    translate_stack = { { 0, 0 } }, -- the do-nothing translation is always here
-    translate_index = 1, -- index of the last pushed translation
-    translate_base_index = 1,
+    translate_stack = { 0, 0 }, -- the do-nothing translation is always here
+    translate_index = 2, -- index of the last pushed translation
+    translate_base_index = 2,
 
     -- cursor areas
     area_stack = {},

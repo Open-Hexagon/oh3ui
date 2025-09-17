@@ -28,8 +28,8 @@ function T.tear_down()
     volatile_data.cursor_base_index = 0
 
     -- cursor translations
-    volatile_data.translate_index = 1 -- index of the last pushed translation
-    volatile_data.translate_base_index = 1
+    volatile_data.translate_index = 2 -- index of the last pushed translation
+    volatile_data.translate_base_index = 2
 
     -- cursor areas
     volatile_data.area_index = 0 -- index of the last started area
@@ -74,7 +74,7 @@ function T.test_translate_index()
     stack_manager.pop_record()
 
     unittest.assert(volatile_data.translate_index == 10)
-    unittest.assert(volatile_data.translate_base_index == 1)
+    unittest.assert(volatile_data.translate_base_index == 2)
 end
 
 function T.test_area_index()
@@ -141,11 +141,11 @@ function T.test_clean_up()
     unittest.assert(volatile_data.cursor_index == 0)
     unittest.assert(volatile_data.cursor_base_index == 0)
 
-    volatile_data.translate_index = 2
-    volatile_data.translate_base_index = 2
+    volatile_data.translate_index = 6
+    volatile_data.translate_base_index = 6
     unittest.assert_error(stack_manager.clean_up)
-    unittest.assert(volatile_data.translate_index == 1)
-    unittest.assert(volatile_data.translate_base_index == 1)
+    unittest.assert(volatile_data.translate_index == 2)
+    unittest.assert(volatile_data.translate_base_index == 2)
 
     volatile_data.area_index = 1
     volatile_data.area_base_index = 1

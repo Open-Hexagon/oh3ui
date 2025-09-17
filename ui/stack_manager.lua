@@ -68,9 +68,9 @@ function stack_manager.clean_up()
         volatile_data.cursor_base_index = 0
         warning("cursor stack was not empty")
     end
-    if volatile_data.translate_index > 1 then
-        volatile_data.translate_index = 1
-        volatile_data.translate_base_index = 1
+    if volatile_data.translate_index > 2 then
+        volatile_data.translate_index = 2
+        volatile_data.translate_base_index = 2
         warning("translation stack was not empty")
     end
     if volatile_data.area_index > 0 then

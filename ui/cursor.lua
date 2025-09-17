@@ -373,15 +373,14 @@ end
 ---@param x number
 ---@param y number
 function cursor.apply_translation(x, y)
-    local prev_x, prev_y = unpack(translate_stack[volatile_data.translate_index])
-    volatile_data.translate_index = volatile_data.translate_index + 1
+    local index = volatile_data.translate_index
+    local prev_x, prev_y = translate_stack[index - 1], translate_stack[index]
+    index = index + 2
 
-    if translate_stack[volatile_data.translate_index] then
-        translate_stack[volatile_data.translate_index][1] = prev_x + x
-        translate_stack[volatile_data.translate_index][2] = prev_y + y
-    else
-        translate_stack[volatile_data.translate_index] = { prev_x + x, prev_y + y }
-    end
+    translate_stack[index - 1] = prev_x + x
+    translate_stack[index] = prev_y + y
+
+    volatile_data.translate_index = index
 end
 
 ---Removes the last applied translation
@@ -389,7 +388,7 @@ function cursor.remove_translation()
     if volatile_data.translate_index == volatile_data.translate_base_index then
         error("no more translations to remove")
     end
-    volatile_data.translate_index = volatile_data.translate_index - 1
+    volatile_data.translate_index = volatile_data.translate_index - 2
 end
 
 --#endregion
@@ -501,8 +500,8 @@ function cursor.place(desired_width, desired_height)
     local width, height = desired_width or cursor.width, desired_height or cursor.height
 
     -- Apply translation
-    placement.x = cursor.x + translate_stack[volatile_data.translate_index][1]
-    placement.y = cursor.y + translate_stack[volatile_data.translate_index][2]
+    placement.x = cursor.x + translate_stack[volatile_data.translate_index - 1]
+    placement.y = cursor.y + translate_stack[volatile_data.translate_index]
 
     -- Update edges
     placement.left, placement.top, placement.right, placement.bottom =
