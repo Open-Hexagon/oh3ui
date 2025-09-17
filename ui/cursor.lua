@@ -3,7 +3,6 @@
 
 local volatile_data = require("ui.shared_data").volatile
 
----Note: parameters that are contained within tables are not saved in snapshots
 local cursor = {}
 
 ---Edge output table mainly to be used by elements.
@@ -400,7 +399,7 @@ end
 -- After an area is started, any new elements that are created will expand the area.
 -- Areas can be stacked, newly created elements only affect the topmost area.
 -- When an area is ended, it's representation is put into the cursor.
--- Ending an area does not expand the area below. Use a cursor.place immediately after an area is finished to do that.
+-- Ending an area expands the area below, unless the no_propagate is true when calling finish_area
 
 local do_area_expansion = true
 
@@ -436,6 +435,7 @@ end
 
 ---Puts the current area representation into the cursor.
 ---If the area contains no objects, this function does nothing.
+---@return boolean empty_area true if the finished area had no elements
 function cursor.put_area()
     local this_area = area_stack[volatile_data.area_index]
     -- There might be nothing to put if no placements have been made
@@ -444,16 +444,21 @@ function cursor.put_area()
         cursor.height = this_area.bottom - this_area.top
         cursor.x = this_area.left + cursor.anchor_x * cursor.width
         cursor.y = this_area.top + cursor.anchor_y * cursor.height
+        return false
     end
+    return true
 end
 
 ---Ends the last started area.
 ---The cursor will be set to that area.
-function cursor.finish_area()
+---@param no_propagate boolean? if true, doesn't propagate this area to the below area
+---@return boolean empty_area true if the finished area had no elements
+function cursor.finish_area(no_propagate)
     if volatile_data.area_index == volatile_data.area_base_index then
         error("no areas to end")
     end
 
+    local ret = true
     local this_area = area_stack[volatile_data.area_index]
     -- There might be nothing to put if no placements have been made
     if this_area.left then
@@ -462,13 +467,18 @@ function cursor.finish_area()
         cursor.x = this_area.left + cursor.anchor_x * cursor.width
         cursor.y = this_area.top + cursor.anchor_y * cursor.height
 
-        expand_area(
-            area_stack[volatile_data.area_index - 1],
-            get_edges(cursor.x, cursor.y, cursor.anchor_x, cursor.anchor_y, cursor.width, cursor.height)
-        )
+        if not no_propagate then
+            expand_area(
+                area_stack[volatile_data.area_index - 1],
+                get_edges(cursor.x, cursor.y, cursor.anchor_x, cursor.anchor_y, cursor.width, cursor.height)
+            )
+        end
+        ret = false
     end
 
     volatile_data.area_index = volatile_data.area_index - 1
+
+    return ret
 end
 
 function cursor.area_expansion_off()
@@ -478,6 +488,7 @@ end
 function cursor.area_expansion_on()
     do_area_expansion = true
 end
+
 --#endregion
 
 ---Places the current cursor down. This will update the cursor edge output table as well as expand areas.

@@ -217,7 +217,9 @@ function mouse_navigation.evaluate()
         elseif name == "mousemoved" then
             -- Any mouse movement sets makes the cursor visible
             love.mouse.setVisible(true)
-            mouse_navigation.hover_on()
+            if not mouse_navigation.dragging then
+                mouse_navigation.hover_on()
+            end
 
             local dx, dy, istouch = a, b, c
 

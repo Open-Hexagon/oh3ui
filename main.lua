@@ -33,6 +33,7 @@ end
 
 local example_menu = require("ui.menu.example")
 local empty_grid = require("ui.menu.empty_grid")
+local scroll_example = require("ui.menu.scroll_example")
 local ui = require("ui")
 
 function love.run()
@@ -51,7 +52,8 @@ function love.run()
     love.keyboard.setKeyRepeat(true)
 
     -- ui.init(empty_grid)
-    ui.init(example_menu)
+    -- ui.init(example_menu)
+    ui.init(scroll_example)
 
     return function()
         -- Process events
