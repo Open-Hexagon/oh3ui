@@ -3,7 +3,6 @@ local primitive = require("ui.primitive")
 local reserve = require("ui.reserve")
 local stack_manager = require("ui.stack_manager")
 local area_element = require("ui.element.area")
-local area_type = area_element.kind.background
 
 local background = {}
 
@@ -12,7 +11,7 @@ function background.start()
     cursor.start_area()
 
     area_element.aeb_push(res_id)
-    area_element.aeb_push(area_type)
+    area_element.aeb_push("background")
     stack_manager.push_record()
 end
 
@@ -23,7 +22,7 @@ function background.finish(pad, color)
     stack_manager.pop_record()
     local a = area_element.aeb_pop()
 
-    if a ~= area_type then
+    if a ~= "background" then
         error("background element was ended with wrong type")
     end
 

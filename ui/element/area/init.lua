@@ -3,12 +3,6 @@ local aeb_stack = volatile_data.aeb_stack
 
 local area_element = {}
 
-area_element.kind = {
-    background = 0xfaeb0001,
-    collapse = 0xfaeb0002,
-    scroll = 0xfaeb0003,
-}
-
 ---pushes a value to the aeb stack
 ---@param value any
 function area_element.aeb_push(value)

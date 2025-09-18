@@ -3,7 +3,7 @@ local primitive = require("ui.primitive")
 local cursor = require("ui.cursor")
 local theme = require("ui.theme")
 local knav = require("ui.control.keyboard_navigation")
-local scroll = require("ui.element.area.scroll")
+local scroll_into_view = require("ui.element.area.scroll.view_request").scroll_into_view
 
 local outset, line_width = element.selection_outline_outset, element.selection_outline_line_width
 
@@ -19,7 +19,7 @@ return function()
     cursor.area_expansion_on()
 
     if knav.selection_has_changed then
-        scroll.scroll_into_view()
+        scroll_into_view()
     end
 
     cursor.pop()

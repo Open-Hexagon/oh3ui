@@ -85,9 +85,10 @@ function stack_manager.clean_up()
         warning("not all masks were removed")
     end
     if volatile_data.aeb_index > 0 then
-        volatile_data.aeb_index = 0
-        volatile_data.aeb_base_index = 0
-        warning("an area element wasn't finished")
+        -- this is enforced because not doing so would actually break stuff
+        error(
+            string.format("a(n) %s element wasn't finished properly", volatile_data.aeb_stack[volatile_data.aeb_index])
+        )
     end
     if volatile_data.record_stack_index > 0 then
         volatile_data.record_stack_index = 0

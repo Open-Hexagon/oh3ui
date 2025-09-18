@@ -1,10 +1,13 @@
 local events = require("ui.events")
-local draw_queue = require("ui.draw_queue")
-local control = require("ui.control")
+local events_clear = events.clear
+local draw_queue_draw = require("ui.draw_queue").draw
+local control_evaluate = require("ui.control").evaluate
 local settings = require("ui.settings")
 local volatile_data = require("ui.shared_data").volatile
 local stack_manager = require("ui.stack_manager")
 local layers = require("ui.layers")
+local layers_run = layers.run
+local view_request_evaluate = require("ui.element.area.scroll.view_request").evaluate
 
 local ui = {}
 
@@ -98,23 +101,25 @@ local function start()
 end
 
 local function finish()
+    view_request_evaluate()
+
     -- draw in order
-    draw_queue.draw()
+    draw_queue_draw()
 
     -- evaluate control methods
-    control.evaluate()
+    control_evaluate()
 
     -- undo scaling
     love.graphics.pop()
 
     -- clean up
-    events.clear()
+    events_clear()
 end
 
 ---reset ui state and set scale
 function ui.run()
     start()
-    layers.run()
+    layers_run()
     finish()
 end
 

@@ -75,8 +75,10 @@ Notable assumptions that the UI makes without enforcing them with error checking
    3. The sensor that is dragged is the earliest created hovered sensor that's marked as draggable. 
 
 ## Tips for performance
+Some suggestions for performance in Lua. Note that most of the time, the performance difference is only significant with large amounts of data. 
 1. Always use locals.
-2. Storing lists of structured data. Example, many coordinate points:
+2. Reuse tables when possible.
+3. Storing arrays of structured data. Example, many coordinate points:
    ```
    -- ok
    polyline = {
@@ -104,4 +106,21 @@ Notable assumptions that the UI makes without enforcing them with error checking
    polyline = {
       1, 2, 3, 4, 5, 6, ...
    }
+   ```
+4. Allocating arrays:
+   ```
+   -- fastest
+   a = {1, 2, 3}
+
+   -- faster
+   a = {true, true, true}
+   a[1] = 1; a[2] = 2; a[3] = 3
+
+
+   -- slower
+   a = {}
+   a[1] = 1; a[2] = 2; a[3] = 3
+
+   -- slowest
+   a = {[1] = 1 [2] = 2 [3] = 3}
    ```

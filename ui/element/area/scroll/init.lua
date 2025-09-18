@@ -8,8 +8,8 @@ local primitive = require("ui.primitive")
 local theme = require("ui.theme")
 local stack_manager = require("ui.stack_manager")
 local area_element = require("ui.element.area")
-local area_type = area_element.kind.scroll
 local view_request = require("ui.element.area.scroll.view_request")
+local volatile_data = require("ui.shared_data").volatile
 
 local scroll = {}
 
@@ -54,12 +54,7 @@ function scroll.start(state)
 
     -- save the current cursor
     cursor.push() -- (1)
-    -- save literal cursor position for use later
     cursor.place() -- ! this has to come before apply_translation!
-    state._literal_scroll_left = placement.left
-    state._literal_scroll_top = placement.top
-    state._literal_scroll_right = placement.right
-    state._literal_scroll_bottom = placement.bottom
 
     -- mask away everything outside of the region
     mask.push() -- (2)
@@ -82,12 +77,18 @@ function scroll.start(state)
     area_element.aeb_push(mnav.declare_sensor_id())
     area_element.aeb_push(mnav.declare_sensor_id())
 
-    -- push and set the top state
-    area_element.aeb_push(state)
-    state._up = view_request.top_state
-    view_request.top_state = state
+    -- save literal cursor position for use later
+    area_element.aeb_push(placement.bottom)
+    area_element.aeb_push(placement.right)
+    area_element.aeb_push(placement.top)
+    area_element.aeb_push(placement.left)
 
-    area_element.aeb_push(area_type) -- (5)
+    area_element.aeb_push(false) -- this gets turned into a true if a view request was made
+    area_element.aeb_push(state) -- state
+    area_element.aeb_push(view_request.top_index) -- aeb_index of the next (up) state
+    view_request.top_index = volatile_data.aeb_index -- put the new top index
+
+    area_element.aeb_push("scroll") -- (5)
 
     -- lock all stacks after we've done setup
     stack_manager.push_record() -- (6)
@@ -265,19 +266,19 @@ function scroll.finish(padding)
     local a = area_element.aeb_pop() -- (5)
 
     -- check type
-    if a ~= area_type then
+    if a ~= "scroll" then
         error("scroll element was ended with wrong type")
     end
 
-    -- pop the state and revert the top state
-    local state = area_element.aeb_pop()
-    view_request.top_state = state._up
+    view_request.top_index = area_element.aeb_pop() -- revert the top state
+    local state = area_element.aeb_pop() -- get the state back
+    local flagged_for_view_request = area_element.aeb_pop() -- get whether we're flagged for a view request
 
     -- get back literal scroll area for mouse limits
-    local literal_scroll_left = state._literal_scroll_left
-    local literal_scroll_top = state._literal_scroll_top
-    local literal_scroll_right = state._literal_scroll_right
-    local literal_scroll_bottom = state._literal_scroll_bottom
+    local literal_scroll_left = area_element.aeb_pop()
+    local literal_scroll_top = area_element.aeb_pop()
+    local literal_scroll_right = area_element.aeb_pop()
+    local literal_scroll_bottom = area_element.aeb_pop()
 
     -- get back those sensor ids
     local scroll_region = area_element.aeb_pop()
@@ -319,10 +320,9 @@ function scroll.finish(padding)
     local dist_limit_top = scroll_top - content_top
 
     -- These are needed by view requests
-    state._dist_limit_right = dist_limit_right
-    state._dist_limit_left = dist_limit_left
-    state._dist_limit_bottom = dist_limit_bottom
-    state._dist_limit_top = dist_limit_top
+    if flagged_for_view_request then
+        view_request.push_limits(dist_limit_left, dist_limit_top, dist_limit_right, dist_limit_bottom)
+    end
 
     -- actuator sizes
     local h_actuator_size = get_actuator_size(content_width, scroll_width)
@@ -333,7 +333,7 @@ function scroll.finish(padding)
         or mnav.get_dragging(h_act)
         or mnav.get_dragging(v_act)
 
-    if possibly_interacting or view_request.show_sb_cooldown > 0 then
+    if possibly_interacting or view_request.time > 0 then
         if content_width > scroll_width then
             -- set scrollbar location
             cursor.change_anchor(0, 1)
