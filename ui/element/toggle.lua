@@ -6,7 +6,7 @@ local mnav = require("ui.control.mouse_navigation")
 local mb = mnav.buttons
 local smode = mnav.sensor_mode
 local knav = require("ui.control.keyboard_navigation")
-local effect = require("ui.effect")
+local follow = require("ui.effect").follow
 local selection_outline = require("ui.element.decorator.selection_outline")
 
 local travel_distance = element.toggle_width - element.toggle_height
@@ -17,7 +17,7 @@ local travel_distance = element.toggle_width - element.toggle_height
 ---@return boolean on the "on" field of the state table
 return function(state)
     -- animate normalized position
-    state._toggle_actuator_position = effect.follow(state._toggle_actuator_position, state.on and 1 or 0, 25)
+    state._toggle_actuator_position = follow(state._toggle_actuator_position, state.on and 1 or 0, 25)
 
     cursor.push()
     do

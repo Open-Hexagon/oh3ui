@@ -8,7 +8,7 @@ local draw_queue = require("ui.draw_queue")
 local mnav = require("ui.control.mouse_navigation")
 local mb = mnav.buttons
 local smode = mnav.sensor_mode
-local effect = require("ui.effect")
+local follow = require("ui.effect").follow
 local selection_outline = require("ui.element.decorator.selection_outline")
 local knav = require("ui.control.keyboard_navigation")
 
@@ -49,7 +49,7 @@ end
 ---@return boolean on the "on" field of the state table
 return function(state)
     -- calculate normalized toggle position
-    state._toggle_actuator_position = effect.follow(state._toggle_actuator_position, state.on and 0.5 or -0.5, 25)
+    state._toggle_actuator_position = follow(state._toggle_actuator_position, state.on and 0.5 or -0.5, 25)
 
     cursor.push()
     do

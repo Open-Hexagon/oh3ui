@@ -3,7 +3,7 @@ local theme = require("ui.theme")
 local primitive = require("ui.primitive")
 local element = require("ui.element")
 local mask = require("ui.mask")
-local effect = require("ui.effect")
+local follow = require("ui.effect").follow
 local reserve = require("ui.reserve")
 local knav = require("ui.control.keyboard_navigation")
 local kba = knav.actions
@@ -98,11 +98,8 @@ return function(state, ...)
     cursor.change_anchor(0)
     cursor.width = section_width
     local base_x = cursor.x
-    state._switch_selection_highlight_position = effect.follow(
-        state._switch_selection_highlight_position,
-        state.position - 1,
-        state._switch_selection_highlight_speed
-    )
+    state._switch_selection_highlight_position =
+        follow(state._switch_selection_highlight_position, state.position - 1, state._switch_selection_highlight_speed)
     cursor.x = base_x + state._switch_selection_highlight_position * section_width
     reserve.take(sel_hl_res)
     primitive.rectangle(theme.accent_color)
