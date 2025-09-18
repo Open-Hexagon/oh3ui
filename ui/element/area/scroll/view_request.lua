@@ -7,6 +7,7 @@ local follow = require("ui.effect").follow
 
 local view_request_padding = area_element.view_request_padding
 local view_request_speed = area_element.view_request_speed
+local view_request_cooldown = area_element.view_request_scrollbar_cooldown_time
 
 local view_request = {
     -- The index of the top state
@@ -133,7 +134,7 @@ function view_request.scroll_into_view()
     end
 
     mode = VR_START
-    view_request.time = 1.5
+    view_request.time = view_request_cooldown
 end
 
 function view_request.push_limits(dist_limit_left, dist_limit_top, dist_limit_right, dist_limit_bottom)

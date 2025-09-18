@@ -431,18 +431,6 @@ function scroll.finish(padding)
 
     cursor.pop()
 
-    -- do_view_request(
-    --     state,
-    --     literal_scroll_left,
-    --     literal_scroll_top,
-    --     literal_scroll_right,
-    --     literal_scroll_bottom,
-    --     dist_limit_left,
-    --     dist_limit_top,
-    --     dist_limit_right,
-    --     dist_limit_bottom
-    -- )
-
     -- scroll region sensor is made last so it has the highest priority
     mnav.make_sensor(scroll_region, smode.lazy, smode.draggable)
 end
