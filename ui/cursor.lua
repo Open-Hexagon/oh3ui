@@ -196,6 +196,7 @@ end
 ---Cursors take on the shape formed by horizontally subdividing the current cursor with padding.
 ---@param n integer number of sections to split into
 ---@param padding number? padding between sections
+---@return integer n number of sections
 ---@return number section_width the width of each resulting section, not including padding
 function cursor.h_split(n, padding)
     padding = padding or 0
@@ -210,7 +211,7 @@ function cursor.h_split(n, padding)
         cursor_stack[volatile_data.cursor_index].width = section_width
     end
 
-    return section_width
+    return n, section_width
 end
 
 ---Pushes n snapshots to the stack, such that when popping them,
@@ -218,6 +219,7 @@ end
 ---Cursors take on the shape formed by vertically subdividing the current cursor with padding.
 ---@param n integer number of sections to split into
 ---@param padding number? padding between sections
+---@return integer n number of sections
 ---@return number section_height the height of each resulting section, not including padding
 function cursor.v_split(n, padding)
     padding = padding or 0
@@ -232,7 +234,7 @@ function cursor.v_split(n, padding)
         cursor_stack[volatile_data.cursor_index].height = section_height
     end
 
-    return section_height
+    return n, section_height
 end
 
 ---Pop a snapshot and expand the current cursor to surround it.
@@ -295,6 +297,60 @@ end
 ---@param d number
 function cursor.outset(d)
     cursor.inset(-d)
+end
+
+---Offsets the top and bottom cursor edges inwards by the same amount.
+---@param d number
+function cursor.v_squeeze(d)
+    local ax, ay = cursor.anchor_x, cursor.anchor_y
+    cursor.change_anchor(0.5, 0.5)
+    cursor.height = cursor.height - 2 * d
+    cursor.change_anchor(ax, ay)
+end
+
+---Offsets the left and right cursor edges inwards by the same amount.
+---@param d number
+function cursor.h_squeeze(d)
+    local ax, ay = cursor.anchor_x, cursor.anchor_y
+    cursor.change_anchor(0.5, 0.5)
+    cursor.width = cursor.width - 2 * d
+    cursor.change_anchor(ax, ay)
+end
+
+---Clips the left side of the cursor by d.
+---@param d number
+function cursor.clip_left(d)
+    local ax, ay = cursor.anchor_x, cursor.anchor_y
+    cursor.change_anchor(1, 1)
+    cursor.width = cursor.width - d
+    cursor.change_anchor(ax, ay)
+end
+
+---Clips the top side of the cursor by d.
+---@param d number
+function cursor.clip_top(d)
+    local ax, ay = cursor.anchor_x, cursor.anchor_y
+    cursor.change_anchor(1, 1)
+    cursor.height = cursor.height - d
+    cursor.change_anchor(ax, ay)
+end
+
+---Clips the right side of the cursor by d.
+---@param d number
+function cursor.clip_right(d)
+    local ax, ay = cursor.anchor_x, cursor.anchor_y
+    cursor.change_anchor(0, 0)
+    cursor.width = cursor.width - d
+    cursor.change_anchor(ax, ay)
+end
+
+---Clips the bottom side of the cursor by d.
+---@param d number
+function cursor.clip_bottom(d)
+    local ax, ay = cursor.anchor_x, cursor.anchor_y
+    cursor.change_anchor(0, 0)
+    cursor.height = cursor.height - d
+    cursor.change_anchor(ax, ay)
 end
 
 ---Returns an iterator that returns n linspaced x coordinates derived from the current x-axis span of the cursor.
@@ -452,13 +508,13 @@ end
 ---Ends the last started area.
 ---The cursor will be set to that area.
 ---@param no_propagate boolean? if true, doesn't propagate this area to the below area
----@return boolean empty_area true if the finished area had no elements
+---@return boolean exists true if the finished area has at least one element
 function cursor.finish_area(no_propagate)
     if volatile_data.area_index == volatile_data.area_base_index then
         error("no areas to end")
     end
 
-    local ret = true
+    local exists = false
     local this_area = area_stack[volatile_data.area_index]
     -- There might be nothing to put if no placements have been made
     if this_area.left then
@@ -473,12 +529,12 @@ function cursor.finish_area(no_propagate)
                 get_edges(cursor.x, cursor.y, cursor.anchor_x, cursor.anchor_y, cursor.width, cursor.height)
             )
         end
-        ret = false
+        exists = true
     end
 
     volatile_data.area_index = volatile_data.area_index - 1
 
-    return ret
+    return exists
 end
 
 function cursor.area_expansion_off()

@@ -3,6 +3,7 @@ local primitive = require("ui.primitive")
 local reserve = require("ui.reserve")
 local stack_manager = require("ui.stack_manager")
 local area_element = require("ui.element.area")
+local draw_queue = require("ui.draw_queue")
 
 local background = {}
 
@@ -28,10 +29,14 @@ function background.finish(pad, color)
 
     local res_id = area_element.aeb_pop()
 
-    cursor.finish_area()
-    cursor.outset(pad)
-    reserve.take(res_id)
-    primitive.rectangle(color)
+    if cursor.finish_area() then
+        cursor.outset(pad)
+        reserve.take(res_id)
+        primitive.rectangle(color)
+    else
+        reserve.take(res_id)
+        draw_queue.nop()
+    end
 end
 
 return background

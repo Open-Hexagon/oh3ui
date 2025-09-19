@@ -289,7 +289,8 @@ function scroll.finish(padding)
 
     mask.pop() -- (2)
 
-    if cursor.finish_area(true) then -- (4)
+    if not cursor.finish_area(true) then -- (4)
+        -- scroll region is empty
         cursor.pop() -- (1)
         return false, false, false, false
     end
