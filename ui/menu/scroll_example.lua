@@ -56,7 +56,7 @@ return function()
             end
         end
         background.finish(5, theme.blue)
-        scroll.finish(0)
+        local at_left, at_top, at_right, at_bottom = scroll.finish(0)
 
         knav.fill_grid(knav.op_cell.tab, 6, 1, 1, 5)
         cursor.push()
@@ -94,10 +94,10 @@ return function()
         primitive.label(
             string.format(
                 "at_left: %s\nat_top: %s\nat_right: %s\nat_bottom: %s",
-                tostring(id.scroll.at_left),
-                tostring(id.scroll.at_top),
-                tostring(id.scroll.at_right),
-                tostring(id.scroll.at_bottom)
+                tostring(at_left),
+                tostring(at_top),
+                tostring(at_right),
+                tostring(at_bottom)
             ),
             16,
             "left",

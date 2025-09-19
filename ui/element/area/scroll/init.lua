@@ -170,9 +170,6 @@ local function do_horizontal_mouse_interaction(
         state.scroll_dist_x = extmath.clamp(mnav.x - mouse_offset_x, dist_limit_right, dist_limit_left)
         view_request.cancel()
     end
-
-    state.at_left = state.scroll_dist_x == dist_limit_left
-    state.at_right = state.scroll_dist_x == dist_limit_right
 end
 
 ---Vertical mouse interaction
@@ -248,9 +245,6 @@ local function do_vertical_mouse_interaction(
         state.scroll_dist_y = extmath.clamp(mnav.y - mouse_offset_y, dist_limit_bottom, dist_limit_top)
         view_request.cancel()
     end
-
-    state.at_top = state.scroll_dist_y == dist_limit_top
-    state.at_bottom = state.scroll_dist_y == dist_limit_bottom
 end
 
 local function get_actuator_size(content_size, scroll_size)
@@ -259,6 +253,10 @@ end
 
 ---Finishes the current scroll region
 ---@param padding number scroll area padding
+---@return boolean at_left
+---@return boolean at_top
+---@return boolean at_right
+---@return boolean at_bottom
 function scroll.finish(padding)
     -- deal with stack stuff
     stack_manager.pop_record() -- (6)
@@ -433,6 +431,13 @@ function scroll.finish(padding)
 
     -- scroll region sensor is made last so it has the highest priority
     mnav.make_sensor(scroll_region, smode.lazy, smode.draggable)
+
+    local at_left = state.scroll_dist_x == dist_limit_left
+    local at_top = state.scroll_dist_y == dist_limit_top
+    local at_right = state.scroll_dist_x == dist_limit_right
+    local at_bottom = state.scroll_dist_y == dist_limit_bottom
+
+    return at_left, at_top, at_right, at_bottom
 end
 
 return scroll
