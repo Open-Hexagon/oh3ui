@@ -13,7 +13,6 @@ local view_request = {
     -- The index of the top state
     -- This is kept updated by the scroll elements
     top_index = nil,
-    -- top_state = nil, -- the scroll region we are currently in
     time = 0,
 }
 

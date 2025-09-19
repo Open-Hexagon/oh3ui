@@ -10,7 +10,7 @@ function area_element.aeb_push(value)
     aeb_stack[volatile_data.aeb_index] = value
 end
 
----pops a value from the arb stack
+---pops a value from the aeb stack
 ---@return any
 function area_element.aeb_pop()
     if volatile_data.aeb_index == volatile_data.aeb_base_index then

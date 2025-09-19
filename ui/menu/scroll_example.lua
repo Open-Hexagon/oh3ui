@@ -27,15 +27,16 @@ return function()
     scroll.start(id.scroll2)
     background.start()
     do
-        cursor.x = 210
-        cursor.y = 60
+        cursor.x = cursor.x + 10
+        cursor.y = cursor.y + 10
         cursor.width = 150
         cursor.height = 150
+
         scroll.start(id.scroll)
         background.start()
         do
-            cursor.x = 220
-            cursor.y = 70
+            cursor.x = cursor.x + 10
+            cursor.y = cursor.y + 10
             cursor.width = 40
             cursor.height = 40
 
@@ -50,13 +51,44 @@ return function()
 
                     knav.make_cell()
                     knav.grid_cell(j, i)
-                    button(string.format("%d", (i - 1) * m + j), 16)
+                    button(string.format("a%d", (i - 1) * m + j), 16)
                 end
             end
         end
         background.finish(5, theme.blue)
         scroll.finish(0)
 
+        knav.fill_grid(knav.op_cell.tab, 6, 1, 1, 5)
+        cursor.push()
+        cursor.shift_right(10)
+
+        scroll.start(id.scroll3)
+        background.start()
+        do
+            cursor.x = cursor.x + 10
+            cursor.y = cursor.y + 10
+            cursor.width = 40
+            cursor.height = 40
+
+            local n, m = 5, 5
+
+            cursor.v_array(n, 10)
+            for i = 1, n do
+                cursor.pop()
+                cursor.h_array(m, 10)
+                for j = 1, m do
+                    cursor.pop()
+
+                    knav.make_cell()
+                    knav.grid_cell(6 + j, i)
+                    button(string.format("b%d", (i - 1) * m + j), 16)
+                end
+            end
+        end
+        background.finish(5, theme.blue)
+        scroll.finish(0)
+
+        cursor.pop()
         cursor.shift_down(10)
 
         primitive.label(

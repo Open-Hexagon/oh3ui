@@ -98,7 +98,7 @@ Some suggestions for performance in Lua. Note that most of the time, the perform
 
    -- even better
    polyline = {
-      {1, 3, 5, ...}
+      {1, 3, 5, ...},
       {2, 4, 6, ...}
    }
 
@@ -122,5 +122,5 @@ Some suggestions for performance in Lua. Note that most of the time, the perform
    a[1] = 1; a[2] = 2; a[3] = 3
 
    -- slowest
-   a = {[1] = 1 [2] = 2 [3] = 3}
+   a = {[1] = 1, [2] = 2, [3] = 3}
    ```

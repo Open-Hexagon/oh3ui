@@ -8,7 +8,7 @@ return function(message)
     else
         -- strict mode is always on for unit testing
         -- luacov: disable
-        io.stderr:write("warning: ", message)
+        io.stderr:write("warning: ", message, "\n")
         -- luacov: enable
     end
 end

@@ -155,6 +155,7 @@ function cursor.drop()
 end
 
 ---Undos cursor reshaping for elements if cursor.auto_reshape is false. Requires a corresponding `cursor.push()`.
+---Wherever the cursor is left when this is called is considered the element's bounding box when this is called.
 function cursor.do_auto_reshape()
     -- We only want the width and height to change.
     local width_new, height_new = cursor.width, cursor.height

@@ -24,8 +24,10 @@
             pop() -- (2) revert back to original element location
 
             -- draw top full-size sub elements: sub-elements that are the same size as this element
-
+            
         end
+        -- ! The cursor must match the shape of the whole final element before running do_auto_reshape or else this isn't going to work.
+        -- ! do_auto_reshape doesn't know how big your element actually is. It just assumes where you left the cursor is the full size of the element. 
         do_auto_reshape() -- (1) this will revert everything except for width and height if auto_reshape is true
 
         -- should immediately return
