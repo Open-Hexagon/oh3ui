@@ -285,13 +285,16 @@ function scroll.finish(padding)
     local v_act = area_element.aeb_pop()
     local v_bar = area_element.aeb_pop()
 
-    cursor.finish_area(true) -- (4)
-
-    cursor.outset(padding)
-
     cursor.remove_translation() -- (3)
 
     mask.pop() -- (2)
+
+    if cursor.finish_area(true) then -- (4)
+        cursor.pop() -- (1)
+        return false, false, false, false
+    end
+
+    cursor.outset(padding)
 
     -- cursor pop (1) happens later
 
@@ -427,7 +430,7 @@ function scroll.finish(padding)
         end
     end
 
-    cursor.pop()
+    cursor.pop() -- (1)
 
     -- scroll region sensor is made last so it has the highest priority
     mnav.make_sensor(scroll_region, smode.lazy, smode.draggable)

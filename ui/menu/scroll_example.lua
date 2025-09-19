@@ -117,4 +117,14 @@ return function()
     end
     background.finish(5, theme.red)
     scroll.finish(0)
+    cursor.shift_down()
+
+    primitive.rectangle(theme.green, "line", 4)
+
+    -- empty scrolls do nothing but still revert the cursor when finished
+    scroll.start(id.scroll4)
+    cursor.shift_right()
+    scroll.finish(0)
+
+    primitive.rectangle(theme.red, "line")
 end
