@@ -12,6 +12,11 @@ local scissor_stack = {}
 ---@param width number
 ---@param height number
 function scissor_stack.push(x, y, width, height)
+    -- correct for floating point rounding
+    x = math.floor(x)
+    y = math.floor(y)
+    width = math.ceil(width)
+    height = math.ceil(height)
     love.graphics.intersectScissor(x, y, width, height)
 
     -- save a snapshot of what the scissor is like now
