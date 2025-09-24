@@ -104,10 +104,9 @@ function cursor.reset(desired_width, desired_height)
 
     -- If true, elements that don't fit in the cursor will cause the cursor to reshape
     cursor.auto_reshape = true
-end
 
--- first cursor setup
-cursor.reset()
+    cursor.area_expansion_on()
+end
 
 --#region snapshotting
 
@@ -156,11 +155,12 @@ end
 
 ---Undos cursor reshaping for elements if cursor.auto_reshape is false. Requires a corresponding `cursor.push()`.
 ---Wherever the cursor is left when this is called is considered the element's bounding box when this is called.
-function cursor.do_auto_reshape()
+---@param force boolean? if true, reshaping is forced, even if auto_reshape is false
+function cursor.do_auto_reshape(force)
     -- We only want the width and height to change.
     local width_new, height_new = cursor.width, cursor.height
     cursor.pop()
-    if cursor.auto_reshape then
+    if cursor.auto_reshape or force then
         cursor.width, cursor.height = width_new, height_new
     end
 end

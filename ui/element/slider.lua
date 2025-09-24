@@ -9,7 +9,7 @@ local kba = knav.actions
 local mnav = require("ui.control.mouse_navigation")
 local mb = mnav.buttons
 local smode = mnav.sensor_mode
-local selection_outline = require("ui.element.decorator.selection_outline")
+local selection_outline_set_location = require("ui.element.decorator.selection_outline").set_location
 
 local actuator_radius = element.slider_height / 2
 local slot_height = element.slider_height / 2
@@ -145,7 +145,7 @@ return function(state, min, max, positions, show_positions, kb_step, kb_fast_ste
     cursor.pop() -- (2)
 
     if knav.is_selected() then
-        selection_outline()
+        selection_outline_set_location()
     end
 
     cursor.do_auto_reshape() -- (1)

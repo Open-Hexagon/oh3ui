@@ -10,6 +10,7 @@ local stack_manager = require("ui.stack_manager")
 local area_element = require("ui.element.area")
 local view_request = require("ui.element.area.scroll.view_request")
 local volatile_data = require("ui.shared_data").volatile
+local selection_outline_add_to_queue = require("ui.element.decorator.selection_outline").add_to_queue
 
 local scroll = {}
 
@@ -86,9 +87,9 @@ function scroll.start(state)
     area_element.aeb_push(false) -- this gets turned into a true if a view request was made
     area_element.aeb_push(state) -- state
     area_element.aeb_push(view_request.top_index) -- aeb_index of the next (up) state
-    view_request.top_index = volatile_data.aeb_index -- put the new top index
+    view_request.top_index = volatile_data.aeb_index -- put the new view request top index
 
-    area_element.aeb_push("scroll") -- (5)
+    area_element.aeb_push_frame_header("scroll") -- (5)
 
     -- lock all stacks after we've done setup
     stack_manager.push_record() -- (6)
@@ -261,14 +262,9 @@ function scroll.finish(padding)
     -- deal with stack stuff
     stack_manager.pop_record() -- (6)
 
-    local a = area_element.aeb_pop() -- (5)
+    local add_selection_outline = area_element.aeb_pop_frame_header("scroll") -- (5)
 
-    -- check type
-    if a ~= "scroll" then
-        error("scroll element was ended with wrong type")
-    end
-
-    view_request.top_index = area_element.aeb_pop() -- revert the top state
+    view_request.top_index = area_element.aeb_pop() -- revert the view request top index
     local state = area_element.aeb_pop() -- get the state back
     local flagged_for_view_request = area_element.aeb_pop() -- get whether we're flagged for a view request
 
@@ -287,6 +283,9 @@ function scroll.finish(padding)
 
     cursor.remove_translation() -- (3)
 
+    -- Must come before mask.pop so the selection outline appears inside the scroll region
+    selection_outline_add_to_queue()
+
     mask.pop() -- (2)
 
     if not cursor.finish_area(true) then -- (4)
@@ -300,7 +299,6 @@ function scroll.finish(padding)
     -- cursor pop (1) happens later
 
     -- element functionality begins here:
-
     -- peek combine to get the size of the content area (must enclose the original scroll area)
     cursor.combine(true)
     local content_width, content_height = cursor.width, cursor.height

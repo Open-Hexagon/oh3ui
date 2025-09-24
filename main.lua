@@ -34,6 +34,7 @@ end
 local example_menu = require("ui.menu.example")
 local empty_grid = require("ui.menu.empty_grid")
 local scroll_example = require("ui.menu.scroll_example")
+local collapse_example = require("ui.menu.collapse_example")
 local ui = require("ui")
 
 function love.run()
@@ -53,7 +54,8 @@ function love.run()
 
     -- ui.init(empty_grid)
     -- ui.init(example_menu)
-    ui.init(scroll_example)
+    -- ui.init(scroll_example)
+    ui.init(collapse_example)
 
     return function()
         -- Process events

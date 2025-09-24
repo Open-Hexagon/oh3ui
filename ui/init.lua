@@ -6,6 +6,7 @@ local settings = require("ui.settings")
 local layers = require("ui.layers")
 local layers_run = layers.run
 local view_request_evaluate = require("ui.element.area.scroll.view_request").evaluate
+local selection_outline_reset = require("ui.element.decorator.selection_outline").reset
 
 local ui = {}
 
@@ -99,6 +100,7 @@ local function start()
 end
 
 local function finish()
+    -- for auto-scrolling with keyboard nav
     view_request_evaluate()
 
     -- draw in order
@@ -112,6 +114,7 @@ local function finish()
 
     -- clean up
     events_clear()
+    selection_outline_reset()
 end
 
 ---reset ui state and set scale

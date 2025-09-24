@@ -27,7 +27,7 @@ local switch = require("ui.element.switch")
 local toggle = require("ui.element.toggle")
 local toggle_hex = require("ui.element.toggle_hex")
 local checkbox = require("ui.element.checkbox")
-local selection_outline = require("ui.element.decorator.selection_outline")
+local selection_outline_set_location = require("ui.element.decorator.selection_outline").set_location
 
 local counter = 0
 
@@ -138,7 +138,7 @@ return function()
 
     primitive.rectangle(theme.green, "line")
     if knav.is_selected() then
-        selection_outline()
+        selection_outline_set_location()
     end
 
     typing.make_text_entry(id.text_entry, text_entry_sensor, text_entry_cell)
@@ -153,7 +153,7 @@ return function()
 
     primitive.rectangle(theme.green, "line")
     if knav.is_selected() then
-        selection_outline()
+        selection_outline_set_location()
     end
 
     typing.make_text_entry(id.text_entry2, text_entry_sensor2, text_entry_cell2)

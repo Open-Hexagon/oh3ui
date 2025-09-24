@@ -9,7 +9,7 @@ local mnav = require("ui.control.mouse_navigation")
 local mb = mnav.buttons
 local smode = mnav.sensor_mode
 local follow = require("ui.effect").follow
-local selection_outline = require("ui.element.decorator.selection_outline")
+local selection_outline_set_location = require("ui.element.decorator.selection_outline").set_location
 local knav = require("ui.control.keyboard_navigation")
 
 local indiameter = element.toggle_height
@@ -87,7 +87,7 @@ return function(state)
 
         -- keyboard selection outline
         if knav.is_selected() then
-            selection_outline()
+            selection_outline_set_location()
         end
     end
     cursor.do_auto_reshape()

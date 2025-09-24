@@ -42,10 +42,10 @@ return function()
 
             local n, m = 5, 5
 
-            cursor.v_array(n, 10)
+            cursor.v_array(n, 0)
             for i = 1, n do
                 cursor.pop()
-                cursor.h_array(m, 10)
+                cursor.h_array(m, 0)
                 for j = 1, m do
                     cursor.pop()
 
@@ -72,10 +72,10 @@ return function()
 
             local n, m = 5, 5
 
-            cursor.v_array(n, 10)
+            cursor.v_array(n, 0)
             for i = 1, n do
                 cursor.pop()
-                cursor.h_array(m, 10)
+                cursor.h_array(m, 0)
                 for j = 1, m do
                     cursor.pop()
 

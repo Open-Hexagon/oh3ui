@@ -170,7 +170,10 @@ end
 --#endregion
 
 ---An ordered list of created cells
-local cell_list = {}
+local cell_x = {}
+local cell_y = {}
+local cell_text_input_state = {}
+local cell_keepout = {}
 
 ---Holds the index of the last created cell.
 local last_cell_id = 0
@@ -234,6 +237,12 @@ local held_action
 ---Used to trigger a scroll view request when a layer transition happens
 local force_selection_has_changed = false
 
+---When keepout is enabled, cells are still created but cannot be interacted with.
+---Grid fills write 0 and tabbing skips them. If the selection is inside, it will be deactivated.
+---@type boolean
+local keepout_enabled = false
+local keepout_old_current_cell_id
+
 local function is_valid_cell_id(cell_id)
     return cell_id >= 0 and cell_id <= last_cell_id
 end
@@ -247,6 +256,8 @@ function keyboard_navigation.reset()
     default_cell_id = nil
     first_gridded_cell_id = nil
     last_gridded_cell_id = nil
+    keepout_enabled = false
+    keepout_old_current_cell_id = nil
 end
 
 ---This only gets called when a layer transitions happens. Finds the best cell to select.
@@ -258,6 +269,30 @@ function keyboard_navigation.finish_layer_transition()
     else
         keyboard_navigation.jump_to_first()
     end
+end
+
+---Turns on the keepout region. If it's already on, does nothing.
+---The current_cell_id gets set to 0 but is reverted when keepout is turned off again
+function keyboard_navigation.keepout_on()
+    if not keepout_enabled then
+        keepout_enabled = true
+        keepout_old_current_cell_id = control_data.current_cell_id
+        control_data.current_cell_id = 0
+    end
+end
+
+---Turns off the keepout region. If it's already off, does nothing.
+---Reverts the current_cell_id to what it was when keepout was last enabled
+function keyboard_navigation.keepout_off()
+    if keepout_enabled then
+        keepout_enabled = false
+        control_data.current_cell_id = keepout_old_current_cell_id
+    end
+end
+
+---Gets whether the keepout region is enabled
+function keyboard_navigation.is_keepout()
+    return keepout_enabled
 end
 
 --#region Cell Controls
@@ -275,14 +310,14 @@ function keyboard_navigation.make_cell(mode)
 
     last_cell_id = last_cell_id + 1
 
-    local cell = cell_list[last_cell_id]
-    if cell then
-        -- erase old fields
-        cell.x = nil
-        cell.y = nil
-        cell.text_input_state = nil
-    else
-        cell_list[last_cell_id] = {}
+    -- erase old fields
+    cell_x[last_cell_id] = nil
+    cell_y[last_cell_id] = nil
+    cell_text_input_state[last_cell_id] = nil
+    cell_keepout[last_cell_id] = keepout_enabled
+
+    if keepout_enabled then
+        return 0
     end
 
     if mode == "default" or mode == "both" then
@@ -310,8 +345,7 @@ function keyboard_navigation.configure_cell_as_text_input(cell_id, state, global
     if cell_id == 0 then
         return
     end
-    local cell = cell_list[cell_id]
-    cell.text_input_state = state
+    cell_text_input_state[cell_id] = state
 
     -- TODO add global typing
 end
@@ -409,7 +443,7 @@ end
 ---@param col_span? integer
 ---@param row_span? integer
 function keyboard_navigation.grid_cell(x, y, col_span, row_span)
-    if last_cell_id == 0 then
+    if last_cell_id == 0 or keepout_enabled then
         return
     end
 
@@ -419,8 +453,8 @@ function keyboard_navigation.grid_cell(x, y, col_span, row_span)
 
     last_gridded_cell_id = last_cell_id
 
-    cell_list[last_cell_id].x = x
-    cell_list[last_cell_id].y = y
+    cell_x[last_cell_id] = x
+    cell_y[last_cell_id] = y
     keyboard_navigation.fill_grid(last_cell_id, x, y, col_span, row_span)
 end
 
@@ -444,8 +478,8 @@ function keyboard_navigation.jump_to_cell(new_selection)
         keyboard_navigation.deselect()
     else
         selected_cell_id = new_selection
-        grid_x = cell_list[new_selection].x
-        grid_y = cell_list[new_selection].y
+        grid_x = cell_x[new_selection]
+        grid_y = cell_y[new_selection]
     end
 end
 
@@ -755,9 +789,9 @@ local function iterate_events()
                 end
             elseif key == "backspace" or key == "delete" then
                 if selected_cell_id == 0 then
-                    typing_target = default_cell_id and cell_list[default_cell_id].text_input_state
+                    typing_target = default_cell_id and cell_text_input_state[default_cell_id]
                 else
-                    typing_target = cell_list[selected_cell_id].text_input_state
+                    typing_target = cell_text_input_state[selected_cell_id]
                 end
                 if typing_target then
                     typing_action = key
@@ -772,14 +806,14 @@ local function iterate_events()
             end
         elseif name == "textinput" then
             if selected_cell_id == 0 then
-                typing_target = default_cell_id and cell_list[default_cell_id].text_input_state
+                typing_target = default_cell_id and cell_text_input_state[default_cell_id]
                 if typing_target then
                     keyboard_navigation.jump_to_cell(default_cell_id)
                     typing_action = key
                     break
                 end
             else
-                typing_target = cell_list[selected_cell_id].text_input_state
+                typing_target = cell_text_input_state[selected_cell_id]
                 if typing_target then
                     typing_action = key
                     break
