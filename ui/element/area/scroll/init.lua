@@ -284,7 +284,9 @@ function scroll.finish(padding)
     cursor.remove_translation() -- (3)
 
     -- Must come before mask.pop so the selection outline appears inside the scroll region
-    selection_outline_add_to_queue()
+    if add_selection_outline then
+        selection_outline_add_to_queue()
+    end
 
     mask.pop() -- (2)
 

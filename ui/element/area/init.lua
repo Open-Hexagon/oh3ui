@@ -30,8 +30,8 @@ end
 ---Push an aeb frame header with a name.
 ---@param name string
 function area_element.aeb_push_frame_header(name)
+    area_element.aeb_push(false) -- This gets turned into a true if the selection outline needs to be added to the stack
     area_element.aeb_push(name)
-    area_element.aeb_push(false)
     area_element.aeb_push(area_element.top_frame)
     area_element.top_frame = volatile_data.aeb_index -- put the new top frame
 end
@@ -42,11 +42,13 @@ end
 ---@nodiscard
 function area_element.aeb_pop_frame_header(verify_name)
     area_element.top_frame = area_element.aeb_pop() -- revert the top frame
-    local add_selection_outline = area_element.aeb_pop()
     local a = area_element.aeb_pop()
+    local add_selection_outline = area_element.aeb_pop()
+
     if a ~= verify_name then
         error(string.format("%s element was ended with wrong type", verify_name))
     end
+
     return add_selection_outline
 end
 

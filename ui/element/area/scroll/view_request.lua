@@ -1,4 +1,3 @@
-local cursor = require("ui.cursor")
 local area_element = require("ui.element.area")
 local volatile_data = require("ui.shared_data").volatile
 local aeb_stack = volatile_data.aeb_stack

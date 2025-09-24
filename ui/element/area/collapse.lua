@@ -23,33 +23,6 @@ local collapse = {}
 local depth = 0
 local top_index = nil
 
---[[
-
-scroll start
-
-    * set_location    
-
-* add_to_queue
-scroll finish
-    
-
-collapse start
-    * set_location
-    collapse start
-    
-        *
-
-    collapse finish
-
-    *
-
-collapse finish
-* add_to_queue
-
-
-
-]]
-
 --TODO relocate the keyboard selection if collapse is closed with the selection inside
 --TODO keyboard navigation can notify a collapse state to auto open
 --TODO have a no-header mode
@@ -130,7 +103,10 @@ function collapse.finish(padding)
     reserve.take(res_id)
     mask.push()
     mask.pop()
-    selection_outline_add_to_queue()
+
+    if add_selection_outline then
+        selection_outline_add_to_queue()
+    end
 
     cursor.do_auto_reshape(true)
 end

@@ -12,7 +12,7 @@ function background.start()
     cursor.start_area()
 
     area_element.aeb_push(res_id)
-    area_element.aeb_push("background")
+    area_element.aeb_push_frame_header("background")
     stack_manager.push_record()
 end
 
@@ -21,12 +21,7 @@ end
 ---@param color table?
 function background.finish(pad, color)
     stack_manager.pop_record()
-    local a = area_element.aeb_pop()
-
-    if a ~= "background" then
-        error("background element was ended with wrong type")
-    end
-
+    local _ = area_element.aeb_pop_frame_header("background")
     local res_id = area_element.aeb_pop()
 
     if cursor.finish_area() then

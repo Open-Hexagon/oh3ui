@@ -37,11 +37,12 @@ return function()
     do
         for i = 1, 5 do
             knav.make_cell()
-            knav.grid_cell(1, 3 + grid_i)
+            knav.grid_cell(1, grid_i)
             grid_i = grid_i + 1
             button(tostring(i), 16)
             cursor.shift_down(0)
         end
+        knav.change_current_cell(0)
         button("collapse2", 16)
         cursor.shift_down(0)
         cursor.h_squeeze(10)
@@ -49,7 +50,7 @@ return function()
         do
             for i = 1, 5 do
                 knav.make_cell()
-                knav.grid_cell(1, 3 + grid_i)
+                knav.grid_cell(1, grid_i)
                 grid_i = grid_i + 1
                 button(tostring(i + 10), 16)
                 cursor.shift_down(0)
@@ -60,11 +61,10 @@ return function()
     end
     collapse.finish()
     cursor.h_squeeze(-10)
-    
+
     cursor.change_anchor(0)
     cursor.shift_down(0)
     cursor.height = 20
-
 
     knav.make_cell()
     knav.grid_cell(1, grid_i)
