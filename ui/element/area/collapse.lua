@@ -5,41 +5,55 @@ local stack_manager = require("ui.stack_manager")
 local mask = require("ui.mask")
 local theme = require("ui.theme")
 local mnav = require("ui.control.mouse_navigation")
-local smode = mnav.sensor_mode
 local mb = mnav.buttons
 local knav = require("ui.control.keyboard_navigation")
 local kba = knav.actions
 local selection_outline_add_to_queue = require("ui.element.decorator.selection_outline").add_to_queue
-local control_data = require("ui.shared_data").control
 local follow = require("ui.effect").follow
 local reserve = require("ui.reserve")
-local volatile_data = require("ui.shared_data").volatile
-
-local header_height = 20
-local minimum_width = 100
-local speed = 10
 
 local collapse = {}
-local depth = 0
-local top_index = nil
 
 --TODO relocate the keyboard selection if collapse is closed with the selection inside
 --TODO keyboard navigation can notify a collapse state to auto open
---TODO have a no-header mode
---TODO have an auto-fit mode
---TODO be able to collapse in any direction
 
 ---@param state table
----@param direction "opens_down"|"opens_up"|"opens_left"|"opens_right"
----@param sensor_id integer?
----@param cell_id integer?
-function collapse.start(state, direction, sensor_id, cell_id)
-    cursor.push()
+---@param anchor_pos "topleft"|"bottomright" The corner of the collapse area that won't move
+---@param clipping_side "left"|"top"|"right"|"bottom" The collapse area side that cuts off the contents
+---@param auto_open boolean? collapse will open automatically when keyboard selection enters
+---@param sensor_id integer? optional sensor id
+---@param cell_id integer? optional cell id
+function collapse.start(state, anchor_pos, clipping_side, auto_open, sensor_id, cell_id)
+    state.value = state.value or 0
+    state._max_size = state._max_size or 0
 
     local res_id = reserve.allocate(1)
+
     cursor.start_area()
 
-    area_element.aeb_push(direction)
+    -- These translations lag behind by one frame, but since collapses move so fast it's normally barely noticeable.
+    if anchor_pos == "topleft" then
+        if clipping_side == "top" then
+            cursor.apply_translation(0, state.value - state._max_size)
+        elseif clipping_side == "left" then
+            cursor.apply_translation(state.value - state._max_size, 0)
+        else
+            cursor.apply_translation(0, 0)
+        end
+    else
+        if clipping_side == "bottom" then
+            cursor.apply_translation(0, state._max_size - state.value)
+        elseif clipping_side == "right" then
+            cursor.apply_translation(state._max_size - state.value, 0)
+        else
+            cursor.apply_translation(0, 0)
+        end
+    end
+
+    area_element.aeb_push(cursor.anchor_y) -- anchors should be preserved
+    area_element.aeb_push(cursor.anchor_x)
+    area_element.aeb_push(clipping_side)
+    area_element.aeb_push(anchor_pos)
     area_element.aeb_push(mnav.get_clicked(sensor_id) == mb.left or knav.get_action(cell_id) == kba.activate)
     area_element.aeb_push(res_id)
     area_element.aeb_push(state)
@@ -49,7 +63,7 @@ function collapse.start(state, direction, sensor_id, cell_id)
     stack_manager.push_record()
 end
 
-function collapse.finish(padding)
+function collapse.finish()
     stack_manager.pop_record()
 
     local add_selection_outline = area_element.aeb_pop_frame_header("collapse")
@@ -57,49 +71,47 @@ function collapse.finish(padding)
     local state = area_element.aeb_pop()
     local res_id = area_element.aeb_pop()
     local left_clicked = area_element.aeb_pop()
-    ---@type "opens_down"|"opens_up"|"opens_left"|"opens_right"
-    local direction = area_element.aeb_pop()
-
-    cursor.finish_area(true)
 
     local anchor_pos
+    if area_element.aeb_pop() == "topleft" then
+        anchor_pos = 0
+    else
+        anchor_pos = 1
+    end
+
+    ---@type "left"|"top"|"right"|"bottom"
+    local clipping_side = area_element.aeb_pop()
+    local ax = area_element.aeb_pop() -- anchors should be preserved
+    local ay = area_element.aeb_pop()
+
+    cursor.remove_translation()
+    cursor.finish_area(true)
+
     local max_size
     local dimension
-    if direction == "opens_down" then
-        anchor_pos = 0
-        max_size = cursor.height
-        dimension = "height"
-    elseif direction == "opens_up" then
-        anchor_pos = 1
-        max_size = cursor.height
-        dimension = "height"
-    elseif direction == "opens_left" then
-        anchor_pos = 1
+    if clipping_side == "left" or clipping_side == "right" then
         max_size = cursor.width
         dimension = "width"
-    elseif direction == "opens_right" then
-        anchor_pos = 0
-        max_size = cursor.width
-        dimension = "width"
+    elseif clipping_side == "top" or clipping_side == "bottom" then
+        max_size = cursor.height
+        dimension = "height"
+    else
+        error("bad clipping side")
+    end
+
+    state._max_size = max_size
+
+    if left_clicked then
+        state.on = not state.on
+    end
+    if state.on then
+        state.value = follow(state.value, max_size, 100) --1800)
+    else
+        state.value = follow(state.value, 0, 100) --1800)
     end
 
     cursor.change_anchor(anchor_pos)
-    state._collapse_size = state._collapse_size or 0
-    if left_clicked then
-        state.on = not state.on
-        if state.on then
-            state._collapse_speed = (max_size - state._collapse_size) * speed
-        else
-            state._collapse_speed = state._collapse_size * speed
-        end
-    end
-    if state.on then
-        state._collapse_size = follow(state._collapse_size, max_size, 2500)
-    else
-        state._collapse_size = follow(state._collapse_size, 0, 2500)
-    end
-
-    cursor[dimension] = state._collapse_size
+    cursor[dimension] = state.value
     reserve.take(res_id)
     mask.push()
     mask.pop()
@@ -108,7 +120,9 @@ function collapse.finish(padding)
         selection_outline_add_to_queue()
     end
 
-    cursor.do_auto_reshape(true)
+    primitive.rectangle(theme.red, "line")
+
+    cursor.change_anchor(ax, ay) -- revert anchors
 end
 
 return collapse

@@ -46,7 +46,7 @@ function area_element.aeb_pop_frame_header(verify_name)
     local add_selection_outline = area_element.aeb_pop()
 
     if a ~= verify_name then
-        error(string.format("%s element was ended with wrong type", verify_name))
+        error(string.format("%s element was ended with wrong type", verify_name), 2)
     end
 
     return add_selection_outline

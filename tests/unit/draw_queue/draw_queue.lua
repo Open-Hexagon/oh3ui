@@ -301,7 +301,8 @@ function T.test_reserve()
     draw_queue.take_reservation(r)
     draw_queue.revert_scissor(4)
 
-    unittest.assert_error(draw_queue.take_reservation, nil, r)
+    draw_queue.take_reservation(r)
+    unittest.assert_error(draw_queue.revert_scissor, nil, 5)
 
     draw_queue.draw()
 

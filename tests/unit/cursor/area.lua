@@ -1,4 +1,5 @@
 local cursor = require("ui.cursor")
+local placement = cursor.placement
 local stack_manager = require("ui.stack_manager")
 local unittest = require("tests.unittest")
 
@@ -190,6 +191,71 @@ function T.test_area_expansion_toggle()
     unittest.assert(b == 10)
 
     cursor.finish_area()
+end
+
+function T.test_no_propogate()
+    cursor.start_area()
+
+    cursor.x = 0
+    cursor.y = 0
+    cursor.place()
+
+    cursor.x = 100
+    cursor.y = 100
+    cursor.place()
+
+    cursor.start_area()
+
+    cursor.x = 200
+    cursor.y = 200
+    cursor.place()
+
+    cursor.x = 300
+    cursor.y = 300
+    cursor.place()
+    cursor.finish_area(true)
+    l, t, r, b = cursor.ltrb()
+    unittest.assert(l == 200)
+    unittest.assert(t == 200)
+    unittest.assert(r == 310)
+    unittest.assert(b == 310)
+
+    cursor.finish_area()
+    l, t, r, b = cursor.ltrb()
+    unittest.assert(l == 0)
+    unittest.assert(t == 0)
+    unittest.assert(r == 110)
+    unittest.assert(b == 110)
+end
+
+function T.test_width_translation()
+    cursor.apply_translation(1000, 0)
+    cursor.start_area()
+
+    cursor.x = 0
+    cursor.y = 0
+    cursor.place()
+    unittest.assert(placement.left == 1000)
+    unittest.assert(placement.top == 0)
+    unittest.assert(placement.right == 1010)
+    unittest.assert(placement.bottom == 10)
+
+    cursor.x = 100
+    cursor.y = 100
+    cursor.place()
+    unittest.assert(placement.left == 1100)
+    unittest.assert(placement.top == 100)
+    unittest.assert(placement.right == 1110)
+    unittest.assert(placement.bottom == 110)
+
+    cursor.finish_area()
+    cursor.place()
+    unittest.assert(placement.left == 1000)
+    unittest.assert(placement.top == 0)
+    unittest.assert(placement.right == 1110)
+    unittest.assert(placement.bottom == 110)
+
+    cursor.remove_translation()
 end
 
 return T

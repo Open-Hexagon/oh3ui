@@ -154,13 +154,13 @@ function cursor.drop()
 end
 
 ---Undos cursor reshaping for elements if cursor.auto_reshape is false. Requires a corresponding `cursor.push()`.
----Wherever the cursor is left when this is called is considered the element's bounding box when this is called.
----@param force boolean? if true, reshaping is forced, even if auto_reshape is false
-function cursor.do_auto_reshape(force)
+---Whatever the cursor's size is when this is called is considered the element's bounding box size when this is called.
+---The cursor's location is always reverted to the popped cursor's snapshot (including anchors)
+function cursor.do_auto_reshape()
     -- We only want the width and height to change.
     local width_new, height_new = cursor.width, cursor.height
     cursor.pop()
-    if cursor.auto_reshape or force then
+    if cursor.auto_reshape then
         cursor.width, cursor.height = width_new, height_new
     end
 end

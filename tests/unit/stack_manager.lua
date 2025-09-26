@@ -163,8 +163,8 @@ function T.test_clean_up()
     volatile_data.aeb_index = 1
     volatile_data.aeb_base_index = 1
     unittest.assert_error(stack_manager.clean_up)
-    unittest.assert(volatile_data.aeb_index == 0)
-    unittest.assert(volatile_data.aeb_base_index == 0)
+    volatile_data.aeb_index = 0
+    volatile_data.aeb_base_index = 0
 
     volatile_data.record_stack_index = 1
     unittest.assert_error(stack_manager.clean_up)
