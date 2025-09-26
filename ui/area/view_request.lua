@@ -1,4 +1,4 @@
-local area_element = require("ui.element.area")
+local area_element = require("ui.area")
 local volatile_data = require("ui.shared_data").volatile
 local aeb_stack = volatile_data.aeb_stack
 local follow = require("ui.effect").follow
@@ -12,6 +12,8 @@ local view_request = {
     -- This is kept updated by the scroll elements
     top_index = nil,
     time = 0,
+
+    collapse_top_index = nil,
 }
 
 local VR_IDLE, VR_START, VR_RUNNING = 0, 1, 2
@@ -183,6 +185,18 @@ function view_request.evaluate()
 
     if view_request.time <= 0 then
         view_request.cancel()
+    end
+end
+
+function view_request.open_collapses()
+    if not view_request.collapse_top_index then
+        return
+    end
+
+    local current_index = view_request.collapse_top_index
+    while current_index do
+        aeb_stack[current_index - 1] = true
+        current_index = aeb_stack[current_index]
     end
 end
 

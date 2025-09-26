@@ -1,16 +1,16 @@
 local cursor = require("ui.cursor")
-local primitive = require("ui.primitive")
-local area_element = require("ui.element.area")
+local area_element = require("ui.area")
 local stack_manager = require("ui.stack_manager")
 local mask = require("ui.mask")
-local theme = require("ui.theme")
 local mnav = require("ui.control.mouse_navigation")
 local mb = mnav.buttons
 local knav = require("ui.control.keyboard_navigation")
 local kba = knav.actions
-local selection_outline_add_to_queue = require("ui.element.decorator.selection_outline").add_to_queue
+local selection_outline_add_to_queue = require("ui.decorator.selection_outline").add_to_queue
 local follow = require("ui.effect").follow
 local reserve = require("ui.reserve")
+local volatile_data = require("ui.shared_data").volatile
+local view_request = require("ui.area.view_request")
 
 local collapse = {}
 
@@ -57,6 +57,9 @@ function collapse.start(state, anchor_pos, clipping_side, auto_open, sensor_id, 
     area_element.aeb_push(mnav.get_clicked(sensor_id) == mb.left or knav.get_action(cell_id) == kba.activate)
     area_element.aeb_push(res_id)
     area_element.aeb_push(state)
+    area_element.aeb_push(false)
+    area_element.aeb_push(view_request.collapse_top_index) -- aeb_index of the next (up) state
+    view_request.collapse_top_index = volatile_data.aeb_index -- put the new view request top index
 
     area_element.aeb_push_frame_header("collapse")
 
@@ -68,6 +71,8 @@ function collapse.finish()
 
     local add_selection_outline = area_element.aeb_pop_frame_header("collapse")
 
+    view_request.collapse_top_index = area_element.aeb_pop() -- revert the view request top index
+    local force_open = area_element.aeb_pop()
     local state = area_element.aeb_pop()
     local res_id = area_element.aeb_pop()
     local left_clicked = area_element.aeb_pop()
@@ -101,13 +106,18 @@ function collapse.finish()
 
     state._max_size = max_size
 
-    if left_clicked then
-        state.on = not state.on
-    end
-    if state.on then
-        state.value = follow(state.value, max_size, 100) --1800)
+    if force_open then
+        state.on = true
     else
-        state.value = follow(state.value, 0, 100) --1800)
+        if left_clicked then
+            state.on = not state.on
+        end
+    end
+
+    if state.on then
+        state.value = follow(state.value, max_size, 1800)
+    else
+        state.value = follow(state.value, 0, 1800)
     end
 
     cursor.change_anchor(anchor_pos)
@@ -119,8 +129,6 @@ function collapse.finish()
     if add_selection_outline then
         selection_outline_add_to_queue()
     end
-
-    primitive.rectangle(theme.red, "line")
 
     cursor.change_anchor(ax, ay) -- revert anchors
 end

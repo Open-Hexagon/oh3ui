@@ -5,8 +5,8 @@ local control_evaluate = require("ui.control").evaluate
 local settings = require("ui.settings")
 local layers = require("ui.layers")
 local layers_run = layers.run
-local view_request_evaluate = require("ui.element.area.scroll.view_request").evaluate
-local selection_outline_reset = require("ui.element.decorator.selection_outline").reset
+local view_request_evaluate = require("ui.area.view_request").evaluate
+local selection_outline_reset = require("ui.decorator.selection_outline").reset
 
 local ui = {}
 

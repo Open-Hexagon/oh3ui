@@ -27,7 +27,7 @@ local switch = require("ui.element.switch")
 local toggle = require("ui.element.toggle")
 local toggle_hex = require("ui.element.toggle_hex")
 local checkbox = require("ui.element.checkbox")
-local selection_outline_set_location = require("ui.element.decorator.selection_outline").set_location
+local selection_outline_set_location = require("ui.decorator.selection_outline").set_location
 
 local counter = 0
 

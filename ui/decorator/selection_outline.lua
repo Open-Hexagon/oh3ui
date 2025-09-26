@@ -3,9 +3,9 @@ local cursor = require("ui.cursor")
 local placement = cursor.placement
 local theme = require("ui.theme")
 local knav = require("ui.control.keyboard_navigation")
-local scroll_into_view = require("ui.element.area.scroll.view_request").scroll_into_view
+local view_request = require("ui.area.view_request")
 local draw_queue = require("ui.draw_queue")
-local area_element = require("ui.element.area")
+local area_element = require("ui.area")
 local volatile_data = require("ui.shared_data").volatile
 local aeb_stack = volatile_data.aeb_stack
 
@@ -40,7 +40,8 @@ function selection_outline.set_location()
         cursor.place()
 
         if knav.selection_has_changed then
-            scroll_into_view(placement.left, placement.top, placement.right, placement.bottom)
+            view_request.scroll_into_view(placement.left, placement.top, placement.right, placement.bottom)
+            view_request.open_collapses()
         end
 
         cursor.area_expansion_on()

@@ -1,4 +1,4 @@
-local scroll = require("ui.element.area.scroll")
+local scroll = require("ui.area.element.scroll")
 local cursor = require("ui.cursor")
 local id = require("ui.id_table")()
 local theme = require("ui.theme")
@@ -10,7 +10,7 @@ local wmode = knav.wrapping_mode
 local layers = require("ui.layers")
 local kba = knav.actions
 
-local background = require("ui.element.area.background")
+local background = require("ui.area.element.background")
 
 local button = require("ui.element.button")
 

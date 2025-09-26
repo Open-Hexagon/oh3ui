@@ -7,7 +7,7 @@ local control_data = shared_data.control
 local control_method = shared_data.enums.control_method
 local draw_queue = require("ui.draw_queue")
 local stack_manager = require("ui.stack_manager")
-local selection_outline_add_to_queue = require("ui.element.decorator.selection_outline").add_to_queue
+local selection_outline_add_to_queue = require("ui.decorator.selection_outline").add_to_queue
 
 --[=[
 Layer changing

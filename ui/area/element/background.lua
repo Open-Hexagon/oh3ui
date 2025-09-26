@@ -2,7 +2,7 @@ local cursor = require("ui.cursor")
 local primitive = require("ui.primitive")
 local reserve = require("ui.reserve")
 local stack_manager = require("ui.stack_manager")
-local area_element = require("ui.element.area")
+local area_element = require("ui.area")
 local draw_queue = require("ui.draw_queue")
 
 local background = {}

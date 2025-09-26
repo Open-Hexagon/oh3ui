@@ -1,5 +1,5 @@
 local cursor = require("ui.cursor")
-local collapse = require("ui.element.area.collapse")
+local collapse = require("ui.area.element.collapse")
 local id = require("ui.id_table")()
 local primitive = require("ui.primitive")
 local theme = require("ui.theme")
@@ -33,7 +33,7 @@ return function()
     cursor.shift_down(0)
 
     cursor.h_squeeze(10)
-    collapse.start(id.collapse, "topleft", "bottom")
+    collapse.start(id.collapse, "topleft", "top")
     do
         for i = 1, 5 do
             knav.make_cell()
@@ -46,7 +46,7 @@ return function()
         button("collapse2", 16)
         cursor.shift_down(0)
         cursor.h_squeeze(10)
-        collapse.start(id.collapse2, "bottomright", "right")
+        collapse.start(id.collapse2, "topleft", "top")
         do
             for i = 1, 5 do
                 knav.make_cell()

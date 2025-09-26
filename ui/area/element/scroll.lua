@@ -7,10 +7,10 @@ local smode = mnav.sensor_mode
 local primitive = require("ui.primitive")
 local theme = require("ui.theme")
 local stack_manager = require("ui.stack_manager")
-local area_element = require("ui.element.area")
-local view_request = require("ui.element.area.scroll.view_request")
+local area_element = require("ui.area")
+local view_request = require("ui.area.view_request")
 local volatile_data = require("ui.shared_data").volatile
-local selection_outline_add_to_queue = require("ui.element.decorator.selection_outline").add_to_queue
+local selection_outline_add_to_queue = require("ui.decorator.selection_outline").add_to_queue
 
 local scroll = {}
 
