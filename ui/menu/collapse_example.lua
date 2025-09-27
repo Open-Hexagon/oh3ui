@@ -8,11 +8,12 @@ local mnav = require("ui.control.mouse_navigation")
 local knav = require("ui.control.keyboard_navigation")
 
 return function()
+    knav.set_wrapping(knav.wrapping_mode.vertical)
     local grid_i = 1
 
     cursor.auto_reshape = false
     cursor.x = 200
-    cursor.y = 20
+    cursor.y = 160
     cursor.width = 170
     cursor.height = 20
 

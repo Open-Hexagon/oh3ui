@@ -17,6 +17,8 @@ local INACTIVE, READY, DONE = 0, 1, 2
 local mode = INACTIVE
 local left, top, right, bottom
 
+local mask_left, mask_top, mask_right, mask_bottom
+
 local selection_outline = {}
 
 ---Write a true value to the "add_selection_outline" value in the closest scroll aeb frame header if possible.
@@ -39,9 +41,9 @@ function selection_outline.set_location()
         cursor.area_expansion_off()
         cursor.place()
 
+        view_request.update_collapses(knav.selection_has_changed)
         if knav.selection_has_changed then
             view_request.scroll_into_view(placement.left, placement.top, placement.right, placement.bottom)
-            view_request.open_collapses()
         end
 
         cursor.area_expansion_on()
@@ -57,17 +59,37 @@ function selection_outline.set_location()
     end
 end
 
+---Sets the selection outline mask.
+---This function behaves like a decorator element and will call cursor.place.
+function selection_outline.set_mask()
+    cursor.area_expansion_off()
+    cursor.place()
+    mask_left = placement.left
+    mask_top = placement.top
+    mask_right = placement.right
+    mask_bottom = placement.bottom
+    cursor.area_expansion_on()
+end
+
 ---Adds the selection outline rectangle to the queue. Does not affect the cursor
 function selection_outline.add_to_queue()
     if mode == READY then
-        draw_queue.rectangle("line", left, top, right, bottom, theme.accent_color, 0, 0, line_width or 1)
+        if mask_left then
+            draw_queue.push_scissor(mask_left, mask_top, mask_right, mask_bottom)
+            draw_queue.rectangle("line", left, top, right, bottom, theme.accent_color, 0, 0, line_width or 1)
+            draw_queue.pop_scissor()
+        else
+            draw_queue.rectangle("line", left, top, right, bottom, theme.accent_color, 0, 0, line_width or 1)
+        end
         mode = DONE
     end
 end
 
----Should be called at the end of the frame
+---Should be called at the end of the frame.
+---Can also be used to hide the selection outline
 function selection_outline.reset()
     mode = INACTIVE
+    mask_left, mask_top, mask_right, mask_bottom = nil, nil, nil, nil
 end
 
 return selection_outline

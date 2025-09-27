@@ -353,6 +353,23 @@ function cursor.clip_bottom(d)
     cursor.change_anchor(ax, ay)
 end
 
+---Sets the cursor width to the width of the screen
+function cursor.full_width()
+    local _
+    cursor.width, _ = love.graphics.inverseTransformPoint(love.graphics.getDimensions())
+end
+
+---Sets the cursor height to the height of the screen
+function cursor.full_height()
+    local _
+    _, cursor.height = love.graphics.inverseTransformPoint(love.graphics.getDimensions())
+end
+
+---Sets the cursor width and height to that of the screen
+function cursor.full_screen()
+    cursor.width, cursor.height = love.graphics.inverseTransformPoint(love.graphics.getDimensions())
+end
+
 ---Returns an iterator that returns n linspaced x coordinates derived from the current x-axis span of the cursor.
 ---An enumerate integer is also given. Goes from 1 to n.
 ---@param n integer
