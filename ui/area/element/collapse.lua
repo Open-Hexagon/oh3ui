@@ -11,20 +11,18 @@ local follow = require("ui.effect").follow
 local reserve = require("ui.reserve")
 local volatile_data = require("ui.shared_data").volatile
 local view_request = require("ui.area.view_request")
-local primitive = require("ui.primitive")
-local theme = require("ui.theme")
+local decorator = require("ui.decorator")
+
+local selection_outline_cutoff = -(decorator.selection_outline_outset + decorator.selection_outline_line_width * 0.5)
 
 local collapse = {}
 
 local speed = 1800
 
---TODO relocate the keyboard selection if collapse is closed with the selection inside
---TODO keyboard navigation can notify a collapse state to auto open
-
 ---@param state table
 ---@param anchor_pos "topleft"|"bottomright" The corner of the collapse area that won't move
 ---@param clipping_side "left"|"top"|"right"|"bottom" The collapse area side that cuts off the contents
----@param no_auto_open boolean? collapse will open automatically when keyboard selection enters and close on exit
+---@param no_auto_open boolean? collapse won't auto open; establishes a keyboard nav keepout zone
 ---@param sensor_id integer? optional sensor id
 ---@param cell_id integer? optional cell id
 function collapse.start(state, anchor_pos, clipping_side, no_auto_open, sensor_id, cell_id)
@@ -54,6 +52,7 @@ function collapse.start(state, anchor_pos, clipping_side, no_auto_open, sensor_i
         end
     end
 
+    area_element.aeb_push(no_auto_open)
     area_element.aeb_push(cursor.anchor_y) -- anchors should be preserved
     area_element.aeb_push(cursor.anchor_x)
     area_element.aeb_push(clipping_side)
@@ -63,11 +62,10 @@ function collapse.start(state, anchor_pos, clipping_side, no_auto_open, sensor_i
     area_element.aeb_push(state)
     area_element.aeb_push(false) -- selection has changed
     area_element.aeb_push(false) -- contains selection
-    area_element.aeb_push(false) -- indirectly contains selection
     area_element.aeb_push(view_request.collapse_top_index) -- aeb_index of the next (up) state
     view_request.collapse_top_index = volatile_data.aeb_index -- put the new view request top index
 
-    area_element.aeb_push_frame_header("collapse")
+    area_element.aeb_push_frame_header("collapse", not state.on and no_auto_open)
 
     stack_manager.push_record()
 end
@@ -78,7 +76,6 @@ function collapse.finish()
     local add_selection_outline = area_element.aeb_pop_frame_header("collapse")
 
     view_request.collapse_top_index = area_element.aeb_pop() -- revert the view request top index
-    local indirectly_contains_selection = area_element.aeb_pop()
     local contains_selection = area_element.aeb_pop()
     local selection_has_changed = area_element.aeb_pop()
     local state = area_element.aeb_pop()
@@ -96,17 +93,23 @@ function collapse.finish()
     local clipping_side = area_element.aeb_pop()
     local ax = area_element.aeb_pop() -- anchors should be preserved
     local ay = area_element.aeb_pop()
+    local no_auto_open = area_element.aeb_pop()
 
     cursor.remove_translation()
     cursor.finish_area(true)
 
-    if indirectly_contains_selection ~= state._collapse_last_indirectly_contains_selection then
-        state.on = indirectly_contains_selection
-        state._collapse_last_indirectly_contains_selection = indirectly_contains_selection
-    elseif left_clicked then
+    if left_clicked then
+        -- interaction from external button
         state.on = not state.on
-    elseif selection_has_changed then
-        state.on = true
+    elseif not no_auto_open then
+        if contains_selection ~= state._collapse_last_contains_selection then
+            -- detect selection enter and exit
+            state.on = contains_selection
+            state._collapse_last_contains_selection = contains_selection
+        elseif contains_selection and selection_has_changed then
+            -- detect selection movement
+            state.on = true
+        end
     end
 
     local max_size
@@ -136,21 +139,25 @@ function collapse.finish()
     mask.push()
     mask.pop()
 
-    if indirectly_contains_selection and not state.on then
-        selection_outline.reset() -- hide the selection outline
-    elseif contains_selection and old_value ~= state._collapse_size then
-        -- make the selection outline look like it's inside the collapse (even though it isn't)
-        cursor.push()
-        cursor.change_anchor(0)
-        if dimension == "width" then
-            cursor.y = 0
-            cursor.full_height()
-        else
-            cursor.x = 0
-            cursor.full_width()
+    if contains_selection then
+        if not state.on then
+            selection_outline.hide() -- hide the selection outline
+        elseif old_value ~= state._collapse_size then -- this collapse is moving
+            -- make the selection outline look like it's inside the collapse (even though it isn't)
+            cursor.push()
+            cursor.change_anchor(0)
+            if dimension == "width" then
+                cursor.y = 0
+                cursor.full_height()
+                cursor.h_squeeze(selection_outline_cutoff)
+            else
+                cursor.x = 0
+                cursor.full_width()
+                cursor.v_squeeze(selection_outline_cutoff)
+            end
+            selection_outline.intersect_mask()
+            cursor.pop()
         end
-        selection_outline.set_mask()
-        cursor.pop()
     end
 
     if add_selection_outline then

@@ -32,6 +32,10 @@ shared_data.control = {
     ---@type boolean
     current_layer_is_active = false,
     current_layer = 0,
+
+    ---Used to disable control functions for non-interactable UI areas 
+    ---@type boolean
+    keepout_enabled = false,
 }
 
 -- data that shouldn't survive between frames

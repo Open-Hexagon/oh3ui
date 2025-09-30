@@ -92,7 +92,8 @@ function mouse_navigation.make_sensor(sensor_id, ...)
         last_sensor_id = last_sensor_id + 1
         control_data.current_sensor_id = last_sensor_id
     end
-    if control_data.current_layer_is_active then
+
+    if control_data.current_layer_is_active and not control_data.keepout_enabled then
         draw_queue.mouse_sensor(
             control_data.current_sensor_id,
             bor(0, ...),
@@ -102,6 +103,7 @@ function mouse_navigation.make_sensor(sensor_id, ...)
             placement.bottom
         )
     end
+
     return control_data.current_sensor_id
 end
 

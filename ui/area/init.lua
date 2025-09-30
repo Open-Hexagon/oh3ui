@@ -1,9 +1,13 @@
-local volatile_data = require("ui.shared_data").volatile
+local shared_data = require("ui.shared_data")
+local volatile_data = shared_data.volatile
+local control_data = shared_data.control
 local aeb_stack = volatile_data.aeb_stack
 
 local area_element = {
     top_frame = nil,
 }
+
+local keepout_point_index
 
 ---pushes a value to the aeb stack
 ---@param value any
@@ -28,19 +32,30 @@ function area_element.aeb_pop()
 end
 
 ---Push an aeb frame header with a name.
----@param name string
-function area_element.aeb_push_frame_header(name)
+---@param name string name of this header
+---@param enable_keepout boolean? enable keepout for this and all inner frames
+function area_element.aeb_push_frame_header(name, enable_keepout)
     area_element.aeb_push(false) -- This gets turned into a true if the selection outline needs to be added to the stack
     area_element.aeb_push(name)
     area_element.aeb_push(area_element.top_frame)
     area_element.top_frame = volatile_data.aeb_index -- put the new top frame
+
+    if not control_data.keepout_enabled and enable_keepout then
+        control_data.keepout_enabled = true
+        keepout_point_index = volatile_data.aeb_index
+    end
 end
 
----Pop an aeb frame header. Verifies that the popped frame name matches.
----@param verify_name string
----@return boolean add_selection_outline
+---Pop an aeb frame header.
+---@param verify_name string the popped frame must match this name
+---@return boolean add_selection_outline true if the selection outline should be added to the queue at this point
 ---@nodiscard
 function area_element.aeb_pop_frame_header(verify_name)
+    if keepout_point_index == volatile_data.aeb_index then
+        control_data.keepout_enabled = false
+        keepout_point_index = nil
+    end
+
     area_element.top_frame = area_element.aeb_pop() -- revert the top frame
     local a = area_element.aeb_pop()
     local add_selection_outline = area_element.aeb_pop()

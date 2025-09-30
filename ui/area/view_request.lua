@@ -194,16 +194,15 @@ function view_request.update_collapses(selection_has_changed)
     end
 
     local current_index = view_request.collapse_top_index
-    aeb_stack[current_index - 2] = true -- set the "contains selection" field
     if selection_has_changed then
         while current_index do
-            aeb_stack[current_index - 1] = true -- set the "indirectly contains selection" field
-            aeb_stack[current_index - 3] = true -- set the "selection has changed" field
+            aeb_stack[current_index - 1] = true -- set the "contains selection" field
+            aeb_stack[current_index - 2] = true -- set the "selection has changed" field
             current_index = aeb_stack[current_index]
         end
     else
         while current_index do
-            aeb_stack[current_index - 1] = true -- set the "indirectly contains selection" field
+            aeb_stack[current_index - 1] = true -- set the "contains selection" field
             current_index = aeb_stack[current_index]
         end
     end

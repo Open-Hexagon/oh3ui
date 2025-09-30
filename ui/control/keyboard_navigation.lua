@@ -237,12 +237,6 @@ local held_action
 ---Used to trigger a scroll view request when a layer transition happens
 local force_selection_has_changed = false
 
----When keepout is enabled, cells are still created but cannot be interacted with.
----Grid fills write 0 and tabbing skips them. If the selection is inside, it will be deactivated.
----@type boolean
-local keepout_enabled = false
-local keepout_old_current_cell_id
-
 local function is_valid_cell_id(cell_id)
     return cell_id >= 0 and cell_id <= last_cell_id
 end
@@ -256,8 +250,6 @@ function keyboard_navigation.reset()
     default_cell_id = nil
     first_gridded_cell_id = nil
     last_gridded_cell_id = nil
-    keepout_enabled = false
-    keepout_old_current_cell_id = nil
 end
 
 ---This only gets called when a layer transitions happens. Finds the best cell to select.
@@ -269,30 +261,6 @@ function keyboard_navigation.finish_layer_transition()
     else
         keyboard_navigation.jump_to_first()
     end
-end
-
----Turns on the keepout region. If it's already on, does nothing.
----The current_cell_id gets set to 0 but is reverted when keepout is turned off again
-function keyboard_navigation.keepout_on()
-    if not keepout_enabled then
-        keepout_enabled = true
-        keepout_old_current_cell_id = control_data.current_cell_id
-        control_data.current_cell_id = 0
-    end
-end
-
----Turns off the keepout region. If it's already off, does nothing.
----Reverts the current_cell_id to what it was when keepout was last enabled
-function keyboard_navigation.keepout_off()
-    if keepout_enabled then
-        keepout_enabled = false
-        control_data.current_cell_id = keepout_old_current_cell_id
-    end
-end
-
----Gets whether the keepout region is enabled
-function keyboard_navigation.is_keepout()
-    return keepout_enabled
 end
 
 --#region Cell Controls
@@ -314,11 +282,7 @@ function keyboard_navigation.make_cell(mode)
     cell_x[last_cell_id] = nil
     cell_y[last_cell_id] = nil
     cell_text_input_state[last_cell_id] = nil
-    cell_keepout[last_cell_id] = keepout_enabled
-
-    if keepout_enabled then
-        return 0
-    end
+    cell_keepout[last_cell_id] = control_data.keepout_enabled
 
     if mode == "default" or mode == "both" then
         default_cell_id = last_cell_id
@@ -443,7 +407,7 @@ end
 ---@param col_span? integer
 ---@param row_span? integer
 function keyboard_navigation.grid_cell(x, y, col_span, row_span)
-    if last_cell_id == 0 or keepout_enabled then
+    if last_cell_id == 0 or control_data.keepout_enabled then
         return
     end
 
@@ -498,7 +462,10 @@ function keyboard_navigation.tab_forward()
     if selected_cell_id >= last_cell_id then
         keyboard_navigation.jump_to_first()
     else
-        keyboard_navigation.jump_to_cell(selected_cell_id + 1)
+        repeat -- make sure we're not in a keepout zone
+            selected_cell_id = selected_cell_id + 1
+        until not cell_keepout[selected_cell_id]
+        keyboard_navigation.jump_to_cell(selected_cell_id)
     end
 end
 
@@ -507,7 +474,10 @@ function keyboard_navigation.tab_backwards()
     if selected_cell_id <= 1 then
         keyboard_navigation.jump_to_last()
     else
-        keyboard_navigation.jump_to_cell(selected_cell_id - 1)
+        repeat -- make sure we're not in a keepout zone
+            selected_cell_id = selected_cell_id - 1
+        until not cell_keepout[selected_cell_id]
+        keyboard_navigation.jump_to_cell(selected_cell_id)
     end
 end
 
@@ -646,13 +616,6 @@ local function navigate_grid(action)
         return nil
     end
 
-    local original_selection = get_grid_cell(grid_x, grid_y)
-    -- if the grid cursor is not on a proper cell, jump to the first cell
-    if original_selection < 1 then
-        keyboard_navigation.jump_to_first()
-        return nil
-    end
-
     -- get the step direction
     local dx, dy, _
     if action == kba.right then
@@ -669,9 +632,29 @@ local function navigate_grid(action)
         -- luacov: enable
     end
 
+    local original_selection = get_grid_cell(grid_x, grid_y)
+    if original_selection < 0 then
+        -- if the grid cursor is not on a proper cell, jump to the first cell as fallback
+        keyboard_navigation.jump_to_first()
+        return nil
+    end
+
     -- Search for the border of our current cell region
     local inside_x, inside_y, outside_x, outside_y, encountered_cell =
         find_border(original_selection, grid_x, grid_y, dx, dy)
+
+    if original_selection == 0 then
+        -- Our grid position started in the void
+        if encountered_cell < 1 then
+            -- we found an op_cell, jump to the first cell as fallback
+            keyboard_navigation.jump_to_first()
+        else
+            -- we found a normal cell
+            grid_x, grid_y = outside_x, outside_y
+            selected_cell_id = encountered_cell
+        end
+        return nil
+    end
 
     if encountered_cell == op_cell.nothing then
         -- encountered a nothing cell

@@ -1,4 +1,4 @@
-local element = require("ui.element")
+local decorator = require("ui.decorator")
 local cursor = require("ui.cursor")
 local placement = cursor.placement
 local theme = require("ui.theme")
@@ -8,8 +8,9 @@ local draw_queue = require("ui.draw_queue")
 local area_element = require("ui.area")
 local volatile_data = require("ui.shared_data").volatile
 local aeb_stack = volatile_data.aeb_stack
+local extmath = require("ui.extmath")
 
-local outset, line_width = element.selection_outline_outset, element.selection_outline_line_width
+local outset, line_width = decorator.selection_outline_outset, decorator.selection_outline_line_width
 
 local INACTIVE, READY, DONE = 0, 1, 2
 
@@ -17,6 +18,7 @@ local INACTIVE, READY, DONE = 0, 1, 2
 local mode = INACTIVE
 local left, top, right, bottom
 
+local hidden = false
 local mask_left, mask_top, mask_right, mask_bottom
 
 local selection_outline = {}
@@ -61,19 +63,40 @@ end
 
 ---Sets the selection outline mask.
 ---This function behaves like a decorator element and will call cursor.place.
-function selection_outline.set_mask()
+function selection_outline.intersect_mask()
     cursor.area_expansion_off()
     cursor.place()
-    mask_left = placement.left
-    mask_top = placement.top
-    mask_right = placement.right
-    mask_bottom = placement.bottom
     cursor.area_expansion_on()
+    if not mask_left then
+        mask_left = placement.left
+        mask_top = placement.top
+        mask_right = placement.right
+        mask_bottom = placement.bottom
+    else
+        mask_left, mask_top, mask_right, mask_bottom = extmath.aligned_rectangle_intersection(
+            mask_left,
+            mask_top,
+            mask_right,
+            mask_bottom,
+            placement.left,
+            placement.top,
+            placement.right,
+            placement.bottom
+        )
+        if not mask_left then
+            hidden = true
+        end
+    end
+end
+
+---Hides the selection outline, even though it's ready
+function selection_outline.hide()
+    hidden = true
 end
 
 ---Adds the selection outline rectangle to the queue. Does not affect the cursor
 function selection_outline.add_to_queue()
-    if mode == READY then
+    if mode == READY and not hidden then
         if mask_left then
             draw_queue.push_scissor(mask_left, mask_top, mask_right, mask_bottom)
             draw_queue.rectangle("line", left, top, right, bottom, theme.accent_color, 0, 0, line_width or 1)
@@ -86,9 +109,9 @@ function selection_outline.add_to_queue()
 end
 
 ---Should be called at the end of the frame.
----Can also be used to hide the selection outline
 function selection_outline.reset()
     mode = INACTIVE
+    hidden = false
     mask_left, mask_top, mask_right, mask_bottom = nil, nil, nil, nil
 end
 
