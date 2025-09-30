@@ -67,6 +67,11 @@ function selection_outline.intersect_mask()
     cursor.area_expansion_off()
     cursor.place()
     cursor.area_expansion_on()
+
+    if hidden then -- don't actually do anything if already hidden
+        return
+    end
+
     if not mask_left then
         mask_left = placement.left
         mask_top = placement.top
@@ -83,7 +88,7 @@ function selection_outline.intersect_mask()
             placement.right,
             placement.bottom
         )
-        if not mask_left then
+        if not mask_left then -- hide if nothing remains
             hidden = true
         end
     end
@@ -96,13 +101,15 @@ end
 
 ---Adds the selection outline rectangle to the queue. Does not affect the cursor
 function selection_outline.add_to_queue()
-    if mode == READY and not hidden then
-        if mask_left then
-            draw_queue.push_scissor(mask_left, mask_top, mask_right, mask_bottom)
-            draw_queue.rectangle("line", left, top, right, bottom, theme.accent_color, 0, 0, line_width or 1)
-            draw_queue.pop_scissor()
-        else
-            draw_queue.rectangle("line", left, top, right, bottom, theme.accent_color, 0, 0, line_width or 1)
+    if mode == READY then
+        if not hidden then
+            if mask_left then
+                draw_queue.push_scissor(mask_left, mask_top, mask_right, mask_bottom)
+                draw_queue.rectangle("line", left, top, right, bottom, theme.accent_color, 0, 0, line_width or 1)
+                draw_queue.pop_scissor()
+            else
+                draw_queue.rectangle("line", left, top, right, bottom, theme.accent_color, 0, 0, line_width or 1)
+            end
         end
         mode = DONE
     end
