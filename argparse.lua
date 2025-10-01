@@ -204,6 +204,13 @@ function Parser:parse_args(args)
             force_positional = true
         else
             if not force_positional and arg_str:find("^%-") then
+                -- check if argument looks like a short argument combined with a value
+                local opt, immediate_val = arg_str:match("^(%-%w)(.+)")
+                if opt and immediate_val then
+                    table.insert(args, arg_index + 1, immediate_val)
+                    arg_str = opt
+                end
+
                 -- argument is an option
                 local entry = self.argument_table[arg_str]
                 if not entry then
