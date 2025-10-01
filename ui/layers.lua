@@ -8,7 +8,9 @@ local control_method = shared_data.enums.control_method
 local draw_queue = require("ui.draw_queue")
 local stack_manager = require("ui.stack_manager")
 local selection_outline_add_to_queue = require("ui.decorator.selection_outline").add_to_queue
+local tooltip_add_to_queue = require("ui.decorator.tooltip").add_to_queue
 
+-- ! this explaination isn't correct anymore
 --[=[
 Layer changing
 
@@ -43,10 +45,6 @@ POP: layer2 wants to pop itself off the stack
         (This is kept track of as a secondary default cell that is updated by layers below the topmost layer.)
         (Since layer2 may already have a default cell, but we just deleted and we don't want to rerun layer1 to find out what it was.)
 - The next frame is run as normal.
-
-
-SWAP: exchange the top layer with another
-TODO : not implemented yet
 
 ]=]
 
@@ -147,7 +145,9 @@ function layers.run()
         stack_manager.clean_up()
     end
 
+    -- add the selection outline if it wasn't already done by any of the area elements
     selection_outline_add_to_queue()
+    -- tooltip_add_to_queue()
 
     -- turn off the draw queue
     -- this also disable the addition of new mouse sensors
