@@ -5,17 +5,24 @@ local unittest = require("tests.unittest")
 local argparse = require("argparse")
 local ui_settings = require("ui.settings")
 
-local parser = argparse.new_parser("ohce", "open hexagon community edition")
-parser:add_argument("-e", "--print-events", "enable printing of events", 0, false, "store_true", false)
-parser:add_argument("-s", "--ui-scale", "starting ui scale", 1, true, nil, 1)
-parser:add_argument("-g", "--grid", "enable grid and set its size", "?", true, "store_const", nil, 50)
-parser:add_argument("-u", "--unittest", "start unittest mode; optionally provide a filter", "?", false, "store_const", nil, ".*")
-parser:add_argument("-v", "--verbose", "verbose output in unittest mode", 0, false, "store_true", false)
-parser:add_argument("-c", "--coverage", "enable coverage in unittest mode", 0, false, "store_true", false)
-parser:add_argument("-S", "--strict", "warnings become errors", 0, false, "store_true", false)
-parser:add_argument("-T", "--tickrate", "number of ticks per second (default is 60)", 1, true, nil, 60)
+local parser = argparse("ohce", "open hexagon community edition")
 
-local arg_values = parser:parse_args(love.arg.parseGameArguments(arg))
+parser:flag("-e --print-events", "enable printing of events")
+parser:option("-s --ui-scale", "starting ui scale", 1, tonumber, 1)
+parser:option("-g --grid", "enable grid and set its size", nil, tonumber, "?"):action(function(args, _, list)
+    args.grid = list[1] or 50
+end)
+parser
+    :option("-u --unittest", "start unittest mode; optionally provide a filter", nil, nil, "?")
+    :action(function(args, _, list)
+        args.grid = list[1] or ".*"
+    end)
+parser:flag("-v --verbose", "verbose output in unittest mode")
+parser:flag("-c --coverage", "enable coverage in unittest mode")
+parser:flag("-S --strict", "warnings become errors")
+parser:option("-T --tickrate", "number of ticks per second (default is 60)", 60, tonumber, 1)
+
+local arg_values = parser:parse(love.arg.parseGameArguments(arg))
 
 ui_settings.scale = arg_values.ui_scale
 ui_settings.debug_grid = arg_values.grid
@@ -35,6 +42,8 @@ local example_menu = require("ui.menu.example")
 local empty_grid = require("ui.menu.empty_grid")
 local scroll_example = require("ui.menu.scroll_example")
 local collapse_example = require("ui.menu.collapse_example")
+local scroll_resizing = require("ui.menu.scroll_resizing")
+local inline_transform = require("ui.menu.inline_transform")
 local ui = require("ui")
 
 function love.run()
@@ -55,7 +64,9 @@ function love.run()
     -- ui.init(empty_grid)
     -- ui.init(example_menu)
     -- ui.init(scroll_example)
-    ui.init(collapse_example)
+    ui.init(scroll_resizing)
+    -- ui.init(collapse_example)
+    -- ui.init(inline_transform)
 
     return function()
         -- Process events

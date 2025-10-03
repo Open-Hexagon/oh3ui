@@ -1,0 +1,88 @@
+#!/usr/bin/luajit
+
+local names = {}
+local mat = {}
+
+local node1, node2, node_name, node_color, n, line, line_num
+
+line = io.stdin:read("*l")
+line_num = 1
+while line do
+    -- node definition
+    node1 = string.match(line, "^(%d+) %b[]$")
+    if node1 then
+        node1 = tonumber(node1)
+        if not node1 then
+            error(string.format("malformed number on line %d", line_num))
+        end
+        node_color, node_name = string.match(line, '%[color = (%a+) label = "(.+)"%]')
+        if node_color == "yellow" then
+            node_name = node_name .. " (external)"
+        end
+        names[node1] = node_name
+        mat[node1] = {}
+        goto continue
+    end
+
+    -- edge definition
+    node1, node2 = string.match(line, "^(%d+) %-> (%d+) %b[]$")
+    if node1 then
+        node1 = tonumber(node1)
+        node2 = tonumber(node2)
+        if not node1 or not node2 then
+            error(string.format("malformed number on line %d", line_num))
+        end
+        -- node1 requires node2
+        mat[node1][node2] = true
+        goto continue
+    end
+
+    -- other lines are ignored
+    ::continue::
+    line = io.stdin:read("*l")
+    line_num = line_num + 1
+end
+
+local name_count = #names
+local max_digits = 0
+
+if name_count == 0 then
+    error("no modules found")
+end
+
+-- determine the number of digits in the name count
+n = name_count
+while n > 0 do
+    max_digits = max_digits + 1
+    n = math.floor(n / 10)
+end
+
+-- print numbered list of modules
+for i = 1, name_count do
+    print(("%%%dd: %%s"):format(max_digits):format(i, names[i]))
+end
+io.write("\n")
+
+-- print matrix header
+io.write("requires -->\n")
+io.write("^", string.rep(" ", max_digits - 1), "|")
+for i = 1, name_count do
+    io.write(("%%%dd|"):format(max_digits):format(i))
+end
+io.write("\n")
+
+-- print matrix
+for i = 1, name_count do
+    io.write(("%%%dd|"):format(max_digits):format(i))
+    for j = 1, name_count do
+        if i == j then
+            n = "-"
+        elseif mat[i][j] then
+            n = "x"
+        else
+            n = " "
+        end
+        io.write(string.rep(n, max_digits), "|")
+    end
+    io.write("\n")
+end
