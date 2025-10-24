@@ -9,6 +9,7 @@ local knav = require("ui.control.keyboard_navigation")
 local wmode = knav.wrapping_mode
 local layers = require("ui.layers")
 local kba = knav.actions
+local collapse = require("ui.area.element.collapse")
 
 local background = require("ui.area.element.background")
 
@@ -21,9 +22,10 @@ return function()
     cursor.auto_reshape = true
     cursor.x = 200
     cursor.y = 50
-    cursor.width = 170
+    cursor.width = 200
     cursor.height = 200
 
+    primitive.rectangle(theme.green, "line")
     scroll.start(id.scroll2)
     background.start()
     do
@@ -32,6 +34,7 @@ return function()
         cursor.width = 150
         cursor.height = 150
 
+        primitive.rectangle(theme.green, "line")
         scroll.start(id.scroll)
         background.start()
         do
@@ -55,13 +58,14 @@ return function()
                 end
             end
         end
-        background.finish(5, theme.blue)
+        background.finish(10, theme.blue)
         local at_left, at_top, at_right, at_bottom = scroll.finish(0)
 
         knav.fill_grid(knav.op_cell.tab, 6, 1, 1, 5)
         cursor.push()
         cursor.shift_right(10)
 
+        primitive.rectangle(theme.green, "line")
         scroll.start(id.scroll3)
         background.start()
         do
@@ -85,7 +89,7 @@ return function()
                 end
             end
         end
-        background.finish(5, theme.blue)
+        background.finish(10, theme.blue)
         scroll.finish(0)
 
         cursor.pop()
@@ -106,8 +110,84 @@ return function()
 
         cursor.shift_down(10)
 
+        local grid_i = 11
+        do
+            cursor.auto_reshape = false
+            cursor.width = 170
+            cursor.height = 20
+
+            knav.make_cell()
+            knav.grid_cell(1, grid_i)
+            grid_i = grid_i + 1
+            button("a", 16)
+            cursor.shift_down(0)
+
+            knav.make_cell()
+            knav.grid_cell(1, grid_i)
+            grid_i = grid_i + 1
+            button("b", 16)
+            cursor.shift_down(0)
+
+            knav.change_current_cell(0)
+            button("collapse", 16)
+            cursor.shift_down(0)
+
+            cursor.h_squeeze(10)
+            collapse.start(id.collapse, "topleft", "bottom", false)
+            do
+                for i = 1, 5 do
+                    knav.make_cell()
+                    knav.grid_cell(1, grid_i)
+                    grid_i = grid_i + 1
+                    button(tostring(i), 16)
+                    cursor.shift_down(0)
+                end
+                knav.change_current_cell(0)
+                button("collapse2", 16)
+                cursor.shift_down(0)
+                cursor.h_squeeze(10)
+                collapse.start(id.collapse2, "topleft", "right", false)
+                do
+                    for i = 1, 5 do
+                        knav.make_cell()
+                        knav.grid_cell(1, grid_i)
+                        grid_i = grid_i + 1
+                        button(tostring(i + 10), 16)
+                        cursor.shift_down(0)
+                    end
+                end
+                collapse.finish()
+                cursor.h_squeeze(-10)
+            end
+            collapse.finish()
+            cursor.h_squeeze(-10)
+
+            cursor.change_anchor(0)
+            cursor.shift_down(0)
+            cursor.height = 20
+
+            knav.make_cell()
+            knav.grid_cell(1, grid_i)
+            grid_i = grid_i + 1
+            button("d", 16)
+            cursor.shift_down(0)
+
+            knav.make_cell()
+            knav.grid_cell(1, grid_i)
+            grid_i = grid_i + 1
+            button("e", 16)
+            cursor.shift_down(0)
+
+            knav.make_cell()
+            knav.grid_cell(1, grid_i)
+            grid_i = grid_i + 1
+            button("f", 16)
+            cursor.shift_down(10)
+        end
+
         knav.make_cell()
-        knav.grid_cell(1, 11)
+        knav.grid_cell(1, grid_i)
+        grid_i = grid_i + 1
         cursor.height = 25
         button("back", 16)
 
@@ -115,16 +195,6 @@ return function()
             layers.pop()
         end
     end
-    background.finish(5, theme.red)
+    background.finish(10, theme.red)
     scroll.finish(0)
-    cursor.shift_down()
-
-    primitive.rectangle(theme.green, "line", 4)
-
-    -- empty scrolls do nothing but still revert the cursor when finished
-    scroll.start(id.scroll4)
-    cursor.shift_right()
-    scroll.finish(0)
-
-    primitive.rectangle(theme.red, "line")
 end

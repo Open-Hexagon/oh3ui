@@ -1,5 +1,5 @@
 local cursor = require("ui.cursor")
-local placement = cursor.placement
+local placement = cursor.projected_placement
 local stack_manager = require("ui.stack_manager")
 local unittest = require("tests.unittest")
 
@@ -229,7 +229,7 @@ function T.test_no_propogate()
 end
 
 function T.test_width_translation()
-    cursor.apply_translation(1000, 0)
+    cursor.push_translation(1000, 0)
     cursor.start_area()
 
     cursor.x = 0
@@ -255,7 +255,7 @@ function T.test_width_translation()
     unittest.assert(placement.right == 1110)
     unittest.assert(placement.bottom == 110)
 
-    cursor.remove_translation()
+    cursor.pop_translation()
 end
 
 return T

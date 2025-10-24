@@ -1,5 +1,5 @@
 local cursor = require("ui.cursor")
-local placement = cursor.placement
+local placement = cursor.projected_placement
 local extmath = require("ui.extmath")
 local mask = require("ui.mask")
 local mnav = require("ui.control.mouse_navigation")
@@ -10,7 +10,7 @@ local stack_manager = require("ui.stack_manager")
 local area_element = require("ui.area")
 local view_request = require("ui.area.view_request")
 local volatile_data = require("ui.shared_data").volatile
-local selection_outline_add_to_queue = require("ui.decorator.selection_outline").add_to_queue
+local selection_outline = require("ui.decorator.selection_outline")
 
 local scroll = {}
 
@@ -61,7 +61,7 @@ function scroll.start(state)
     mask.push() -- (2)
 
     -- move the contents of the scroll area
-    cursor.apply_translation(
+    cursor.push_translation(
         state.scroll_dist_x, -- positive values scroll left
         state.scroll_dist_y -- positive values scroll up
     ) -- (3)
@@ -154,11 +154,7 @@ local function do_horizontal_mouse_interaction(
     else
         -- mouse wheel (disabled if dragging)
         if mnav.wheel_dx ~= 0 then
-            state.scroll_dist_x = extmath.clamp(
-                state.scroll_dist_x + mnav.wheel_dx * -mouse_wheel_scroll_distance,
-                dist_limit_right,
-                dist_limit_left
-            )
+            state.scroll_dist_x = state.scroll_dist_x + mnav.wheel_dx * -mouse_wheel_scroll_distance
             view_request.cancel()
         end
     end
@@ -168,7 +164,7 @@ local function do_horizontal_mouse_interaction(
         if mnav.get_started_dragging(scroll_region) then
             mouse_offset_x = mnav.press_x - state.scroll_dist_x
         end
-        state.scroll_dist_x = extmath.clamp(mnav.x - mouse_offset_x, dist_limit_right, dist_limit_left)
+        state.scroll_dist_x = mnav.x - mouse_offset_x
         view_request.cancel()
     end
 end
@@ -229,11 +225,7 @@ local function do_vertical_mouse_interaction(
     else
         -- mouse wheel (disabled if dragging)
         if mnav.wheel_dy ~= 0 then
-            state.scroll_dist_y = extmath.clamp(
-                state.scroll_dist_y + mnav.wheel_dy * mouse_wheel_scroll_distance,
-                dist_limit_bottom,
-                dist_limit_top
-            )
+            state.scroll_dist_y = state.scroll_dist_y + mnav.wheel_dy * mouse_wheel_scroll_distance
             view_request.cancel()
         end
     end
@@ -243,7 +235,7 @@ local function do_vertical_mouse_interaction(
         if mnav.get_started_dragging(scroll_region) then
             mouse_offset_y = mnav.press_y - state.scroll_dist_y
         end
-        state.scroll_dist_y = extmath.clamp(mnav.y - mouse_offset_y, dist_limit_bottom, dist_limit_top)
+        state.scroll_dist_y = mnav.y - mouse_offset_y
         view_request.cancel()
     end
 end
@@ -262,7 +254,11 @@ function scroll.finish(padding)
     -- deal with stack stuff
     stack_manager.pop_record() -- (6)
 
-    local add_selection_outline = area_element.aeb_pop_frame_header("scroll") -- (5)
+    -- Must come before mask.pop so the selection outline appears inside the scroll region
+    -- Must come before cursor.remove_translation so the scroll request is made in the correct location
+    selection_outline.add_to_queue()
+
+    area_element.aeb_pop_frame_header("scroll") -- (5)
 
     view_request.top_index = area_element.aeb_pop() -- revert the view request top index
     local state = area_element.aeb_pop() -- get the state back
@@ -281,13 +277,7 @@ function scroll.finish(padding)
     local v_act = area_element.aeb_pop()
     local v_bar = area_element.aeb_pop()
 
-    cursor.remove_translation() -- (3)
-
-    -- Must come before mask.pop so the selection outline appears inside the scroll region
-    if add_selection_outline then
-        selection_outline_add_to_queue()
-    end
-
+    cursor.pop_translation() -- (3)
     mask.pop() -- (2)
 
     if not cursor.finish_area(true) then -- (4)
@@ -325,6 +315,9 @@ function scroll.finish(padding)
     if flagged_for_view_request then
         view_request.push_limits(dist_limit_left, dist_limit_top, dist_limit_right, dist_limit_bottom)
     end
+
+    state.scroll_dist_x = extmath.clamp(state.scroll_dist_x, dist_limit_right, dist_limit_left)
+    state.scroll_dist_y = extmath.clamp(state.scroll_dist_y, dist_limit_bottom, dist_limit_top)
 
     -- actuator sizes
     local h_actuator_size = get_actuator_size(content_width, scroll_width)

@@ -7,6 +7,8 @@ local draw_queue = require("ui.draw_queue")
 local text = require("ui.text")
 local settings = require("ui.settings")
 
+-- TODO We're running these calculations too early, we need to be able to edit the placement data as we're building the draw queue
+
 local primitive = {}
 
 ---Rectangle primitive. Never reshapes the cursor.

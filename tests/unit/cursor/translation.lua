@@ -1,5 +1,5 @@
 local cursor = require("ui.cursor")
-local placement = cursor.placement
+local placement = cursor.projected_placement
 local stack_manager = require("ui.stack_manager")
 local unittest = require("tests.unittest")
 
@@ -26,11 +26,11 @@ function T.tear_down()
 end
 
 function T.test_stack_underflow()
-    unittest.assert_error(cursor.remove_translation, "we should be at the bottom of the stack")
+    unittest.assert_error(cursor.pop_translation, "we should be at the bottom of the stack")
 end
 
 function T.test_translate()
-    cursor.apply_translation(100, 0)
+    cursor.push_translation(100, 0)
 
     cursor.place()
     unittest.assert(placement.left == 100)
@@ -40,7 +40,7 @@ function T.test_translate()
     unittest.assert(placement.x == 100)
     unittest.assert(placement.y == 0)
 
-    cursor.apply_translation(0, 100)
+    cursor.push_translation(0, 100)
 
     cursor.place()
     unittest.assert(placement.left == 100)
@@ -50,8 +50,8 @@ function T.test_translate()
     unittest.assert(placement.x == 100)
     unittest.assert(placement.y == 100)
 
-    cursor.remove_translation()
-    cursor.remove_translation()
+    cursor.pop_translation()
+    cursor.pop_translation()
 
     cursor.place()
     unittest.assert(placement.left == 0)
@@ -63,7 +63,7 @@ function T.test_translate()
 end
 
 function T.test_translate_rollback()
-    cursor.apply_translation(100, 0)
+    cursor.push_translation(100, 0)
 
     cursor.place()
     unittest.assert(placement.left == 100)
@@ -75,10 +75,10 @@ function T.test_translate_rollback()
 
     stack_manager.push_record()
 
-    unittest.assert_error(cursor.remove_translation, "we should be at the bottom of the stack")
+    unittest.assert_error(cursor.pop_translation, "we should be at the bottom of the stack")
 
-    cursor.apply_translation(0, 50)
-    cursor.apply_translation(0, 50)
+    cursor.push_translation(0, 50)
+    cursor.push_translation(0, 50)
 
     cursor.place()
     unittest.assert(placement.left == 100)
@@ -90,7 +90,7 @@ function T.test_translate_rollback()
 
     stack_manager.pop_record()
 
-    cursor.remove_translation()
+    cursor.pop_translation()
 
     cursor.place()
     unittest.assert(placement.left == 0)

@@ -1,5 +1,5 @@
 local cursor = require("ui.cursor")
-local placement = cursor.placement
+local placement = cursor.projected_placement
 local stack_manager = require("ui.stack_manager")
 local unittest = require("tests.unittest")
 

@@ -12,6 +12,8 @@ local reserve = require("ui.reserve")
 local volatile_data = require("ui.shared_data").volatile
 local view_request = require("ui.area.view_request")
 local decorator = require("ui.decorator")
+local primitive = require("ui.primitive")
+local theme = require("ui.theme")
 
 local selection_outline_cutoff = -(decorator.selection_outline_outset + decorator.selection_outline_line_width * 0.5)
 
@@ -36,19 +38,19 @@ function collapse.start(state, anchor_pos, clipping_side, no_auto_open, sensor_i
     -- These translations lag behind by one frame, but since collapses move so fast it's normally barely noticeable.
     if anchor_pos == "topleft" then
         if clipping_side == "top" then
-            cursor.apply_translation(0, state._collapse_size - state._collapse_max_size)
+            cursor.push_translation(0, state._collapse_size - state._collapse_max_size)
         elseif clipping_side == "left" then
-            cursor.apply_translation(state._collapse_size - state._collapse_max_size, 0)
+            cursor.push_translation(state._collapse_size - state._collapse_max_size, 0)
         else
-            cursor.apply_translation(0, 0)
+            cursor.push_translation(0, 0)
         end
     else
         if clipping_side == "bottom" then
-            cursor.apply_translation(0, state._collapse_max_size - state._collapse_size)
+            cursor.push_translation(0, state._collapse_max_size - state._collapse_size)
         elseif clipping_side == "right" then
-            cursor.apply_translation(state._collapse_max_size - state._collapse_size, 0)
+            cursor.push_translation(state._collapse_max_size - state._collapse_size, 0)
         else
-            cursor.apply_translation(0, 0)
+            cursor.push_translation(0, 0)
         end
     end
 
@@ -73,7 +75,7 @@ end
 function collapse.finish()
     stack_manager.pop_record()
 
-    local add_selection_outline = area_element.aeb_pop_frame_header("collapse")
+    area_element.aeb_pop_frame_header("collapse")
 
     view_request.collapse_top_index = area_element.aeb_pop() -- revert the view request top index
     local contains_selection = area_element.aeb_pop()
@@ -95,7 +97,7 @@ function collapse.finish()
     local ay = area_element.aeb_pop()
     local no_auto_open = area_element.aeb_pop()
 
-    cursor.remove_translation()
+    cursor.pop_translation()
     cursor.finish_area(true)
 
     if left_clicked then
@@ -160,11 +162,8 @@ function collapse.finish()
         end
     end
 
-    if add_selection_outline then
-        selection_outline.add_to_queue()
-    end
-
     cursor.change_anchor(ax, ay) -- revert anchors
+    -- cursor.place()
 end
 
 return collapse

@@ -35,7 +35,6 @@ end
 ---@param name string name of this header
 ---@param enable_keepout boolean? enable keepout for this and all inner frames
 function area_element.aeb_push_frame_header(name, enable_keepout)
-    area_element.aeb_push(false) -- This gets turned into a true if the selection outline needs to be added to the stack
     area_element.aeb_push(name)
     area_element.aeb_push(area_element.top_frame)
     area_element.top_frame = volatile_data.aeb_index -- put the new top frame
@@ -48,8 +47,6 @@ end
 
 ---Pop an aeb frame header.
 ---@param verify_name string the popped frame must match this name
----@return boolean add_selection_outline true if the selection outline should be added to the queue at this point
----@nodiscard
 function area_element.aeb_pop_frame_header(verify_name)
     if keepout_point_index == volatile_data.aeb_index then
         control_data.keepout_enabled = false
@@ -58,13 +55,10 @@ function area_element.aeb_pop_frame_header(verify_name)
 
     area_element.top_frame = area_element.aeb_pop() -- revert the top frame
     local a = area_element.aeb_pop()
-    local add_selection_outline = area_element.aeb_pop()
 
     if a ~= verify_name then
         error(string.format("%s element was ended with wrong type", verify_name), 2)
     end
-
-    return add_selection_outline
 end
 
 area_element.scrollbar_thickness = 8

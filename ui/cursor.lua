@@ -2,23 +2,35 @@
 ---a tool for positioning and aligning ui elements.
 
 local volatile_data = require("ui.shared_data").volatile
+local draw_data = require("ui.draw_queue.draw_data")
 
 local cursor = {}
 
----Edge output table mainly to be used by elements.
----This table gets affected by translations so the area it represents will not always coincide with the cursor if a translation is in affect.
+---This table gets affected by translations so the area it represents will not always coincide with the cursor if a translation is in effect.
 ---Elements have to be literally placed in their final locations and not transformed by other means or else other position related functionality would break.
----Use this if you want to check against a the literal location of a placed element, such as when comparing against the mouse position.
-cursor.placement = {
+
+---This projected_placement table should only be used to measure distances from an element's placement location to the mouse.
+---! IMPORTANT: This placement is a guess as to where the current placement is. It will be inaccurate if translations are edited afterwards.
+---!            However, this usually isn't a problem when checking against mouse distances
+cursor.projected_placement = {
+    x = 0,
+    y = 0,
     left = 0,
     top = 0,
     right = 0,
     bottom = 0,
-    -- the coordinate points are also affected
-    x = 0,
-    y = 0,
 }
 
+cursor.placement = {
+    x = 0,
+    y = 0,
+    left = 0,
+    top = 0,
+    right = 0,
+    bottom = 0,
+}
+
+local projected_placement = cursor.projected_placement
 local placement = cursor.placement
 
 --#region edge calculations
@@ -110,39 +122,37 @@ end
 
 --#region snapshotting
 
+local CURSOR_INDEX_STEP = 7
+
 ---Push a snapshot of the cursor, saving its current state for later.
 function cursor.push()
-    volatile_data.cursor_index = volatile_data.cursor_index + 1
+    local i = volatile_data.cursor_index + CURSOR_INDEX_STEP
 
-    local new_snapshot = cursor_stack[volatile_data.cursor_index]
-    if not new_snapshot then
-        new_snapshot = {}
-        cursor_stack[volatile_data.cursor_index] = new_snapshot
-    end
+    cursor_stack[i - 6] = cursor.x
+    cursor_stack[i - 5] = cursor.y
+    cursor_stack[i - 4] = cursor.anchor_x
+    cursor_stack[i - 3] = cursor.anchor_y
+    cursor_stack[i - 2] = cursor.width
+    cursor_stack[i - 1] = cursor.height
+    cursor_stack[i] = cursor.auto_reshape
 
-    new_snapshot.x = cursor.x
-    new_snapshot.y = cursor.y
-    new_snapshot.width = cursor.width
-    new_snapshot.height = cursor.height
-    new_snapshot.anchor_x = cursor.anchor_x
-    new_snapshot.anchor_y = cursor.anchor_y
-    new_snapshot.auto_reshape = cursor.auto_reshape
+    volatile_data.cursor_index = i
 end
 
 ---Peek a snapshot of the cursor, returning it to the last pushed state without dropping it.
 function cursor.peek()
-    if volatile_data.cursor_index == volatile_data.cursor_base_index then
+    local i = volatile_data.cursor_index
+    if i == volatile_data.cursor_base_index then
         error("cursor snapshot stack underflow", 2)
     end
-    for k, v in pairs(cursor_stack[volatile_data.cursor_index]) do
-        cursor[k] = v
-    end
+    cursor.x, cursor.y, cursor.anchor_x, cursor.anchor_y, cursor.width, cursor.height, cursor.auto_reshape =
+        unpack(cursor_stack, i - 6, i)
 end
 
 ---Pop a snapshot of the cursor, returning it to the last pushed state.
 function cursor.pop()
     cursor.peek()
-    volatile_data.cursor_index = volatile_data.cursor_index - 1
+    volatile_data.cursor_index = volatile_data.cursor_index - CURSOR_INDEX_STEP
 end
 
 ---Drops the last snapshot of the cursor
@@ -150,7 +160,7 @@ function cursor.drop()
     if volatile_data.cursor_index == volatile_data.cursor_base_index then
         error("cursor snapshot stack underflow", 2)
     end
-    volatile_data.cursor_index = volatile_data.cursor_index - 1
+    volatile_data.cursor_index = volatile_data.cursor_index - CURSOR_INDEX_STEP
 end
 
 ---Undos cursor reshaping for elements if cursor.auto_reshape is false. Requires a corresponding `cursor.push()`.
@@ -165,78 +175,6 @@ function cursor.do_auto_reshape()
     end
 end
 
----Pushes n snapshots to the stack, such that when popping them,
----the cursor will move from left to right with padding,
----while maintaining the cursor's current shape.
----@param n integer
----@param padding number?
-function cursor.h_array(n, padding)
-    padding = padding or 0
-    for i = n - 1, 0, -1 do
-        cursor.push()
-        cursor_stack[volatile_data.cursor_index].x = cursor.x + (cursor.width + padding) * i
-    end
-end
-
----Pushes n snapshots to the stack, such that when popping them,
----the cursor will move from top to bottom with padding,
----while maintaining the cursor's current shape.
----@param n integer
----@param padding number?
-function cursor.v_array(n, padding)
-    padding = padding or 0
-    for i = n - 1, 0, -1 do
-        cursor.push()
-        cursor_stack[volatile_data.cursor_index].y = cursor.y + (cursor.height + padding) * i
-    end
-end
-
----Pushes n snapshots to the stack, such that when popping them,
----the cursor will move from left to right with padding within the bounding box of the current cursor.
----Cursors take on the shape formed by horizontally subdividing the current cursor with padding.
----@param n integer number of sections to split into
----@param padding number? padding between sections
----@return integer n number of sections
----@return number section_width the width of each resulting section, not including padding
-function cursor.h_split(n, padding)
-    padding = padding or 0
-    local section_width = (cursor.width - (n - 1) * padding) / n
-    local left_edge = cursor.x - cursor.anchor_x * cursor.width
-
-    for i = n - 1, 0, -1 do
-        cursor.push()
-        cursor_stack[volatile_data.cursor_index].x = left_edge
-            + (section_width + padding) * i
-            + section_width * cursor.anchor_x
-        cursor_stack[volatile_data.cursor_index].width = section_width
-    end
-
-    return n, section_width
-end
-
----Pushes n snapshots to the stack, such that when popping them,
----the cursor will move from top to bottom with padding within the bounding box of the current cursor.
----Cursors take on the shape formed by vertically subdividing the current cursor with padding.
----@param n integer number of sections to split into
----@param padding number? padding between sections
----@return integer n number of sections
----@return number section_height the height of each resulting section, not including padding
-function cursor.v_split(n, padding)
-    padding = padding or 0
-    local section_height = (cursor.height - (n - 1) * padding) / n
-    local top_edge = cursor.y - cursor.anchor_y * cursor.height
-
-    for i = n - 1, 0, -1 do
-        cursor.push()
-        cursor_stack[volatile_data.cursor_index].y = top_edge
-            + (section_height + padding) * i
-            + section_height * cursor.anchor_y
-        cursor_stack[volatile_data.cursor_index].height = section_height
-    end
-
-    return n, section_height
-end
-
 ---Pop a snapshot and expand the current cursor to surround it.
 ---Does not change relative anchor locations.
 ---If the anchor is in the top-left then it will stay in the top-left after the operation, even if the cursor x, y had to move.
@@ -246,9 +184,9 @@ function cursor.combine(peek)
         error("cursor snapshot stack underflow", 2)
     end
 
-    local s = cursor_stack[volatile_data.cursor_index]
+    local i = volatile_data.cursor_index
 
-    local new_left, new_top, new_right, new_bottom = get_edges(s.x, s.y, s.anchor_x, s.anchor_y, s.width, s.height)
+    local new_left, new_top, new_right, new_bottom = get_edges(unpack(cursor_stack, i - 6, i - 1))
     local left, top, right, bottom =
         get_edges(cursor.x, cursor.y, cursor.anchor_x, cursor.anchor_y, cursor.width, cursor.height)
 
@@ -404,6 +342,78 @@ function cursor.v_linspace(n)
     end)
 end
 
+---Pushes n snapshots to the stack, such that when popping them,
+---the cursor will move from left to right with padding,
+---while maintaining the cursor's current shape.
+---@param n integer
+---@param padding number?
+function cursor.h_array(n, padding)
+    padding = padding or 0
+    for i = n - 1, 0, -1 do
+        cursor.push()
+        cursor_stack[volatile_data.cursor_index].x = cursor.x + (cursor.width + padding) * i
+    end
+end
+
+---Pushes n snapshots to the stack, such that when popping them,
+---the cursor will move from top to bottom with padding,
+---while maintaining the cursor's current shape.
+---@param n integer
+---@param padding number?
+function cursor.v_array(n, padding)
+    padding = padding or 0
+    for i = n - 1, 0, -1 do
+        cursor.push()
+        cursor_stack[volatile_data.cursor_index].y = cursor.y + (cursor.height + padding) * i
+    end
+end
+
+---Pushes n snapshots to the stack, such that when popping them,
+---the cursor will move from left to right with padding within the bounding box of the current cursor.
+---Cursors take on the shape formed by horizontally subdividing the current cursor with padding.
+---@param n integer number of sections to split into
+---@param padding number? padding between sections
+---@return integer n number of sections
+---@return number section_width the width of each resulting section, not including padding
+function cursor.h_split(n, padding)
+    padding = padding or 0
+    local section_width = (cursor.width - (n - 1) * padding) / n
+    local left_edge = cursor.x - cursor.anchor_x * cursor.width
+
+    for i = n - 1, 0, -1 do
+        cursor.push()
+        cursor_stack[volatile_data.cursor_index].x = left_edge
+            + (section_width + padding) * i
+            + section_width * cursor.anchor_x
+        cursor_stack[volatile_data.cursor_index].width = section_width
+    end
+
+    return n, section_width
+end
+
+---Pushes n snapshots to the stack, such that when popping them,
+---the cursor will move from top to bottom with padding within the bounding box of the current cursor.
+---Cursors take on the shape formed by vertically subdividing the current cursor with padding.
+---@param n integer number of sections to split into
+---@param padding number? padding between sections
+---@return integer n number of sections
+---@return number section_height the height of each resulting section, not including padding
+function cursor.v_split(n, padding)
+    padding = padding or 0
+    local section_height = (cursor.height - (n - 1) * padding) / n
+    local top_edge = cursor.y - cursor.anchor_y * cursor.height
+
+    for i = n - 1, 0, -1 do
+        cursor.push()
+        cursor_stack[volatile_data.cursor_index].y = top_edge
+            + (section_height + padding) * i
+            + section_height * cursor.anchor_y
+        cursor_stack[volatile_data.cursor_index].height = section_height
+    end
+
+    return n, section_height
+end
+
 ---Move the cursor right by its own width
 ---@param padding number? defaults to 0
 ---@param times integer? defaults to 1
@@ -443,10 +453,12 @@ end
 --#region translations
 
 ---Apply a translation to the cursor. Translations stack.
----Only affects the edge output table.
+---This translations can be edited later, but if it is, all placement tables will be inaccurate.
+---In this case, the first time a translation is applied, it should be a reasonable guess as to where the translation should be.
 ---@param x number
 ---@param y number
-function cursor.apply_translation(x, y)
+---@return integer translate_id
+function cursor.push_translation(x, y)
     local index = volatile_data.translate_index
     local prev_x, prev_y = translate_stack[index - 1], translate_stack[index]
     index = index + 2
@@ -455,14 +467,18 @@ function cursor.apply_translation(x, y)
     translate_stack[index] = prev_y + y
 
     volatile_data.translate_index = index
+
+    return draw_data.make_push_translation(x, y)
 end
 
 ---Removes the last applied translation
-function cursor.remove_translation()
+function cursor.pop_translation()
     if volatile_data.translate_index == volatile_data.translate_base_index then
         error("no more translations to remove")
     end
     volatile_data.translate_index = volatile_data.translate_index - 2
+
+    draw_data.make_pop_translation()
 end
 
 --#endregion
@@ -473,6 +489,7 @@ end
 -- Areas can be stacked, newly created elements only affect the topmost area.
 -- When an area is ended, it's representation is put into the cursor.
 -- Ending an area expands the area below, unless the no_propagate is true when calling finish_area
+-- Areas depend only on the cursor location. They are not affected by translations
 
 local do_area_expansion = true
 
@@ -564,28 +581,36 @@ end
 
 --#endregion
 
----Places the current cursor down. This will update the cursor edge output table as well as expand areas.
----Translations will be applied to the edge output table.
----Desired width and height are typically used by elements when their contents don't fit the cursor exactly.
+---Places the current cursor down. This will update both the last_placement and projected_placement tables.
+---Translations will be applied to ONLY the projected_placement table.
+---Desired width and height are for elements that don't fit the cursor.
 ---Passing desired width and height will reshape the cursor.
+---Placing a cursor will also expand areas.
 ---@param desired_width number? if provided, the placement will use this instead of cursor.width
 ---@param desired_height number? if provided, the placement will use this instead of cursor.height
 function cursor.place(desired_width, desired_height)
     local width, height = desired_width or cursor.width, desired_height or cursor.height
+    local dx, dy = translate_stack[volatile_data.translate_index - 1], translate_stack[volatile_data.translate_index]
+    local left, top, right, bottom = get_edges(cursor.x, cursor.y, cursor.anchor_x, cursor.anchor_y, width, height)
 
-    -- Apply translation
-    placement.x = cursor.x + translate_stack[volatile_data.translate_index - 1]
-    placement.y = cursor.y + translate_stack[volatile_data.translate_index]
+    -- update projected_placement
+    projected_placement.x = cursor.x + dx
+    projected_placement.y = cursor.y + dy
+    projected_placement.left = left + dx
+    projected_placement.top = top + dy
+    projected_placement.right = right + dx
+    projected_placement.bottom = bottom + dy
 
-    -- Update edges
-    placement.left, placement.top, placement.right, placement.bottom =
-        get_edges(placement.x, placement.y, cursor.anchor_x, cursor.anchor_y, width, height)
+    -- expand the current area
+    expand_area(area_stack[volatile_data.area_index], left, top, right, bottom)
 
-    -- Expand the current area
-    expand_area(
-        area_stack[volatile_data.area_index],
-        get_edges(cursor.x, cursor.y, cursor.anchor_x, cursor.anchor_y, width, height)
-    )
+    -- update placement
+    placement.x = cursor.x
+    placement.y = cursor.y
+    placement.left = left
+    placement.top = top
+    placement.right = right
+    placement.bottom = bottom
 
     -- reshape the cursor
     cursor.width, cursor.height = width, height

@@ -8,134 +8,15 @@ local scissor_stack = require("ui.draw_queue.scissor_stack")
 local extmath = require("ui.extmath")
 local sensor = require("ui.control.mouse_navigation.sensor")
 local warning = require("ui.warning")
+local draw_data = require("ui.draw_queue.draw_data")
+local op_ids = require("ui.draw_queue.draw_operation")
 
 local draw_queue = {}
-
-local op_ids = {
-    -- special operations
-    push_scissor = 0,
-    pop_scissor = 1,
-    mouse_sensor = 2,
-    revert_scissor = 3,
-    unused_reservation = 4,
-
-    -- operations that draw stuff
-    rectangle = 100,
-    rectangle_outline = 101,
-    circle = 102,
-    circle_outline = 103,
-    line = 104,
-    polygon = 105,
-    text = 106,
-}
-
----List of draw operations
-local op_list = {}
----Hold the index of the last pushed draw operation
-local op_index = 0
----List of reservations
-local res_list = {}
----Holds the index of the last created reservation
-local res_index = 0
----Contains the reservation table that the next operation will use, nil otherwise
-local take_reservation = nil
-
-local enable_pushing = true
-
----Pushes an operation to the current group. The first value should be an operation id.
----This operation id can be nil which will cause the operation to be ignored.
----@param ... any
-local function push_operation(...)
-    if not enable_pushing then
-        return
-    end
-
-    local slot_index
-
-    if take_reservation then
-        -- take a reservation
-
-        if take_reservation.next == take_reservation.stop then
-            error("reservation is full")
-        end
-
-        take_reservation.next = take_reservation.next + 1
-        slot_index = take_reservation.next
-
-        take_reservation = nil
-    else
-        op_index = op_index + 1
-        slot_index = op_index
-    end
-
-    op_list[slot_index] = op_list[slot_index] or {}
-    for i = 1, math.max(select("#", ...), #op_list[slot_index]) do
-        op_list[slot_index][i] = select(i, ...)
-    end
-end
-
----Reserves the next n draw operations. It is undefined behavior if not all reservations are properly taken later.
----@param n integer number of reservations, defaults to 1
----@return integer res_id use this reference id to later fill in reservation slots
----@nodiscard
-function draw_queue.reserve(n)
-    if not enable_pushing then
-        return 0
-    end
-
-    if n < 1 then
-        error("can't reserve less than 1 slot")
-    end
-
-    -- reservation start and stop points
-    local start, stop = op_index, op_index + n
-
-    res_index = res_index + 1
-    local res = res_list[res_index]
-    if res then
-        res.next = start
-        res.stop = stop
-    else
-        res = { next = start, stop = stop }
-        res_list[res_index] = res
-    end
-
-    -- fill in the gap that the reservation leaves
-    -- these slots are set up to be detected when drawing if they're not taken
-    for i = 1, n do
-        op_list[op_index + i] = op_list[op_index + i] or {}
-        local slot = op_list[op_index + i]
-        slot[1] = op_ids.unused_reservation
-        slot[2] = res_index
-        slot[3] = i
-        slot[4] = n
-    end
-
-    -- set the op_index to the end of the reservation
-    op_index = stop
-
-    return res_index
-end
-
----The next operation will fill in a slot in a reservation.
----Calling this multiple times in a row will only make the next draw operation take the last given res_id.
----@param res_id integer the reservation id to fill
-function draw_queue.take_reservation(res_id)
-    if not enable_pushing then
-        return
-    end
-
-    if not (res_id > 0 and res_id <= res_index) then
-        error("bad reservation id")
-    end
-
-    take_reservation = res_list[res_id]
-end
 
 ---Add a no-operation to the queue.
 ---Can be used to pop the reservation stack without adding any operation.
 function draw_queue.nop()
-    push_operation()
+    draw_data.add_operation(op_ids.nop)
 end
 
 ---Add a push to the scissor stack
@@ -143,18 +24,21 @@ end
 ---@param top number
 ---@param right number
 ---@param bottom number
+---@return integer placement_id
 function draw_queue.push_scissor(left, top, right, bottom)
-    push_operation(op_ids.push_scissor, left, top, right, bottom)
+    local id = draw_data.make_placement(left, top, right, bottom)
+    draw_data.add_operation(op_ids.push_scissor, id)
+    return id
 end
 
 ---Add a pop to the scissor stack
 function draw_queue.pop_scissor()
-    push_operation(op_ids.pop_scissor)
+    draw_data.add_operation(op_ids.pop_scissor)
 end
 
 ---@param n integer
 function draw_queue.revert_scissor(n)
-    push_operation(op_ids.revert_scissor, n)
+    draw_data.add_operation(op_ids.revert_scissor, n)
 end
 
 ---Add a mouse sensor to the draw queue.
@@ -166,11 +50,14 @@ end
 ---@param top number
 ---@param right number
 ---@param bottom number
+---@return integer placement_id
 function draw_queue.mouse_sensor(sensor_id, mode, left, top, right, bottom)
-    push_operation(op_ids.mouse_sensor, sensor_id, mode, left, top, right, bottom)
+    local id = draw_data.make_placement(left, top, right, bottom)
+    draw_data.add_operation(op_ids.mouse_sensor, id, sensor_id, mode)
+    return id
 end
 
---#region functions that actually draw things
+--#region drawing functions
 
 ---Add a rectangle to the queue
 ---@param mode love.DrawMode
@@ -182,8 +69,11 @@ end
 ---@param rx number
 ---@param ry number
 ---@param line_width number
+---@return integer placement_id
 function draw_queue.rectangle(mode, left, top, right, bottom, color, rx, ry, line_width)
-    push_operation(op_ids.rectangle, mode, left, top, right, bottom, rx, ry, line_width, unpack(color))
+    local id = draw_data.make_placement(left, top, right, bottom)
+    draw_data.add_operation(op_ids.rectangle, id, mode, rx, ry, line_width, unpack(color))
+    return id
 end
 
 ---Add a rectangle outline to the queue
@@ -195,8 +85,11 @@ end
 ---@param color number[]
 ---@param rx number
 ---@param ry number
+---@return integer placement_id
 function draw_queue.rectangle_outline(left, top, right, bottom, color, line_width, rx, ry)
-    push_operation(op_ids.rectangle_outline, left, top, right, bottom, line_width, rx, ry, unpack(color))
+    local id = draw_data.make_placement(left, top, right, bottom)
+    draw_data.add_operation(op_ids.rectangle_outline, id, line_width, rx, ry, unpack(color))
+    return id
 end
 
 ---Add a circle to the queue. Can also be used to make regular polygons.
@@ -208,13 +101,14 @@ end
 ---@param line_width number
 ---@param segments integer? number of sides
 ---@param rotation number? only useful if the number of segments is low
+---@return integer point_id
 function draw_queue.circle(mode, x, y, radius, color, line_width, segments, rotation)
+    local id = draw_data.make_point(x, y)
     rotation = rotation or 0
-    push_operation(
+    draw_data.add_operation(
         op_ids.circle,
+        id,
         mode,
-        x,
-        y,
         radius,
         color[1],
         color[2],
@@ -224,6 +118,7 @@ function draw_queue.circle(mode, x, y, radius, color, line_width, segments, rota
         rotation,
         segments
     )
+    return id
 end
 
 ---Add a circle outline to the queue. Can also be used to make regular polygons.
@@ -234,12 +129,13 @@ end
 ---@param color number[]
 ---@param segments integer? number of sides
 ---@param rotation number? only useful if the number of segments is low
+---@return integer point_id
 function draw_queue.circle_outline(x, y, radius, line_width, color, segments, rotation)
+    local id = draw_data.make_point(x, y)
     rotation = rotation or 0
-    push_operation(
+    draw_data.add_operation(
         op_ids.circle_outline,
-        x,
-        y,
+        id,
         radius,
         line_width,
         color[1],
@@ -249,15 +145,40 @@ function draw_queue.circle_outline(x, y, radius, line_width, color, segments, ro
         rotation,
         segments
     )
+    return id
 end
 
 ---Add a polygon to the queue
 ---@param mode string
 ---@param color number[]
 ---@param line_width number
+---@param x1 number 1st point x coordinate
+---@param y1 number 1st point y coordinate
+---@param x2 number 2nd point x coordinate
+---@param y2 number 2nd point y coordinate
+---@param x3 number 3rd point x coordinate
+---@param y3 number 3rd point y coordinate
 ---@param ... number
-function draw_queue.polygon(mode, color, line_width, ...)
-    push_operation(op_ids.polygon, mode, line_width, color[1], color[2], color[3], color[4], ...)
+---@return integer point_cluster_id
+function draw_queue.polygon(mode, color, line_width, x1, y1, x2, y2, x3, y3, ...)
+    local id = draw_data.make_point_cluster(x1, y1, x2, y2, x3, y3, ...)
+    draw_data.add_operation(op_ids.polygon, id, mode, line_width, color[1], color[2], color[3], color[4])
+    return id
+end
+
+---Add a multiline to the queue
+---@param line_width number
+---@param color number[]
+---@param x1 number 1st point x coordinate
+---@param y1 number 1st point y coordinate
+---@param x2 number 2nd point x coordinate
+---@param y2 number 2nd point y coordinate
+---@param ... number more coordinates
+---@return integer point_cluster_id
+function draw_queue.line(line_width, color, x1, y1, x2, y2, ...)
+    local id = draw_data.make_point_cluster(x1, y1, x2, y2, ...)
+    draw_data.add_operation(op_ids.line, id, line_width, color[1], color[2], color[3], color[4])
+    return id
 end
 
 ---Add text to the queue
@@ -265,20 +186,11 @@ end
 ---@param x number
 ---@param y number
 ---@param color number[]
+---@return integer point_id
 function draw_queue.text(text_object, x, y, color)
-    push_operation(op_ids.text, text_object, x, y, unpack(color))
-end
-
----Add a multiline to the queue
----@param line_width number
----@param color number[]
----@param x1 number first point x coordinate
----@param y1 number first point y coordinate
----@param x2 number second point x coordinate
----@param y2 number second point y coordinate
----@param ... number more coordinates
-function draw_queue.line(line_width, color, x1, y1, x2, y2, ...)
-    push_operation(op_ids.line, line_width, color[1], color[2], color[3], color[4], x1, y1, x2, y2, ...)
+    local id = draw_data.make_point(x, y)
+    draw_data.add_operation(op_ids.text, id, text_object, unpack(color))
+    return id
 end
 
 --#endregion
@@ -315,30 +227,23 @@ end
     - calling graphics transformations has no effect while building the queue.
 ]]
 
----Tells the draw_queue that we're done drawing for this frame.
----Any further operations are not added to the queue.
----Operations are enabled again after draw is called.
-function draw_queue.done()
-    enable_pushing = false
-end
-
 ---Execute all queued commands.
 ---This will also reset everything related to the queue
 function draw_queue.draw()
-    for i = 1, op_index do
-        local item = op_list[i]
-
-        local id = item[1]
-        -- id may be nil if a placeholder was left in / nothing was appended
-        if id then
+    local id, x1, y1, x2, y2, mode, rx, ry, line_width, r, g, b, a, half_width, radius, rotation, segments, text_object, sensor_id
+    for item in draw_data.iterate() do
+        id = item[1]
+        if id > op_ids.nop then
             if id == op_ids.rectangle then
-                local mode, x1, y1, x2, y2, rx, ry, line_width, r, g, b, a = unpack(item, 2, 13)
+                x1, y1, x2, y2 = draw_data.get_placement(item[2])
+                mode, rx, ry, line_width, r, g, b, a = unpack(item, 3)
                 love.graphics.setLineWidth(line_width)
                 love.graphics.setColor(r, g, b, a)
                 love.graphics.rectangle(mode, x1, y1, x2 - x1, y2 - y1, rx, ry)
             elseif id == op_ids.rectangle_outline then
-                local x1, y1, x2, y2, line_width, rx, ry, r, g, b, a = unpack(item, 2)
-                local half_width = line_width * 0.5
+                x1, y1, x2, y2 = draw_data.get_placement(item[2])
+                line_width, rx, ry, r, g, b, a = unpack(item, 3)
+                half_width = line_width * 0.5
                 love.graphics.setLineWidth(line_width)
                 love.graphics.setColor(r, g, b, a)
                 love.graphics.rectangle(
@@ -351,20 +256,22 @@ function draw_queue.draw()
                     ry
                 )
             elseif id == op_ids.circle then
-                local mode, x, y, radius, r, g, b, a, line_width, rotation, segments = unpack(item, 2)
+                x1, y1 = draw_data.get_point(item[2])
+                mode, radius, r, g, b, a, line_width, rotation, segments = unpack(item, 3)
                 love.graphics.setLineWidth(line_width)
                 love.graphics.setColor(r, g, b, a)
                 if rotation == 0 then
-                    love.graphics.circle(mode, x, y, radius, segments)
+                    love.graphics.circle(mode, x1, y1, radius, segments)
                 else
                     love.graphics.push()
-                    love.graphics.translate(x, y)
+                    love.graphics.translate(x1, y1)
                     love.graphics.rotate(rotation)
                     love.graphics.circle(mode, 0, 0, radius, segments)
                     love.graphics.pop()
                 end
             elseif id == op_ids.circle_outline then
-                local x, y, radius, line_width, r, g, b, a, rotation, segments = unpack(item, 2)
+                x1, y1 = draw_data.get_point(item[2])
+                radius, line_width, r, g, b, a, rotation, segments = unpack(item, 3)
                 if segments then
                     -- use accurate inset
                     radius = extmath.inradius_offset(radius, segments, -0.5 * line_width)
@@ -375,38 +282,39 @@ function draw_queue.draw()
                 love.graphics.setLineWidth(line_width)
                 love.graphics.setColor(r, g, b, a)
                 if rotation == 0 then
-                    love.graphics.circle("line", x, y, radius, segments)
+                    love.graphics.circle("line", x1, y1, radius, segments)
                 else
                     love.graphics.push()
-                    love.graphics.translate(x, y)
+                    love.graphics.translate(x1, y1)
                     love.graphics.rotate(rotation)
                     love.graphics.circle("line", 0, 0, radius, segments)
                     love.graphics.pop()
                 end
-            elseif id == op_ids.line then
-                local line_width, r, g, b, a = unpack(item, 2, 6)
-                love.graphics.setLineWidth(line_width)
-                love.graphics.setColor(r, g, b, a)
-                love.graphics.line(unpack(item, 7))
             elseif id == op_ids.polygon then
-                local mode, line_width, r, g, b, a = unpack(item, 2, 7)
+                mode, line_width, r, g, b, a = unpack(item, 3)
                 love.graphics.setLineWidth(line_width)
                 love.graphics.setColor(r, g, b, a)
-                love.graphics.polygon(mode, unpack(item, 8))
+                love.graphics.polygon(mode, draw_data.get_point_cluster(item[2]))
+            elseif id == op_ids.line then
+                line_width, r, g, b, a = unpack(item, 3)
+                love.graphics.setLineWidth(line_width)
+                love.graphics.setColor(r, g, b, a)
+                love.graphics.line(draw_data.get_point_cluster(item[2]))
             elseif id == op_ids.text then
-                local text_object, x, y, r, g, b, a = unpack(item, 2)
+                x1, y1 = draw_data.get_point(item[2])
+                text_object, r, g, b, a = unpack(item, 3)
                 love.graphics.setColor(r, g, b, a)
                 -- draw text objects without scaling for full resolution
                 -- find out where the text should go after we undo the scaling
-                x, y = love.graphics.transformPoint(x, y)
+                x1, y1 = love.graphics.transformPoint(x1, y1)
                 love.graphics.push()
                 love.graphics.origin()
-                love.graphics.draw(text_object, x, y)
+                love.graphics.draw(text_object, x1, y1)
                 love.graphics.pop()
 
             -- * special
             elseif id == op_ids.push_scissor then
-                local x1, y1, x2, y2 = unpack(item, 2)
+                x1, y1, x2, y2 = draw_data.get_placement(item[2])
                 -- scissor is not affected by graphics transforms
                 x1, y1 = love.graphics.transformPoint(x1, y1)
                 x2, y2 = love.graphics.transformPoint(x2, y2)
@@ -414,7 +322,8 @@ function draw_queue.draw()
             elseif id == op_ids.pop_scissor then
                 scissor_stack.pop()
             elseif id == op_ids.mouse_sensor then
-                local sensor_id, mode, x1, y1, x2, y2 = unpack(item, 2)
+                x1, y1, x2, y2 = draw_data.get_placement(item[2])
+                sensor_id, mode = unpack(item, 3)
                 local x, y, width, height = love.graphics.getScissor()
 
                 -- sensor and mouse is not affected by graphics transforms
@@ -451,11 +360,7 @@ function draw_queue.draw()
         end
     end
 
-    -- cleanup
-    op_index = 0
-    res_index = 0
-    take_reservation = nil
-    enable_pushing = true
+    draw_data.reset()
 end
 
 return draw_queue
