@@ -5,7 +5,7 @@ local knav = require("ui.control.keyboard_navigation")
 local shared_data = require("ui.shared_data")
 local control_data = shared_data.control
 local control_method = shared_data.enums.control_method
-local draw_queue = require("ui.draw_queue")
+local draw_data_block_draw_operations = require("ui.draw_queue.draw_data").block_draw_operations
 local stack_manager = require("ui.stack_manager")
 local selection_outline_add_to_queue = require("ui.decorator.selection_outline").add_to_queue
 local tooltip_add_to_queue = require("ui.decorator.tooltip").add_to_queue
@@ -151,7 +151,7 @@ function layers.run()
 
     -- turn off the draw queue
     -- this also disable the addition of new mouse sensors
-    draw_queue.done()
+    draw_data_block_draw_operations()
 
     reconfigure_layers()
 

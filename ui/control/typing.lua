@@ -246,7 +246,7 @@ do
     local knav = require("ui.control.keyboard_navigation")
     local kba = knav.actions
     local cursor = require("ui.cursor")
-    local placement = cursor.projected_placement
+    local placement = cursor.placement
     local mask = require("ui.mask")
     local text = require("ui.text")
     local theme = require("ui.theme")

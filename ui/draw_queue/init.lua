@@ -359,8 +359,6 @@ function draw_queue.draw()
             end
         end
     end
-
-    draw_data.reset()
 end
 
 return draw_queue

@@ -1,5 +1,5 @@
 local cursor = require("ui.cursor")
-local placement = cursor.projected_placement
+local projected_placement = cursor.projected_placement
 local extmath = require("ui.extmath")
 local mask = require("ui.mask")
 local mnav = require("ui.control.mouse_navigation")
@@ -11,6 +11,7 @@ local area_element = require("ui.area")
 local view_request = require("ui.area.view_request")
 local volatile_data = require("ui.shared_data").volatile
 local selection_outline = require("ui.decorator.selection_outline")
+local draw_data_edit_translation = require("ui.draw_queue.draw_data").edit_translation
 
 local scroll = {}
 
@@ -61,7 +62,7 @@ function scroll.start(state)
     mask.push() -- (2)
 
     -- move the contents of the scroll area
-    cursor.push_translation(
+    local tid = cursor.push_translation(
         state.scroll_dist_x, -- positive values scroll left
         state.scroll_dist_y -- positive values scroll up
     ) -- (3)
@@ -69,7 +70,8 @@ function scroll.start(state)
     -- for use later
     cursor.start_area() -- (4)
 
-    -- push area type
+    -- save transform id
+    area_element.aeb_push(tid)
 
     -- make a bunch of sensor ids (order does not matter)
     area_element.aeb_push(mnav.declare_sensor_id())
@@ -79,10 +81,10 @@ function scroll.start(state)
     area_element.aeb_push(mnav.declare_sensor_id())
 
     -- save literal cursor position for use later
-    area_element.aeb_push(placement.bottom)
-    area_element.aeb_push(placement.right)
-    area_element.aeb_push(placement.top)
-    area_element.aeb_push(placement.left)
+    area_element.aeb_push(projected_placement.bottom)
+    area_element.aeb_push(projected_placement.right)
+    area_element.aeb_push(projected_placement.top)
+    area_element.aeb_push(projected_placement.left)
 
     area_element.aeb_push(false) -- this gets turned into a true if a view request was made
     area_element.aeb_push(state) -- state
@@ -277,6 +279,8 @@ function scroll.finish(padding)
     local v_act = area_element.aeb_pop()
     local v_bar = area_element.aeb_pop()
 
+    local tid = area_element.aeb_pop()
+
     cursor.pop_translation() -- (3)
     mask.pop() -- (2)
 
@@ -368,7 +372,7 @@ function scroll.finish(padding)
                     literal_scroll_left,
                     literal_scroll_right,
                     h_actuator_size,
-                    placement.left,
+                    projected_placement.left,
                     scroll_region,
                     h_bar,
                     h_act
@@ -415,7 +419,7 @@ function scroll.finish(padding)
                     literal_scroll_top,
                     literal_scroll_bottom,
                     v_actuator_size,
-                    placement.top,
+                    projected_placement.top,
                     scroll_region,
                     v_bar,
                     v_act
@@ -425,6 +429,8 @@ function scroll.finish(padding)
     end
 
     cursor.pop() -- (1)
+
+    draw_data_edit_translation(tid, state.scroll_dist_x, state.scroll_dist_y)
 
     -- scroll region sensor is made last so it has the highest priority
     mnav.make_sensor(scroll_region, smode.lazy, smode.draggable)

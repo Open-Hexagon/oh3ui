@@ -7,6 +7,7 @@ local layers = require("ui.layers")
 local layers_run = layers.run
 local view_request_evaluate = require("ui.area.view_request").evaluate
 local selection_outline_reset = require("ui.decorator.selection_outline").reset
+local draw_data = require("ui.draw_queue.draw_data")
 
 local ui = {}
 
@@ -103,8 +104,11 @@ local function finish()
     -- for auto-scrolling with keyboard nav
     view_request_evaluate()
 
+    
     -- draw in order
+    draw_data.bake_translations()
     draw_queue_draw()
+    draw_data.reset()
 
     -- evaluate control methods
     control_evaluate()
