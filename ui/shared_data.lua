@@ -33,7 +33,7 @@ shared_data.control = {
     current_layer_is_active = false,
     current_layer = 0,
 
-    ---Used to disable control functions for non-interactable UI areas 
+    ---Used to disable control functions for non-interactable UI areas
     ---@type boolean
     keepout_enabled = false,
 }
@@ -46,7 +46,8 @@ shared_data.volatile = {
     cursor_base_index = 0,
 
     -- cursor translations
-    translate_stack = { 0, 0 }, -- the do-nothing translation is always here
+    -- has overloaded functionality: used to make the projected_placement table and bake_translations
+    translate_stack = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 }, -- the do-nothing translation is always here
     translate_index = 2, -- index of the last pushed translation
     translate_base_index = 2,
 
@@ -57,7 +58,6 @@ shared_data.volatile = {
 
     -- keeps track of how many masks have been applied
     mask_stack = {}, -- this only gets used when draw_queue.draw is called
-    -- this has overloaded funcionality as both mask.lua and scissor_stack.lua use this
     mask_index = 0, -- number of masks applied
     mask_base_index = 0,
 

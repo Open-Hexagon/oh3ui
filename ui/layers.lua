@@ -116,7 +116,7 @@ local function reconfigure_layers()
         -- if keyboard navigation was used we need to find the best cell to select on the new top layer
         control_data.current_layer_is_active = true
         knav.reset()
-        stack[length]()
+        stack[length]() -- we have to run the new top layer (possibly again)
         knav.finish_layer_transition()
         stack_manager.clean_up()
     else

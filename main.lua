@@ -1,9 +1,9 @@
 -- luacov: disable
 -- disable coverage while parsing arguments
 
-local unittest = require("tests.unittest")
 local argparse = require("argparse")
 local ui_settings = require("ui.settings")
+local unittest = require("tests.unittest")
 
 local parser = argparse("ohce", "open hexagon community edition")
 
@@ -38,10 +38,10 @@ end
 
 -- luacov: enable
 
-local example_menu = require("ui.menu.example")
-local empty_grid = require("ui.menu.empty_grid")
-local scroll_example = require("ui.menu.scroll_example")
 local collapse_example = require("ui.menu.collapse_example")
+local empty_grid = require("ui.menu.empty_grid")
+local example_menu = require("ui.menu.example")
+local scroll_example = require("ui.menu.scroll_example")
 local scroll_resizing = require("ui.menu.scroll_resizing")
 local ui = require("ui")
 

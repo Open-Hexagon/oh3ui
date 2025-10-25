@@ -1,4 +1,4 @@
--- emulates love2d's graphics transform system 
+-- emulates love2d's graphics transform system
 
 local transform_emulator = {}
 

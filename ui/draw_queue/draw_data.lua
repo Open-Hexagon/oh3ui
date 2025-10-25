@@ -129,11 +129,12 @@ function draw_data.make_pop_translation()
     return placement_index
 end
 
+local tstack = require("ui.shared_data").volatile.translate_stack
+
 ---Edits all placements so they are offset by the applied translations. This function should only be run once per frame.
 ---This saves us some work later.
 function draw_data.bake_translations()
     local prev_x, prev_y, length
-    local tstack = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 } -- do some preallocation
     local tindex = 2
     local i = 1
     while i <= placement_index do

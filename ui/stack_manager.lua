@@ -2,7 +2,7 @@
 
 local volatile_data = require("ui.shared_data").volatile
 local record_stack = volatile_data.record_stack
-local draw_queue = require("ui.draw_queue")
+local draw_queue_revert_scissor = require("ui.draw_queue").revert_scissor
 local warning = require("ui.warning")
 
 local stack_manager = {}
@@ -39,7 +39,7 @@ function stack_manager.pop_record()
 
     -- tell the draw queue that masks might not have been popped normally
     if volatile_data.mask_index ~= volatile_data.mask_base_index then
-        draw_queue.revert_scissor(volatile_data.mask_base_index)
+        draw_queue_revert_scissor(volatile_data.mask_base_index)
     end
 
     volatile_data.cursor_index = volatile_data.cursor_base_index
@@ -81,7 +81,7 @@ function stack_manager.clean_up()
     if volatile_data.mask_index > 0 then
         volatile_data.mask_index = 0
         volatile_data.mask_base_index = 0
-        draw_queue.revert_scissor(0)
+        draw_queue_revert_scissor(0)
         warning("not all masks were removed")
     end
     if volatile_data.aeb_index > 0 then

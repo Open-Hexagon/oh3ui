@@ -67,7 +67,6 @@ theme.widget_actuator = { 0.8, 0.8, 0.8, 1 }
 theme.widget_actuator_outline = theme.white
 theme.widget_actuator_outline_highlight = theme.accent_color
 
-
 theme.scrollbar = { 1, 1, 1, 0.35 }
 theme.grabbed_scrollbar = { 1, 1, 1, 0.6 }
 
