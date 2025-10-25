@@ -1,7 +1,6 @@
 local cursor = require("ui.cursor")
 local placement = cursor.placement
 local draw_queue = require("ui.draw_queue")
-local volatile_data = require("ui.shared_data").volatile
 
 local mask = {}
 
@@ -10,18 +9,11 @@ local mask = {}
 ---Make sure to pop the mask when you're done!
 ---@return integer placement_id
 function mask.push()
-    volatile_data.mask_index = volatile_data.mask_index + 1
     cursor.place()
     return draw_queue.push_scissor(placement.left, placement.top, placement.right, placement.bottom)
 end
 
----Removes the last applied mask.
-function mask.pop()
-    if volatile_data.mask_index == volatile_data.mask_base_index then
-        error("scissor stack underflow")
-    end
-    draw_queue.pop_scissor()
-    volatile_data.mask_index = volatile_data.mask_index - 1
-end
+---stack underflow checking is done during drawing
+mask.pop = draw_queue.pop_scissor
 
 return mask

@@ -10,7 +10,7 @@ local stack_manager = require("ui.stack_manager")
 local area_element = require("ui.area")
 local view_request = require("ui.area.view_request")
 local volatile_data = require("ui.shared_data").volatile
-local selection_outline = require("ui.decorator.selection_outline")
+local selection_outline_add_to_queue = require("ui.decorator.selection_outline").add_to_queue
 
 local scroll = {}
 
@@ -257,7 +257,7 @@ function scroll.finish(padding)
 
     -- Must come before mask.pop so the selection outline appears inside the scroll region
     -- Must come before cursor.remove_translation so the scroll request is made in the correct location
-    selection_outline.add_to_queue()
+    selection_outline_add_to_queue()
 
     area_element.aeb_pop_frame_header("scroll") -- (5)
 
@@ -318,9 +318,6 @@ function scroll.finish(padding)
     if flagged_for_view_request then
         view_request.push_limits(dist_limit_left, dist_limit_top, dist_limit_right, dist_limit_bottom)
     end
-
-    state.scroll_dist_x = extmath.clamp(state.scroll_dist_x, dist_limit_right, dist_limit_left)
-    state.scroll_dist_y = extmath.clamp(state.scroll_dist_y, dist_limit_bottom, dist_limit_top)
 
     -- actuator sizes
     local h_actuator_size = get_actuator_size(content_width, scroll_width)
@@ -428,6 +425,9 @@ function scroll.finish(padding)
     end
 
     cursor.pop() -- (1)
+
+    state.scroll_dist_x = extmath.clamp(state.scroll_dist_x, dist_limit_right, dist_limit_left)
+    state.scroll_dist_y = extmath.clamp(state.scroll_dist_y, dist_limit_bottom, dist_limit_top)
 
     cursor.edit_translation(tid, state.scroll_dist_x, state.scroll_dist_y)
 

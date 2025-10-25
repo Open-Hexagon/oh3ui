@@ -1,7 +1,7 @@
 ---A table of standard colors for the UI
 
 local bit = require("bit")
-local band, rshift = bit.band, bit.rshift
+local band, bor, rshift, lshift = bit.band, bit.bor, bit.rshift, bit.lshift
 local extmath = require("ui.extmath")
 local text = require("ui.text")
 
@@ -34,6 +34,50 @@ end
 
 local theme = {}
 
+---Gets an Xterm color by it's number.
+---Reference: https://www.calmar.ws/vim/256-xterm-24bit-rgb-color-chart.html
+---@param n integer 0-255
+---@return table
+function theme.get_xterm_color(n)
+    -- clamp number
+    n = band(n, 0xff)
+
+    -- check cache
+    if theme[n + 1] then
+        return theme[n + 1]
+    end
+
+    local hex
+    if n == 7 then
+        hex = 0xc0c0c0
+    elseif n == 8 then
+        hex = 0x808080
+    elseif n < 16 then
+        local r = band(n, 1) * 0xff0000
+        local g = band(rshift(n, 1), 1) * 0x00ff00
+        local b = band(rshift(n, 2), 1) * 0x0000ff
+        hex = bor(r, g, b)
+        if n < 8 then
+            hex = band(0x808080, hex)
+        end
+    elseif n < 232 then
+        local a = ((n - 16) % 6)
+        local b = (math.floor((n - 16) / 6) % 6)
+        local c = (math.floor((n - 16) / 36) % 6)
+        a = a > 0 and a * 40 + 55 or 0
+        b = b > 0 and b * 40 + 55 or 0
+        c = c > 0 and c * 40 + 55 or 0
+        hex = bor(lshift(c, 16), lshift(b, 8), a)
+    else
+        local brightness = 8 + (n - 232) * 10
+        hex = bor(lshift(brightness, 16), lshift(brightness, 8), brightness)
+    end
+
+    local color_table = i2c(hex)
+    theme[n + 1] = color_table
+    return color_table
+end
+
 ---Currently used text font
 ---@type text_font_path
 theme.font_path = text.font.default
@@ -43,14 +87,14 @@ theme.font_path = text.font.default
 theme.icon_font_path = text.icon_font.default
 
 -- primitive colors
-theme.black = { 0, 0, 0, 1 }
-theme.red = { 1, 0, 0, 1 }
-theme.yellow = { 1, 1, 0, 1 }
-theme.green = { 0, 1, 0, 1 }
-theme.cyan = { 0, 1, 1, 1 }
-theme.blue = { 0, 0, 1, 1 }
-theme.magenta = { 1, 0, 1, 1 }
-theme.white = { 1, 1, 1, 1 }
+theme.black = theme.get_xterm_color(0)
+theme.red = theme.get_xterm_color(9)
+theme.green = theme.get_xterm_color(10)
+theme.yellow = theme.get_xterm_color(11)
+theme.blue = theme.get_xterm_color(12)
+theme.magenta = theme.get_xterm_color(13)
+theme.cyan = theme.get_xterm_color(14)
+theme.white = theme.get_xterm_color(15)
 
 -- standard colors
 theme.default = theme.magenta -- default color of primitives

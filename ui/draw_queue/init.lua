@@ -10,6 +10,8 @@ local sensor = require("ui.control.mouse_navigation.sensor")
 local warning = require("ui.warning")
 local draw_data = require("ui.draw_queue.draw_data")
 local op_ids = require("ui.draw_queue.draw_operation")
+local settings = require("ui.settings")
+local theme = require("ui.theme")
 
 local draw_queue = {}
 
@@ -230,7 +232,10 @@ end
 ---Execute all queued commands.
 ---This will also reset everything related to the queue
 function draw_queue.draw()
-    local id, x1, y1, x2, y2, mode, rx, ry, line_width, r, g, b, a, half_width, radius, rotation, segments, text_object, sensor_id
+    draw_data.unblock_draw_operations()
+    local id, x1, y1, x2, y2, x3, y3, mode, rx, ry, line_width, r, g, b, a
+    local width, height, half_width, radius, rotation, segments, text_object, sensor_id
+    local tx1, ty1, tx2, ty2
     for item in draw_data.iterate() do
         id = item[1]
         if id > op_ids.nop then
@@ -306,39 +311,62 @@ function draw_queue.draw()
                 love.graphics.setColor(r, g, b, a)
                 -- draw text objects without scaling for full resolution
                 -- find out where the text should go after we undo the scaling
-                x1, y1 = love.graphics.transformPoint(x1, y1)
+                tx1, ty1 = love.graphics.transformPoint(x1, y1)
                 love.graphics.push()
                 love.graphics.origin()
-                love.graphics.draw(text_object, x1, y1)
+                love.graphics.draw(text_object, tx1, ty1)
                 love.graphics.pop()
 
             -- * special
             elseif id == op_ids.push_scissor then
                 x1, y1, x2, y2 = draw_data.get_placement(item[2])
                 -- scissor is not affected by graphics transforms
-                x1, y1 = love.graphics.transformPoint(x1, y1)
-                x2, y2 = love.graphics.transformPoint(x2, y2)
-                scissor_stack.push(x1, y1, x2, y2)
+                tx1, ty1 = love.graphics.transformPoint(x1, y1)
+                tx2, ty2 = love.graphics.transformPoint(x2, y2)
+                scissor_stack.push(tx1, ty1, tx2, ty2)
+
+                -- overlay masks
+                if settings.show_masks then
+                    draw_queue.rectangle("line", x1 - 1, y1 - 1, x2 + 1, y2 + 1, theme.get_xterm_color(157), 0, 0, 2)
+                end
             elseif id == op_ids.pop_scissor then
                 scissor_stack.pop()
             elseif id == op_ids.mouse_sensor then
                 x1, y1, x2, y2 = draw_data.get_placement(item[2])
                 sensor_id, mode = unpack(item, 3)
-                local x, y, width, height = love.graphics.getScissor()
+                x3, y3, width, height = love.graphics.getScissor()
 
                 -- sensor and mouse is not affected by graphics transforms
-                x1, y1 = love.graphics.transformPoint(x1, y1)
-                x2, y2 = love.graphics.transformPoint(x2, y2)
+                tx1, ty1 = love.graphics.transformPoint(x1, y1)
+                tx2, ty2 = love.graphics.transformPoint(x2, y2)
 
-                if x then
-                    x1, y1, x2, y2 = extmath.aligned_rectangle_intersection(x1, y1, x2, y2, x, y, x + width, y + height)
+                if x3 then
+                    tx1, ty1, tx2, ty2 =
+                        extmath.aligned_rectangle_intersection(tx1, ty1, tx2, ty2, x3, y3, x3 + width, y3 + height)
                     -- only push if there was an intersection
-                    if x1 then
-                        sensor.push(sensor_id, mode, x1, y1, x2, y2)
+                    if tx1 then
+                        sensor.push(sensor_id, mode, tx1, ty1, tx2, ty2)
                     end
                 else
                     -- push if there is no active scissor
-                    sensor.push(sensor_id, mode, x1, y1, x2, y2)
+                    sensor.push(sensor_id, mode, tx1, ty1, tx2, ty2)
+                end
+
+                -- overlay mouse sensors
+                if tx1 and settings.show_mouse_sensors then
+                    tx1, ty1 = love.graphics.inverseTransformPoint(tx1, ty1)
+                    tx2, ty2 = love.graphics.inverseTransformPoint(tx2, ty2)
+                    draw_queue.rectangle(
+                        "line",
+                        tx1 - 1,
+                        ty1 - 1,
+                        tx2 + 1,
+                        ty2 + 1,
+                        theme.get_xterm_color(213),
+                        0,
+                        0,
+                        2
+                    )
                 end
             elseif id == op_ids.revert_scissor then
                 scissor_stack.revert(item[2])

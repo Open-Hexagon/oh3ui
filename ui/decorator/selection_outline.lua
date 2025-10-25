@@ -64,31 +64,19 @@ local mask_left, mask_top, mask_right, mask_bottom
 
 local selection_outline = {}
 
--- ---Write a true value to the "add_selection_outline" value in the closest scroll aeb frame header if possible.
--- local function set_aeb_stack()
---     local current_index = area_element.top_frame
---     while current_index do
---         if aeb_stack[current_index - 1] == "scroll" then
---             aeb_stack[current_index - 2] = true
---             return
---         end
---         current_index = aeb_stack[current_index]
---     end
--- end
-
-local x, y, width, height, anchor_x, anchor_y
+-- local x, y, width, height, anchor_x, anchor_y
 
 ---Sets the selection outline location so it can be put in the draw queue later.
 ---This function behaves like a decorator element and will call cursor.place.
 ---Also requests scroll regions to put the location into view
 function selection_outline.set_location()
     if mode == INACTIVE then
-        x = cursor.x
-        y = cursor.y
-        width = cursor.width
-        height = cursor.height
-        anchor_x = cursor.anchor_x
-        anchor_y = cursor.anchor_y
+        -- x = cursor.x
+        -- y = cursor.y
+        -- width = cursor.width
+        -- height = cursor.height
+        -- anchor_x = cursor.anchor_x
+        -- anchor_y = cursor.anchor_y
 
         cursor.area_expansion_off()
         cursor.place()
@@ -100,8 +88,6 @@ function selection_outline.set_location()
         top = placement.top - outset
         right = placement.right + outset
         bottom = placement.bottom + outset
-
-        -- set_aeb_stack()
 
         mode = READY
     end
@@ -129,13 +115,13 @@ end
 function selection_outline.add_to_queue()
     if mode == READY then
         if not hidden then
-            if knav.selection_has_changed then
-                initiate_auto_scroll()
-            end
+            -- if knav.selection_has_changed then
+            --     initiate_auto_scroll()
+            -- end
             if mask_left then
-                draw_queue.push_scissor(mask_left, mask_top, mask_right, mask_bottom)
+                -- draw_queue.push_scissor(mask_left, mask_top, mask_right, mask_bottom)
                 draw_queue.rectangle("line", left, top, right, bottom, theme.accent_color, 0, 0, line_width or 1)
-                draw_queue.pop_scissor()
+                -- draw_queue.pop_scissor()
             else
                 draw_queue.rectangle("line", left, top, right, bottom, theme.accent_color, 0, 0, line_width or 1)
             end

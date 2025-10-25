@@ -223,6 +223,10 @@ function draw_data.block_draw_operations()
     draw_data_is_blocked = true
 end
 
+function draw_data.unblock_draw_operations()
+    draw_data_is_blocked = false
+end
+
 --#region draw reservations
 
 ---Reserves the next n draw operations. Will cause an error/warning if not all reservations are taken later.
@@ -298,8 +302,11 @@ end
 ---@return fun():table
 function draw_data.iterate()
     return coroutine.wrap(function()
-        for i = 1, draw_index do
+        -- we do it like this because the draw list might self modify
+        local i = 1
+        while i <= draw_index do
             coroutine.yield(draw_list[i])
+            i = i + 1
         end
     end)
 end

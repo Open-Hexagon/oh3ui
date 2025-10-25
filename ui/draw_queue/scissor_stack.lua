@@ -34,6 +34,9 @@ end
 
 ---Pop an area from the stack
 function scissor_stack.pop()
+    if mask_index == 0 then
+        error("scissor stack underflow")
+    end
     scissor_stack.revert(mask_index - 1)
 end
 
