@@ -382,10 +382,10 @@ function cursor.h_split(n, padding)
 
     for i = n - 1, 0, -1 do
         cursor.push()
-        cursor_stack[volatile_data.cursor_index].x = left_edge
+        cursor_stack[volatile_data.cursor_index - 6] = left_edge
             + (section_width + padding) * i
             + section_width * cursor.anchor_x
-        cursor_stack[volatile_data.cursor_index].width = section_width
+        cursor_stack[volatile_data.cursor_index - 2] = section_width
     end
 
     return n, section_width
@@ -405,10 +405,10 @@ function cursor.v_split(n, padding)
 
     for i = n - 1, 0, -1 do
         cursor.push()
-        cursor_stack[volatile_data.cursor_index].y = top_edge
+        cursor_stack[volatile_data.cursor_index - 5] = top_edge
             + (section_height + padding) * i
             + section_height * cursor.anchor_y
-        cursor_stack[volatile_data.cursor_index].height = section_height
+        cursor_stack[volatile_data.cursor_index - 1] = section_height
     end
 
     return n, section_height

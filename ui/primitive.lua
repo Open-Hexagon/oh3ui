@@ -15,9 +15,10 @@ local primitive = {}
 ---@param color number[]? overrides the default color
 ---@param mode? "fill"|"line" default is "fill"
 ---@param line_width number? only used in line mode
+---@return integer placement_id
 function primitive.rectangle(color, mode, line_width)
     cursor.place()
-    draw_queue.rectangle(
+    return draw_queue.rectangle(
         mode or "fill",
         placement.left,
         placement.top,
@@ -33,9 +34,10 @@ end
 ---Rectangle outline primitive. Never reshapes the cursor.
 ---@param color number[]? overrides the default color
 ---@param line_width number?
+---@return integer placement_id
 function primitive.rectangle_outline(color, line_width)
     cursor.place()
-    draw_queue.rectangle_outline(
+    return draw_queue.rectangle_outline(
         placement.left,
         placement.top,
         placement.right,
@@ -51,10 +53,11 @@ end
 ---@param color number[]? overrides the default color
 ---@param mode? "fill"|"line" default is "fill"
 ---@param line_width number? only used in line mode
+---@return integer placement_id
 function primitive.slot(color, mode, line_width)
     local radius = math.min(cursor.width, cursor.height) / 2
     cursor.place()
-    draw_queue.rectangle(
+    return draw_queue.rectangle(
         mode or "fill",
         placement.left,
         placement.top,
@@ -70,10 +73,11 @@ end
 ---Slot outline primitive. Never reshapes the cursor.
 ---@param color number[]? overrides the default color
 ---@param line_width number?
+---@return integer placement_id
 function primitive.slot_outline(color, line_width)
     local radius = math.min(cursor.width, cursor.height) / 2
     cursor.place()
-    draw_queue.rectangle_outline(
+    return draw_queue.rectangle_outline(
         placement.left,
         placement.top,
         placement.right,
@@ -92,12 +96,13 @@ end
 ---@param rotation number? only useful if the number of sides is small
 ---@param mode string? "fill" or "line" (default is "fill")
 ---@param line_width number?
+---@return integer point_id
 function primitive.circle(color, sides, rotation, mode, line_width)
     cursor.push()
     local diameter = math.min(cursor.width, cursor.height)
     local radius = diameter / 2
     cursor.place(diameter, diameter)
-    draw_queue.circle(
+    local point_id = draw_queue.circle(
         mode or "fill",
         placement.left + radius,
         placement.top + radius,
@@ -108,6 +113,7 @@ function primitive.circle(color, sides, rotation, mode, line_width)
         rotation
     )
     cursor.do_auto_reshape()
+    return point_id
 end
 
 ---Circle primitive. Will reshape the cursor if the cursor width and height aren't the same.
@@ -116,12 +122,13 @@ end
 ---@param line_width number?
 ---@param sides integer? create regular polygons instead
 ---@param rotation number? only useful if the number of sides is small
+---@return integer point_id
 function primitive.circle_outline(color, line_width, sides, rotation)
     cursor.push()
     local diameter = math.min(cursor.width, cursor.height)
     local radius = diameter / 2
     cursor.place(diameter, diameter)
-    draw_queue.circle_outline(
+    local point_id = draw_queue.circle_outline(
         placement.left + radius,
         placement.top + radius,
         radius,
@@ -131,6 +138,7 @@ function primitive.circle_outline(color, line_width, sides, rotation)
         rotation
     )
     cursor.do_auto_reshape()
+    return point_id
 end
 
 ---Creates a label. Will reshape the cursor.
@@ -140,6 +148,7 @@ end
 ---@param wrap boolean wrap text
 ---@param color number[]? override text color
 ---@param font_path string? override font
+---@return integer point_id
 function primitive.label(str, size, align, wrap, color, font_path)
     cursor.push()
 
@@ -161,15 +170,17 @@ function primitive.label(str, size, align, wrap, color, font_path)
     end
 
     cursor.place(text_width, text_height)
-    draw_queue.text(text_object, placement.left, placement.top, color or theme.text_color)
+    local point_id = draw_queue.text(text_object, placement.left, placement.top, color or theme.text_color)
 
     cursor.do_auto_reshape()
+    return point_id
 end
 
 ---Creates an icon. Uses "assets/bootstrap-icons.ttf" by default. Will reshape the cursor.
 ---@param icon_name string icon name
 ---@param size number icon override icon size in pixels (works like a font)
 ---@param color number[]? override text color
+---@return integer point_id
 function primitive.icon(icon_name, size, color)
     cursor.push()
 
@@ -181,29 +192,32 @@ function primitive.icon(icon_name, size, color)
     local width, height = love.graphics.inverseTransformPoint(text_object:getDimensions())
 
     cursor.place(width, height)
-    draw_queue.text(text_object, placement.left, placement.top, color or theme.text_color)
+    local point_id = draw_queue.text(text_object, placement.left, placement.top, color or theme.text_color)
 
     cursor.do_auto_reshape()
+    return point_id
 end
 
 ---Horizontal line primitive. Never reshapes the cursor.
 ---The line will be placed at about cursor.y and extend from edge.left to edge.right.
 ---@param color number[]?
 ---@param line_width number?
+---@return integer point_cluster_id
 function primitive.hline(color, line_width)
     cursor.place()
     local y = placement.y - cursor.anchor_y + 0.5
-    draw_queue.line(line_width or 1, color or theme.default, placement.left, y, placement.right, y)
+    return draw_queue.line(line_width or 1, color or theme.default, placement.left, y, placement.right, y)
 end
 
 ---Vertical line primitive. Never reshapes the cursor.
 ---The line will be placed at about cursor.x and extend from edge.top to edge.bottom.
 ---@param color number[]?
 ---@param line_width number?
+---@return integer point_cluster_id
 function primitive.vline(color, line_width)
     cursor.place()
     local x = placement.x - cursor.anchor_x + 0.5
-    draw_queue.line(line_width or 1, color or theme.default, x, placement.top, x, placement.bottom)
+    return draw_queue.line(line_width or 1, color or theme.default, x, placement.top, x, placement.bottom)
 end
 
 return primitive

@@ -8,10 +8,11 @@ local mask = {}
 ---Mask everything outside of the cursor. Further draw operations will not affect masked areas.
 ---Mouse interaction is cancelled in masked areas.
 ---Make sure to pop the mask when you're done!
+---@return integer placement_id
 function mask.push()
     volatile_data.mask_index = volatile_data.mask_index + 1
     cursor.place()
-    draw_queue.push_scissor(placement.left, placement.top, placement.right, placement.bottom)
+    return draw_queue.push_scissor(placement.left, placement.top, placement.right, placement.bottom)
 end
 
 ---Removes the last applied mask.

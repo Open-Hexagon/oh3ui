@@ -74,15 +74,15 @@ end
 function draw_data.make_point_cluster(...)
     placement_index = placement_index + 1
     local cluster_id = placement_index
-    placement_index[placement_index] = "point_cluster"
+    placement_list[placement_index] = "point_cluster"
 
     placement_index = placement_index + 1
     local size = select("#", ...)
-    placement_index[placement_index] = size
+    placement_list[placement_index] = size
 
     for i = 1, size do
         placement_index = placement_index + 1
-        placement_index[placement_index] = select(i, ...)
+        placement_list[placement_index] = select(i, ...)
     end
 
     return cluster_id
@@ -92,7 +92,7 @@ end
 ---@param id integer
 ---@return number ...
 function draw_data.get_point_cluster(id)
-    return unpack(placement_list, id + 2, id + 2 + placement_list[id + 1])
+    return unpack(placement_list, id + 2, id + 1 + placement_list[id + 1])
 end
 
 ---adds a push translation
