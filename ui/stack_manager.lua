@@ -1,28 +1,23 @@
 ---A module that manages stacks that are used across the module
 
 local volatile_data = require("ui.shared_data").volatile
-local record_stack = volatile_data.record_stack
 local draw_queue_revert_scissor = require("ui.draw_queue").revert_scissor
 local warning = require("ui.warning")
+
+local record_stack = {}
+local record_stack_index = 0
 
 local stack_manager = {}
 
 ---Makes a record of all stacks. This prevents popping of any stack entries that have been made before this function is called.
 ---Can be used to restore all stacks to a known state.
 function stack_manager.push_record()
-    do
-        local index = volatile_data.record_stack_index + 1
-        record_stack[index] = record_stack[index] or {}
-        local slot = record_stack[index]
-
-        slot[1] = volatile_data.cursor_base_index
-        slot[2] = volatile_data.translate_base_index
-        slot[3] = volatile_data.area_base_index
-        slot[4] = volatile_data.mask_base_index
-        slot[5] = volatile_data.aeb_base_index
-
-        volatile_data.record_stack_index = index
-    end
+    record_stack_index = record_stack_index + 5
+    record_stack[record_stack_index - 4] = volatile_data.cursor_base_index
+    record_stack[record_stack_index - 3] = volatile_data.translate_base_index
+    record_stack[record_stack_index - 2] = volatile_data.area_base_index
+    record_stack[record_stack_index - 1] = volatile_data.mask_base_index
+    record_stack[record_stack_index] = volatile_data.aeb_base_index
 
     volatile_data.cursor_base_index = volatile_data.cursor_index
     volatile_data.translate_base_index = volatile_data.translate_index
@@ -33,7 +28,7 @@ end
 
 ---Reverts all stacks to the last record
 function stack_manager.pop_record()
-    if volatile_data.record_stack_index == 0 then
+    if record_stack_index == 0 then
         error("no records left to pop")
     end
 
@@ -48,18 +43,12 @@ function stack_manager.pop_record()
     volatile_data.mask_index = volatile_data.mask_base_index
     volatile_data.aeb_index = volatile_data.aeb_base_index
 
-    do
-        local index = volatile_data.record_stack_index
-        local slot = record_stack[index]
-
-        volatile_data.cursor_base_index = slot[1]
-        volatile_data.translate_base_index = slot[2]
-        volatile_data.area_base_index = slot[3]
-        volatile_data.mask_base_index = slot[4]
-        volatile_data.aeb_base_index = slot[5]
-
-        volatile_data.record_stack_index = index - 1
-    end
+    volatile_data.cursor_base_index = record_stack[record_stack_index - 4]
+    volatile_data.translate_base_index = record_stack[record_stack_index - 3]
+    volatile_data.area_base_index = record_stack[record_stack_index - 2]
+    volatile_data.mask_base_index = record_stack[record_stack_index - 1]
+    volatile_data.aeb_base_index = record_stack[record_stack_index]
+    record_stack_index = record_stack_index - 5
 end
 
 function stack_manager.clean_up()
@@ -90,8 +79,8 @@ function stack_manager.clean_up()
             string.format("a(n) %s element wasn't finished properly", volatile_data.aeb_stack[volatile_data.aeb_index])
         )
     end
-    if volatile_data.record_stack_index > 0 then
-        volatile_data.record_stack_index = 0
+    if record_stack_index > 0 then
+        record_stack_index = 0
         warning("the record stack wasn't empty at the end of frame")
     end
 end
