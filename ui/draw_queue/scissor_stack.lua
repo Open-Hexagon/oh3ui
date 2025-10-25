@@ -8,17 +8,18 @@ local mask_stack = require("ui.shared_data").volatile.mask_stack
 local mask_index = 0
 
 ---Push an area on the stack
----@param x number
----@param y number
----@param width number
----@param height number
-function scissor_stack.push(x, y, width, height)
+---@param x1 number
+---@param y1 number
+---@param x2 number
+---@param y2 number
+function scissor_stack.push(x1, y1, x2, y2)
     -- correct for floating point rounding
-    x = math.floor(x)
-    y = math.floor(y)
-    width = math.ceil(width)
-    height = math.ceil(height)
-    love.graphics.intersectScissor(x, y, width, height)
+    x1 = math.floor(x1)
+    y1 = math.floor(y1)
+    x2 = math.ceil(x2)
+    y2 = math.ceil(y2)
+
+    love.graphics.intersectScissor(x1, y1, x2 - x1, y2 - y1)
 
     -- save a snapshot of what the scissor is like now
     mask_index = mask_index + 1

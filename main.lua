@@ -61,8 +61,8 @@ function love.run()
     love.keyboard.setKeyRepeat(true)
 
     -- ui.init(empty_grid)
-    ui.init(example_menu)
-    -- ui.init(scroll_example)
+    -- ui.init(example_menu)
+    ui.init(scroll_example)
     -- ui.init(collapse_example)
     -- ui.init(scroll_resizing)
 

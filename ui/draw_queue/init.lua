@@ -318,7 +318,7 @@ function draw_queue.draw()
                 -- scissor is not affected by graphics transforms
                 x1, y1 = love.graphics.transformPoint(x1, y1)
                 x2, y2 = love.graphics.transformPoint(x2, y2)
-                scissor_stack.push(x1, y1, x2 - x1, y2 - y1)
+                scissor_stack.push(x1, y1, x2, y2)
             elseif id == op_ids.pop_scissor then
                 scissor_stack.pop()
             elseif id == op_ids.mouse_sensor then
