@@ -186,7 +186,7 @@ end
 
 ---Adds an operation.
 ---@param ... any
-function draw_data.add_operation(...)
+function draw_data.add_draw_operation(...)
     if draw_data_is_blocked then
         return
     end
@@ -228,7 +228,7 @@ end
 ---@param n integer number of reservations, defaults to 1
 ---@return integer res_id use this reference id to later fill in reservation slots
 ---@nodiscard
-function draw_data.reserve(n)
+function draw_data.reserve_draw_slots(n)
     if draw_data_is_blocked then
         return 0
     end
@@ -264,7 +264,7 @@ end
 ---The next operation will fill in a slot in a reservation.
 ---Calling this multiple times in a row will only make the next draw operation take the last given res_id.
 ---@param res_id integer the reservation id to fill
-function draw_data.take_reservation(res_id)
+function draw_data.take_draw_reservation(res_id)
     if draw_data_is_blocked then
         return
     end

@@ -351,7 +351,7 @@ function cursor.h_array(n, padding)
     padding = padding or 0
     for i = n - 1, 0, -1 do
         cursor.push()
-        cursor_stack[volatile_data.cursor_index].x = cursor.x + (cursor.width + padding) * i
+        cursor_stack[volatile_data.cursor_index - 6] = cursor.x + (cursor.width + padding) * i
     end
 end
 
@@ -364,7 +364,7 @@ function cursor.v_array(n, padding)
     padding = padding or 0
     for i = n - 1, 0, -1 do
         cursor.push()
-        cursor_stack[volatile_data.cursor_index].y = cursor.y + (cursor.height + padding) * i
+        cursor_stack[volatile_data.cursor_index - 5] = cursor.y + (cursor.height + padding) * i
     end
 end
 
@@ -453,7 +453,7 @@ end
 --#region translations
 
 ---Apply a translation to the cursor. Translations stack.
----This translations can be edited later, but if it is, all placement tables will be inaccurate.
+---This translations can be edited later, but if it is, the projected_placement table will be inaccurate.
 ---In this case, the first time a translation is applied, it should be a reasonable guess as to where the translation should be.
 ---@param x number
 ---@param y number
@@ -480,6 +480,9 @@ function cursor.pop_translation()
 
     draw_data.make_pop_translation()
 end
+
+cursor.edit_translation = draw_data.edit_translation
+cursor.get_translation = draw_data.get_translation
 
 --#endregion
 

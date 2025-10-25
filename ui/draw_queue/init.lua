@@ -16,7 +16,7 @@ local draw_queue = {}
 ---Add a no-operation to the queue.
 ---Can be used to pop the reservation stack without adding any operation.
 function draw_queue.nop()
-    draw_data.add_operation(op_ids.nop)
+    draw_data.add_draw_operation(op_ids.nop)
 end
 
 ---Add a push to the scissor stack
@@ -27,18 +27,18 @@ end
 ---@return integer placement_id
 function draw_queue.push_scissor(left, top, right, bottom)
     local id = draw_data.make_placement(left, top, right, bottom)
-    draw_data.add_operation(op_ids.push_scissor, id)
+    draw_data.add_draw_operation(op_ids.push_scissor, id)
     return id
 end
 
 ---Add a pop to the scissor stack
 function draw_queue.pop_scissor()
-    draw_data.add_operation(op_ids.pop_scissor)
+    draw_data.add_draw_operation(op_ids.pop_scissor)
 end
 
 ---@param n integer
 function draw_queue.revert_scissor(n)
-    draw_data.add_operation(op_ids.revert_scissor, n)
+    draw_data.add_draw_operation(op_ids.revert_scissor, n)
 end
 
 ---Add a mouse sensor to the draw queue.
@@ -53,7 +53,7 @@ end
 ---@return integer placement_id
 function draw_queue.mouse_sensor(sensor_id, mode, left, top, right, bottom)
     local id = draw_data.make_placement(left, top, right, bottom)
-    draw_data.add_operation(op_ids.mouse_sensor, id, sensor_id, mode)
+    draw_data.add_draw_operation(op_ids.mouse_sensor, id, sensor_id, mode)
     return id
 end
 
@@ -72,7 +72,7 @@ end
 ---@return integer placement_id
 function draw_queue.rectangle(mode, left, top, right, bottom, color, rx, ry, line_width)
     local id = draw_data.make_placement(left, top, right, bottom)
-    draw_data.add_operation(op_ids.rectangle, id, mode, rx, ry, line_width, unpack(color))
+    draw_data.add_draw_operation(op_ids.rectangle, id, mode, rx, ry, line_width, unpack(color))
     return id
 end
 
@@ -88,7 +88,7 @@ end
 ---@return integer placement_id
 function draw_queue.rectangle_outline(left, top, right, bottom, color, line_width, rx, ry)
     local id = draw_data.make_placement(left, top, right, bottom)
-    draw_data.add_operation(op_ids.rectangle_outline, id, line_width, rx, ry, unpack(color))
+    draw_data.add_draw_operation(op_ids.rectangle_outline, id, line_width, rx, ry, unpack(color))
     return id
 end
 
@@ -105,7 +105,7 @@ end
 function draw_queue.circle(mode, x, y, radius, color, line_width, segments, rotation)
     local id = draw_data.make_point(x, y)
     rotation = rotation or 0
-    draw_data.add_operation(
+    draw_data.add_draw_operation(
         op_ids.circle,
         id,
         mode,
@@ -133,7 +133,7 @@ end
 function draw_queue.circle_outline(x, y, radius, line_width, color, segments, rotation)
     local id = draw_data.make_point(x, y)
     rotation = rotation or 0
-    draw_data.add_operation(
+    draw_data.add_draw_operation(
         op_ids.circle_outline,
         id,
         radius,
@@ -162,7 +162,7 @@ end
 ---@return integer point_cluster_id
 function draw_queue.polygon(mode, color, line_width, x1, y1, x2, y2, x3, y3, ...)
     local id = draw_data.make_point_cluster(x1, y1, x2, y2, x3, y3, ...)
-    draw_data.add_operation(op_ids.polygon, id, mode, line_width, color[1], color[2], color[3], color[4])
+    draw_data.add_draw_operation(op_ids.polygon, id, mode, line_width, color[1], color[2], color[3], color[4])
     return id
 end
 
@@ -177,7 +177,7 @@ end
 ---@return integer point_cluster_id
 function draw_queue.line(line_width, color, x1, y1, x2, y2, ...)
     local id = draw_data.make_point_cluster(x1, y1, x2, y2, ...)
-    draw_data.add_operation(op_ids.line, id, line_width, color[1], color[2], color[3], color[4])
+    draw_data.add_draw_operation(op_ids.line, id, line_width, color[1], color[2], color[3], color[4])
     return id
 end
 
@@ -189,7 +189,7 @@ end
 ---@return integer point_id
 function draw_queue.text(text_object, x, y, color)
     local id = draw_data.make_point(x, y)
-    draw_data.add_operation(op_ids.text, id, text_object, unpack(color))
+    draw_data.add_draw_operation(op_ids.text, id, text_object, unpack(color))
     return id
 end
 

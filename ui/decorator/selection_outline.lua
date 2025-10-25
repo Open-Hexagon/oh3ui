@@ -1,6 +1,7 @@
 local decorator = require("ui.decorator")
 local cursor = require("ui.cursor")
-local placement = cursor.projected_placement
+local placement = cursor.placement
+local projected_placement = cursor.projected_placement
 local theme = require("ui.theme")
 local knav = require("ui.control.keyboard_navigation")
 local view_request = require("ui.area.view_request")
@@ -115,7 +116,12 @@ local function initiate_auto_scroll()
     cursor.anchor_x = anchor_x
     cursor.anchor_y = anchor_y
     cursor.place()
-    view_request.scroll_into_view(placement.left, placement.top, placement.right, placement.bottom)
+    view_request.scroll_into_view(
+        projected_placement.left,
+        projected_placement.top,
+        projected_placement.right,
+        projected_placement.bottom
+    )
     cursor.pop()
 end
 

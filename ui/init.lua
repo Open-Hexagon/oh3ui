@@ -104,7 +104,6 @@ local function finish()
     -- for auto-scrolling with keyboard nav
     view_request_evaluate()
 
-    
     -- draw in order
     draw_data.bake_translations()
     draw_queue_draw()

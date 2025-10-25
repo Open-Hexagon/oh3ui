@@ -1,10 +1,10 @@
 ---Alias module for the draw queue reservation functionality
 
-local draw_queue = require("ui.draw_queue")
+local draw_data = require("ui.draw_queue.draw_data")
 
 local reserve = {}
 
-reserve.allocate = draw_queue.reserve
-reserve.take = draw_queue.take_reservation
+reserve.allocate = draw_data.reserve_draw_slots
+reserve.take = draw_data.take_draw_reservation
 
 return reserve

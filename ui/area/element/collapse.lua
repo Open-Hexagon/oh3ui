@@ -19,7 +19,7 @@ local selection_outline_cutoff = -(decorator.selection_outline_outset + decorato
 
 local collapse = {}
 
-local speed = 1800
+local speed = 100 --1800
 
 ---@param state table
 ---@param anchor_pos "topleft"|"bottomright" The corner of the collapse area that won't move
@@ -28,32 +28,14 @@ local speed = 1800
 ---@param sensor_id integer? optional sensor id
 ---@param cell_id integer? optional cell id
 function collapse.start(state, anchor_pos, clipping_side, no_auto_open, sensor_id, cell_id)
-    state._collapse_size = state._collapse_size or 0
-    state._collapse_max_size = state._collapse_max_size or 0
-
     local res_id = reserve.allocate(1)
 
     cursor.start_area()
 
-    -- These translations lag behind by one frame, but since collapses move so fast it's normally barely noticeable.
-    if anchor_pos == "topleft" then
-        if clipping_side == "top" then
-            cursor.push_translation(0, state._collapse_size - state._collapse_max_size)
-        elseif clipping_side == "left" then
-            cursor.push_translation(state._collapse_size - state._collapse_max_size, 0)
-        else
-            cursor.push_translation(0, 0)
-        end
-    else
-        if clipping_side == "bottom" then
-            cursor.push_translation(0, state._collapse_max_size - state._collapse_size)
-        elseif clipping_side == "right" then
-            cursor.push_translation(state._collapse_max_size - state._collapse_size, 0)
-        else
-            cursor.push_translation(0, 0)
-        end
-    end
+    -- guess the translation
+    local tid = cursor.push_translation(state._last_dx or 0, state._last_dy or 0)
 
+    area_element.aeb_push(tid)
     area_element.aeb_push(no_auto_open)
     area_element.aeb_push(cursor.anchor_y) -- anchors should be preserved
     area_element.aeb_push(cursor.anchor_x)
@@ -96,6 +78,7 @@ function collapse.finish()
     local ax = area_element.aeb_pop() -- anchors should be preserved
     local ay = area_element.aeb_pop()
     local no_auto_open = area_element.aeb_pop()
+    local tid = area_element.aeb_pop()
 
     cursor.pop_translation()
     cursor.finish_area(true)
@@ -128,7 +111,7 @@ function collapse.finish()
 
     state._collapse_max_size = max_size
 
-    local old_value = state._collapse_size
+    local old_value = state._collapse_size or 0
     if state.on then
         state._collapse_size = follow(state._collapse_size, max_size, speed)
     else
@@ -162,8 +145,29 @@ function collapse.finish()
         end
     end
 
+    local dx, dy
+    if anchor_pos == 0 then
+        if clipping_side == "top" then
+            dx, dy = 0, state._collapse_size - state._collapse_max_size
+        elseif clipping_side == "left" then
+            dx, dy = state._collapse_size - state._collapse_max_size, 0
+        else
+            dx, dy = 0, 0
+        end
+    else
+        if clipping_side == "bottom" then
+            dx, dy = 0, state._collapse_max_size - state._collapse_size
+        elseif clipping_side == "right" then
+            dx, dy = state._collapse_max_size - state._collapse_size, 0
+        else
+            dx, dy = 0, 0
+        end
+    end
+    cursor.edit_translation(tid, dx, dy)
+    state._last_dx = dx
+    state._last_dy = dy
+
     cursor.change_anchor(ax, ay) -- revert anchors
-    -- cursor.place()
 end
 
 return collapse

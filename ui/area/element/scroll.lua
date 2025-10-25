@@ -11,7 +11,6 @@ local area_element = require("ui.area")
 local view_request = require("ui.area.view_request")
 local volatile_data = require("ui.shared_data").volatile
 local selection_outline = require("ui.decorator.selection_outline")
-local draw_data_edit_translation = require("ui.draw_queue.draw_data").edit_translation
 
 local scroll = {}
 
@@ -430,7 +429,7 @@ function scroll.finish(padding)
 
     cursor.pop() -- (1)
 
-    draw_data_edit_translation(tid, state.scroll_dist_x, state.scroll_dist_y)
+    cursor.edit_translation(tid, state.scroll_dist_x, state.scroll_dist_y)
 
     -- scroll region sensor is made last so it has the highest priority
     mnav.make_sensor(scroll_region, smode.lazy, smode.draggable)
