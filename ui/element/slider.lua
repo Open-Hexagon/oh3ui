@@ -9,7 +9,7 @@ local kba = knav.actions
 local mnav = require("ui.control.mouse_navigation")
 local mb = mnav.buttons
 local smode = mnav.sensor_mode
-local selection_outline_set_location = require("ui.decorator.selection_outline").set_location
+local selection_outline_set_location = require("ui.decorator.selection_outline").set_placement
 
 local actuator_radius = element.slider_height / 2
 local slot_height = element.slider_height / 2

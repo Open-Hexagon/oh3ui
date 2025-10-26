@@ -93,13 +93,10 @@ local function calculate_request_parameters()
     end
 end
 
----Makes a request for the current scroll region to put the current cursor into view.
----Only the latest made request is honored.
----@param view_left number
----@param view_top number
----@param view_right number
----@param view_bottom number
-function view_request.scroll_into_view(view_left, view_top, view_right, view_bottom)
+---Sets up picture frame data for the view request. This needs to be called while building the draw_queue while inside of a scroll region.
+---This function will capture the current state of all relevant scroll regions for the request.
+---Only the latest capture is honored.
+function view_request.initiate_auto_scroll()
     -- don't do anything if a scroll region isn't active
     if not view_request.top_index then
         return
@@ -107,12 +104,6 @@ function view_request.scroll_into_view(view_left, view_top, view_right, view_bot
 
     running_states_index = 0
     dist_limits_index = 0
-
-    -- get the requested area
-    left = view_left - view_request_padding
-    top = view_top - view_request_padding
-    right = view_right + view_request_padding
-    bottom = view_bottom + view_request_padding
 
     -- copy all states that will be affected by the request
     local current_index = view_request.top_index
@@ -134,6 +125,19 @@ function view_request.scroll_into_view(view_left, view_top, view_right, view_bot
 
     mode = VR_START
     view_request.time = view_request_cooldown
+end
+
+---Sets the region that will be be moved into view for the view request.
+---Only the latest set location is honored.
+---@param view_left number
+---@param view_top number
+---@param view_right number
+---@param view_bottom number
+function view_request.set_view_location(view_left, view_top, view_right, view_bottom)
+    left = view_left - view_request_padding
+    top = view_top - view_request_padding
+    right = view_right + view_request_padding
+    bottom = view_bottom + view_request_padding
 end
 
 function view_request.push_limits(dist_limit_left, dist_limit_top, dist_limit_right, dist_limit_bottom)

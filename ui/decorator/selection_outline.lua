@@ -16,6 +16,7 @@ local INACTIVE, READY, DONE = 0, 1, 2
 ---@type `INACTIVE`|`READY`|`DONE`
 local mode = INACTIVE
 local placement_id
+local view_request_placement_id
 
 local hidden = false
 local mask_left, mask_top, mask_right, mask_bottom
@@ -25,7 +26,7 @@ local selection_outline = {}
 ---Sets the selection outline location so it can be put in the draw queue later.
 ---This function behaves like a decorator element and will call cursor.place.
 ---Also requests scroll regions to put the location into view
-function selection_outline.set_location()
+function selection_outline.set_placement()
     if mode == INACTIVE then
         cursor.area_expansion_off()
         cursor.place()
@@ -45,8 +46,12 @@ function selection_outline.set_location()
     end
 end
 
-local function initiate_auto_scroll()
-    draw_data.add_draw_operation(op_ids.view_request, placement_id)
+---Makes a new placement for the view request area that is an identical to the selection outline placement.
+---This can be used so the view request references its own placement, so that it can be affected differently by translations.
+function selection_outline.copy_placement_for_view_request()
+    if placement_id then
+        view_request_placement_id = draw_data.make_placement(draw_data.get_placement(placement_id))
+    end
 end
 
 ---Adds the selection outline rectangle to the queue. Does not affect the cursor
@@ -54,7 +59,8 @@ function selection_outline.add_to_queue()
     if mode == READY then
         if not hidden then
             if knav.selection_has_changed then
-                initiate_auto_scroll()
+                view_request.initiate_auto_scroll()
+                draw_data.add_draw_operation(op_ids.view_request, view_request_placement_id or placement_id)
             end
             if mask_left then
                 draw_queue.push_scissor(mask_left, mask_top, mask_right, mask_bottom)
@@ -91,6 +97,8 @@ function selection_outline.reset()
     mode = INACTIVE
     hidden = false
     mask_left, mask_top, mask_right, mask_bottom = nil, nil, nil, nil
+    placement_id = nil
+    view_request_placement_id = nil
 end
 
 --#region masking and hiding

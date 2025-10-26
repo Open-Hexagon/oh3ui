@@ -19,7 +19,7 @@ local selection_outline_cutoff3 = selection_outline_cutoff * 3
 
 local collapse = {}
 
-local speed = 100 --1800
+local speed = 1800
 
 ---@param state table
 ---@param anchor_pos "topleft"|"bottomright" The corner of the collapse area that won't move
@@ -81,6 +81,10 @@ function collapse.finish()
     local tid = area_element.aeb_pop()
 
     cursor.pop_translation()
+
+    -- we do this so that the translation (just popped above) does not affect the view request location
+    selection_outline.copy_placement_for_view_request()
+
     cursor.finish_area(true)
 
     if left_clicked then

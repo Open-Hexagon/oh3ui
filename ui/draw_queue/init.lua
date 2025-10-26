@@ -12,7 +12,7 @@ local draw_data = require("ui.draw_queue.draw_data")
 local op_ids = require("ui.draw_queue.draw_operation")
 local settings = require("ui.settings")
 local theme = require("ui.theme")
-local view_request_scroll_into_view = require("ui.area.view_request").scroll_into_view
+local view_request_set_view_location = require("ui.area.view_request").set_view_location
 
 local draw_queue = {}
 
@@ -372,7 +372,7 @@ function draw_queue.draw()
             elseif id == op_ids.revert_scissor then
                 scissor_stack.revert(item[2])
             elseif id == op_ids.view_request then
-                view_request_scroll_into_view(draw_data.get_placement(item[2]))
+                view_request_set_view_location(draw_data.get_placement(item[2]))
 
             -- * overlay
             elseif id >= op_ids.overlay_rectangle and id < op_ids.overlay_rectangle + 100 then

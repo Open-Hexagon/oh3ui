@@ -133,7 +133,7 @@ return function()
             cursor.shift_down(0)
 
             cursor.h_squeeze(10)
-            collapse.start(id.collapse, "topleft", "bottom", false)
+            collapse.start(id.collapse, "topleft", "top", false)
             do
                 for i = 1, 5 do
                     knav.make_cell()
@@ -146,7 +146,7 @@ return function()
                 button("collapse2", 16)
                 cursor.shift_down(0)
                 cursor.h_squeeze(10)
-                collapse.start(id.collapse2, "topleft", "right", false)
+                collapse.start(id.collapse2, "topleft", "top", false)
                 do
                     for i = 1, 5 do
                         knav.make_cell()
