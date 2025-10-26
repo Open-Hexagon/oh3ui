@@ -18,6 +18,17 @@ local draw_operation = {
     pop_scissor = 202,
     mouse_sensor = 203,
     revert_scissor = 204,
+    view_request = 205,
+
+    -- overlay operations
+    -- these are identical to the draw operations except that they get put at the end of the draw_list
+    overlay_rectangle = 300,
+    overlay_rectangle_outline = 301,
+    overlay_circle = 302,
+    overlay_circle_outline = 303,
+    overlay_line = 304,
+    overlay_polygon = 305,
+    overlay_text = 306,
 }
 
 return draw_operation

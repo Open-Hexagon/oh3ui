@@ -21,15 +21,15 @@ parser:flag("-v --verbose", "verbose output in unittest mode")
 parser:flag("-c --coverage", "enable coverage in unittest mode")
 parser:flag("-S --strict", "warnings become errors")
 parser:option("-T --tickrate", "number of ticks per second (default is 60)", 60, tonumber, 1)
-parser:flag("-k --show-masks", "show mask elements")
-parser:flag("-m --show-mouse-sensors", "show mouse sensor elements")
+parser:flag("-k --overlay-masks", "overlay mask elements")
+parser:flag("-m --overlay-mouse-sensors", "overlay mouse sensor elements")
 
 local arg_values = parser:parse(love.arg.parseGameArguments(arg))
 
 ui_settings.scale = arg_values.ui_scale
 ui_settings.debug_grid = arg_values.grid
-ui_settings.show_masks = arg_values.show_masks
-ui_settings.show_mouse_sensors = arg_values.show_mouse_sensors
+ui_settings.overlay_masks = arg_values.overlay_masks
+ui_settings.overlay_mouse_sensors = arg_values.overlay_mouse_sensors
 local enable_event_printing = arg_values.print_events
 local unittest_mode = not not arg_values.unittest
 unittest.pattern = arg_values.unittest
@@ -66,8 +66,8 @@ function love.run()
 
     -- ui.init(empty_grid)
     -- ui.init(example_menu)
-    -- ui.init(scroll_example)
-    ui.init(collapse_example)
+    ui.init(scroll_example)
+    -- ui.init(collapse_example)
     -- ui.init(scroll_resizing)
 
     return function()

@@ -246,6 +246,12 @@ function cursor.v_squeeze(d)
     cursor.change_anchor(ax, ay)
 end
 
+---Offsets the top and bottom cursor edges outwards by the same amount.
+---@param d number
+function cursor.v_stretch(d)
+    cursor.v_squeeze(-d)
+end
+
 ---Offsets the left and right cursor edges inwards by the same amount.
 ---@param d number
 function cursor.h_squeeze(d)
@@ -253,6 +259,12 @@ function cursor.h_squeeze(d)
     cursor.change_anchor(0.5, 0.5)
     cursor.width = cursor.width - 2 * d
     cursor.change_anchor(ax, ay)
+end
+
+---Offsets the left and right cursor edges outwards by the same amount.
+---@param d number
+function cursor.h_stretch(d)
+    cursor.h_squeeze(-d)
 end
 
 ---Clips the left side of the cursor by d.

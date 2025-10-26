@@ -12,11 +12,10 @@ local reserve = require("ui.reserve")
 local volatile_data = require("ui.shared_data").volatile
 local view_request = require("ui.area.view_request")
 local decorator = require("ui.decorator")
-local primitive = require("ui.primitive")
-local theme = require("ui.theme")
-local selection_outline_add_to_queue = require("ui.decorator.selection_outline").add_to_queue
 
-local selection_outline_cutoff = -(decorator.selection_outline_outset + decorator.selection_outline_line_width * 0.5)
+local selection_outline_cutoff = decorator.selection_outline_outset + decorator.selection_outline_line_width * 0.5
+-- this is an arbitrary value, it only needs to be bigger than selection_outline_cutoff
+local selection_outline_cutoff3 = selection_outline_cutoff * 3
 
 local collapse = {}
 
@@ -74,10 +73,6 @@ function collapse.finish()
         anchor_pos = 1
     end
 
-    mask.pop()
-    selection_outline_add_to_queue()
-
-
     ---@type "left"|"top"|"right"|"bottom"
     local clipping_side = area_element.aeb_pop()
     local ax = area_element.aeb_pop() -- anchors should be preserved
@@ -127,27 +122,26 @@ function collapse.finish()
     cursor[dimension] = state._collapse_size
     reserve.take(res_id)
     mask.push()
+    mask.pop()
 
-    -- if contains_selection then
-    --     if not state.on then
-    --         selection_outline.hide() -- hide the selection outline
-    --     elseif old_value ~= state._collapse_size then -- this collapse is moving
-    --         -- make the selection outline look like it's inside the collapse (even though it isn't)
-    --         cursor.push()
-    --         cursor.change_anchor(0)
-    --         if dimension == "width" then
-    --             cursor.y = 0
-    --             cursor.full_height()
-    --             cursor.h_squeeze(selection_outline_cutoff)
-    --         else
-    --             cursor.x = 0
-    --             cursor.full_width()
-    --             cursor.v_squeeze(selection_outline_cutoff)
-    --         end
-    --         selection_outline.intersect_mask()
-    --         cursor.pop()
-    --     end
-    -- end
+    if contains_selection then
+        if not state.on then
+            selection_outline.hide() -- hide the selection outline
+        elseif old_value ~= state._collapse_size then -- this collapse is moving
+            -- make the selection outline look like it's inside the collapse (even though it isn't)
+            cursor.push()
+            cursor.change_anchor(0)
+            if dimension == "width" then
+                cursor.v_stretch(selection_outline_cutoff3)
+                cursor.h_stretch(selection_outline_cutoff)
+            else
+                cursor.v_stretch(selection_outline_cutoff)
+                cursor.h_stretch(selection_outline_cutoff3)
+            end
+            selection_outline.intersect_mask()
+            cursor.pop()
+        end
+    end
 
     local dx, dy
     if anchor_pos == 0 then

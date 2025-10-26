@@ -12,6 +12,7 @@ local draw_data = require("ui.draw_queue.draw_data")
 local op_ids = require("ui.draw_queue.draw_operation")
 local settings = require("ui.settings")
 local theme = require("ui.theme")
+local view_request_scroll_into_view = require("ui.area.view_request").scroll_into_view
 
 local draw_queue = {}
 
@@ -326,7 +327,7 @@ function draw_queue.draw()
                 scissor_stack.push(tx1, ty1, tx2, ty2)
 
                 -- overlay masks
-                if settings.show_masks then
+                if settings.overlay_masks then
                     draw_queue.rectangle("line", x1 - 1, y1 - 1, x2 + 1, y2 + 1, theme.get_xterm_color(157), 0, 0, 2)
                 end
             elseif id == op_ids.pop_scissor then
@@ -353,15 +354,15 @@ function draw_queue.draw()
                 end
 
                 -- overlay mouse sensors
-                if tx1 and settings.show_mouse_sensors then
+                if tx1 and settings.overlay_mouse_sensors then
                     tx1, ty1 = love.graphics.inverseTransformPoint(tx1, ty1)
                     tx2, ty2 = love.graphics.inverseTransformPoint(tx2, ty2)
                     draw_queue.rectangle(
                         "line",
-                        tx1 - 1,
-                        ty1 - 1,
-                        tx2 + 1,
-                        ty2 + 1,
+                        tx1 + 1,
+                        ty1 + 1,
+                        tx2 - 1,
+                        ty2 - 1,
                         theme.get_xterm_color(213),
                         0,
                         0,
@@ -370,6 +371,14 @@ function draw_queue.draw()
                 end
             elseif id == op_ids.revert_scissor then
                 scissor_stack.revert(item[2])
+            elseif id == op_ids.view_request then
+                view_request_scroll_into_view(draw_data.get_placement(item[2]))
+
+            -- * overlay
+            elseif id >= op_ids.overlay_rectangle and id < op_ids.overlay_rectangle + 100 then
+                draw_data.add_draw_operation(id - (op_ids.overlay_rectangle - op_ids.rectangle), unpack(item, 2))
+
+            -- * other
             elseif id == op_ids.unused_reservation then
                 warning(
                     string.format(

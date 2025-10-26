@@ -12,8 +12,8 @@ return function()
     local grid_i = 1
 
     cursor.auto_reshape = false
-    cursor.x = 200
-    cursor.y = 160
+    cursor.x = 100
+    cursor.y = 50
     cursor.width = 170
     cursor.height = 20
 
