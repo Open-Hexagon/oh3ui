@@ -68,5 +68,6 @@ area_element.mouse_wheel_scroll_distance = 10
 area_element.view_request_padding = area_element.scrollbar_thickness * 1.5
 area_element.view_request_speed = 10 -- this is the reciprocal of the time it takes for the animation
 area_element.view_request_scrollbar_cooldown_time = 1.5
+area_element.collapse_speed = 1800
 
 return area_element

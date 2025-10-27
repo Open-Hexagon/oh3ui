@@ -26,7 +26,6 @@ Features that will not be implemented to make development of the UI system easie
 
 - There will be no system to backpropagate the size of elements. If something doesn't fit where it needs to go, it will have to either spill out of bounds or get cut off. It is up to the developer to ensure that there is enough space for elements or make special cases when elements can't fit.
 - There will be no universal method to get the size of an element before it gets rendered (elements will not neccessarily fit the cursor). Dear ImGui doesn't do this so why should ours? (one exception is text but in that case it is actually important)
-- Nested scroll regions will not be allowed. This vastly simplifies things as there's no need to keep track of arbitrarily-deep, nested scroll regions.
 - Elements do not need to behave like primitive elements when calling them and shouldn't be used as sub elements. Some duplicated behavior between elements is okay.
 
 ## Assumptions

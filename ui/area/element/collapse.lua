@@ -19,7 +19,7 @@ local selection_outline_cutoff3 = selection_outline_cutoff * 3
 
 local collapse = {}
 
-local speed = 1800
+local speed = area_element.collapse_speed
 
 ---@param state table
 ---@param anchor_pos "topleft"|"bottomright" The corner of the collapse area that won't move

@@ -157,6 +157,7 @@ function typing.evaluate()
         if name == "textinput" then
             control_data.last_used_control_method = control_methods.typing
             typing.insert_character(target, event[2])
+            cursor_flash_timer = 0
         elseif name == "keypressed" then
             control_data.last_used_control_method = control_methods.typing
             local key = event[3]
@@ -164,10 +165,12 @@ function typing.evaluate()
                 if target._text_entry_char_position > 0 then
                     target._text_entry_char_position = target._text_entry_char_position - 1
                 end
+                cursor_flash_timer = 0
             elseif key == "right" then
                 if target._text_entry_char_position < utf8.len(target.text) then
                     target._text_entry_char_position = target._text_entry_char_position + 1
                 end
+                cursor_flash_timer = 0
             elseif key == "backspace" then
                 -- backspace will modify target._text_entry_text_offset to try to keep the text cursor still
                 -- this prevents the cursor from moving to the far left side of the text entry, which makes it so you can't see what you're deleting
@@ -193,6 +196,7 @@ function typing.evaluate()
                         end
                     end
                 end
+                cursor_flash_timer = 0
             elseif key == "delete" then
                 if target._text_entry_char_position < utf8.len(target.text) then
                     if love.keyboard.isDown("lctrl", "rctrl") then
@@ -202,6 +206,13 @@ function typing.evaluate()
                             .. utf8_sub(target.text, target._text_entry_char_position + 2, -1)
                     end
                 end
+                cursor_flash_timer = 0
+            elseif key == "home" or key == "pageup" then
+                target._text_entry_char_position = 0
+                cursor_flash_timer = 0
+            elseif key == "end" or key == "pagedown" then
+                target._text_entry_char_position = utf8.len(target.text)
+                cursor_flash_timer = 0
             elseif key == "escape" then
                 -- unsets the target but doesn't move the keyboard selection
                 unset_target(stop_methods.escape)
@@ -221,10 +232,6 @@ function typing.evaluate()
                     unset_target(stop_methods.tab_down)
                     return target_cell_id, stop_methods.tab_down
                 end
-            elseif key == "home" or key == "pageup" then
-                target._text_entry_char_position = 0
-            elseif key == "end" or key == "pagedown" then
-                target._text_entry_char_position = utf8.len(target.text)
             end
         -- these events are matched by the filter but are unused
         elseif name == "keyreleased" then
@@ -257,7 +264,7 @@ do
     ---@param state table
     ---@param sensor_id integer? use a specific sensor id
     ---@param cell_id integer? use a specific cell id
-    ---@param global boolean? if true, makes this text entry accessible from anywhere by keyboard nav, even if a different non-text-entry element is already selected 
+    ---@param global boolean? if true, makes this text entry accessible from anywhere by keyboard nav, even if a different non-text-entry element is already selected
     function typing.make_text_entry(state, sensor_id, cell_id, global)
         state.text = state.text or ""
         -- used to offset the entry text in case there's too much text to fit in view
@@ -345,16 +352,16 @@ do
                 text_color or theme.text_color
             )
 
-            -- cursor flash
-            cursor_flash_timer = cursor_flash_timer + love.timer.getDelta()
-            if cursor_flash_timer > 1 then
-                cursor_flash_timer = cursor_flash_timer - 1
-            end
-
             -- draw the text cursor
             if cursor_flash_timer < 0.5 then
                 cursor.x = cursor.x + cursor_offset
                 primitive.vline(theme.white, 1)
+            end
+
+            -- cursor flash
+            cursor_flash_timer = cursor_flash_timer + love.timer.getDelta()
+            if cursor_flash_timer > 1 then
+                cursor_flash_timer = cursor_flash_timer - 1
             end
         else
             draw_queue.text(text_object, placement.left, placement.top, text_color or theme.text_color)

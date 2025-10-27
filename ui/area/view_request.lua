@@ -2,203 +2,237 @@ local area_element = require("ui.area")
 local volatile_data = require("ui.shared_data").volatile
 local aeb_stack = volatile_data.aeb_stack
 local follow = require("ui.effect").follow
+local knav = require("ui.control.keyboard_navigation")
+local draw_data = require("ui.draw_queue.draw_data")
+local op_ids = require("ui.draw_queue.draw_operation")
+local mnav = require("ui.control.mouse_navigation")
 
-local view_request_padding = area_element.view_request_padding
-local view_request_speed = area_element.view_request_speed
-local view_request_cooldown = area_element.view_request_scrollbar_cooldown_time
+local padding = area_element.view_request_padding
+local base_speed = area_element.view_request_speed
+local scrollbar_cooldown_time = area_element.view_request_scrollbar_cooldown_time
 
 local view_request = {
     -- The index of the top state
     -- This is kept updated by the scroll elements
     top_index = nil,
+
+    -- Time remaining for view request. If greater than 0, view request is enabled
     time = 0,
 
+    -- The index of the top collapse state
     collapse_top_index = nil,
 }
 
-local VR_IDLE, VR_START, VR_RUNNING = 0, 1, 2
-local mode = VR_IDLE
+local view_left, view_top, view_right, view_bottom
 
-local running_states = {}
-local picture_frames = { 0, 0, 0, 0 } -- left, top, right, bottom
-local ts_data = { 0, 0, 0, 0 } -- x_target, x_speed, y_target, y_speed
-local running_states_index = 0
+local pf_data = {}
+local pf_data_index = 0
+local pf_data_size = 11
 
-local dist_limits = { 0, 0, 0, 0 } -- left, top, right, bottom
-local dist_limits_index = 0
-
-local left, top, right, bottom
-
-local function calculate_request_parameters()
-    local move_distance, target, speed
-    local i4, pf_left, pf_top, pf_right, pf_bottom
-    local state
-
-    for i = 1, running_states_index do
-        state = running_states[i]
-        i4 = i * 4
-
-        pf_left = picture_frames[i4 - 3]
-        pf_top = picture_frames[i4 - 2]
-        pf_right = picture_frames[i4 - 1]
-        pf_bottom = picture_frames[i4]
-
-        -- x movement
-        move_distance = 0
-        ts_data[i4 - 3] = nil -- erase old values
-        ts_data[i4 - 2] = nil
-        if left < pf_left then
-            -- need to scroll left, move_distance is positive
-            move_distance = pf_left - left
-            target = math.min(state.scroll_dist_x + move_distance, dist_limits[i4 - 3])
-            speed = (target - state.scroll_dist_x) * view_request_speed
-
-            ts_data[i4 - 3] = target
-            ts_data[i4 - 2] = speed
-        elseif right > pf_right then
-            -- need to scroll right, move_distance is negative
-            move_distance = pf_right - right
-            target = math.max(state.scroll_dist_x + move_distance, dist_limits[i4 - 1])
-            speed = (state.scroll_dist_x - target) * view_request_speed
-
-            ts_data[i4 - 3] = target
-            ts_data[i4 - 2] = speed
-        end
-        left = left + move_distance -- move the requested area for the next iteration
-        right = right + move_distance
-
-        -- y movement
-        move_distance = 0
-        ts_data[i4 - 1] = nil -- erase old values
-        ts_data[i4] = nil
-        if top < pf_top then
-            -- need to scroll up, move_distance is positive
-            move_distance = pf_top - top
-            target = math.min(state.scroll_dist_y + move_distance, dist_limits[i4 - 2])
-            speed = (target - state.scroll_dist_y) * view_request_speed
-
-            ts_data[i4 - 1] = target
-            ts_data[i4] = speed
-        elseif bottom > pf_bottom then
-            -- need to scroll down, move_distance is negative
-            move_distance = pf_bottom - bottom
-            target = math.max(state.scroll_dist_y + move_distance, dist_limits[i4])
-            speed = (state.scroll_dist_y - target) * view_request_speed
-
-            ts_data[i4 - 1] = target
-            ts_data[i4] = speed
-        end
-        top = top + move_distance -- move the requested area for the next iteration
-        bottom = bottom + move_distance
-    end
-end
+local just_initiated = false
 
 ---Sets up picture frame data for the view request. This needs to be called while building the draw_queue while inside of a scroll region.
 ---This function will capture the current state of all relevant scroll regions for the request.
 ---Only the latest capture is honored.
-function view_request.initiate_auto_scroll()
+function view_request.update_auto_scroll(view_location_placement_id)
     -- don't do anything if a scroll region isn't active
     if not view_request.top_index then
         return
     end
 
-    running_states_index = 0
-    dist_limits_index = 0
-
-    -- copy all states that will be affected by the request
-    local current_index = view_request.top_index
-    local pf_index
-    while current_index do
-        running_states_index = running_states_index + 1
-        running_states[running_states_index] = aeb_stack[current_index - 1]
-        aeb_stack[current_index - 2] = true -- flag this state as requested
-
-        pf_index = running_states_index * 4
-        picture_frames[pf_index - 3] = aeb_stack[current_index - 3] -- left
-        picture_frames[pf_index - 2] = aeb_stack[current_index - 4] -- top
-        picture_frames[pf_index - 1] = aeb_stack[current_index - 5] -- right
-        picture_frames[pf_index] = aeb_stack[current_index - 6] -- bottom
-
-        -- next state index
-        current_index = aeb_stack[current_index]
+    if knav.selection_has_changed then
+        view_request.time = scrollbar_cooldown_time
+        just_initiated = true
     end
 
-    mode = VR_START
-    view_request.time = view_request_cooldown
+    if view_request.time > 0 then
+        draw_data.add_draw_operation(op_ids.view_request_export_view_location, view_location_placement_id)
+
+        -- flag all above scroll areas as requested
+        local current_index = view_request.top_index
+        while current_index do
+            aeb_stack[current_index - 2] = true -- flag this state as requested
+
+            -- next state index
+            current_index = aeb_stack[current_index]
+        end
+
+        -- mode = VR_START
+    end
 end
 
 ---Sets the region that will be be moved into view for the view request.
 ---Only the latest set location is honored.
----@param view_left number
----@param view_top number
----@param view_right number
----@param view_bottom number
-function view_request.set_view_location(view_left, view_top, view_right, view_bottom)
-    left = view_left - view_request_padding
-    top = view_top - view_request_padding
-    right = view_right + view_request_padding
-    bottom = view_bottom + view_request_padding
+function view_request.set_view_location(left, top, right, bottom)
+    view_left = left - padding
+    view_top = top - padding
+    view_right = right + padding
+    view_bottom = bottom + padding
 end
 
-function view_request.push_limits(dist_limit_left, dist_limit_top, dist_limit_right, dist_limit_bottom)
-    dist_limits_index = dist_limits_index + 4
-    dist_limits[dist_limits_index - 3] = dist_limit_left
-    dist_limits[dist_limits_index - 2] = dist_limit_top
-    dist_limits[dist_limits_index - 1] = dist_limit_right
-    dist_limits[dist_limits_index] = dist_limit_bottom
+---Adds picture frame data so the view request knows which scroll states to modify
+function view_request.add_picture_frame_data(
+    state,
+    dist_limit_left,
+    dist_limit_top,
+    dist_limit_right,
+    dist_limit_bottom,
+    pf_left,
+    pf_top,
+    pf_right,
+    pf_bottom
+)
+    pf_data_index = pf_data_index + pf_data_size
+
+    -- there are two speed values at -9 and -10 here but they are purposely preserved between frames
+    pf_data[pf_data_index - 8] = state
+    pf_data[pf_data_index - 7] = dist_limit_left
+    pf_data[pf_data_index - 6] = dist_limit_top
+    pf_data[pf_data_index - 5] = dist_limit_right
+    pf_data[pf_data_index - 4] = dist_limit_bottom
+    pf_data[pf_data_index - 3] = pf_left
+    pf_data[pf_data_index - 2] = pf_top
+    pf_data[pf_data_index - 1] = pf_right
+    pf_data[pf_data_index] = pf_bottom
 end
 
-function view_request.cancel()
-    mode = VR_IDLE
-    view_request.time = 0
+local function calculate_speed_heuristic(v_left, v_top, v_right, v_bottom)
+    local state
+    local pf_left, pf_top, pf_right, pf_bottom
+    local dist_limit_left, dist_limit_top, dist_limit_right, dist_limit_bottom
+    local move_distance, target, speed
+
+    for i = pf_data_size, pf_data_index, pf_data_size do
+        state = pf_data[i - 8]
+        dist_limit_left = pf_data[i - 7]
+        dist_limit_top = pf_data[i - 6]
+        dist_limit_right = pf_data[i - 5]
+        dist_limit_bottom = pf_data[i - 4]
+        pf_left = pf_data[i - 3]
+        pf_top = pf_data[i - 2]
+        pf_right = pf_data[i - 1]
+        pf_bottom = pf_data[i]
+
+        -- x movement
+        move_distance = 0
+        speed = 0
+        if v_left < pf_left then
+            -- need to scroll left, move_distance is positive
+            move_distance = pf_left - v_left
+            target = math.min(state.scroll_dist_x + move_distance, dist_limit_left)
+            speed = (target - state.scroll_dist_x) * base_speed
+        elseif v_right > pf_right then
+            -- need to scroll right, move_distance is negative
+            move_distance = pf_right - v_right
+            target = math.max(state.scroll_dist_x + move_distance, dist_limit_right)
+            speed = (state.scroll_dist_x - target) * base_speed
+        end
+        pf_data[i - 10] = speed
+        v_left = v_left + move_distance -- move the requested area for the next iteration
+        v_right = v_right + move_distance
+
+        -- y movement
+        move_distance = 0
+        speed = 0
+        if v_top < pf_top then
+            -- need to scroll up, move_distance is positive
+            move_distance = pf_top - v_top
+            target = math.min(state.scroll_dist_y + move_distance, dist_limit_top)
+            speed = (target - state.scroll_dist_y) * base_speed
+        elseif v_bottom > pf_bottom then
+            -- need to scroll down, move_distance is negative
+            move_distance = pf_bottom - v_bottom
+            target = math.max(state.scroll_dist_y + move_distance, dist_limit_bottom)
+            speed = (state.scroll_dist_y - target) * base_speed
+        end
+        pf_data[i - 9] = speed
+        v_top = v_top + move_distance -- move the requested area for the next iteration
+        v_bottom = v_bottom + move_distance
+    end
 end
 
 function view_request.evaluate()
-    if mode == VR_IDLE then
+    if view_request.time == 0 then
         return
     end
 
-    if mode == VR_START then
-        calculate_request_parameters()
-        mode = VR_RUNNING
+    if mnav.holding then
+        view_request.time = 0
+        just_initiated = false
+        pf_data_index = 0
+        return
     end
 
-    local i4, state, x_target, y_target
-    for i = 1, running_states_index do
-        state = running_states[i]
-        i4 = i * 4
+    if just_initiated then
+        calculate_speed_heuristic(view_left, view_top, view_right, view_bottom)
+    end
 
-        x_target = ts_data[i4 - 3]
-        if x_target then
-            state.scroll_dist_x = follow(state.scroll_dist_x, x_target, ts_data[i4 - 2])
-            if state.scroll_dist_x == x_target then
-                ts_data[i4 - 3] = nil
-            end
+    local state
+    local dist_limit_left, dist_limit_top, dist_limit_right, dist_limit_bottom
+    local pf_left, pf_top, pf_right, pf_bottom
+    local move_distance, target
+    local x_speed, y_speed
+
+    for i = pf_data_size, pf_data_index, pf_data_size do
+        x_speed = pf_data[i - 10]
+        y_speed = pf_data[i - 9]
+        state = pf_data[i - 8]
+        dist_limit_left = pf_data[i - 7]
+        dist_limit_top = pf_data[i - 6]
+        dist_limit_right = pf_data[i - 5]
+        dist_limit_bottom = pf_data[i - 4]
+        pf_left = pf_data[i - 3]
+        pf_top = pf_data[i - 2]
+        pf_right = pf_data[i - 1]
+        pf_bottom = pf_data[i]
+
+        -- x movement
+        target = nil
+        if view_left < pf_left then
+            -- need to scroll left, move_distance is positive
+            move_distance = pf_left - view_left
+            target = math.min(state.scroll_dist_x + move_distance, dist_limit_left)
+        elseif view_right > pf_right then
+            move_distance = pf_right - view_right
+            target = math.max(state.scroll_dist_x + move_distance, dist_limit_right)
+        end
+        if target then
+            state.scroll_dist_x = follow(state.scroll_dist_x, target, x_speed)
         end
 
-        y_target = ts_data[i4 - 1]
-        if y_target then
-            state.scroll_dist_y = follow(state.scroll_dist_y, y_target, ts_data[i4])
-            if state.scroll_dist_y == y_target then
-                ts_data[i4 - 1] = nil
-            end
+        -- y movement
+        target = nil
+        if view_top < pf_top then
+            -- need to scroll up, move_distance is positive
+            move_distance = pf_top - view_top
+            target = math.min(state.scroll_dist_y + move_distance, dist_limit_top)
+        elseif view_bottom > pf_bottom then
+            -- need to scroll down, move_distance is negative
+            move_distance = pf_bottom - view_bottom
+            target = math.max(state.scroll_dist_y + move_distance, dist_limit_bottom)
+        end
+        if target then
+            state.scroll_dist_y = follow(state.scroll_dist_y, target, y_speed)
         end
     end
 
     view_request.time = view_request.time - love.timer.getDelta()
 
-    if view_request.time <= 0 then
-        view_request.cancel()
+    if view_request.time < 0 then
+        view_request.time = 0
     end
+
+    just_initiated = false
+    pf_data_index = 0
 end
 
-function view_request.update_collapses(selection_has_changed)
+function view_request.update_collapses()
     if not view_request.collapse_top_index then
         return
     end
 
     local current_index = view_request.collapse_top_index
-    if selection_has_changed then
+    if knav.selection_has_changed then
         while current_index do
             aeb_stack[current_index - 1] = true -- set the "contains selection" field
             aeb_stack[current_index - 2] = true -- set the "selection has changed" field

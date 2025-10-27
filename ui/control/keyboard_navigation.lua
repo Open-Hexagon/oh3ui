@@ -4,7 +4,7 @@ local bor, band = bit.bor, bit.band
 local shared_data = require("ui.shared_data")
 local control_data = shared_data.control
 local control_method = shared_data.enums.control_method
-local hover_off = require("ui.control.mouse_navigation").hover_off
+local hover_off = require("ui.control.mouse_navigation.sensor").disable_intersection_checks
 
 local keyboard_navigation = {}
 

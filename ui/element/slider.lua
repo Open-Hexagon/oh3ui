@@ -1,5 +1,5 @@
 local cursor = require("ui.cursor")
-local placement = cursor.placement
+local projected_placement = cursor.projected_placement
 local theme = require("ui.theme")
 local primitive = require("ui.primitive")
 local element = require("ui.element")
@@ -58,7 +58,7 @@ return function(state, min, max, positions, show_positions, kb_step, kb_fast_ste
     cursor.change_anchor(0, 0.5)
 
     -- absolute min and max slider coordinate positions
-    local min_x, max_x = placement.left + actuator_radius, placement.right - actuator_radius
+    local min_x, max_x = projected_placement.left + actuator_radius, projected_placement.right - actuator_radius
     local clamped_mouse_x = extmath.clamp(mnav.x, min_x, max_x)
     local step_size = (max_x - min_x) / divisions
 
@@ -95,7 +95,7 @@ return function(state, min, max, positions, show_positions, kb_step, kb_fast_ste
     local dragging, clicked = mnav.get_dragging() == mb.left, mnav.get_clicked() == mb.left
     if dragging then
         -- draw using mouse position
-        fill_width = clamped_mouse_x - placement.x
+        fill_width = clamped_mouse_x - projected_placement.x
 
         -- set position and value
         state.position = get_closest_position(clamped_mouse_x, min_x, max_x, positions)

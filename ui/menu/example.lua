@@ -32,6 +32,8 @@ local selection_outline_set_location = require("ui.decorator.selection_outline")
 local counter = 0
 
 return function()
+    cursor.push_translation(100, 100)
+
     cursor.change_anchor(0.5)
     primitive.label(string.format("%02d", counter), 400, "center", false, { 1, 1, 1, 0.1 })
     counter = (counter + 1) % 60
@@ -185,4 +187,6 @@ is_editing_any_text %s
         "left",
         false
     )
+
+    cursor.pop_translation()
 end

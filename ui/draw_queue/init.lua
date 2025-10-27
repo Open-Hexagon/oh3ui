@@ -12,7 +12,7 @@ local draw_data = require("ui.draw_queue.draw_data")
 local op_ids = require("ui.draw_queue.draw_operation")
 local settings = require("ui.settings")
 local theme = require("ui.theme")
-local view_request_set_view_location = require("ui.area.view_request").set_view_location
+local view_request = require("ui.area.view_request")
 
 local draw_queue = {}
 
@@ -42,22 +42,6 @@ end
 ---@param n integer
 function draw_queue.revert_scissor(n)
     draw_data.add_draw_operation(op_ids.revert_scissor, n)
-end
-
----Add a mouse sensor to the draw queue.
----This will be used by the sensor module to determine which sensor is being hovered.
----The actual shape of the sensor may be changed by the scissor during execution of the draw queue.
----@param sensor_id integer
----@param mode integer
----@param left number
----@param top number
----@param right number
----@param bottom number
----@return integer placement_id
-function draw_queue.mouse_sensor(sensor_id, mode, left, top, right, bottom)
-    local id = draw_data.make_placement(left, top, right, bottom)
-    draw_data.add_draw_operation(op_ids.mouse_sensor, id, sensor_id, mode)
-    return id
 end
 
 --#region drawing functions
@@ -371,8 +355,19 @@ function draw_queue.draw()
                 end
             elseif id == op_ids.revert_scissor then
                 scissor_stack.revert(item[2])
-            elseif id == op_ids.view_request then
-                view_request_set_view_location(draw_data.get_placement(item[2]))
+            elseif id == op_ids.view_request_export_view_location then
+                view_request.set_view_location(draw_data.get_placement(item[2]))
+            elseif id == op_ids.view_request_export_picture_frame then
+                view_request.add_picture_frame_data(
+                    item[2],
+                    -- distance limits
+                    item[3],
+                    item[4],
+                    item[5],
+                    item[6],
+                    -- picture frame area
+                    draw_data.get_placement(item[7])
+                )
 
             -- * overlay
             elseif id >= op_ids.overlay_rectangle and id < op_ids.overlay_rectangle + 100 then

@@ -2,7 +2,6 @@ local decorator = require("ui.decorator")
 local cursor = require("ui.cursor")
 local placement = cursor.placement
 local theme = require("ui.theme")
-local knav = require("ui.control.keyboard_navigation")
 local view_request = require("ui.area.view_request")
 local draw_queue = require("ui.draw_queue")
 local extmath = require("ui.extmath")
@@ -32,7 +31,7 @@ function selection_outline.set_placement()
         cursor.place()
         cursor.area_expansion_on()
 
-        view_request.update_collapses(knav.selection_has_changed)
+        view_request.update_collapses()
 
         -- make a placement without drawing anything yet
         placement_id = draw_data.make_placement(
@@ -58,10 +57,7 @@ end
 function selection_outline.add_to_queue()
     if mode == READY then
         if not hidden then
-            if knav.selection_has_changed then
-                view_request.initiate_auto_scroll()
-                draw_data.add_draw_operation(op_ids.view_request, view_request_placement_id or placement_id)
-            end
+            view_request.update_auto_scroll(view_request_placement_id or placement_id)
             if mask_left then
                 draw_queue.push_scissor(mask_left, mask_top, mask_right, mask_bottom)
                 -- draw data needs to be manually created since the placement was already made

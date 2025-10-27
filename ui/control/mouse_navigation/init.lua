@@ -4,13 +4,14 @@
 local events = require("ui.events")
 local cursor = require("ui.cursor")
 local placement = cursor.placement
-local draw_queue = require("ui.draw_queue")
 local sensor = require("ui.control.mouse_navigation.sensor")
 local bit = require("bit")
 local bor = bit.bor
 local shared_data = require("ui.shared_data")
 local control_data = shared_data.control
 local control_method = shared_data.enums.control_method
+local draw_data = require("ui.draw_queue.draw_data")
+local op_ids = require("ui.draw_queue.draw_operation")
 
 local mouse_navigation = {
     -- this frame's mouse position (not screen coordinates)
@@ -81,6 +82,7 @@ end
 ---@param sensor_id? integer forces this sensor to be created with a certain id (must be negative)
 ---@param ... integer sensor modes
 ---@return integer sensor_id sensor id
+---@return integer placement_id
 function mouse_navigation.make_sensor(sensor_id, ...)
     cursor.place()
     if sensor_id then
@@ -93,18 +95,12 @@ function mouse_navigation.make_sensor(sensor_id, ...)
         control_data.current_sensor_id = last_sensor_id
     end
 
+    local placement_id = draw_data.make_placement(placement.left, placement.top, placement.right, placement.bottom)
     if control_data.current_layer_is_active and not control_data.keepout_enabled then
-        draw_queue.mouse_sensor(
-            control_data.current_sensor_id,
-            bor(0, ...),
-            placement.left,
-            placement.top,
-            placement.right,
-            placement.bottom
-        )
+        draw_data.add_draw_operation(op_ids.mouse_sensor, placement_id, control_data.current_sensor_id, bor(0, ...))
     end
 
-    return control_data.current_sensor_id
+    return control_data.current_sensor_id, placement_id
 end
 
 ---Changes the currently recognized sensor to a new id.

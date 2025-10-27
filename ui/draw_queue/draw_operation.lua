@@ -18,7 +18,8 @@ local draw_operation = {
     pop_scissor = 202,
     mouse_sensor = 203,
     revert_scissor = 204,
-    view_request = 205,
+    view_request_export_view_location = 205,
+    view_request_export_picture_frame = 206,
 
     -- overlay operations
     -- these are identical to the draw operations except that they get put at the end of the draw_list

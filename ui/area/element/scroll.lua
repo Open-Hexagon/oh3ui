@@ -11,6 +11,8 @@ local area_element = require("ui.area")
 local view_request = require("ui.area.view_request")
 local volatile_data = require("ui.shared_data").volatile
 local selection_outline_add_to_queue = require("ui.decorator.selection_outline").add_to_queue
+local draw_data = require("ui.draw_queue.draw_data")
+local draw_operation = require("ui.draw_queue.draw_operation")
 
 local scroll = {}
 
@@ -58,7 +60,7 @@ function scroll.start(state)
     cursor.place() -- ! this has to come before apply_translation!
 
     -- mask away everything outside of the region
-    mask.push() -- (2)
+    local picture_frame_id = mask.push() -- (2)
 
     -- move the contents of the scroll area
     local tid = cursor.push_translation(
@@ -68,6 +70,9 @@ function scroll.start(state)
 
     -- for use later
     cursor.start_area() -- (4)
+
+    -- save picture frame placement id in case of view request
+    area_element.aeb_push(picture_frame_id)
 
     -- save transform id
     area_element.aeb_push(tid)
@@ -136,7 +141,6 @@ local function do_horizontal_mouse_interaction(
             dist_limit_left,
             dist_limit_right
         )
-        view_request.cancel()
     end
 
     -- move the scrollbar and scroll region if dragging
@@ -151,12 +155,10 @@ local function do_horizontal_mouse_interaction(
             dist_limit_left,
             dist_limit_right
         )
-        view_request.cancel()
     else
         -- mouse wheel (disabled if dragging)
         if mnav.wheel_dx ~= 0 then
             state.scroll_dist_x = state.scroll_dist_x + mnav.wheel_dx * -mouse_wheel_scroll_distance
-            view_request.cancel()
         end
     end
 
@@ -166,7 +168,6 @@ local function do_horizontal_mouse_interaction(
             mouse_offset_x = mnav.press_x - state.scroll_dist_x
         end
         state.scroll_dist_x = mnav.x - mouse_offset_x
-        view_request.cancel()
     end
 end
 
@@ -207,7 +208,6 @@ local function do_vertical_mouse_interaction(
             dist_limit_top,
             dist_limit_bottom
         )
-        view_request.cancel()
     end
 
     -- move the scrollbar and region if dragging
@@ -222,12 +222,10 @@ local function do_vertical_mouse_interaction(
             dist_limit_top,
             dist_limit_bottom
         )
-        view_request.cancel()
     else
         -- mouse wheel (disabled if dragging)
         if mnav.wheel_dy ~= 0 then
             state.scroll_dist_y = state.scroll_dist_y + mnav.wheel_dy * mouse_wheel_scroll_distance
-            view_request.cancel()
         end
     end
 
@@ -237,7 +235,6 @@ local function do_vertical_mouse_interaction(
             mouse_offset_y = mnav.press_y - state.scroll_dist_y
         end
         state.scroll_dist_y = mnav.y - mouse_offset_y
-        view_request.cancel()
     end
 end
 
@@ -279,6 +276,7 @@ function scroll.finish(padding)
     local v_bar = area_element.aeb_pop()
 
     local tid = area_element.aeb_pop()
+    local picture_frame_id = area_element.aeb_pop()
 
     cursor.pop_translation() -- (3)
     mask.pop() -- (2)
@@ -314,9 +312,21 @@ function scroll.finish(padding)
     -- should be >= 0 (positive values scroll up)
     local dist_limit_top = scroll_top - content_top
 
-    -- These are needed by view requests
+    -- clamp before drawing anything because content sizes may have changed since last time
+    state.scroll_dist_x = extmath.clamp(state.scroll_dist_x, dist_limit_right, dist_limit_left)
+    state.scroll_dist_y = extmath.clamp(state.scroll_dist_y, dist_limit_bottom, dist_limit_top)
+
+    -- If flagged by a view request, export picture frame data
     if flagged_for_view_request then
-        view_request.push_limits(dist_limit_left, dist_limit_top, dist_limit_right, dist_limit_bottom)
+        draw_data.add_draw_operation(
+            draw_operation.view_request_export_picture_frame,
+            state,
+            dist_limit_left,
+            dist_limit_top,
+            dist_limit_right,
+            dist_limit_bottom,
+            picture_frame_id
+        )
     end
 
     -- actuator sizes
