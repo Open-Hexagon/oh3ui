@@ -56,8 +56,9 @@ end
 ---Adds the selection outline rectangle to the queue. Does not affect the cursor
 function selection_outline.add_to_queue()
     if mode == READY then
+        -- update function must always run if we are ready, even if we've ended up hiding it.
+        view_request.update_auto_scroll(view_request_placement_id or placement_id)
         if not hidden then
-            view_request.update_auto_scroll(view_request_placement_id or placement_id)
             if mask_left then
                 draw_queue.push_scissor(mask_left, mask_top, mask_right, mask_bottom)
                 -- draw data needs to be manually created since the placement was already made
