@@ -12,13 +12,13 @@ local draw_operation = {
     line = 104,
     polygon = 105,
     text = 106,
+    rectangle_inline = 107,
 
     -- special operations
     push_scissor = 201,
     pop_scissor = 202,
     mouse_sensor = 203,
     revert_scissor = 204,
-    view_request_export_view_location = 205,
     view_request_export_picture_frame = 206,
 
     -- overlay operations
@@ -30,6 +30,7 @@ local draw_operation = {
     overlay_line = 304,
     overlay_polygon = 305,
     overlay_text = 306,
+    overlay_rectangle_inline = 307,
 }
 
 return draw_operation

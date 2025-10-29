@@ -47,6 +47,7 @@ end
 
 ---Makes a new placement for the view request area that is an identical to the selection outline placement.
 ---This can be used so the view request references its own placement, so that it can be affected differently by translations.
+---Only the latest copied placement is used, the older ones are abandoned.
 function selection_outline.copy_placement_for_view_request()
     if placement_id then
         view_request_placement_id = draw_data.make_placement(draw_data.get_placement(placement_id))
@@ -58,6 +59,7 @@ function selection_outline.add_to_queue()
     if mode == READY then
         -- update function must always run if we are ready, even if we've ended up hiding it.
         view_request.update_auto_scroll(view_request_placement_id or placement_id)
+
         if not hidden then
             if mask_left then
                 draw_queue.push_scissor(mask_left, mask_top, mask_right, mask_bottom)

@@ -39,7 +39,7 @@ ui.init = layers.init
 local function start()
     -- The red grid shows screen space
     -- luacov: disable
-    if settings.debug_grid then
+    if settings.overlay_grid then
         love.graphics.setLineWidth(2)
         love.graphics.setColor(1, 0, 0, 0.2)
 
@@ -48,7 +48,7 @@ local function start()
         local x = 0
         while x < width do
             love.graphics.line(x, 0, x, height)
-            x = x + settings.debug_grid
+            x = x + settings.overlay_grid
         end
         x = width
         love.graphics.line(x, 0, x, height)
@@ -56,7 +56,7 @@ local function start()
         local y = 0
         while y < height do
             love.graphics.line(0, y, width, y)
-            y = y + settings.debug_grid
+            y = y + settings.overlay_grid
         end
         y = height
         love.graphics.line(0, y, width, y)
@@ -70,7 +70,7 @@ local function start()
     ---The green grid shows scaled space.
     ---This is where drawn graphics end up, but not everything is affected by graphics transforms.
     -- luacov: disable
-    if settings.debug_grid then
+    if settings.overlay_grid then
         love.graphics.setLineWidth(2)
         love.graphics.setColor(0, 1, 0, 0.2)
 
@@ -79,7 +79,7 @@ local function start()
         local x = 0
         while x < width do
             love.graphics.line(x, 0, x, height)
-            x = x + settings.debug_grid
+            x = x + settings.overlay_grid
         end
         x = width
         love.graphics.line(x, 0, x, height)
@@ -87,7 +87,7 @@ local function start()
         local y = 0
         while y < height do
             love.graphics.line(0, y, width, y)
-            y = y + settings.debug_grid
+            y = y + settings.overlay_grid
         end
         y = height
         love.graphics.line(0, y, width, y)

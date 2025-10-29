@@ -63,7 +63,7 @@ function draw_queue.rectangle(mode, left, top, right, bottom, color, rx, ry, lin
     return id
 end
 
----Add a rectangle outline to the queue
+---Add a rectangle outline to the queue (the outer edges of the drawn line matches the placement)
 ---@param left number
 ---@param top number
 ---@param right number
@@ -76,6 +76,22 @@ end
 function draw_queue.rectangle_outline(left, top, right, bottom, color, line_width, rx, ry)
     local id = draw_data.make_placement(left, top, right, bottom)
     draw_data.add_draw_operation(op_ids.rectangle_outline, id, line_width, rx, ry, unpack(color))
+    return id
+end
+
+---Add a rectangle inline to the queue (the inner edges of the drawn line matches the placement)
+---@param left number
+---@param top number
+---@param right number
+---@param bottom number
+---@param line_width number
+---@param color number[]
+---@param rx number
+---@param ry number
+---@return integer placement_id
+function draw_queue.rectangle_inline(left, top, right, bottom, color, line_width, rx, ry)
+    local id = draw_data.make_placement(left, top, right, bottom)
+    draw_data.add_draw_operation(op_ids.rectangle_inline, id, line_width, rx, ry, unpack(color))
     return id
 end
 
@@ -245,6 +261,21 @@ function draw_queue.draw()
                     rx,
                     ry
                 )
+            elseif id == op_ids.rectangle_inline then
+                x1, y1, x2, y2 = draw_data.get_placement(item[2])
+                line_width, rx, ry, r, g, b, a = unpack(item, 3)
+                half_width = line_width * 0.5
+                love.graphics.setLineWidth(line_width)
+                love.graphics.setColor(r, g, b, a)
+                love.graphics.rectangle(
+                    "line",
+                    x1 - half_width,
+                    y1 - half_width,
+                    x2 - x1 + line_width,
+                    y2 - y1 + line_width,
+                    rx,
+                    ry
+                )
             elseif id == op_ids.circle then
                 x1, y1 = draw_data.get_point(item[2])
                 mode, radius, r, g, b, a, line_width, rotation, segments = unpack(item, 3)
@@ -312,7 +343,15 @@ function draw_queue.draw()
 
                 -- overlay masks
                 if settings.overlay_masks then
-                    draw_queue.rectangle("line", x1 - 1, y1 - 1, x2 + 1, y2 + 1, theme.get_xterm_color(157), 0, 0, 2)
+                    -- we can reuse the placement
+                    draw_data.add_draw_operation(
+                        op_ids.rectangle_inline,
+                        item[2], -- we can reuse the placement
+                        2,
+                        0,
+                        0,
+                        unpack(theme.get_xterm_color(157))
+                    )
                 end
             elseif id == op_ids.pop_scissor then
                 scissor_stack.pop()
@@ -341,22 +380,11 @@ function draw_queue.draw()
                 if tx1 and settings.overlay_mouse_sensors then
                     tx1, ty1 = love.graphics.inverseTransformPoint(tx1, ty1)
                     tx2, ty2 = love.graphics.inverseTransformPoint(tx2, ty2)
-                    draw_queue.rectangle(
-                        "line",
-                        tx1 + 1,
-                        ty1 + 1,
-                        tx2 - 1,
-                        ty2 - 1,
-                        theme.get_xterm_color(213),
-                        0,
-                        0,
-                        2
-                    )
+                    -- we cannot reuse the placememt
+                    draw_queue.rectangle_outline(tx1, ty1, tx2, ty2, theme.get_xterm_color(213), 2, 0, 0)
                 end
             elseif id == op_ids.revert_scissor then
                 scissor_stack.revert(item[2])
-            elseif id == op_ids.view_request_export_view_location then
-                view_request.set_view_location(draw_data.get_placement(item[2]))
             elseif id == op_ids.view_request_export_picture_frame then
                 view_request.add_picture_frame_data(
                     item[2],
