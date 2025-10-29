@@ -442,7 +442,7 @@ function scroll.finish(padding)
     cursor.edit_translation(tid, state.scroll_dist_x, state.scroll_dist_y)
 
     -- scroll region sensor is made last so it has the highest priority
-    mnav.make_sensor(scroll_region, smode.lazy, smode.draggable)
+    mnav.make_sensor(scroll_region, smode.draggable)
 
     local at_left = state.scroll_dist_x == dist_limit_left
     local at_top = state.scroll_dist_y == dist_limit_top
