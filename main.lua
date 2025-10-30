@@ -23,7 +23,7 @@ parser:flag("-S --strict", "warnings become errors")
 parser:option("-T --tickrate", "number of ticks per second (default is 60)", 60, tonumber, 1)
 parser:flag("-k --overlay-masks", "overlay mask elements")
 parser:flag("-m --overlay-mouse-sensors", "overlay mouse sensor elements")
-parser:flag("-w --overlay-view-request", "overlay mouse sensor elements")
+parser:flag("-w --overlay-view-request", "overlay mouse view requests")
 
 local arg_values = parser:parse(love.arg.parseGameArguments(arg))
 
@@ -69,8 +69,8 @@ function love.run()
     love.keyboard.setKeyRepeat(true)
 
     -- ui.init(empty_grid)
-    -- ui.init(example_menu)
-    ui.init(scroll_example)
+    ui.init(example_menu)
+    -- ui.init(scroll_example)
     -- ui.init(collapse_example)
     -- ui.init(scroll_resizing)
 

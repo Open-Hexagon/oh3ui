@@ -35,7 +35,7 @@ end
 local theme = {}
 
 ---Gets an Xterm color by it's number.
----Reference: https://www.calmar.ws/vim/256-xterm-24bit-rgb-color-chart.html
+---Check the xterm_colors.html file for a reference
 ---@param n integer 0-255
 ---@return table
 function theme.get_xterm_color(n)
@@ -102,12 +102,12 @@ theme.text_color = theme.white -- default text color
 -- theme.accent_color = i2c(0x3daee9)
 theme.accent_color = i2c(0xff7321)
 
-theme.widget_outline = i2c(0x8c8c8c)
+theme.widget_outline = theme.get_xterm_color(245)
 theme.widget_outline_highlight = theme.accent_color
-theme.widget_background = i2c(0x404040)
-theme.widget_background_brighter = mix(theme.widget_background, theme.white, 0.2)
-theme.widget_background_highlight = mix(theme.widget_background, theme.widget_outline_highlight, 0.5)
-theme.widget_actuator = { 0.8, 0.8, 0.8, 1 }
+theme.widget_background = theme.get_xterm_color(238)
+theme.widget_background_brighter = theme.get_xterm_color(241)
+theme.widget_background_highlight = mix(theme.widget_background, theme.widget_outline_highlight, 0.4)
+theme.widget_actuator = theme.get_xterm_color(250)
 theme.widget_actuator_outline = theme.white
 theme.widget_actuator_outline_highlight = theme.accent_color
 

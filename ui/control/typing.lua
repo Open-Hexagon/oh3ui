@@ -221,10 +221,16 @@ function typing.evaluate()
                 -- unsets the target and reverse tabs the keyboard selection
                 unset_target(stop_methods.tab_up)
                 return target_cell_id, stop_methods.tab_up
-            elseif key == "tab" or key == "down" then
+            elseif key == "down" then
                 -- unsets the target and tabs the keyboard selection
                 unset_target(stop_methods.tab_down)
                 return target_cell_id, stop_methods.tab_down
+            elseif key == "tab" then
+                -- unsets the target and tabs or reverse tabs the keyboard selection
+                local tab_method = love.keyboard.isDown("lshift", "rshift") and stop_methods.tab_up
+                    or stop_methods.tab_down
+                unset_target(tab_method)
+                return target_cell_id, tab_method
             elseif key == "return" then
                 -- not spammable
                 if not is_repeat then
