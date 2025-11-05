@@ -1,4 +1,4 @@
----Primitives are elements that only use a single draw operation.
+---Primitives are elements that only created a single draw operation.
 
 local cursor = require("ui.cursor")
 local placement = cursor.placement
@@ -150,27 +150,55 @@ end
 ---@param font_path string? override font
 ---@return integer point_id
 function primitive.label(str, size, align, wrap, color, font_path)
+    primitive.rectangle(theme.get_xterm_color(161), "line")
     cursor.push()
 
-    -- Scale up
-    local wrap_limit = wrap and (cursor.width * settings.scale) or math.huge
-
+    local cursor_width_before = cursor.width
+    local wrap_limit = wrap and (cursor_width_before * settings.scale) or math.huge
     local font = text.get_font(size * settings.scale, font_path or theme.font_path)
 
     -- get a new text object
     local text_object = text.get_text_object(font, str, wrap_limit, align)
 
     -- Get text size. It can change even if wrap_text is true. Scaled down this time.
-    local text_width, text_height = love.graphics.inverseTransformPoint(text_object:getDimensions())
+    local true_text_width, true_text_height = text_object:getDimensions()
+    local text_width, text_height = love.graphics.inverseTransformPoint(true_text_width, true_text_height)
 
     -- A text object with an infinite wrap limit will not get drawn properly when aligned with center or right,
     -- so we replace the text_object with a a version with a finite wrap limit in those cases.
     if not wrap and align ~= "left" then
-        text_object = text.get_text_object(font, str, text_width, align)
+        text_object = text.get_text_object(font, str, true_text_width, align)
     end
 
-    cursor.place(text_width, text_height)
-    local point_id = draw_queue.text(text_object, placement.left, placement.top, color or theme.text_color)
+    local x, y
+    if wrap then
+        ---If wrapping is used, then the the width of the entire text object is actually the wrapping limit.
+        ---The actual text size has nothing to do with it. This is only noticeable in center and right align modes
+        ---where the text object origin isn't at the same location as the upper-left corner of the visible text bounding box.
+
+        cursor.place(text_width, text_height)
+
+        local offset_contribution
+        if align == "left" then
+            offset_contribution = 0
+        elseif align == "center" then
+            offset_contribution = 0.5
+        elseif align == "right" then
+            offset_contribution = 1
+        else
+            error("bad alignment")
+        end
+
+        x = placement.left - (cursor_width_before - text_width) * offset_contribution
+        y = placement.top
+    else
+        cursor.place(text_width, text_height)
+        x, y = placement.left, placement.top
+    end
+
+    primitive.rectangle(theme.get_xterm_color(49), "line")
+
+    local point_id = draw_queue.text(text_object, x, y, color or theme.text_color)
 
     cursor.do_auto_reshape()
     return point_id
