@@ -2,7 +2,7 @@ local scroll = require("ui.area.element.scroll")
 local cursor = require("ui.cursor")
 local id = require("ui.id_table")()
 local theme = require("ui.theme")
-local primitive = require("ui.primitive")
+local draw_by_cursor = require("ui.draw_queue").by_cursor
 local mnav = require("ui.control.mouse_navigation")
 local mb = mnav.buttons
 local knav = require("ui.control.keyboard_navigation")
@@ -16,7 +16,7 @@ local background = require("ui.area.element.background")
 local button = require("ui.element.button")
 
 return function()
-    primitive.rectangle({ 0, 0, 0, 0.8 })
+    draw_by_cursor.rectangle({ 0, 0, 0, 0.8 })
     knav.set_wrapping(wmode.tab, wmode.vertical)
 
     cursor.auto_reshape = true
@@ -25,7 +25,7 @@ return function()
     cursor.width = 200
     cursor.height = 200
 
-    primitive.rectangle(theme.green, "line")
+    draw_by_cursor.rectangle(theme.green, "line")
     scroll.start(id.scroll2)
     background.start()
     do
@@ -34,7 +34,7 @@ return function()
         cursor.width = 150
         cursor.height = 150
 
-        primitive.rectangle(theme.green, "line")
+        draw_by_cursor.rectangle(theme.green, "line")
         scroll.start(id.scroll)
         background.start()
         do
@@ -65,7 +65,7 @@ return function()
         cursor.push()
         cursor.shift_right(10)
 
-        primitive.rectangle(theme.green, "line")
+        draw_by_cursor.rectangle(theme.green, "line")
         scroll.start(id.scroll3)
         background.start()
         do
@@ -95,7 +95,7 @@ return function()
         cursor.pop()
         cursor.shift_down(10)
 
-        primitive.label(
+        draw_by_cursor.label(
             string.format(
                 "at_left: %s\nat_top: %s\nat_right: %s\nat_bottom: %s",
                 tostring(at_left),

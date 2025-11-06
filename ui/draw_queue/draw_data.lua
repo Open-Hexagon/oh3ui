@@ -1,5 +1,7 @@
 local draw_operation = require("ui.draw_queue.draw_operation")
 
+local ID_POS = 1
+
 local draw_data = {}
 local draw_data_is_blocked = true
 
@@ -50,6 +52,13 @@ end
 ---@return number bottom
 function draw_data.get_placement(id)
     return placement_list[id + 1], placement_list[id + 2], placement_list[id + 3], placement_list[id + 4]
+end
+
+---duplicates a placement
+---@param id integer placement_id
+---@return integer placement_id
+function draw_data.dup_placement(id)
+    return draw_data.make_placement(draw_data.get_placement(id))
 end
 
 ---makes a coordinate point
@@ -223,10 +232,11 @@ function draw_data.add_draw_operation(...)
     end
 
     if as_overlay then
-        local id, rect_id = slot[1], draw_operation.rectangle
+        local id, rect_id = slot[ID_POS], draw_operation.rectangle
         if id >= rect_id and id < rect_id + 100 then
-            slot[1] = id + (draw_operation.overlay_rectangle - rect_id)
+            slot[ID_POS] = id + (draw_operation.overlay_rectangle - rect_id)
         end
+        as_overlay = false
     end
 end
 
@@ -273,7 +283,7 @@ function draw_data.reserve_draw_slots(n)
     for i = 1, n do
         draw_list[draw_index + i] = draw_list[draw_index + i] or {}
         local slot = draw_list[draw_index + i]
-        slot[2] = draw_operation.unused_reservation
+        slot[ID_POS] = draw_operation.unused_reservation
         slot[3] = res_index
         slot[4] = i
         slot[5] = n
@@ -310,7 +320,7 @@ function draw_data.close_reservation(res_id)
     local i, stop = res_list[res_id], res_list[res_id - 1]
     while i ~= stop do
         i = i + 1
-        draw_list[i][2] = draw_operation.nop
+        draw_list[i][ID_POS] = draw_operation.nop
     end
     res_list[res_id] = stop
 end

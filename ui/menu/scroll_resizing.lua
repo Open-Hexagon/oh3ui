@@ -2,14 +2,8 @@ local scroll = require("ui.area.element.scroll")
 local cursor = require("ui.cursor")
 local id = require("ui.id_table")()
 local theme = require("ui.theme")
-local primitive = require("ui.primitive")
+local draw_by_cursor = require("ui.draw_queue").by_cursor
 local mnav = require("ui.control.mouse_navigation")
-local mb = mnav.buttons
-local knav = require("ui.control.keyboard_navigation")
-local wmode = knav.wrapping_mode
-local layers = require("ui.layers")
-local kba = knav.actions
-local button = require("ui.element.button")
 
 local collapsed = false
 
@@ -23,7 +17,7 @@ return function()
     cursor.width = 200
     cursor.height = 200
 
-    primitive.rectangle(theme.red, "line", 2)
+    draw_by_cursor.rectangle(theme.red, "line", 2)
     scroll.start(id.scroll)
 
     if mnav.clicked then
@@ -35,7 +29,7 @@ return function()
         cursor.height = 400
     end
 
-    primitive.rectangle(theme.green, "line", 2)
+    draw_by_cursor.rectangle(theme.green, "line", 2)
 
     scroll.finish(0)
 end

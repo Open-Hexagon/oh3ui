@@ -1,5 +1,5 @@
 local cursor = require("ui.cursor")
-local primitive = require("ui.primitive")
+local draw_by_cursor = require("ui.draw_queue").by_cursor
 local element = require("ui.element")
 local theme = require("ui.theme")
 local mnav = require("ui.control.mouse_navigation")
@@ -37,7 +37,7 @@ return function(state)
         cursor.push()
         do
             -- draw the base shape
-            primitive.slot(state.on and theme.accent_color or theme.widget_background)
+            draw_by_cursor.slot(state.on and theme.accent_color or theme.widget_background)
 
             -- draw the actuator
             cursor.change_anchor(0, 0)
@@ -45,8 +45,8 @@ return function(state)
             cursor.height = element.toggle_height
             cursor.x = cursor.x + state._toggle_actuator_position * travel_distance
 
-            primitive.circle(theme.widget_actuator)
-            primitive.circle_outline(
+            draw_by_cursor.circle(theme.widget_actuator)
+            draw_by_cursor.circle_outline(
                 mnav.is_hovering() and theme.widget_actuator_outline_highlight or theme.widget_actuator_outline
             )
         end

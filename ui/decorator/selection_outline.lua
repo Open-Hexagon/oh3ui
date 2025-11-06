@@ -5,7 +5,6 @@ local theme = require("ui.theme")
 local view_request = require("ui.area.view_request")
 local draw_queue = require("ui.draw_queue")
 local extmath = require("ui.extmath")
-local draw_data = require("ui.draw_queue.draw_data")
 local op_ids = require("ui.draw_queue.draw_operation")
 
 local outset, line_width = decorator.selection_outline_outset, decorator.selection_outline_line_width
@@ -34,7 +33,7 @@ function selection_outline.set_placement()
         view_request.update_collapses()
 
         -- make a placement without drawing anything yet
-        placement_id = draw_data.make_placement(
+        placement_id = draw_queue.make_placement(
             placement.left - outset,
             placement.top - outset,
             placement.right + outset,
@@ -50,7 +49,7 @@ end
 ---Only the latest copied placement is used, the older ones are abandoned.
 function selection_outline.copy_placement_for_view_request()
     if placement_id then
-        view_request_placement_id = draw_data.make_placement(draw_data.get_placement(placement_id))
+        view_request_placement_id = draw_queue.dup_placement(placement_id)
     end
 end
 
@@ -63,28 +62,10 @@ function selection_outline.add_to_queue()
         if not hidden then
             if mask_left then
                 draw_queue.by_value.push_mask(mask_left, mask_top, mask_right, mask_bottom)
-                -- draw data needs to be manually created since the placement was already made
-                draw_data.add_draw_operation(
-                    op_ids.rectangle,
-                    placement_id,
-                    "line",
-                    0,
-                    0,
-                    line_width,
-                    unpack(theme.accent_color)
-                )
+                draw_queue.by_id.rectangle(placement_id, "line", 0, 0, line_width, unpack(theme.accent_color))
                 draw_queue.pop_mask()
             else
-                -- as above
-                draw_data.add_draw_operation(
-                    op_ids.rectangle,
-                    placement_id,
-                    "line",
-                    0,
-                    0,
-                    line_width,
-                    unpack(theme.accent_color)
-                )
+                draw_queue.by_id.rectangle(placement_id, "line", 0, 0, line_width, unpack(theme.accent_color))
             end
         end
         mode = DONE

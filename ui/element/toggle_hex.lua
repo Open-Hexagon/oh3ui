@@ -1,6 +1,6 @@
 local cursor = require("ui.cursor")
 local placement = cursor.placement
-local primitive = require("ui.primitive")
+local draw_by_cursor = require("ui.draw_queue").by_cursor
 local element = require("ui.element")
 local theme = require("ui.theme")
 local extmath = require("ui.extmath")
@@ -32,7 +32,7 @@ local function draw_base_shape(color)
     local y2 = placement.bottom
 
     -- stylua: ignore
-    draw_queue.polygon(
+    draw_queue.by_value.polygon(
         "fill", color, 1,
         x0, y1,
         x1, y0,
@@ -76,8 +76,8 @@ return function(state)
             cursor.height = diameter
             cursor.x = cursor.x + state._toggle_actuator_position * travel_distance
 
-            primitive.circle(theme.widget_actuator, 6)
-            primitive.circle_outline(
+            draw_by_cursor.circle(theme.widget_actuator, 6)
+            draw_by_cursor.circle_outline(
                 mnav.is_hovering() and theme.widget_actuator_outline_highlight or theme.widget_actuator_outline,
                 nil,
                 6

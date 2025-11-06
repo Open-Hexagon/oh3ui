@@ -3,8 +3,7 @@ local volatile_data = require("ui.shared_data").volatile
 local aeb_stack = volatile_data.aeb_stack
 local follow = require("ui.effect").follow
 local knav = require("ui.control.keyboard_navigation")
-local draw_data = require("ui.draw_queue.draw_data")
-local op_ids = require("ui.draw_queue.draw_operation")
+local draw_queue = require("ui.draw_queue")
 local mnav = require("ui.control.mouse_navigation")
 local settings = require("ui.settings")
 local theme = require("ui.theme")
@@ -51,12 +50,15 @@ function view_request.update_auto_scroll(view_pid)
         view_location_placement_id = view_pid
 
         if settings.overlay_view_request then
-            draw_data.add_draw_operation(op_ids.overlay_rectangle_inline, view_pid, 2, 0, 0, theme.get_xterm_color(75))
+            draw_queue.next_as_overlay()
+            draw_queue.by_id.rectangle_inline(view_pid, 2, 0, 0, unpack(theme.get_xterm_color(75)))
 
             -- copy placement for outer outline that shows padding
-            local left, top, right, bottom = draw_data.get_placement(view_pid)
-            local pid = draw_data.make_placement(left - padding, top - padding, right + padding, bottom + padding)
-            draw_data.add_draw_operation(op_ids.overlay_rectangle_outline, pid, 2, 0, 0, theme.get_xterm_color(203))
+            local left, top, right, bottom = draw_queue.get_placement(view_pid)
+            local pid = draw_queue.make_placement(left - padding, top - padding, right + padding, bottom + padding)
+
+            draw_queue.next_as_overlay()
+            draw_queue.by_id.rectangle_outline(pid, 2, 0, 0, unpack(theme.get_xterm_color(203)))
         end
 
         -- flag all above scroll areas as requested
@@ -162,7 +164,7 @@ function view_request.evaluate()
         return
     end
 
-    local view_left, view_top, view_right, view_bottom = draw_data.get_placement(view_location_placement_id)
+    local view_left, view_top, view_right, view_bottom = draw_queue.get_placement(view_location_placement_id)
     view_left = view_left - padding
     view_top = view_top - padding
     view_right = view_right + padding

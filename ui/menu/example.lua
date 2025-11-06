@@ -3,7 +3,7 @@
 local cursor = require("ui.cursor")
 local id = require("ui.id_table")()
 local theme = require("ui.theme")
-local primitive = require("ui.primitive")
+local draw_by_cursor = require("ui.draw_queue").by_cursor
 local mnav = require("ui.control.mouse_navigation")
 local smode = mnav.sensor_mode
 local mb = mnav.buttons
@@ -34,7 +34,7 @@ local counter = 0
 
 return function()
     cursor.change_anchor(0.5)
-    primitive.label(string.format("%02d", counter), 400, "center", false, { 1, 1, 1, 0.1 })
+    draw_by_cursor.label(string.format("%02d", counter), 400, "center", false, { 1, 1, 1, 0.1 })
     counter = (counter + 1) % 60
     cursor.change_anchor(0)
 
@@ -72,7 +72,7 @@ Rerum ducimus tenetur fugit.
         250
     )
     cursor.shift_down(10)
-    primitive.label(string.format("%d%%", id.slider.value), 16, "left", false)
+    draw_by_cursor.label(string.format("%d%%", id.slider.value), 16, "left", false)
     cursor.shift_down(10)
 
     cursor.width = 150
@@ -92,7 +92,7 @@ Rerum ducimus tenetur fugit.
     end
     cursor.shift_down(10)
 
-    primitive.label(string.format("UI Scale: %.1f", id.slider_coarse.value), 16, "left", false)
+    draw_by_cursor.label(string.format("UI Scale: %.1f", id.slider_coarse.value), 16, "left", false)
     cursor.shift_down(10)
 
     cursor.width = 150
@@ -159,21 +159,20 @@ Rerum ducimus tenetur fugit.
     knav.grid_cell(1, 13)
     local text_entry_sensor = mnav.make_sensor(nil, smode.block)
 
-    primitive.rectangle(theme.green, "line")
+    draw_by_cursor.rectangle(theme.green, "line")
     if knav.is_selected() then
         selection_outline_set_location()
     end
 
     typing.make_text_entry(id.text_entry, text_entry_sensor, text_entry_cell)
     typing.draw_text_entry(24, "Search")
-    tooltip("right", string.rep("tooltip text2", 5, "\n"), 16, "left", nil)
     cursor.shift_down(10)
 
     local text_entry_cell2 = knav.make_cell()
     knav.grid_cell(1, 14)
     local text_entry_sensor2 = mnav.make_sensor(nil, smode.block)
 
-    primitive.rectangle(theme.green, "line")
+    draw_by_cursor.rectangle(theme.green, "line")
     if knav.is_selected() then
         selection_outline_set_location()
     end
@@ -205,7 +204,7 @@ Rerum ducimus tenetur fugit.
     cursor.shift_down(40)
     cursor.width = id.slider.value
     cursor.change_anchor(id.slider_anchor_x.value, id.slider_anchor_y.value)
-    primitive.label(
+    draw_by_cursor.label(
         [[
 Magnam blanditiis et et perferendis ipsum qui nisi.
 Earum voluptatem qui ea amet ea quae est deleniti.

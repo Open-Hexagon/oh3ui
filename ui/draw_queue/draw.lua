@@ -217,10 +217,10 @@ return function()
             elseif id == op_ids.unused_reservation then
                 warning(
                     string.format(
-                        "unused reservation slot with res_id %d, slot number %d of %d\n",
-                        item[2],
+                        "unused reservation slot with res_id %d, slot number %d of %d",
                         item[3],
-                        item[4]
+                        item[4],
+                        item[5]
                     )
                 )
             else

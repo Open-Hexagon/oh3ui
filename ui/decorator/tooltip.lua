@@ -19,8 +19,7 @@ local is_active = false
 local time = 0
 local alpha = 0
 
-local tooltip_outline_color = {}
-local tooltip_background_color = {}
+local tooltip_text_color = { 0, 0, 0, 0 }
 
 ---@param edge "left"|"top"|"right"|"bottom"
 ---@param str string
@@ -71,42 +70,29 @@ function tooltip.tooltip(edge, str, font_size, align, wrap_limit)
         cursor.width = wrap_limit
     end
 
-    tooltip_outline_color[1] = theme.text_color[1]
-    tooltip_outline_color[2] = theme.text_color[2]
-    tooltip_outline_color[3] = theme.text_color[3]
-    tooltip_outline_color[4] = alpha
-
+    tooltip_text_color[1], tooltip_text_color[2], tooltip_text_color[3], tooltip_text_color[4] =
+        theme.alpha_mod_unpack(theme.text_color, alpha)
     draw_queue.next_as_overlay()
-    label(str, font_size, align, not not wrap_limit, tooltip_outline_color)
+    label(str, font_size, align, not not wrap_limit, tooltip_text_color)
 
     cursor.outset(text_padding)
 
     cursor.place()
 
-    local id = draw_data.make_placement(placement.left, placement.top, placement.right, placement.bottom)
+    local id = draw_queue.make_placement(placement.left, placement.top, placement.right, placement.bottom)
     local shadow_id =
-        draw_data.make_placement(placement.left + 3, placement.top + 3, placement.right + 3, placement.bottom + 3)
+        draw_queue.make_placement(placement.left + 3, placement.top + 3, placement.right + 3, placement.bottom + 3)
 
-    reserve.take(res_id)
-    draw_data.add_draw_operation(op_ids.overlay_rectangle, shadow_id, "fill", 0, 0, 1, 0, 0, 0, alpha * 0.2)
-    reserve.take(res_id)
-    draw_data.add_draw_operation(
-        op_ids.overlay_rectangle,
-        id,
-        "fill",
-        0,
-        0,
-        1,
-        theme.alpha_mod_unpack(theme.tooltip_background, alpha)
-    )
-    draw_data.add_draw_operation(
-        op_ids.overlay_rectangle_outline,
-        id,
-        1,
-        0,
-        0,
-        theme.alpha_mod_unpack(theme.tooltip_outline, alpha)
-    )
+    draw_queue.next_takes_reservation(res_id)
+    draw_queue.next_as_overlay()
+    draw_queue.by_id.rectangle(shadow_id, "fill", 0, 0, 1, 0, 0, 0, alpha * 0.2)
+
+    draw_queue.next_takes_reservation(res_id)
+    draw_queue.next_as_overlay()
+    draw_queue.by_id.rectangle(id, "fill", 0, 0, 1, theme.alpha_mod_unpack(theme.tooltip_background, alpha))
+
+    draw_queue.next_as_overlay()
+    draw_queue.by_id.rectangle_outline(id, 1, 0, 0, theme.alpha_mod_unpack(theme.tooltip_outline, alpha))
 
     cursor.pop()
 end

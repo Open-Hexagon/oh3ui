@@ -1,7 +1,6 @@
 local cursor = require("ui.cursor")
 local collapse = require("ui.area.element.collapse")
 local id = require("ui.id_table")()
-local primitive = require("ui.primitive")
 local theme = require("ui.theme")
 local button = require("ui.element.button")
 local mnav = require("ui.control.mouse_navigation")

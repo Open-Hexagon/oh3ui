@@ -9,6 +9,7 @@ local draw_queue = {
 
 draw_queue.allocate_reservation = draw_data.reserve_draw_slots
 draw_queue.next_takes_reservation = draw_data.next_takes_reservation
+draw_queue.close_reservation = draw_data.close_reservation
 
 draw_queue.next_as_overlay = draw_data.next_as_overlay
 
@@ -22,6 +23,7 @@ end
 
 draw_queue.make_placement = draw_data.make_placement
 draw_queue.get_placement = draw_data.get_placement
+draw_queue.dup_placement = draw_data.dup_placement
 draw_queue.make_point = draw_data.make_point
 draw_queue.get_point = draw_data.get_point
 draw_queue.make_point_cluster = draw_data.make_point_cluster

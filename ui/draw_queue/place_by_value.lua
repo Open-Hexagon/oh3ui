@@ -6,7 +6,7 @@ local place_by_id = require("ui.draw_queue.place_by_id")
 
 local place_by_value = {}
 
----Pushes a mask
+---Pushes a mask.
 ---@param left number
 ---@param top number
 ---@param right number
@@ -31,7 +31,7 @@ end
 ---@return integer placement_id
 function place_by_value.rectangle(mode, left, top, right, bottom, color, rx, ry, line_width)
     local id = draw_data.make_placement(left, top, right, bottom)
-    place_by_id.rectangle(id, mode, color, rx, ry, line_width)
+    place_by_id.rectangle(id, mode, rx, ry, line_width, unpack(color))
     return id
 end
 
@@ -47,7 +47,7 @@ end
 ---@return integer placement_id
 function place_by_value.rectangle_outline(left, top, right, bottom, color, line_width, rx, ry)
     local id = draw_data.make_placement(left, top, right, bottom)
-    place_by_id.rectangle_outline(id, color, line_width, rx, ry)
+    place_by_id.rectangle_outline(id, line_width, rx, ry, unpack(color))
     return id
 end
 
@@ -63,7 +63,7 @@ end
 ---@return integer placement_id
 function place_by_value.rectangle_inline(left, top, right, bottom, color, line_width, rx, ry)
     local id = draw_data.make_placement(left, top, right, bottom)
-    place_by_id.rectangle_inline(id, color, line_width, rx, ry)
+    place_by_id.rectangle_inline(id, line_width, rx, ry, unpack(color))
     return id
 end
 
@@ -79,7 +79,7 @@ end
 ---@return integer point_id
 function place_by_value.circle(mode, x, y, radius, color, line_width, segments, rotation)
     local id = draw_data.make_point(x, y)
-    place_by_id.circle(id, mode, radius, color, line_width, segments, rotation)
+    place_by_id.circle(id, mode, radius, line_width, segments, rotation, unpack(color))
     return id
 end
 
@@ -94,7 +94,7 @@ end
 ---@return integer point_id
 function place_by_value.circle_outline(x, y, radius, line_width, color, segments, rotation)
     local id = draw_data.make_point(x, y)
-    place_by_id.circle_outline(id, radius, line_width, color, segments, rotation)
+    place_by_id.circle_outline(id, radius, line_width, segments, rotation, unpack(color))
     return id
 end
 
@@ -112,7 +112,7 @@ end
 ---@return integer point_cluster_id
 function place_by_value.polygon(mode, color, line_width, x1, y1, x2, y2, x3, y3, ...)
     local id = draw_data.make_point_cluster(x1, y1, x2, y2, x3, y3, ...)
-    place_by_id.polygon(id, mode, color, line_width)
+    place_by_id.polygon(id, mode, line_width, unpack(color))
     return id
 end
 
@@ -127,7 +127,7 @@ end
 ---@return integer point_cluster_id
 function place_by_value.line(line_width, color, x1, y1, x2, y2, ...)
     local id = draw_data.make_point_cluster(x1, y1, x2, y2, ...)
-    place_by_id.line(id, line_width, color)
+    place_by_id.line(id, line_width, unpack(color))
     return id
 end
 
@@ -139,7 +139,7 @@ end
 ---@return integer point_id
 function place_by_value.text(text_object, x, y, color)
     local id = draw_data.make_point(x, y)
-    place_by_id.text(id, text_object, color)
+    place_by_id.text(id, text_object, unpack(color))
     return id
 end
 
