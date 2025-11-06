@@ -2,18 +2,6 @@
 
 local shared_data = {}
 
-shared_data.enums = {}
-
----@enum control_methods
-local control_methods = {
-    none = 0,
-    mouse = 1,
-    keyboard = 2,
-    typing = 3,
-}
-
-shared_data.enums.control_method = control_methods
-
 shared_data.control = {
     ---The cell id that is used to check for selection and actions
     ---The cell id 0 will never be assigned normally
@@ -25,8 +13,8 @@ shared_data.control = {
     ---@type integer
     current_sensor_id = 0,
 
-    ---@type control_methods
-    last_used_control_method = control_methods.none,
+    ---@type "none"|"mouse"|"keyboard"|"typing"
+    last_used_control_method = "none",
 
     ---Used to disable control functions on inactive layers.
     ---@type boolean
@@ -57,7 +45,7 @@ shared_data.volatile = {
     area_base_index = 0,
 
     -- keeps track of how many masks have been applied
-    mask_stack = {}, -- this only gets used when draw_queue.draw is called
+    mask_stack = {}, -- this only gets used when draw_queue_draw is called
     mask_index = 0, -- number of masks applied
     mask_base_index = 0,
 

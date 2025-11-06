@@ -1,6 +1,6 @@
 local cursor = require("ui.cursor")
 local theme = require("ui.theme")
-local primitive = require("ui.primitive")
+local draw_by_cursor = require("ui.draw_queue").by_cursor
 local element = require("ui.element")
 local extmath = require("ui.extmath")
 local selection_outline_set_location = require("ui.decorator.selection_outline").set_placement
@@ -91,7 +91,7 @@ return function(state, min, max, step, decimals, format)
     if dragging == mb.left then
         -- highlighted background
         cursor.width = full_width
-        primitive.rectangle(theme.widget_background_highlight)
+        draw_by_cursor.rectangle(theme.widget_background_highlight)
 
         -- increment/decrement value
         state.value = state.value + mnav.screen_dx * 10 ^ -decimals
@@ -101,12 +101,12 @@ return function(state, min, max, step, decimals, format)
     else
         -- normal background
         cursor.width = full_width
-        primitive.rectangle(theme.widget_background)
+        draw_by_cursor.rectangle(theme.widget_background)
         cursor.width = center_width
 
         -- brighter center
         if center_hovering then
-            primitive.rectangle(theme.widget_background_brighter)
+            draw_by_cursor.rectangle(theme.widget_background_brighter)
         end
     end
 
@@ -130,12 +130,12 @@ return function(state, min, max, step, decimals, format)
                 state.value = state.value - step
             end
             if mnav.get_holding(left_sid) == mb.left or kb_holding == kba.left then
-                primitive.rectangle(theme.widget_background_highlight)
+                draw_by_cursor.rectangle(theme.widget_background_highlight)
             elseif mnav.is_hovering(left_sid) then
-                primitive.rectangle(theme.widget_background_brighter)
+                draw_by_cursor.rectangle(theme.widget_background_brighter)
             end
         end
-        primitive.icon("chevron-left", element.numeric_input_text_size)
+        draw_by_cursor.icon("chevron-left", element.numeric_input_text_size)
         -- #endregion
 
         -- #region right arrow
@@ -150,12 +150,12 @@ return function(state, min, max, step, decimals, format)
                 state.value = state.value + step
             end
             if mnav.get_holding(right_sid) == mb.left or kb_holding == kba.right then
-                primitive.rectangle(theme.widget_background_highlight)
+                draw_by_cursor.rectangle(theme.widget_background_highlight)
             elseif mnav.is_hovering(right_sid) then
-                primitive.rectangle(theme.widget_background_brighter)
+                draw_by_cursor.rectangle(theme.widget_background_brighter)
             end
         end
-        primitive.icon("chevron-right", element.numeric_input_text_size)
+        draw_by_cursor.icon("chevron-right", element.numeric_input_text_size)
         -- #endregion
     end
 
@@ -174,9 +174,9 @@ return function(state, min, max, step, decimals, format)
     if is_editing then
         typing.draw_text_entry(element.numeric_input_text_size, "input")
     else
-        primitive.label(string.format(format or "%f", state.value), element.numeric_input_text_size, "left", false)
+        draw_by_cursor.label(string.format(format or "%f", state.value), element.numeric_input_text_size, "left", false)
     end
-    primitive.rectangle_outline(
+    draw_by_cursor.rectangle_outline(
         (hovering or dragging or is_editing) and theme.widget_outline_highlight or theme.widget_outline
     )
     mnav.make_sensor(everything_sid)

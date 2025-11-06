@@ -1,6 +1,6 @@
 local cursor = require("ui.cursor")
 local theme = require("ui.theme")
-local primitive = require("ui.primitive")
+local icon = require("ui.draw_queue").by_cursor.icon
 local selection_outline_set_location = require("ui.decorator.selection_outline").set_placement
 local knav = require("ui.control.keyboard_navigation")
 local kba = knav.actions
@@ -33,7 +33,7 @@ return function(size, icon_name)
     end
 
     cursor.auto_reshape = true
-    primitive.icon(icon_name, size, button_color)
+    icon(icon_name, size, button_color)
     mnav.make_sensor(sid, smode.block)
 
     if knav.is_selected() then

@@ -1,17 +1,16 @@
 local cursor = require("ui.cursor")
 local area_element = require("ui.area")
 local stack_manager = require("ui.stack_manager")
-local mask = require("ui.mask")
 local mnav = require("ui.control.mouse_navigation")
 local mb = mnav.buttons
 local knav = require("ui.control.keyboard_navigation")
 local kba = knav.actions
 local selection_outline = require("ui.decorator.selection_outline")
 local follow = require("ui.effect").follow
-local reserve = require("ui.reserve")
 local volatile_data = require("ui.shared_data").volatile
 local view_request = require("ui.area.view_request")
 local decorator = require("ui.decorator")
+local draw_queue = require("ui.draw_queue")
 
 local selection_outline_cutoff = decorator.selection_outline_outset + decorator.selection_outline_line_width * 0.5
 -- this is an arbitrary value, it only needs to be bigger than selection_outline_cutoff
@@ -28,7 +27,7 @@ local speed = area_element.collapse_speed
 ---@param sensor_id integer? optional sensor id
 ---@param cell_id integer? optional cell id
 function collapse.start(state, anchor_pos, clipping_side, no_auto_open, sensor_id, cell_id)
-    local res_id = reserve.allocate(1)
+    local res_id = draw_queue.allocate_reservation(1)
 
     cursor.start_area()
 
@@ -124,9 +123,9 @@ function collapse.finish()
 
     cursor.change_anchor(anchor_pos)
     cursor[dimension] = state._collapse_size
-    reserve.take(res_id)
-    mask.push()
-    mask.pop()
+    draw_queue.next_takes_reservation(res_id)
+    draw_queue.by_cursor.push_mask()
+    draw_queue.pop_mask()
 
     if contains_selection then
         if not state.on then

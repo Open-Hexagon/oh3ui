@@ -1,6 +1,5 @@
 local cursor = require("ui.cursor")
-local primitive = require("ui.primitive")
-local reserve = require("ui.reserve")
+local rectangle = require("ui.draw_queue").by_cursor.rectangle
 local stack_manager = require("ui.stack_manager")
 local area_element = require("ui.area")
 local draw_queue = require("ui.draw_queue")
@@ -8,7 +7,7 @@ local draw_queue = require("ui.draw_queue")
 local background = {}
 
 function background.start()
-    local res_id = reserve.allocate(1)
+    local res_id = draw_queue.allocate_reservation(1)
     cursor.start_area()
 
     area_element.aeb_push(res_id)
@@ -26,10 +25,10 @@ function background.finish(pad, color)
 
     if cursor.finish_area() then
         cursor.outset(pad)
-        reserve.take(res_id)
-        primitive.rectangle(color)
+        draw_queue.next_takes_reservation(res_id)
+        rectangle(color)
     else
-        reserve.take(res_id)
+        draw_queue.next_takes_reservation(res_id)
         draw_queue.nop()
     end
 end

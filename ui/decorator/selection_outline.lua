@@ -62,7 +62,7 @@ function selection_outline.add_to_queue()
 
         if not hidden then
             if mask_left then
-                draw_queue.push_scissor(mask_left, mask_top, mask_right, mask_bottom)
+                draw_queue.by_value.push_mask(mask_left, mask_top, mask_right, mask_bottom)
                 -- draw data needs to be manually created since the placement was already made
                 draw_data.add_draw_operation(
                     op_ids.rectangle,
@@ -73,7 +73,7 @@ function selection_outline.add_to_queue()
                     line_width,
                     unpack(theme.accent_color)
                 )
-                draw_queue.pop_scissor()
+                draw_queue.pop_mask()
             else
                 -- as above
                 draw_data.add_draw_operation(

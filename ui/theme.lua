@@ -114,8 +114,23 @@ theme.widget_actuator_outline_highlight = theme.accent_color
 theme.scrollbar = { 1, 1, 1, 0.35 }
 theme.grabbed_scrollbar = { 1, 1, 1, 0.6 }
 
+-- The alpha values of these colors are ignored
+theme.tooltip_outline = theme.get_xterm_color(236)
+theme.tooltip_background = theme.get_xterm_color(234)
+
 -- export the mix function
 theme.mix = mix
+
+---unpacks a color but replaces the alpha
+---@param c table
+---@param a number
+---@return number
+---@return number
+---@return number
+---@return number
+function theme.alpha_mod_unpack(c, a)
+    return c[1], c[2], c[3], a
+end
 
 -- allows setting values in the table to overwrite them but restores default when set to nil
 return setmetatable({}, { __index = theme })

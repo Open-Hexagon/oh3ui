@@ -1,16 +1,15 @@
 local cursor = require("ui.cursor")
 local theme = require("ui.theme")
-local primitive = require("ui.primitive")
 local element = require("ui.element")
-local mask = require("ui.mask")
 local follow = require("ui.effect").follow
-local reserve = require("ui.reserve")
 local knav = require("ui.control.keyboard_navigation")
 local kba = knav.actions
 local mnav = require("ui.control.mouse_navigation")
 local mb = mnav.buttons
 local smode = mnav.sensor_mode
 local selection_outline_set_location = require("ui.decorator.selection_outline").set_placement
+local draw_queue = require("ui.draw_queue")
+local draw_by_cursor = draw_queue.by_cursor
 
 local selection_highlight_speed = 25
 
@@ -38,8 +37,8 @@ return function(state, ...)
 
     cursor.push() -- (2)
 
-    local sel_bg_res = reserve.allocate(positions)
-    local sel_hl_res = reserve.allocate(1)
+    local sel_bg_res = draw_queue.allocate_reservation(positions)
+    local sel_hl_res = draw_queue.allocate_reservation(1)
 
     -- selection buttons
     local hovering = knav.is_selected()
@@ -63,13 +62,13 @@ return function(state, ...)
             button_color = theme.widget_background
         end
 
-        reserve.take(sel_bg_res)
-        primitive.rectangle(button_color)
+        draw_queue.next_takes_reservation(sel_bg_res)
+        draw_by_cursor.rectangle(button_color)
 
         cursor.inset(element.switch_internal_padding)
-        mask.push()
-        primitive.label(select(i, ...), element.switch_text_size, "left", false)
-        mask.pop()
+        draw_by_cursor.push_mask()
+        draw_by_cursor.label(select(i, ...), element.switch_text_size, "left", false)
+        draw_queue.pop_mask()
     end
 
     -- keyboard navigation
@@ -101,12 +100,12 @@ return function(state, ...)
     state._switch_selection_highlight_position =
         follow(state._switch_selection_highlight_position, state.position - 1, state._switch_selection_highlight_speed)
     cursor.x = base_x + state._switch_selection_highlight_position * section_width
-    reserve.take(sel_hl_res)
-    primitive.rectangle(theme.accent_color)
+    draw_queue.next_takes_reservation(sel_hl_res)
+    draw_by_cursor.rectangle(theme.accent_color)
 
     cursor.pop() -- (2)
 
-    primitive.rectangle_outline(hovering and theme.accent_color or theme.widget_outline)
+    draw_by_cursor.rectangle_outline(hovering and theme.accent_color or theme.widget_outline)
     mnav.make_sensor() -- this is so external click functions are correct
     if knav.is_selected() then
         selection_outline_set_location()

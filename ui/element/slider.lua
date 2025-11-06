@@ -1,7 +1,7 @@
 local cursor = require("ui.cursor")
 local projected_placement = cursor.projected_placement
 local theme = require("ui.theme")
-local primitive = require("ui.primitive")
+local draw_by_cursor = require("ui.draw_queue").by_cursor
 local element = require("ui.element")
 local extmath = require("ui.extmath")
 local knav = require("ui.control.keyboard_navigation")
@@ -85,8 +85,8 @@ return function(state, min, max, positions, show_positions, kb_step, kb_fast_ste
 
     -- background slot
     cursor.height = slot_height
-    primitive.slot(theme.widget_background)
-    primitive.slot_outline(theme.widget_outline)
+    draw_by_cursor.slot(theme.widget_background)
+    draw_by_cursor.slot_outline(theme.widget_outline)
     -- save background slot position for by show_positions
     cursor.push()
 
@@ -114,8 +114,8 @@ return function(state, min, max, positions, show_positions, kb_step, kb_fast_ste
 
     -- background slot filled portion
     cursor.width = fill_width
-    primitive.slot(theme.widget_background_highlight)
-    primitive.slot_outline(theme.accent_color)
+    draw_by_cursor.slot(theme.widget_background_highlight)
+    draw_by_cursor.slot_outline(theme.accent_color)
 
     -- position lines
     if show_positions then
@@ -125,7 +125,7 @@ return function(state, min, max, positions, show_positions, kb_step, kb_fast_ste
         cursor.height = cursor.height - 2 -- prevents lines from spilling over
         for x, i in cursor.h_linspace(positions) do
             cursor.x = x
-            primitive.vline(i - 1 > state.position and theme.widget_outline or theme.accent_color)
+            draw_by_cursor.vline(i - 1 > state.position and theme.widget_outline or theme.accent_color)
         end
         cursor.pop()
     else
@@ -137,8 +137,8 @@ return function(state, min, max, positions, show_positions, kb_step, kb_fast_ste
     cursor.anchor_x = 0.5
     cursor.width = element.slider_height
     cursor.height = element.slider_height
-    primitive.circle(theme.widget_actuator)
-    primitive.circle_outline(
+    draw_by_cursor.circle(theme.widget_actuator)
+    draw_by_cursor.circle_outline(
         (mnav.is_hovering() or dragging) and theme.widget_actuator_outline_highlight or theme.widget_actuator_outline
     )
 

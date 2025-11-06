@@ -27,17 +27,18 @@ local switch = require("ui.element.switch")
 local toggle = require("ui.element.toggle")
 local toggle_hex = require("ui.element.toggle_hex")
 local checkbox = require("ui.element.checkbox")
+local tooltip = require("ui.decorator.tooltip").tooltip
 local selection_outline_set_location = require("ui.decorator.selection_outline").set_placement
 
 local counter = 0
 
 return function()
-    cursor.push_translation(100, 100)
-
     cursor.change_anchor(0.5)
     primitive.label(string.format("%02d", counter), 400, "center", false, { 1, 1, 1, 0.1 })
     counter = (counter + 1) % 60
     cursor.change_anchor(0)
+
+    cursor.push_translation(100, 100)
 
     knav.set_wrapping(wmode.redirect, wmode.vertical)
     knav.set_page_length(2)
@@ -51,14 +52,34 @@ return function()
     knav.make_cell()
     knav.grid_cell(1, 1)
     numeric_input(id.numeric, -100, 100, 5, 1, "X = %.2f")
-    cursor.shift_down(10)
+    tooltip("right", string.rep("tooltip text", 5, "\n"), 16, "left", nil)
+    cursor.shift_down(0)
 
     -- Slider
     knav.make_cell()
     knav.grid_cell(1, 2)
-    slider(id.slider, 0, 100, 101)
+    slider(id.slider, 100, 500, 401)
+    tooltip(
+        "right",
+        [[
+Magnam blanditiis et et perferendis ipsum qui nisi.
+Earum voluptatem qui ea amet ea quae est deleniti.
+Tempore dolores ex et iusto.
+Rerum ducimus tenetur fugit.
+]],
+        16,
+        "center",
+        250
+    )
     cursor.shift_down(10)
     primitive.label(string.format("%d%%", id.slider.value), 16, "left", false)
+    cursor.shift_down(10)
+
+    cursor.width = 150
+    slider(id.slider_anchor_x, 0, 1, 101)
+    cursor.shift_down(10)
+
+    slider(id.slider_anchor_y, 0, 1, 101)
     cursor.shift_down(10)
 
     -- Coarse Slider
@@ -144,9 +165,8 @@ return function()
     end
 
     typing.make_text_entry(id.text_entry, text_entry_sensor, text_entry_cell)
-
     typing.draw_text_entry(24, "Search")
-
+    tooltip("right", string.rep("tooltip text2", 5, "\n"), 16, "left", nil)
     cursor.shift_down(10)
 
     local text_entry_cell2 = knav.make_cell()
@@ -173,19 +193,28 @@ return function()
         layers.push(scroll_example_menu)
     end
 
-    cursor.shift_down(10)
+    local align
+    if id.switch.position == 1 then
+        align = "left"
+    elseif id.switch.position == 2 then
+        align = "center"
+    else
+        align = "right"
+    end
+
+    cursor.shift_down(40)
+    cursor.width = id.slider.value
+    cursor.change_anchor(id.slider_anchor_x.value, id.slider_anchor_y.value)
     primitive.label(
-        string.format(
-            [[
-last_used_control_method %d
-is_editing_any_text %s
+        [[
+Magnam blanditiis et et perferendis ipsum qui nisi.
+Earum voluptatem qui ea amet ea quae est deleniti.
+Tempore dolores ex et iusto.
+Rerum ducimus tenetur fugit.
 ]],
-            shared_data.control.last_used_control_method,
-            typing.is_editing_any_text()
-        ),
         16,
-        "left",
-        false
+        align,
+        id.toggle.on
     )
 
     cursor.pop_translation()

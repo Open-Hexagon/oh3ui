@@ -91,7 +91,7 @@ function love.run()
             -- reset everything
             love.graphics.setCanvas()
             love.graphics.origin()
-            love.graphics.clear(0, 0, 0, 1)
+            love.graphics.clear(0.1, 0.1, 0.1, 1)
 
             ui.run()
 

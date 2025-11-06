@@ -20,6 +20,8 @@ local res_index = 0
 ---Contains the reservation index that the next operation will use, nil otherwise
 local take_reservation_id = nil
 
+local as_overlay = false
+
 --#region placements and translations
 
 ---adds a placement
@@ -42,9 +44,12 @@ end
 
 ---gets a placement
 ---@param id integer placement_id
----@return number ...
+---@return number left
+---@return number top
+---@return number right
+---@return number bottom
 function draw_data.get_placement(id)
-    return unpack(placement_list, id + 1, id + 4)
+    return placement_list[id + 1], placement_list[id + 2], placement_list[id + 3], placement_list[id + 4]
 end
 
 ---makes a coordinate point
@@ -63,9 +68,10 @@ end
 
 ---gets a coordinate point
 ---@param id integer
----@return number ...
+---@return number x
+---@return number y
 function draw_data.get_point(id)
-    return unpack(placement_list, id + 1, id + 2)
+    return placement_list[id + 1], placement_list[id + 2]
 end
 
 ---adds a point cluster
@@ -215,6 +221,13 @@ function draw_data.add_draw_operation(...)
     for i = 1, math.max(select("#", ...), #slot) do
         slot[i] = select(i, ...)
     end
+
+    if as_overlay then
+        local id, rect_id = slot[1], draw_operation.rectangle
+        if id >= rect_id and id < rect_id + 100 then
+            slot[1] = id + (draw_operation.overlay_rectangle - rect_id)
+        end
+    end
 end
 
 ---Blocks the addition of any further draw operations.
@@ -225,6 +238,12 @@ end
 
 function draw_data.unblock_draw_operations()
     draw_data_is_blocked = false
+end
+
+---The next added draw operation will be converted into an overlay element if appropriate.
+---Calling this multiple times does nothing.
+function draw_data.next_as_overlay()
+    as_overlay = true
 end
 
 --#region draw reservations
@@ -266,10 +285,10 @@ function draw_data.reserve_draw_slots(n)
     return res_index
 end
 
----The next operation will fill in a slot in a reservation.
+---The next added draw operation will fill in a slot in a reservation.
 ---Calling this multiple times in a row will only make the next draw operation take the last given res_id.
 ---@param res_id integer the reservation id to fill
-function draw_data.take_draw_reservation(res_id)
+function draw_data.next_takes_reservation(res_id)
     if draw_data_is_blocked then
         return
     end
@@ -316,7 +335,6 @@ function draw_data.reset()
     draw_index = 0
     res_index = 0
     take_reservation_id = nil
-    draw_data_is_blocked = false
 end
 
 return draw_data

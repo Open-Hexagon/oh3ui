@@ -3,7 +3,6 @@ local utf8 = require("utf8")
 local settings = require("ui.settings")
 local shared_data = require("ui.shared_data")
 local control_data = shared_data.control
-local control_methods = shared_data.enums.control_method
 
 local typing = {}
 
@@ -155,11 +154,11 @@ function typing.evaluate()
     for event in events.iterate("^[tk]e") do
         local name, is_repeat = event[1], event[4]
         if name == "textinput" then
-            control_data.last_used_control_method = control_methods.typing
+            control_data.last_used_control_method = "typing"
             typing.insert_character(target, event[2])
             cursor_flash_timer = 0
         elseif name == "keypressed" then
-            control_data.last_used_control_method = control_methods.typing
+            control_data.last_used_control_method = "typing"
             local key = event[3]
             if key == "left" then
                 if target._text_entry_char_position > 0 then
@@ -260,11 +259,11 @@ do
     local kba = knav.actions
     local cursor = require("ui.cursor")
     local placement = cursor.placement
-    local mask = require("ui.mask")
     local text = require("ui.text")
     local theme = require("ui.theme")
     local draw_queue = require("ui.draw_queue")
-    local primitive = require("ui.primitive")
+    local draw_queue_vline = draw_queue.by_cursor.vline
+    local draw_queue_text = draw_queue.by_value.text
 
     ---Sets up a text entry. Uses the current sensor and cell ids for interaction.
     ---@param state table
@@ -309,7 +308,6 @@ do
         cursor.push()
         cursor.auto_reshape = false
         cursor.inset(4)
-        mask.push()
 
         cursor.change_anchor(0, 0.5)
         cursor.height = text_cursor_height
@@ -318,7 +316,7 @@ do
         -- draw the hint text only if there is no text in the entry
         if hint and (not current_typing_state.text or #current_typing_state.text == 0) then
             local hint_text_object = text.get_text_object(font, hint, math.huge, "left")
-            draw_queue.text(
+            draw_queue_text(
                 hint_text_object,
                 placement.left,
                 placement.top,
@@ -351,7 +349,7 @@ do
             end
 
             -- draw the text
-            draw_queue.text(
+            draw_queue_text(
                 text_object,
                 placement.left + current_typing_state._text_entry_text_offset,
                 placement.top,
@@ -361,7 +359,7 @@ do
             -- draw the text cursor
             if cursor_flash_timer < 0.5 then
                 cursor.x = cursor.x + cursor_offset
-                primitive.vline(theme.white, 1)
+                draw_queue_vline(theme.white, 1)
             end
 
             -- cursor flash
@@ -370,10 +368,10 @@ do
                 cursor_flash_timer = cursor_flash_timer - 1
             end
         else
-            draw_queue.text(text_object, placement.left, placement.top, text_color or theme.text_color)
+            draw_queue_text(text_object, placement.left, placement.top, text_color or theme.text_color)
         end
 
-        mask.pop()
+        draw_queue.pop_mask()
         cursor.pop()
     end
 end

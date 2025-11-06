@@ -1,24 +1,43 @@
----Primitives are elements that only created a single draw operation.
+---Formerly called primitive.
+---Similar to place_by_value but will use the cursor to determine placement.
+---These functions will create their own placements as well as place and possibly the cursor.
+---These functions can be treated as single operation elements.
+---Some operations in place_by_cursor don't have equivalents in place_by_id or place_by_value.
+---Some operations in place_by_id or place_by_value have no equivalents in place_by_cursor.
 
 local cursor = require("ui.cursor")
 local placement = cursor.placement
-local draw_queue = require("ui.draw_queue")
+local place_by_value = require("ui.draw_queue.place_by_value")
 local settings = require("ui.settings")
 local text = require("ui.text")
 local theme = require("ui.theme")
+local draw_data = require("ui.draw_queue.draw_data")
 
--- TODO We're running these calculations too early, we need to be able to edit the placement data as we're building the draw queue
+local place_by_cursor = {}
 
-local primitive = {}
+---Pushes a mask.
+---@return integer placement_id
+function place_by_cursor.push_mask()
+    cursor.place()
+    return place_by_value.push_mask(placement.left, placement.top, placement.right, placement.bottom)
+end
+
+---Makes a blank placement using the cursor.
+---Does not add a draw operation.
+---@return integer placement_id
+function place_by_cursor.blank()
+    cursor.place()
+    return draw_data.make_placement(placement.left, placement.top, placement.right, placement.bottom)
+end
 
 ---Rectangle primitive. Never reshapes the cursor.
 ---@param color number[]? overrides the default color
 ---@param mode? "fill"|"line" default is "fill"
 ---@param line_width number? only used in line mode
 ---@return integer placement_id
-function primitive.rectangle(color, mode, line_width)
+function place_by_cursor.rectangle(color, mode, line_width)
     cursor.place()
-    return draw_queue.rectangle(
+    return place_by_value.rectangle(
         mode or "fill",
         placement.left,
         placement.top,
@@ -35,9 +54,9 @@ end
 ---@param color number[]? overrides the default color
 ---@param line_width number?
 ---@return integer placement_id
-function primitive.rectangle_outline(color, line_width)
+function place_by_cursor.rectangle_outline(color, line_width)
     cursor.place()
-    return draw_queue.rectangle_outline(
+    return place_by_value.rectangle_outline(
         placement.left,
         placement.top,
         placement.right,
@@ -54,10 +73,10 @@ end
 ---@param mode? "fill"|"line" default is "fill"
 ---@param line_width number? only used in line mode
 ---@return integer placement_id
-function primitive.slot(color, mode, line_width)
+function place_by_cursor.slot(color, mode, line_width)
     local radius = math.min(cursor.width, cursor.height) / 2
     cursor.place()
-    return draw_queue.rectangle(
+    return place_by_value.rectangle(
         mode or "fill",
         placement.left,
         placement.top,
@@ -74,10 +93,10 @@ end
 ---@param color number[]? overrides the default color
 ---@param line_width number?
 ---@return integer placement_id
-function primitive.slot_outline(color, line_width)
+function place_by_cursor.slot_outline(color, line_width)
     local radius = math.min(cursor.width, cursor.height) / 2
     cursor.place()
-    return draw_queue.rectangle_outline(
+    return place_by_value.rectangle_outline(
         placement.left,
         placement.top,
         placement.right,
@@ -97,12 +116,12 @@ end
 ---@param mode string? "fill" or "line" (default is "fill")
 ---@param line_width number?
 ---@return integer point_id
-function primitive.circle(color, sides, rotation, mode, line_width)
+function place_by_cursor.circle(color, sides, rotation, mode, line_width)
     cursor.push()
     local diameter = math.min(cursor.width, cursor.height)
     local radius = diameter / 2
     cursor.place(diameter, diameter)
-    local point_id = draw_queue.circle(
+    local point_id = place_by_value.circle(
         mode or "fill",
         placement.left + radius,
         placement.top + radius,
@@ -123,12 +142,12 @@ end
 ---@param sides integer? create regular polygons instead
 ---@param rotation number? only useful if the number of sides is small
 ---@return integer point_id
-function primitive.circle_outline(color, line_width, sides, rotation)
+function place_by_cursor.circle_outline(color, line_width, sides, rotation)
     cursor.push()
     local diameter = math.min(cursor.width, cursor.height)
     local radius = diameter / 2
     cursor.place(diameter, diameter)
-    local point_id = draw_queue.circle_outline(
+    local point_id = place_by_value.circle_outline(
         placement.left + radius,
         placement.top + radius,
         radius,
@@ -149,8 +168,7 @@ end
 ---@param color number[]? override text color
 ---@param font_path string? override font
 ---@return integer point_id
-function primitive.label(str, size, align, wrap, color, font_path)
-    primitive.rectangle(theme.get_xterm_color(161), "line")
+function place_by_cursor.label(str, size, align, wrap, color, font_path)
     cursor.push()
 
     local cursor_width_before = cursor.width
@@ -196,9 +214,7 @@ function primitive.label(str, size, align, wrap, color, font_path)
         x, y = placement.left, placement.top
     end
 
-    primitive.rectangle(theme.get_xterm_color(49), "line")
-
-    local point_id = draw_queue.text(text_object, x, y, color or theme.text_color)
+    local point_id = place_by_value.text(text_object, x, y, color or theme.text_color)
 
     cursor.do_auto_reshape()
     return point_id
@@ -209,7 +225,7 @@ end
 ---@param size number icon override icon size in pixels (works like a font)
 ---@param color number[]? override text color
 ---@return integer point_id
-function primitive.icon(icon_name, size, color)
+function place_by_cursor.icon(icon_name, size, color)
     cursor.push()
 
     local str = text.get_icon_string(icon_name, theme.icon_font_path)
@@ -220,7 +236,7 @@ function primitive.icon(icon_name, size, color)
     local width, height = love.graphics.inverseTransformPoint(text_object:getDimensions())
 
     cursor.place(width, height)
-    local point_id = draw_queue.text(text_object, placement.left, placement.top, color or theme.text_color)
+    local point_id = place_by_value.text(text_object, placement.left, placement.top, color or theme.text_color)
 
     cursor.do_auto_reshape()
     return point_id
@@ -231,10 +247,10 @@ end
 ---@param color number[]?
 ---@param line_width number?
 ---@return integer point_cluster_id
-function primitive.hline(color, line_width)
+function place_by_cursor.hline(color, line_width)
     cursor.place()
     local y = placement.y - cursor.anchor_y + 0.5
-    return draw_queue.line(line_width or 1, color or theme.default, placement.left, y, placement.right, y)
+    return place_by_value.line(line_width or 1, color or theme.default, placement.left, y, placement.right, y)
 end
 
 ---Vertical line primitive. Never reshapes the cursor.
@@ -242,10 +258,10 @@ end
 ---@param color number[]?
 ---@param line_width number?
 ---@return integer point_cluster_id
-function primitive.vline(color, line_width)
+function place_by_cursor.vline(color, line_width)
     cursor.place()
     local x = placement.x - cursor.anchor_x + 0.5
-    return draw_queue.line(line_width or 1, color or theme.default, x, placement.top, x, placement.bottom)
+    return place_by_value.line(line_width or 1, color or theme.default, x, placement.top, x, placement.bottom)
 end
 
-return primitive
+return place_by_cursor

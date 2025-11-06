@@ -4,11 +4,10 @@ local cursor = require("ui.cursor")
 local knav = require("ui.control.keyboard_navigation")
 local shared_data = require("ui.shared_data")
 local control_data = shared_data.control
-local control_method = shared_data.enums.control_method
 local draw_data_block_draw_operations = require("ui.draw_queue.draw_data").block_draw_operations
 local stack_manager = require("ui.stack_manager")
 local selection_outline_add_to_queue = require("ui.decorator.selection_outline").add_to_queue
-local tooltip_add_to_queue = require("ui.decorator.tooltip").add_to_queue
+local tooltip_reset = require("ui.decorator.tooltip").reset
 
 -- ! this explaination isn't correct anymore
 --[=[
@@ -112,7 +111,7 @@ local function reconfigure_layers()
     end
     schedule_index = 0
 
-    if control_data.last_used_control_method == control_method.keyboard then
+    if control_data.last_used_control_method == "keyboard" then
         -- if keyboard navigation was used we need to find the best cell to select on the new top layer
         control_data.current_layer_is_active = true
         knav.reset()
@@ -147,7 +146,7 @@ function layers.run()
 
     -- add the selection outline if it wasn't already done by any of the area elements
     selection_outline_add_to_queue()
-    -- tooltip_add_to_queue()
+    tooltip_reset()
 
     -- turn off the draw queue
     -- this also disable the addition of new mouse sensors

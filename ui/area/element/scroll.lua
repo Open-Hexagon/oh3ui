@@ -1,18 +1,19 @@
 local cursor = require("ui.cursor")
 local projected_placement = cursor.projected_placement
+local placement = cursor.placement
 local extmath = require("ui.extmath")
-local mask = require("ui.mask")
 local mnav = require("ui.control.mouse_navigation")
 local smode = mnav.sensor_mode
-local primitive = require("ui.primitive")
+local slot = require("ui.draw_queue").by_cursor.slot
 local theme = require("ui.theme")
 local stack_manager = require("ui.stack_manager")
 local area_element = require("ui.area")
 local view_request = require("ui.area.view_request")
 local volatile_data = require("ui.shared_data").volatile
 local selection_outline_add_to_queue = require("ui.decorator.selection_outline").add_to_queue
-local draw_data = require("ui.draw_queue.draw_data")
-local draw_operation = require("ui.draw_queue.draw_operation")
+local draw_queue = require("ui.draw_queue")
+local draw_data_add_draw_operation = require("ui.draw_queue.draw_data").add_draw_operation
+local view_request_export_picture_frame = require("ui.draw_queue.draw_operation").view_request_export_picture_frame
 
 local scroll = {}
 
@@ -57,10 +58,10 @@ function scroll.start(state)
 
     -- save the current cursor
     cursor.push() -- (1)
-    cursor.place() -- ! this has to come before apply_translation!
 
     -- mask away everything outside of the region
-    local picture_frame_id = mask.push() -- (2)
+    -- ! this has to come before apply_translation!
+    local picture_frame_id = draw_queue.by_cursor.push_mask() -- (2)
 
     -- move the contents of the scroll area
     local tid = cursor.push_translation(
@@ -252,7 +253,7 @@ function scroll.finish(padding)
     -- deal with stack stuff
     stack_manager.pop_record() -- (6)
 
-    -- Must come before mask.pop so the selection outline appears inside the scroll region
+    -- Must come before pop_mask so the selection outline appears inside the scroll region
     -- Must come before cursor.remove_translation so the scroll request is made in the correct location
     selection_outline_add_to_queue()
 
@@ -279,7 +280,7 @@ function scroll.finish(padding)
     local picture_frame_id = area_element.aeb_pop()
 
     cursor.pop_translation() -- (3)
-    mask.pop() -- (2)
+    draw_queue.pop_mask() -- (2)
 
     if not cursor.finish_area(true) then -- (4)
         -- scroll region is empty
@@ -318,8 +319,8 @@ function scroll.finish(padding)
 
     -- If flagged by a view request, export picture frame data
     if flagged_for_view_request then
-        draw_data.add_draw_operation(
-            draw_operation.view_request_export_picture_frame,
+        draw_data_add_draw_operation(
+            view_request_export_picture_frame,
             state,
             dist_limit_left,
             dist_limit_top,
@@ -366,9 +367,7 @@ function scroll.finish(padding)
             end
 
             -- draw the actuator
-            primitive.slot(
-                (mnav.get_dragging(h_act) or mnav.get_holding(h_act)) and theme.grabbed_scrollbar or theme.scrollbar
-            )
+            slot((mnav.get_dragging(h_act) or mnav.get_holding(h_act)) and theme.grabbed_scrollbar or theme.scrollbar)
 
             if possibly_interacting then
                 do_horizontal_mouse_interaction(
@@ -413,9 +412,7 @@ function scroll.finish(padding)
             end
 
             -- draw the actuator
-            primitive.slot(
-                (mnav.get_dragging(v_act) or mnav.get_holding(v_act)) and theme.grabbed_scrollbar or theme.scrollbar
-            )
+            slot((mnav.get_dragging(v_act) or mnav.get_holding(v_act)) and theme.grabbed_scrollbar or theme.scrollbar)
 
             if possibly_interacting then
                 do_vertical_mouse_interaction(

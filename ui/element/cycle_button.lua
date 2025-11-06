@@ -1,6 +1,6 @@
 local cursor = require("ui.cursor")
 local theme = require("ui.theme")
-local primitive = require("ui.primitive")
+local draw_by_cursor = require("ui.draw_queue").by_cursor
 local selection_outline_set_location = require("ui.decorator.selection_outline").set_placement
 local knav = require("ui.control.keyboard_navigation")
 local kba = knav.actions
@@ -51,15 +51,15 @@ return function(state, font_size, ...)
     else
         button_color = theme.widget_background
     end
-    primitive.rectangle(button_color)
-    primitive.rectangle_outline(
+    draw_by_cursor.rectangle(button_color)
+    draw_by_cursor.rectangle_outline(
         (mnav.is_hovering() or knav.is_selected()) and theme.widget_outline_highlight or theme.widget_outline
     )
 
     -- draw button internals
     cursor.push()
     cursor.change_anchor(0.5, 0.5)
-    primitive.label(select(state.position, ...), font_size, "left", false)
+    draw_by_cursor.label(select(state.position, ...), font_size, "left", false)
     cursor.pop()
 
     if knav.is_selected() then

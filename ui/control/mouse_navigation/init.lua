@@ -9,7 +9,6 @@ local bit = require("bit")
 local bor = bit.bor
 local shared_data = require("ui.shared_data")
 local control_data = shared_data.control
-local control_method = shared_data.enums.control_method
 local draw_data = require("ui.draw_queue.draw_data")
 local op_ids = require("ui.draw_queue.draw_operation")
 
@@ -78,7 +77,8 @@ function mouse_navigation.declare_sensor_id()
 end
 
 ---Makes a new sensor element used to detect mouse hovering.
----Returns a new sensor id and sets the current_sensor_id to the new id
+---Returns a new sensor id and sets the current_sensor_id to the new id.
+---Behaves like a place_by_cursor draw_queue function.
 ---@param sensor_id? integer forces this sensor to be created with a certain id (must be negative)
 ---@param ... integer sensor modes
 ---@return integer sensor_id sensor id
@@ -207,12 +207,14 @@ function mouse_navigation.evaluate()
 
         if name == "wheelmoved" then
             -- Scrolling updates the last used method
-            control_data.last_used_control_method = control_method.mouse
+            control_data.last_used_control_method = "mouse"
 
             -- Record wheel movement
             mouse_navigation.wheel_dx = mouse_navigation.wheel_dx + x
             mouse_navigation.wheel_dy = mouse_navigation.wheel_dy + y
         elseif name == "mousemoved" then
+            control_data.last_used_control_method = "mouse"
+
             -- Any mouse movement sets makes the cursor visible
             love.mouse.setVisible(true)
             if not mouse_navigation.dragging then
@@ -250,7 +252,7 @@ function mouse_navigation.evaluate()
 
             if name == "mousepressed" then
                 -- Pressing updates the last used method
-                control_data.last_used_control_method = control_method.mouse
+                control_data.last_used_control_method = "mouse"
 
                 if mouse_navigation.holding then
                     -- Pressing another button while holding stops holding
@@ -269,7 +271,7 @@ function mouse_navigation.evaluate()
                 end
             elseif name == "mousereleased" then
                 -- Releasing updates the last used method
-                control_data.last_used_control_method = control_method.mouse
+                control_data.last_used_control_method = "mouse"
 
                 if mouse_navigation.holding then
                     -- Releasing the same button that is being held is a click. If not then holding is stopped.

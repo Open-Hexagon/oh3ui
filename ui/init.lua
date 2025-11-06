@@ -1,6 +1,6 @@
 local events = require("ui.events")
 local events_clear = events.clear
-local draw_queue_draw = require("ui.draw_queue").draw
+local draw_queue_draw = require("ui.draw_queue.draw")
 local control_evaluate = require("ui.control").evaluate
 local layers = require("ui.layers")
 local settings = require("ui.settings")
