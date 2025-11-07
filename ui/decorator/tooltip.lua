@@ -3,15 +3,15 @@ local placement = cursor.placement
 local theme = require("ui.theme")
 local mnav = require("ui.control.mouse_navigation")
 local knav = require("ui.control.keyboard_navigation")
-local op_ids = require("ui.draw_queue.draw_operation")
 local control_data = require("ui.shared_data").control
 local extmath = require("ui.extmath")
 local typing = require("ui.control.typing")
 local draw_queue = require("ui.draw_queue")
 local label = draw_queue.by_cursor.label
+local decorator = require("ui.decorator")
 
-local text_padding = 4
-local spacing = 6 + text_padding
+local text_padding = decorator.tooltip_text_padding
+local tooltip_element_spacing = decorator.tooltip_element_spacing + text_padding
 
 local tooltip = {}
 
@@ -45,21 +45,20 @@ function tooltip.tooltip(edge, str, font_size, align, wrap_limit)
     is_active = true
 
     cursor.push()
-
     cursor.auto_reshape = true
 
     if edge == "left" then
         cursor.change_anchor(1, 0.5)
-        cursor.shift_left(spacing)
+        cursor.shift_left(tooltip_element_spacing)
     elseif edge == "top" then
         cursor.change_anchor(0.5, 1)
-        cursor.shift_up(spacing)
+        cursor.shift_up(tooltip_element_spacing)
     elseif edge == "right" then
         cursor.change_anchor(0, 0.5)
-        cursor.shift_right(spacing)
+        cursor.shift_right(tooltip_element_spacing)
     elseif edge == "bottom" then
         cursor.change_anchor(0.5, 0)
-        cursor.shift_down(spacing)
+        cursor.shift_down(tooltip_element_spacing)
     else
         error("invalid tooltip edge")
     end

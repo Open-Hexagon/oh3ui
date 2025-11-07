@@ -15,6 +15,7 @@ local typing = require("ui.control.typing")
 local layers = require("ui.layers")
 local scroll_example_menu = require("ui.menu.scroll_example")
 local shared_data = require("ui.shared_data")
+local ansi = require("ui.text.ansi")
 
 -- Elements
 local button = require("ui.element.button")
@@ -31,6 +32,17 @@ local tooltip = require("ui.decorator.tooltip").tooltip
 local selection_outline_set_location = require("ui.decorator.selection_outline").set_placement
 
 local counter = 0
+
+local colored_text = ansi.colored_text_to_string({
+    theme.red,
+    "Magnam blanditiis et et perferendis ipsum qui nisi.\n",
+    theme.green,
+    "Earum voluptatem qui ea amet ea quae est deleniti.\n",
+    theme.blue,
+    "Tempore dolores ex et iusto.\n",
+    theme.yellow,
+    "Rerum ducimus tenetur fugit.\n",
+})
 
 return function()
     cursor.change_anchor(0.5)
@@ -74,6 +86,8 @@ Rerum ducimus tenetur fugit.
     cursor.shift_down(10)
     draw_by_cursor.label(string.format("%d%%", id.slider.value), 16, "left", false)
     cursor.shift_down(10)
+
+    knav.change_current_cell(0)
 
     cursor.width = 150
     slider(id.slider_anchor_x, 0, 1, 101)
@@ -204,17 +218,8 @@ Rerum ducimus tenetur fugit.
     cursor.shift_down(40)
     cursor.width = id.slider.value
     cursor.change_anchor(id.slider_anchor_x.value, id.slider_anchor_y.value)
-    draw_by_cursor.label(
-        [[
-Magnam blanditiis et et perferendis ipsum qui nisi.
-Earum voluptatem qui ea amet ea quae est deleniti.
-Tempore dolores ex et iusto.
-Rerum ducimus tenetur fugit.
-]],
-        16,
-        align,
-        id.toggle.on
-    )
+
+    draw_by_cursor.label(colored_text, 16, align, id.toggle.on)
 
     cursor.pop_translation()
 end

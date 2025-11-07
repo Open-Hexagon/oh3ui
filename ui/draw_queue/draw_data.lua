@@ -259,7 +259,7 @@ end
 --#region draw reservations
 
 ---Reserves the next n draw operations. Will cause an error/warning if not all reservations are taken later.
----@param n integer number of reservations, defaults to 1
+---@param n integer number of reservations
 ---@return integer res_id use this reference id to later fill in reservation slots
 ---@nodiscard
 function draw_data.reserve_draw_slots(n)

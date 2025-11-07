@@ -14,7 +14,7 @@ local text = {
     ---@enum icon_font_path
     icon_font = {
         default = "assets/bootstrap-icons.ttf",
-    }
+    },
 }
 
 ---Cache of fonts based on file used and size

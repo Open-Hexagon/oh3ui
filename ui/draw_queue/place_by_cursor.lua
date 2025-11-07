@@ -1,6 +1,6 @@
 ---Formerly called primitive.
 ---Similar to place_by_value but will use the cursor to determine placement.
----These functions will create their own placements as well as place and possibly the cursor.
+---These functions will create their own placements as well as place and possibly reshape the cursor.
 ---These functions can be treated as single operation elements.
 ---Some operations in place_by_cursor don't have equivalents in place_by_id or place_by_value.
 ---Some operations in place_by_id or place_by_value have no equivalents in place_by_cursor.
