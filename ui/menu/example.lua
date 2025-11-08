@@ -16,6 +16,7 @@ local layers = require("ui.layers")
 local scroll_example_menu = require("ui.menu.scroll_example")
 local shared_data = require("ui.shared_data")
 local ansi = require("ui.text.ansi")
+local search = require("ui.text.search")
 
 -- Elements
 local button = require("ui.element.button")
@@ -169,57 +170,71 @@ Rerum ducimus tenetur fugit.
     cursor.width = 200
     cursor.height = 50
 
-    local text_entry_cell = knav.make_cell("default")
-    knav.grid_cell(1, 13)
-    local text_entry_sensor = mnav.make_sensor(nil, smode.block)
+    do
+        local text_entry_cell = knav.make_cell("default")
+        knav.grid_cell(1, 13)
+        local text_entry_sensor = mnav.make_sensor(nil, smode.block)
 
-    draw_by_cursor.rectangle(theme.green, "line")
-    if knav.is_selected() then
-        selection_outline_set_location()
+        draw_by_cursor.rectangle(theme.green, "line")
+        if knav.is_selected() then
+            selection_outline_set_location()
+        end
+
+        typing.make_text_entry(id.text_entry, text_entry_sensor, text_entry_cell)
+        typing.draw_text_entry(24, "Search")
+        cursor.shift_down(10)
     end
 
-    typing.make_text_entry(id.text_entry, text_entry_sensor, text_entry_cell)
-    typing.draw_text_entry(24, "Search")
-    cursor.shift_down(10)
+    do
+        local text_entry_cell2 = knav.make_cell()
+        knav.grid_cell(1, 14)
+        local text_entry_sensor2 = mnav.make_sensor(nil, smode.block)
 
-    local text_entry_cell2 = knav.make_cell()
-    knav.grid_cell(1, 14)
-    local text_entry_sensor2 = mnav.make_sensor(nil, smode.block)
+        draw_by_cursor.rectangle(theme.green, "line")
+        if knav.is_selected() then
+            selection_outline_set_location()
+        end
 
-    draw_by_cursor.rectangle(theme.green, "line")
-    if knav.is_selected() then
-        selection_outline_set_location()
+        typing.make_text_entry(id.text_entry2, text_entry_sensor2, text_entry_cell2)
+        typing.draw_text_entry(36, "Search2")
+        cursor.shift_down(10)
     end
 
-    typing.make_text_entry(id.text_entry2, text_entry_sensor2, text_entry_cell2)
+    do
+        local matches, score, text = search(id.text_entry.text, id.text_entry2.text, theme.text_color, theme.red)
 
-    typing.draw_text_entry(36, "Search2")
-
-    cursor.shift_down(10)
-
-    cursor.width = 150
-    cursor.height = 20
-    knav.make_cell()
-    knav.grid_cell(1, 15)
-    button("open scroll example", 16)
-    if mnav.get_clicked() == mb.left or knav.get_action() == kba.activate then
-        layers.push(scroll_example_menu)
+        draw_by_cursor.label(string.format("matches: %s, score: %d", tostring(matches), score), 16, "left", false)
+        cursor.shift_down(10)
+        draw_by_cursor.label(text, 20, "left", false)
+        cursor.shift_down(10)
     end
 
-    local align
-    if id.switch.position == 1 then
-        align = "left"
-    elseif id.switch.position == 2 then
-        align = "center"
-    else
-        align = "right"
+    do
+        cursor.width = 150
+        cursor.height = 20
+        knav.make_cell()
+        knav.grid_cell(1, 15)
+        button("open scroll example", 16)
+        if mnav.get_clicked() == mb.left or knav.get_action() == kba.activate then
+            layers.push(scroll_example_menu)
+        end
     end
 
-    cursor.shift_down(40)
-    cursor.width = id.slider.value
-    cursor.change_anchor(id.slider_anchor_x.value, id.slider_anchor_y.value)
+    do
+        local align
+        if id.switch.position == 1 then
+            align = "left"
+        elseif id.switch.position == 2 then
+            align = "center"
+        else
+            align = "right"
+        end
 
-    draw_by_cursor.label(colored_text, 16, align, id.toggle.on)
+        cursor.shift_down(40)
+        cursor.width = id.slider.value
+        cursor.change_anchor(id.slider_anchor_x.value, id.slider_anchor_y.value)
+        draw_by_cursor.label(colored_text, 16, align, id.toggle.on)
+    end
 
     cursor.pop_translation()
 end

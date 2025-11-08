@@ -4,28 +4,49 @@ local band = bit.band
 
 local ansi = {}
 
+---Converts a color and optionally some text to an escape sequence
+---@param color number[]
+---@param text string?
+---@return string
+function ansi.to_sequence(color, text)
+    text = text or ""
+    local r, g, b, a =
+        band(color[1] * 255, 255), band(color[2] * 255, 255), band(color[3] * 255, 255), band(color[4] * 255, 255)
+
+    -- 38 means set foreground color
+    -- 4 means CMYK mode in the original ITU-T T.416 spec, but here we're using it for RGBA
+    return string.format("\x1b[38;4;%d;%d;%d;%dm%s", r, g, b, a, text)
+end
+
+---Extracts the next escape sequence and its following text. Returns nil if none was found. 
+---@param seq string string to search
+---@param init integer? start searching from this position
+---@return number[]|nil color
+---@return string|nil text
+---@return integer|nil start_pos
+---@return integer|nil end_pos
+function ansi.from_sequence(seq, init)
+    local start_pos, end_pos, r, g, b, a, str = string.find(seq, "\x1b%[38;4;(%d+);(%d+);(%d+);(%d+)m([^\x1b]*)", init)
+    if start_pos then
+        return { r / 255, g / 255, b / 255, a / 255 }, str, start_pos, end_pos
+    end
+    return nil, nil, nil, nil
+end
+
 ---Converts colored text table to a string that embeds the color information
 ---@param coloredtext table
 ---@return string
 function ansi.colored_text_to_string(coloredtext)
-    local color, str, r, g, b, a
+    local color, str
     local buf = buffer.new()
     for i = 2, #coloredtext, 2 do
         color = coloredtext[i - 1]
         str = coloredtext[i]
 
-        r = band(color[1] * 255)
-        g = band(color[2] * 255)
-        b = band(color[3] * 255)
-        a = band(color[4] * 255)
-
-        -- 38 means set foreground color
-        -- 4 means CMYK mode in the original ITU-T T.416 spec, but here we're using it for RGBA
-        buf:putf("\x1b[38;4;%d;%d;%d;%dm%s", r, g, b, a, str)
+        buf:put(ansi.to_sequence(color, str))
     end
     return tostring(buf)
 end
-
 
 ---Converts a string with embedded colors to a colored text table
 ---@param text string

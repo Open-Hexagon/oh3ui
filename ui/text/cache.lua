@@ -60,8 +60,8 @@ local update_interval = 1 -- seconds
     > operations like string comparison and table indexing very fast, but it slows
     > down string creation.
 
-    So while doing this isn't necessarily great, since Lua has to check if it already
-    has the string for each call, it doesn't result in a new object being allocated for
+    So while doing this isn't necessarily great (since Lua has to check if it already
+    has the string for each call), it doesn't result in a new object being allocated for
     every function call:
     foo("bar"); foo("bar"); foo("bar")
     
@@ -105,6 +105,7 @@ function text_cache.get(font, text, wraplimit, align)
     then
         -- it is not cached, check if an unused one can be used
         local cached_object = unused_text_objects[#unused_text_objects]
+        -- check if the text has color information
         local coloredtext = nil
         if string.sub(text, 1, 1) == "\x1b" then
             coloredtext = ansi.string_to_colored_text(text)

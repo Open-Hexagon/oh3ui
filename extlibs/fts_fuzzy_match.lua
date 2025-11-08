@@ -39,7 +39,7 @@ end
 ---@param str string
 ---@return boolean matches true if each character in pattern is found sequentially within str
 ---@return integer score Match score. Higher is better match. Value has no intrinsic meaning. Range localies with pattern. Can only compare scores with same search pattern.
----@return table matchedIndices the indices of characters that were matched in str
+---@return table matchedIndices set of indices that were matched
 ---@nodiscard
 function module.fuzzy_match(pattern, str)
     -- Score consts
@@ -84,7 +84,9 @@ function module.fuzzy_match(pattern, str)
         local patternRepeat = bestLetter and patternChar and bestLower == patternLower
         if advanced or patternRepeat then
             score = score + bestLetterScore
-            table.insert(matchedIndices, bestLetterIdx)
+            if bestLetterIdx then
+                matchedIndices[bestLetterIdx] = true
+            end
             bestLetter = nil
             bestLower = nil
             bestLetterIdx = nil
@@ -150,10 +152,12 @@ function module.fuzzy_match(pattern, str)
     -- Apply score for last match
     if bestLetter then
         score = score + bestLetterScore
-        table.insert(matchedIndices, bestLetterIdx)
+        if bestLetterIdx then
+            matchedIndices[bestLetterIdx] = true
+        end
     end
 
-    local matched = patternIdx == patternLength
+    local matched = patternIdx > patternLength
     return matched, score, matchedIndices
 end
 
