@@ -9,44 +9,6 @@ local stack_manager = require("ui.stack_manager")
 local selection_outline_add_to_queue = require("ui.decorator.selection_outline.backend").add_to_queue
 local tooltip_reset = require("ui.decorator.tooltip.backend").reset
 
--- ! this explaination isn't correct anymore
---[=[
-Layer changing
-
-Layers that have interaction disabled cannot modify the layer stack so only the topmost layer can affect the stack.
-
-PUSH: layer1 wants to push a new layer
-
-                                                        [layer2]
-                                                           v
-[inter-frame] [layer1] [inter-frame [layer2] ]  [layer1]         [inter-frame]
-                  \______^    \________^__________________^
-
-- layer1 requests to push layer2
-- In between frames (layer1 was the last layer):
-    - Restart all control methods, pretending as if layer1 had interaction disabled.
-    - Run layer2 (this rebuilds the navigation data only for layer2)
-    - If keyboard nav was used, select the default or first cell of layer2.
-    - Insert layer2 into the stack for the next frame.
-- The next frame is run as normal.
-
-POP: layer2 wants to pop itself off the stack
-
-                                                      [layer2]
-                                                         ^    
-[inter-frame] [layer1][layer2] [inter-frame] [layer1]         [inter-frame]
-                          \______^    \__________________^
-
-- layer2 requests to pop itself.
-- In between frames
-    - layer2 gets removed.
-    - If keyboard nav was used, select the default or first cell of layer1.
-        (This is kept track of as a secondary default cell that is updated by layers below the topmost layer.)
-        (Since layer2 may already have a default cell, but we just deleted and we don't want to rerun layer1 to find out what it was.)
-- The next frame is run as normal.
-
-]=]
-
 local layers = {}
 
 -- Higher index layers will show up on top of lower index layers
