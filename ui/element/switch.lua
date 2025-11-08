@@ -7,7 +7,7 @@ local kba = knav.actions
 local mnav = require("ui.control.mouse_navigation")
 local mb = mnav.buttons
 local smode = mnav.sensor_mode
-local selection_outline_set_location = require("ui.decorator.selection_outline").set_placement
+local selection_outline = require("ui.decorator.selection_outline")
 local draw_queue = require("ui.draw_queue")
 local draw_by_cursor = draw_queue.by_cursor
 
@@ -108,7 +108,7 @@ return function(state, ...)
     draw_by_cursor.rectangle_outline(hovering and theme.accent_color or theme.widget_outline)
     mnav.make_sensor() -- this is so external click functions are correct
     if knav.is_selected() then
-        selection_outline_set_location()
+        selection_outline()
     end
 
     cursor.do_auto_reshape() -- (1)

@@ -7,7 +7,7 @@ local mb = mnav.buttons
 local smode = mnav.sensor_mode
 local knav = require("ui.control.keyboard_navigation")
 local follow = require("ui.effect").follow
-local selection_outline_set_location = require("ui.decorator.selection_outline").set_placement
+local selection_outline = require("ui.decorator.selection_outline")
 
 local travel_distance = element.toggle_width - element.toggle_height
 
@@ -54,7 +54,7 @@ return function(state)
 
         -- keyboard selection outline
         if knav.is_selected() then
-            selection_outline_set_location()
+            selection_outline()
         end
     end
     cursor.do_auto_reshape()

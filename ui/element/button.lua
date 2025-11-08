@@ -1,7 +1,7 @@
 local cursor = require("ui.cursor")
 local theme = require("ui.theme")
 local draw_by_cursor = require("ui.draw_queue").by_cursor
-local selection_outline_set_location = require("ui.decorator.selection_outline").set_placement
+local selection_outline = require("ui.decorator.selection_outline")
 local knav = require("ui.control.keyboard_navigation")
 local kba = knav.actions
 local mnav = require("ui.control.mouse_navigation")
@@ -36,7 +36,7 @@ return function(text, font_size)
     cursor.pop()
 
     if knav.is_selected() then
-        selection_outline_set_location()
+        selection_outline()
     end
 
     return mnav.get_clicked()

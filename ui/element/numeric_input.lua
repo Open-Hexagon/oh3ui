@@ -3,7 +3,7 @@ local theme = require("ui.theme")
 local draw_by_cursor = require("ui.draw_queue").by_cursor
 local element = require("ui.element")
 local extmath = require("ui.extmath")
-local selection_outline_set_location = require("ui.decorator.selection_outline").set_placement
+local selection_outline = require("ui.decorator.selection_outline")
 local mnav = require("ui.control.mouse_navigation")
 local mb = mnav.buttons
 local smode = mnav.sensor_mode
@@ -182,7 +182,7 @@ return function(state, min, max, step, decimals, format)
     mnav.make_sensor(everything_sid)
 
     if knav.is_selected() then
-        selection_outline_set_location()
+        selection_outline()
     end
 
     cursor.do_auto_reshape() -- (1)

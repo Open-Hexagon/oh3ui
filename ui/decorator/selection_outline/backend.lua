@@ -5,7 +5,6 @@ local theme = require("ui.theme")
 local view_request = require("ui.area.view_request")
 local draw_queue = require("ui.draw_queue")
 local extmath = require("ui.extmath")
-local op_ids = require("ui.draw_queue.draw_operation")
 
 local outset, line_width = decorator.selection_outline_outset, decorator.selection_outline_line_width
 
