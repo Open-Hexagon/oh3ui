@@ -6,8 +6,8 @@ local shared_data = require("ui.shared_data")
 local control_data = shared_data.control
 local draw_data_block_draw_operations = require("ui.draw_queue.draw_data").block_draw_operations
 local stack_manager = require("ui.stack_manager")
-local selection_outline_add_to_queue = require("ui.decorator.selection_outline.backend").add_to_queue
-local tooltip_reset = require("ui.decorator.tooltip.backend").reset
+local selection_outline_add_to_queue = require("ui.decorator.element.selection_outline.backend").add_to_queue
+local tooltip_reset = require("ui.decorator.element.tooltip.backend").reset
 
 local layers = {}
 

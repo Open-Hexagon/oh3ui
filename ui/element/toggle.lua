@@ -7,7 +7,7 @@ local mb = mnav.buttons
 local smode = mnav.sensor_mode
 local knav = require("ui.control.keyboard_navigation")
 local follow = require("ui.effect").follow
-local selection_outline = require("ui.decorator.selection_outline")
+local selection_outline = require("ui.decorator.element.selection_outline")
 
 local travel_distance = element.toggle_width - element.toggle_height
 

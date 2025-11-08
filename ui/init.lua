@@ -6,7 +6,7 @@ local layers = require("ui.layers")
 local settings = require("ui.settings")
 local layers_run = layers.run
 local view_request_evaluate = require("ui.area.view_request").evaluate
-local selection_outline_reset = require("ui.decorator.selection_outline.backend").reset
+local selection_outline_reset = require("ui.decorator.element.selection_outline.backend").reset
 local draw_data = require("ui.draw_queue.draw_data")
 
 local ui = {}
