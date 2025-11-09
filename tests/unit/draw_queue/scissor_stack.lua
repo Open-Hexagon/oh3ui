@@ -8,31 +8,53 @@ function T.set_up_case()
     unittest.skip_if(os.getenv("HEADLESS"), "this test cannot be run in headless mode")
 end
 
-function T.test_all()
+local x, y, w, h
+
+function T.test_intersect()
     ss.push(0, 0, 100, 100)
+    x, y, w, h = love.graphics.getScissor()
+    unittest.assert(x == 0)
+    unittest.assert(y == 0)
+    unittest.assert(w == 100)
+    unittest.assert(h == 100)
 
-    unittest.assert(volatile_data.mask_index == 1)
-    unittest.assert_equal_lists({ love.graphics.getScissor() }, volatile_data.mask_stack[1])
+    ss.push(50, 50, 150, 150)
+    x, y, w, h = love.graphics.getScissor()
+    unittest.assert(x == 50)
+    unittest.assert(y == 50)
+    unittest.assert(w == 50)
+    unittest.assert(h == 50)
+
+    ss.pop()
+    x, y, w, h = love.graphics.getScissor()
+    unittest.assert(x == 0)
+    unittest.assert(y == 0)
+    unittest.assert(w == 100)
+    unittest.assert(h == 100)
+
+    ss.pop()
+    x, y, w, h = love.graphics.getScissor()
+    unittest.assert(type(x) == "nil")
 
     ss.push(50, 50, 100, 100)
-
-    unittest.assert(volatile_data.mask_index == 2)
-    unittest.assert_equal_lists({ love.graphics.getScissor() }, volatile_data.mask_stack[2])
+    x, y, w, h = love.graphics.getScissor()
+    unittest.assert(x == 50)
+    unittest.assert(y == 50)
+    unittest.assert(w == 50)
+    unittest.assert(h == 50)
 
     ss.pop()
 
-    unittest.assert(volatile_data.mask_index == 1)
-    unittest.assert_equal_lists({ love.graphics.getScissor() }, volatile_data.mask_stack[1])
+    unittest.assert_error(ss.pop, "should be at bottom of scissor stack")
+end
 
-    ss.pop()
-    unittest.assert(volatile_data.mask_index == 0)
-    local a = love.graphics.getScissor()
-    unittest.assert(type(a) == "nil")
-
-    ss.push(50, 50, 100, 100)
-
-    unittest.assert(volatile_data.mask_index == 1)
-    unittest.assert_equal_lists({ love.graphics.getScissor() }, volatile_data.mask_stack[1])
+function T.test_rounding()
+    ss.push(0.5, 0.3, 99.3, 99.1)
+    x, y, w, h = love.graphics.getScissor()
+    unittest.assert(x == 0)
+    unittest.assert(y == 0)
+    unittest.assert(w == 100)
+    unittest.assert(h == 100)
     ss.pop()
 end
 

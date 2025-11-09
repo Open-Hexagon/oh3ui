@@ -8,6 +8,7 @@ local ansi = {}
 ---@param color number[]
 ---@param text string?
 ---@return string
+---@nodiscard
 function ansi.to_sequence(color, text)
     text = text or ""
     local r, g, b, a =
@@ -21,21 +22,23 @@ end
 ---Extracts the next escape sequence and its following text. Returns nil if none was found. 
 ---@param seq string string to search
 ---@param init integer? start searching from this position
----@return number[]|nil color
----@return string|nil text
----@return integer|nil start_pos
+---@return number[]|nil color is nil if nothing was found
+---@return string text
+---@return integer start_pos
 ---@return integer|nil end_pos
+---@nodiscard
 function ansi.from_sequence(seq, init)
     local start_pos, end_pos, r, g, b, a, str = string.find(seq, "\x1b%[38;4;(%d+);(%d+);(%d+);(%d+)m([^\x1b]*)", init)
     if start_pos then
         return { r / 255, g / 255, b / 255, a / 255 }, str, start_pos, end_pos
     end
-    return nil, nil, nil, nil
+    return nil, "", 0, 0
 end
 
 ---Converts colored text table to a string that embeds the color information
 ---@param coloredtext table
 ---@return string
+---@nodiscard
 function ansi.colored_text_to_string(coloredtext)
     local color, str
     local buf = buffer.new()
@@ -51,6 +54,7 @@ end
 ---Converts a string with embedded colors to a colored text table
 ---@param text string
 ---@return table
+---@nodiscard
 function ansi.string_to_colored_text(text)
     local coloredtext = {}
     local start_pos, end_pos, r, g, b, a, str

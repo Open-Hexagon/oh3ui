@@ -201,7 +201,7 @@ function cursor.combine(peek)
     cursor.y = top + cursor.anchor_y * cursor.height
 
     if not peek then
-        volatile_data.cursor_index = volatile_data.cursor_index - 1
+        volatile_data.cursor_index = volatile_data.cursor_index - CURSOR_INDEX_STEP
     end
 end
 

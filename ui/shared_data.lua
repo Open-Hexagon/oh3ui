@@ -44,11 +44,6 @@ shared_data.volatile = {
     area_index = 0, -- index of the last started area
     area_base_index = 0,
 
-    -- keeps track of how many masks have been applied
-    mask_stack = {}, -- this only gets used when draw_queue_draw is called
-    mask_index = 0, -- number of masks applied
-    mask_base_index = 0,
-
     -- area element balance stack for two-part area elements
     aeb_stack = {},
     aeb_index = 0,

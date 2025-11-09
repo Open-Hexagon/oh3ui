@@ -4,7 +4,7 @@
 
 local scissor_stack = {}
 
-local mask_stack = require("ui.shared_data").volatile.mask_stack
+local mask_stack = {}
 local mask_index = 0
 
 ---Push an area on the stack
@@ -22,14 +22,9 @@ function scissor_stack.push(x1, y1, x2, y2)
     love.graphics.intersectScissor(x1, y1, x2 - x1, y2 - y1)
 
     -- save a snapshot of what the scissor is like now
-    mask_index = mask_index + 1
-    local snapshot = mask_stack[mask_index]
-    if snapshot then
-        snapshot[1], snapshot[2], snapshot[3], snapshot[4] = love.graphics.getScissor()
-    else
-        snapshot = { love.graphics.getScissor() }
-    end
-    mask_stack[mask_index] = snapshot
+    mask_index = mask_index + 4
+    mask_stack[mask_index - 3], mask_stack[mask_index - 2], mask_stack[mask_index - 1], mask_stack[mask_index] =
+        love.graphics.getScissor()
 end
 
 ---Pop an area from the stack
@@ -37,7 +32,7 @@ function scissor_stack.pop()
     if mask_index == 0 then
         error("scissor stack underflow")
     end
-    scissor_stack.revert(mask_index - 1)
+    scissor_stack.revert(mask_index - 4)
 end
 
 ---@param n integer
@@ -45,7 +40,7 @@ function scissor_stack.revert(n)
     if n == 0 then
         love.graphics.setScissor()
     else
-        love.graphics.setScissor(unpack(mask_stack[n]))
+        love.graphics.setScissor(unpack(mask_stack, n - 3, n))
     end
     mask_index = n
 end

@@ -195,8 +195,6 @@ return function()
                     -- we cannot reuse the placememt
                     draw_queue.rectangle_outline(tx1, ty1, tx2, ty2, theme.get_xterm_color(213), 2, 0, 0)
                 end
-            elseif id == op_ids.revert_scissor then
-                scissor_stack.revert(item[2])
             elseif id == op_ids.view_request_export_picture_frame then
                 view_request.add_picture_frame_data(
                     item[2],

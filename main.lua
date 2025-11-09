@@ -15,7 +15,7 @@ end)
 parser
     :option("-u --unittest", "start unittest mode; optionally provide a filter", nil, nil, "?")
     :action(function(args, _, list)
-        args.grid = list[1] or ".*"
+        args.unittest = list[1] or ".*"
     end)
 parser:flag("-v --verbose", "verbose output in unittest mode")
 parser:flag("-c --coverage", "enable coverage in unittest mode")
