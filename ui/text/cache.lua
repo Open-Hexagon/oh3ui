@@ -26,6 +26,18 @@ local function update()
             -- text was not used
             -- remove cache entries
             text_objects[font][contents][wraplimit][align] = nil
+
+            -- delete tables if they're empty
+            if next(text_objects[font][contents][wraplimit]) == nil then
+                text_objects[font][contents][wraplimit] = nil
+                if next(text_objects[font][contents]) == nil then
+                    text_objects[font][contents] = nil
+                    if next(text_objects[font]) == nil then
+                        text_objects[font] = nil
+                    end
+                end
+            end
+
             text_object_usage[text] = nil
             text_object_contents[text] = nil
             text_object_wraplimit[text] = nil

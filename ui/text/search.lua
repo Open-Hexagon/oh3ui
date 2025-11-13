@@ -30,6 +30,8 @@ local function get_highlighted_string(str, matched_indices, text_prefix, highlig
     return tostring(result)
 end
 
+-- This cache is very similar to the text cache
+
 local search_cache = {}
 local search_cache_objects = {}
 local search_cache_object_usage = {}
@@ -54,12 +56,12 @@ local function update()
             -- delete tables if they're empty
             if next(search_cache[pattern][str][text_prefix]) == nil then
                 search_cache[pattern][str][text_prefix] = nil
-            end
-            if next(search_cache[pattern][str]) == nil then
-                search_cache[pattern][str] = nil
-            end
-            if next(search_cache[pattern]) == nil then
-                search_cache[pattern] = nil
+                if next(search_cache[pattern][str]) == nil then
+                    search_cache[pattern][str] = nil
+                    if next(search_cache[pattern]) == nil then
+                        search_cache[pattern] = nil
+                    end
+                end
             end
 
             search_cache_object_usage[cached_object] = nil
