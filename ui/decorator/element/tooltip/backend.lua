@@ -34,7 +34,7 @@ function tooltip.tooltip(edge, str, font_size, align, wrap_limit)
     local method = control_data.last_used_control_method
     if
         not (
-            method == "mouse" and mnav.is_hovering()
+            method == "mouse" and (mnav.is_hovering() or mnav.get_dragging())
             or method == "keyboard" and knav.is_selected()
             or method == "typing" and typing.is_editing()
         )
