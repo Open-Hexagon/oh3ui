@@ -1,7 +1,7 @@
 local cursor = require("ui.cursor")
 local theme = require("ui.theme")
 local draw_by_cursor = require("ui.draw_queue").by_cursor
-local element = require("ui.element")
+local const = require("ui.element.const")
 local extmath = require("ui.extmath")
 local selection_outline = require("ui.decorator.element.selection_outline")
 local mnav = require("ui.control.mouse_navigation")
@@ -39,10 +39,10 @@ return function(state, min, max, step, decimals, format)
     cursor.push() -- (1)
 
     -- set base shape
-    local full_width = math.max(element.numeric_input_min_width, cursor.width)
-    cursor.place(full_width, element.numeric_input_height)
+    local full_width = math.max(const.numeric_input_min_width, cursor.width)
+    cursor.place(full_width, const.numeric_input_height)
 
-    local center_width = cursor.width - element.numeric_input_lr_button_width * 2
+    local center_width = cursor.width - const.numeric_input_lr_button_width * 2
 
     cursor.auto_reshape = false
     cursor.change_anchor(0.5)
@@ -119,7 +119,7 @@ return function(state, min, max, step, decimals, format)
         -- #region Left Arrow
         cursor.peek()
         cursor.change_anchor(0)
-        cursor.width = element.numeric_input_lr_button_width
+        cursor.width = const.numeric_input_lr_button_width
         cursor.change_anchor(0.5)
 
         if not dragging then
@@ -135,13 +135,13 @@ return function(state, min, max, step, decimals, format)
                 draw_by_cursor.rectangle(theme.widget_background_brighter)
             end
         end
-        draw_by_cursor.icon("chevron-left", element.numeric_input_text_size)
+        draw_by_cursor.icon("chevron-left", const.numeric_input_text_size)
         -- #endregion
 
         -- #region right arrow
         cursor.peek()
         cursor.change_anchor(1, 0)
-        cursor.width = element.numeric_input_lr_button_width
+        cursor.width = const.numeric_input_lr_button_width
         cursor.change_anchor(0.5)
 
         if not dragging then
@@ -155,7 +155,7 @@ return function(state, min, max, step, decimals, format)
                 draw_by_cursor.rectangle(theme.widget_background_brighter)
             end
         end
-        draw_by_cursor.icon("chevron-right", element.numeric_input_text_size)
+        draw_by_cursor.icon("chevron-right", const.numeric_input_text_size)
         -- #endregion
     end
 
@@ -172,9 +172,9 @@ return function(state, min, max, step, decimals, format)
     state.value = extmath.clamp(extmath.round(state.value, decimals), min or -math.huge, max or math.huge)
 
     if is_editing then
-        typing.draw_text_entry(element.numeric_input_text_size, "input")
+        typing.draw_text_entry(const.numeric_input_text_size, "input")
     else
-        draw_by_cursor.label(string.format(format or "%f", state.value), element.numeric_input_text_size, "left", false)
+        draw_by_cursor.label(string.format(format or "%f", state.value), const.numeric_input_text_size, "left", false)
     end
     draw_by_cursor.rectangle_outline(
         (hovering or dragging or is_editing) and theme.widget_outline_highlight or theme.widget_outline
