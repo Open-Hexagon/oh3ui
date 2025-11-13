@@ -98,6 +98,7 @@ local grid = {}
 ---Grid size. This enforces the grid borders.
 local grid_width, grid_height = 0, 0
 ---Grid cursor location. The location where navigation starts. A cell can be selected but have an undefined navigation location.
+---@type integer?
 local grid_x, grid_y
 
 ---Fills a rectangular region of the grid with some value
@@ -134,6 +135,7 @@ end
 ---@param x integer
 ---@param y integer
 ---@return integer
+---@nodiscard
 local function get_grid_cell(x, y)
     if x < 1 or x > grid_width then
         -- x coordinate exceeds grid size
@@ -166,6 +168,15 @@ local function get_grid_cell(x, y)
     return row[x] or op_cell.nothing
 end
 
+---Gets the current grid location. Nil if there is none.
+---This usually isn't very useful unless you're debugging something.
+---@return integer?
+---@return integer?
+---@nodiscard
+function keyboard_navigation.get_grid_location()
+    return grid_x, grid_y
+end
+
 --#endregion
 
 ---An ordered list of created cells
@@ -173,6 +184,11 @@ local cell_x = {}
 local cell_y = {}
 local cell_text_input_state = {}
 local cell_keepout = {}
+
+---The cell id that is used to check for selection and actions
+---The cell id 0 will never be assigned normally
+---@type integer
+local current_cell_id = 0
 
 ---Holds the index of the last created cell.
 local last_cell_id = 0
@@ -244,7 +260,7 @@ end
 function keyboard_navigation.reset()
     erase_grid()
     last_cell_id = 0
-    control_data.current_cell_id = 0
+    current_cell_id = 0
     escape_cell_id = nil
     default_cell_id = nil
     first_gridded_cell_id = nil
@@ -291,7 +307,7 @@ function keyboard_navigation.make_cell(mode)
         escape_cell_id = last_cell_id
     end
 
-    control_data.current_cell_id = last_cell_id
+    current_cell_id = last_cell_id
 
     return last_cell_id
 end
@@ -317,11 +333,18 @@ end
 ---Can be used to revert the current cell back to a previously made cell.
 ---Setting the current cell to 0 prevents elements from being selected
 ---@param cell_id integer
-function keyboard_navigation.change_current_cell(cell_id)
+function keyboard_navigation.set_current_cell_id(cell_id)
     if not is_valid_cell_id(cell_id) then
         error("bad cell id")
     end
-    control_data.current_cell_id = cell_id
+    current_cell_id = cell_id
+end
+
+---Gets the current cell id
+---@return integer
+---@nodiscard
+function keyboard_navigation.get_current_cell_id()
+    return current_cell_id
 end
 
 --#endregion
@@ -335,7 +358,7 @@ end
 ---@return boolean
 ---@nodiscard
 function keyboard_navigation.is_selected(cell_id)
-    cell_id = cell_id or control_data.current_cell_id
+    cell_id = cell_id or current_cell_id
     if not is_valid_cell_id(cell_id) then
         error("bad cell id")
     end

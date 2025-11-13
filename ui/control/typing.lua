@@ -277,8 +277,8 @@ do
 
         current_typing_state = state
 
-        sensor_id = sensor_id or control_data.current_sensor_id
-        cell_id = cell_id or control_data.current_cell_id
+        sensor_id = sensor_id or mnav.get_current_sensor_id()
+        cell_id = cell_id or knav.get_current_cell_id()
 
         if typing.is_editing(state) then
             target_cell_id = cell_id

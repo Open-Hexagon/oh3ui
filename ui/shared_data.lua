@@ -3,16 +3,6 @@
 local shared_data = {}
 
 shared_data.control = {
-    ---The cell id that is used to check for selection and actions
-    ---The cell id 0 will never be assigned normally
-    ---@type integer
-    current_cell_id = 0,
-
-    ---The sensor id that will be used to check for hovering.
-    ---The sensor id 0 will never be assigned normally
-    ---@type integer
-    current_sensor_id = 0,
-
     ---@type "none"|"mouse"|"keyboard"|"typing"
     last_used_control_method = "none",
 

@@ -1,7 +1,7 @@
 -- An example menu to figure out what the hell I'm doing
 
-local cursor = require("ui.cursor")
 local id = require("ui.id_table")()
+local cursor = require("ui.cursor")
 local theme = require("ui.theme")
 local draw_by_cursor = require("ui.draw_queue").by_cursor
 local mnav = require("ui.control.mouse_navigation")
@@ -88,7 +88,7 @@ Rerum ducimus tenetur fugit.
     draw_by_cursor.label(string.format("%d%%", id.slider.value), 16, "left", false)
     cursor.shift_down(10)
 
-    knav.change_current_cell(0)
+    knav.set_current_cell_id(0)
 
     cursor.width = 150
     slider(id.slider_anchor_x, 0, 1, 101)
@@ -166,6 +166,8 @@ Rerum ducimus tenetur fugit.
     knav.grid_cell(1, 12)
     checkbox(id.checkbox)
     cursor.shift_down(10)
+
+    
 
     cursor.width = 200
     cursor.height = 50

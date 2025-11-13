@@ -128,7 +128,7 @@ return function()
             button("b", 16)
             cursor.shift_down(0)
 
-            knav.change_current_cell(0)
+            knav.set_current_cell_id(0)
             button("collapse", 16)
             cursor.shift_down(0)
 
@@ -142,7 +142,7 @@ return function()
                     button(tostring(i), 16)
                     cursor.shift_down(0)
                 end
-                knav.change_current_cell(0)
+                knav.set_current_cell_id(0)
                 button("collapse2", 16)
                 cursor.shift_down(0)
                 cursor.h_squeeze(10)

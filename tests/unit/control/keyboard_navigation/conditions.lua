@@ -47,15 +47,15 @@ function T.tear_down()
 end
 
 function T.test_change_to_bad_cell()
-    unittest.assert_error(knav.change_current_cell, nil, -1)
+    unittest.assert_error(knav.set_current_cell_id, nil, -1)
 end
 
 function T.test_is_selected()
-    knav.change_current_cell(0)
+    knav.set_current_cell_id(0)
     unittest.assert(not knav.is_selected(0))
 
     knav.jump_to_cell(2)
-    knav.change_current_cell(2)
+    knav.set_current_cell_id(2)
     unittest.assert(knav.is_selected())
 
     unittest.assert(not knav.is_selected(1))
@@ -72,7 +72,7 @@ function T.test_default()
     unittest.assert(x == 1)
     unittest.assert(y == 4)
 
-    knav.change_current_cell(2)
+    knav.set_current_cell_id(2)
     unittest.assert(knav.get_action() == kba.activate)
 end
 
@@ -85,7 +85,7 @@ function T.test_escape()
     unittest.assert(x == 1)
     unittest.assert(y == 5)
 
-    knav.change_current_cell(3)
+    knav.set_current_cell_id(3)
     unittest.assert(knav.get_action() == kba.activate)
 end
 

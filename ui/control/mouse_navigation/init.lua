@@ -59,6 +59,11 @@ local press_bubble_x, press_bubble_y
 local press_bubble_radius = 2
 local press_bubble_touch_radius = 6
 
+---The sensor id that will be used to check for hovering.
+---The sensor id 0 will never be assigned normally
+---@type integer
+local current_sensor_id = 0
+
 ---Holds the id of the last created sensor.
 ---Increments as sensors are made.
 local last_sensor_id = 0
@@ -72,7 +77,7 @@ local last_manual_sensor_id = 0
 ---@nodiscard
 function mouse_navigation.declare_sensor_id()
     last_manual_sensor_id = last_manual_sensor_id - 1
-    control_data.current_sensor_id = last_manual_sensor_id
+    current_sensor_id = last_manual_sensor_id
     return last_manual_sensor_id
 end
 
@@ -82,35 +87,42 @@ end
 ---@param sensor_id? integer forces this sensor to be created with a certain id (must be negative)
 ---@param ... integer sensor modes
 ---@return integer sensor_id sensor id
----@return integer placement_id
+---@return integer placement_id sensor placement id
 function mouse_navigation.make_sensor(sensor_id, ...)
     cursor.place()
     if sensor_id then
         if sensor_id >= 0 then
             error(string.format("sensor id %d cannot be used", sensor_id))
         end
-        control_data.current_sensor_id = sensor_id
+        current_sensor_id = sensor_id
     else
         last_sensor_id = last_sensor_id + 1
-        control_data.current_sensor_id = last_sensor_id
+        current_sensor_id = last_sensor_id
     end
 
     local placement_id = draw_data.make_placement(placement.left, placement.top, placement.right, placement.bottom)
     if control_data.current_layer_is_active and not control_data.keepout_enabled then
-        draw_data.add_draw_operation(op_ids.mouse_sensor, placement_id, control_data.current_sensor_id, bor(0, ...))
+        draw_data.add_draw_operation(op_ids.mouse_sensor, placement_id, current_sensor_id, bor(0, ...))
     end
 
-    return control_data.current_sensor_id, placement_id
+    return current_sensor_id, placement_id
 end
 
 ---Changes the currently recognized sensor to a new id.
 ---Can be used to revert the current sensor back to a previously made sensor
 ---@param sensor_id integer
-function mouse_navigation.change_current_sensor(sensor_id)
+function mouse_navigation.set_current_sensor_id(sensor_id)
     if sensor_id < last_manual_sensor_id or sensor_id > last_sensor_id then
         error("bad sensor id")
     end
-    control_data.current_sensor_id = sensor_id
+    current_sensor_id = sensor_id
+end
+
+---Gets the current sensor id
+---@return integer
+---@nodiscard
+function mouse_navigation.get_current_sensor_id()
+    return current_sensor_id
 end
 
 ---Returns true if the mouse is hovering the current sensor.
@@ -120,7 +132,7 @@ end
 ---@return boolean
 ---@nodiscard
 function mouse_navigation.is_hovering(sensor_id)
-    return sensor.hover_set[sensor_id or control_data.current_sensor_id] or false
+    return sensor.hover_set[sensor_id or current_sensor_id] or false
 end
 
 ---Gets the mouse button that is holding the current sensor, if any.
@@ -150,7 +162,7 @@ end
 ---@return mouse_button?
 ---@nodiscard
 function mouse_navigation.get_dragging(sensor_id)
-    if mouse_navigation.dragging and latest_dragging_id == (sensor_id or control_data.current_sensor_id) then
+    if mouse_navigation.dragging and latest_dragging_id == (sensor_id or current_sensor_id) then
         return mouse_navigation.dragging
     end
     return nil
@@ -161,7 +173,7 @@ end
 ---@return mouse_button?
 ---@nodiscard
 function mouse_navigation.get_started_dragging(sensor_id)
-    if mouse_navigation.started_dragging and latest_dragging_id == (sensor_id or control_data.current_sensor_id) then
+    if mouse_navigation.started_dragging and latest_dragging_id == (sensor_id or current_sensor_id) then
         return mouse_navigation.started_dragging
     end
     return nil
@@ -172,7 +184,7 @@ end
 ---@return mouse_button?
 ---@nodiscard
 function mouse_navigation.get_stopped_dragging(sensor_id)
-    if mouse_navigation.stopped_dragging and latest_dragging_id == (sensor_id or control_data.current_sensor_id) then
+    if mouse_navigation.stopped_dragging and latest_dragging_id == (sensor_id or current_sensor_id) then
         return mouse_navigation.stopped_dragging
     end
     return nil
@@ -307,7 +319,7 @@ function mouse_navigation.reset()
     sensor.clear()
     last_sensor_id = 0
     last_manual_sensor_id = 0
-    control_data.current_sensor_id = 0
+    current_sensor_id = 0
 end
 
 return mouse_navigation
