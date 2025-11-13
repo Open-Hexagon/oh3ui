@@ -122,11 +122,11 @@ end
 
 --#region snapshotting
 
-local CURSOR_INDEX_STEP = 7
+local SIZEOF_CURSOR_SNAPSHOT = 7
 
 ---Push a snapshot of the cursor, saving its current state for later.
 function cursor.push()
-    local i = volatile_data.cursor_index + CURSOR_INDEX_STEP
+    local i = volatile_data.cursor_index + SIZEOF_CURSOR_SNAPSHOT
 
     cursor_stack[i - 6] = cursor.x
     cursor_stack[i - 5] = cursor.y
@@ -152,7 +152,7 @@ end
 ---Pop a snapshot of the cursor, returning it to the last pushed state.
 function cursor.pop()
     cursor.peek()
-    volatile_data.cursor_index = volatile_data.cursor_index - CURSOR_INDEX_STEP
+    volatile_data.cursor_index = volatile_data.cursor_index - SIZEOF_CURSOR_SNAPSHOT
 end
 
 ---Drops the last snapshot of the cursor
@@ -160,7 +160,7 @@ function cursor.drop()
     if volatile_data.cursor_index == volatile_data.cursor_base_index then
         error("cursor snapshot stack underflow", 2)
     end
-    volatile_data.cursor_index = volatile_data.cursor_index - CURSOR_INDEX_STEP
+    volatile_data.cursor_index = volatile_data.cursor_index - SIZEOF_CURSOR_SNAPSHOT
 end
 
 ---Undos cursor reshaping for elements if cursor.auto_reshape is false. Requires a corresponding `cursor.push()`.
@@ -201,7 +201,7 @@ function cursor.combine(peek)
     cursor.y = top + cursor.anchor_y * cursor.height
 
     if not peek then
-        volatile_data.cursor_index = volatile_data.cursor_index - CURSOR_INDEX_STEP
+        volatile_data.cursor_index = volatile_data.cursor_index - SIZEOF_CURSOR_SNAPSHOT
     end
 end
 

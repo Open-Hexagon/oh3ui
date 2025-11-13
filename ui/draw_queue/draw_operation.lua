@@ -18,6 +18,7 @@ local draw_operation = {
     push_scissor = 201,
     pop_scissor = 202,
     mouse_sensor = 203,
+    set_shader = 204,
     view_request_export_picture_frame = 206,
 
     -- overlay operations

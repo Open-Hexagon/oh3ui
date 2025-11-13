@@ -7,7 +7,7 @@ local kba = knav.actions
 local mnav = require("ui.control.mouse_navigation")
 local mb = mnav.buttons
 local smode = mnav.sensor_mode
-local selection_outline = require("ui.decorator.element.selection_outline")
+local selection_outline = require("ui.decorator.element.selection_outline").set_placement
 local draw_queue = require("ui.draw_queue")
 local draw_by_cursor = draw_queue.by_cursor
 

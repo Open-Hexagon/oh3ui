@@ -25,6 +25,7 @@ end
 ---Makes a blank placement using the cursor.
 ---Does not add a draw operation.
 ---@return integer placement_id
+---@nodiscard
 function place_by_cursor.blank()
     cursor.place()
     return draw_data.make_placement(placement.left, placement.top, placement.right, placement.bottom)
