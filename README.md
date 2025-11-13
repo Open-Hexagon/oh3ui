@@ -27,11 +27,11 @@ Features that will not be implemented to make development of the UI system easie
 - There will be no system to backpropagate the size of elements. If something doesn't fit where it needs to go, it will have to either spill out of bounds or get cut off. It is up to the developer to ensure that there is enough space for elements or make special cases when elements can't fit.
 - There will be no universal method to get the size of an element before it gets rendered (elements will not neccessarily fit the cursor). Dear ImGui doesn't do this so why should ours? (one exception is text but in that case it is actually important)
 - Elements do not need to behave like primitive elements when calling them and shouldn't be used as sub elements. Some duplicated behavior between elements is okay.
+- Individual draw operations can be pushed to the draw queue out of order with reservations, but full elements cannot.
 
 ## Assumptions
-Notable assumptions that the UI makes without enforcing them with error checking
+Assumptions that the UI makes without enforcing them with error checking
 
-- Scroll regions expect that all cursor data structures have returned to their original states from when scroll.start was called when scroll.finish is called. Not honoring this assumption is undefined behavior.
 - Keyboard navigation cell and mouse sensor IDs need to remain assigned to the same elements between frames for keyboard and mouse interaction to function. (This may be a problem when the layout of a page suddenly changes, but the error will only last one frame.)
   - A good practice is to make elements always use the same amount of cell and sensor IDs even if they don't actually need them all. 
 
