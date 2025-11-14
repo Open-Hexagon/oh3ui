@@ -207,6 +207,10 @@ local escape_cell_id
 ---nil means there was no cell set.
 local default_cell_id
 
+---The id of the cell that's globally accessible for typing. This is stronger than the default cell if it also has a text input.
+---nil means there was no cell set.
+local global_typing_cell_id
+
 ---The id of the first cell that has a actual grid position.
 ---nil means no cells exist on the grid
 local first_gridded_cell_id
@@ -290,28 +294,6 @@ function keyboard_navigation.make_cell(mode)
 
     return last_cell_id
 end
-
---#region backend functions
--- These functions are installed into the backend table so they're hidden from the user
-
----Informs keyboard navigation that a cell is meant for a text entry and thus certain actions should behave differently when interacting with this cell.
----If 0 is passed in as the cell id, it is silently ignored.
----@param cell_id integer
----@param state table
----@param global boolean?
-function control_backend.keyboard_navigation_configure_cell_as_text_input(cell_id, state, global)
-    if not is_valid_cell_id(cell_id) then
-        error(string.format("bad cell id %d", cell_id))
-    end
-    if cell_id == 0 then
-        return
-    end
-    cell_text_input_state[cell_id] = state
-
-    -- TODO add global typing
-end
-
---#endregion
 
 ---Changes the currently recognized cell id.
 ---Can be used to revert the current cell back to a previously made cell.
@@ -804,7 +786,17 @@ local function iterate_events()
                 held_action = nil
             end
         elseif name == "textinput" then
-            if selected_cell_id == 0 then
+            if global_typing_cell_id then
+                -- blacklist the space key from activating global typing since it's also used to activate elements,
+                -- but only if the selected cell is different from the global typing cell
+                -- but not including cell 0
+                if key ~= " " or global_typing_cell_id == selected_cell_id or selected_cell_id == 0 then
+                    typing_target = cell_text_input_state[global_typing_cell_id]
+                    jump_to_cell(global_typing_cell_id)
+                    typing_action = key
+                    break
+                end
+            elseif selected_cell_id == 0 then
                 typing_target = default_cell_id and cell_text_input_state[default_cell_id]
                 if typing_target then
                     jump_to_cell(default_cell_id)
@@ -881,6 +873,7 @@ function control_backend.keyboard_navigation_reset()
     current_cell_id = 0
     escape_cell_id = nil
     default_cell_id = nil
+    global_typing_cell_id = nil
     first_gridded_cell_id = nil
     last_gridded_cell_id = nil
 end
@@ -893,6 +886,25 @@ function control_backend.keyboard_navigation_finish_layer_transition()
         jump_to_cell(default_cell_id)
     else
         jump_to_first()
+    end
+end
+
+---Informs keyboard navigation that a cell is meant for a text entry and thus certain actions should behave differently when interacting with this cell.
+---If 0 is passed in as the cell id, it is silently ignored.
+---@param cell_id integer
+---@param state table
+---@param global boolean?
+function control_backend.keyboard_navigation_configure_cell_as_text_input(cell_id, state, global)
+    if not is_valid_cell_id(cell_id) then
+        error(string.format("bad cell id %d", cell_id))
+    end
+    if cell_id == 0 or not layer_status.current_layer_is_active then
+        return
+    end
+    cell_text_input_state[cell_id] = state
+
+    if global then
+        global_typing_cell_id = cell_id
     end
 end
 

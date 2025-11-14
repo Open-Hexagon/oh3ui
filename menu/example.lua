@@ -111,7 +111,7 @@ Rerum ducimus tenetur fugit.
     cursor.shift_down(10)
 
     cursor.width = 150
-    knav.make_cell("default")
+    knav.make_cell()
     knav.grid_cell(1, 4)
     button("Apply UI Scale", 16)
     if mnav.get_clicked() == mb.left or knav.get_action() == kba.activate then
@@ -173,7 +173,7 @@ Rerum ducimus tenetur fugit.
     cursor.height = 50
 
     do
-        local text_entry_cell = knav.make_cell("default")
+        local text_entry_cell = knav.make_cell()
         knav.grid_cell(1, 13)
         local text_entry_sensor = mnav.make_sensor(nil, smode.block)
 
@@ -197,7 +197,7 @@ Rerum ducimus tenetur fugit.
             selection_outline()
         end
 
-        typing.make_text_entry(id.text_entry2, text_entry_sensor2, text_entry_cell2)
+        typing.make_text_entry(id.text_entry2, text_entry_sensor2, text_entry_cell2, true)
         typing.draw_text_entry(36, "Search2")
         cursor.shift_down(10)
     end
