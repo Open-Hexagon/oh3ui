@@ -128,7 +128,10 @@ Rerum ducimus tenetur fugit.
 
     knav.make_cell()
     knav.grid_cell(1, 6)
-    button("button", 16)
+    button("deselect kb", 16)
+    if mnav.get_clicked() == mb.left or knav.get_action() == kba.activate then
+        knav.deselect()
+    end
     cursor.shift_down(10)
 
     knav.make_cell()
@@ -166,8 +169,6 @@ Rerum ducimus tenetur fugit.
     knav.grid_cell(1, 12)
     checkbox(id.checkbox)
     cursor.shift_down(10)
-
-    
 
     cursor.width = 200
     cursor.height = 50

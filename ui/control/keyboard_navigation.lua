@@ -422,6 +422,7 @@ local function deselect()
 end
 
 control_backend.keyboard_navigation_deselect = deselect
+keyboard_navigation.deselect = deselect
 
 ---Moves the selection to a specified cell id in the tab ordered table.
 ---Will jump to the cell even if it's in a keepout zone.
@@ -786,6 +787,12 @@ local function iterate_events()
                 held_action = nil
             end
         elseif name == "textinput" then
+            typing_target = cell_text_input_state[selected_cell_id]
+            if typing_target then
+                typing_action = key
+                break
+            end
+
             if global_typing_cell_id then
                 -- blacklist the space key from activating global typing since it's also used to activate elements,
                 -- but only if the selected cell is different from the global typing cell
@@ -800,12 +807,6 @@ local function iterate_events()
                 typing_target = default_cell_id and cell_text_input_state[default_cell_id]
                 if typing_target then
                     jump_to_cell(default_cell_id)
-                    typing_action = key
-                    break
-                end
-            else
-                typing_target = cell_text_input_state[selected_cell_id]
-                if typing_target then
                     typing_action = key
                     break
                 end
