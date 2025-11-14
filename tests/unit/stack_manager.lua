@@ -1,5 +1,5 @@
 local monkeypatch = require("tests.monkeypatch")
-local volatile_data = require("ui.shared_data").volatile
+local volatile_data = require("ui.stack_data").volatile
 local draw_queue = require("ui.draw_queue")
 local unittest = require("tests.unittest")
 local stack_manager = require("ui.stack_manager")

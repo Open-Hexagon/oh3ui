@@ -30,22 +30,4 @@ function draw_queue.nop()
     draw_data.add_draw_operation(op_ids.nop)
 end
 
--- local disabled_shader = love.graphics.newShader([[
--- vec4 effect(vec4 color, Image tex, vec2 texture_coords, vec2 screen_coords)
--- {
---     vec4 texturecolor = Texel(tex, texture_coords);
---     color *= texturecolor;
---     color.rgb *= 0.5;
---     return color;
--- }
--- ]])
-
--- function draw_queue.disable_on()
-
--- end
-
--- function draw_queue.disable_off()
-
--- end
-
 return draw_queue

@@ -7,11 +7,11 @@ local placement = cursor.placement
 local sensor = require("ui.control.sensor")
 local bit = require("bit")
 local bor = bit.bor
-local shared_data = require("ui.shared_data")
-local control_data = shared_data.control
 local draw_data = require("ui.draw_queue.draw_data")
 local op_ids = require("ui.draw_queue.draw_operation")
 local private = require("ui.control.private")
+local is_suppressed = require("ui.suppress").is_suppressed
+local is_current_layer_active = require("ui.layers").is_current_layer_active
 
 local mouse_navigation = {
     -- this frame's mouse position (not screen coordinates)
@@ -38,8 +38,8 @@ local mouse_navigation = {
     press_x = -1,
     press_y = -1,
 }
-
-mouse_navigation.sensor_mode = sensor.sensor_mode
+local smode = sensor.sensor_mode
+mouse_navigation.sensor_mode = smode
 
 ---@enum mouse_button
 mouse_navigation.buttons = {
@@ -86,7 +86,7 @@ end
 ---Returns a new sensor id and sets the current_sensor_id to the new id.
 ---Behaves like a place_by_cursor draw_queue function.
 ---@param sensor_id? integer forces this sensor to be created with a certain id (must be negative)
----@param ... integer sensor modes
+---@param ... sensor_mode sensor modes
 ---@return integer sensor_id sensor id
 ---@return integer placement_id sensor placement id
 function mouse_navigation.make_sensor(sensor_id, ...)
@@ -102,8 +102,13 @@ function mouse_navigation.make_sensor(sensor_id, ...)
     end
 
     local placement_id = draw_data.make_placement(placement.left, placement.top, placement.right, placement.bottom)
-    if control_data.current_layer_is_active and not control_data.keepout_enabled then
-        draw_data.add_draw_operation(op_ids.mouse_sensor, placement_id, current_sensor_id, bor(0, ...))
+    if is_current_layer_active() then
+        draw_data.add_draw_operation(
+            op_ids.mouse_sensor,
+            placement_id,
+            current_sensor_id,
+            bor(is_suppressed() and smode.disable or 0, ...)
+        )
     end
 
     return current_sensor_id, placement_id
@@ -220,13 +225,13 @@ function private.mouse_navigation_evaluate()
 
         if name == "wheelmoved" then
             -- Scrolling updates the last used method
-            control_data.last_used_control_method = "mouse"
+            private.last_used_control_method = "mouse"
 
             -- Record wheel movement
             mouse_navigation.wheel_dx = mouse_navigation.wheel_dx + x
             mouse_navigation.wheel_dy = mouse_navigation.wheel_dy + y
         elseif name == "mousemoved" then
-            control_data.last_used_control_method = "mouse"
+            private.last_used_control_method = "mouse"
 
             -- Any mouse movement sets makes the cursor visible
             love.mouse.setVisible(true)
@@ -265,7 +270,7 @@ function private.mouse_navigation_evaluate()
 
             if name == "mousepressed" then
                 -- Pressing updates the last used method
-                control_data.last_used_control_method = "mouse"
+                private.last_used_control_method = "mouse"
 
                 if mouse_navigation.holding then
                     -- Pressing another button while holding stops holding
@@ -284,7 +289,7 @@ function private.mouse_navigation_evaluate()
                 end
             elseif name == "mousereleased" then
                 -- Releasing updates the last used method
-                control_data.last_used_control_method = "mouse"
+                private.last_used_control_method = "mouse"
 
                 if mouse_navigation.holding then
                     -- Releasing the same button that is being held is a click. If not then holding is stopped.

@@ -1,8 +1,6 @@
 local events = require("ui.events")
 local utf8 = require("utf8")
 local settings = require("ui.settings")
-local shared_data = require("ui.shared_data")
-local control_data = shared_data.control
 local private = require("ui.control.private")
 local utf8_sub = require("ui.text.utf8_sub")
 
@@ -108,11 +106,11 @@ function private.typing_evaluate()
     for event in events.iterate("^[tk]e") do
         local name, is_repeat = event[1], event[4]
         if name == "textinput" then
-            control_data.last_used_control_method = "typing"
+            private.last_used_control_method = "typing"
             private.typing_insert_character(target, event[2])
             cursor_flash_timer = 0
         elseif name == "keypressed" then
-            control_data.last_used_control_method = "typing"
+            private.last_used_control_method = "typing"
             local key = event[3]
             if key == "left" then
                 if target._text_entry_char_position > 0 then

@@ -3,7 +3,7 @@ local draw_queue = require("ui.draw_queue")
 local monkeypatch = require("tests.monkeypatch")
 local cursor = require("ui.cursor")
 local placement = cursor.projected_placement
-local volatile_data = require("ui.shared_data").volatile
+local volatile_data = require("ui.stack_data").volatile
 local stack_manager = require("ui.stack_manager")
 
 local T = {}

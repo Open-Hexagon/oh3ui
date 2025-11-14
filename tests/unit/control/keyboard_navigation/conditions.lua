@@ -2,7 +2,7 @@ local knav = require("ui.control.keyboard_navigation")
 local kba = knav.actions
 local wmode = knav.wrapping_mode
 local events = require("ui.events")
-local shared_data = require("ui.shared_data")
+local shared_data = require("ui.stack_data")
 local control_data = shared_data.control
 local unittest = require("tests.unittest")
 

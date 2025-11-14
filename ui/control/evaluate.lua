@@ -1,8 +1,5 @@
 local keyboard_navigation = require("ui.control.keyboard_navigation")
 local typing = require("ui.control.typing")
-
-local shared_data = require("ui.shared_data")
-local control_data = shared_data.control
 local private = require("ui.control.private")
 
 return function()
@@ -13,7 +10,7 @@ return function()
 
         -- do immediate keyboard navigation
         if goto_cell then
-            control_data.last_used_control_method = "keyboard"
+            private.last_used_control_method = "keyboard"
 
             keyboard_navigation.jump_to_cell(goto_cell)
             if tab_direction == "tab_down" then
@@ -33,7 +30,7 @@ return function()
 
         -- do immediate text editing
         if typing_target then
-            control_data.last_used_control_method = "typing"
+            private.last_used_control_method = "typing"
 
             private.typing_set_target(typing_target)
             if typing_action == "backspace" then

@@ -2,6 +2,11 @@ local utf8_sub = require("ui.text.utf8_sub")
 
 ---Functions that shouldn't be part of the user facing api
 local private = {
+    ---@type "none"|"mouse"|"keyboard"|"typing"
+    last_used_control_method = "none",
+
+    ---These functions get installed by other modules
+
     ---@type fun():integer?,typing_stop_methods
     typing_evaluate = nil,
 

@@ -8,7 +8,7 @@ local knav = require("ui.control.keyboard_navigation")
 local kba = knav.actions
 local selection_outline = require("ui.decorator.element.selection_outline")
 local follow = require("ui.effect").follow
-local volatile_data = require("ui.shared_data").volatile
+local stack_data = require("ui.stack_data")
 local view_request = require("ui.area.view_request")
 local draw_queue = require("ui.draw_queue")
 
@@ -46,7 +46,7 @@ function collapse.start(state, anchor_pos, clipping_side, no_auto_open, sensor_i
     aeb.push(false) -- selection has changed
     aeb.push(false) -- contains selection
     aeb.push(view_request.collapse_top_index) -- aeb_index of the next (up) state
-    view_request.collapse_top_index = volatile_data.aeb_index -- put the new view request top index
+    view_request.collapse_top_index = stack_data.aeb_index -- put the new view request top index
 
     aeb.push_frame_header("collapse", not state.on and no_auto_open)
 

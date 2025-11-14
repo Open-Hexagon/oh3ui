@@ -3,8 +3,7 @@
 local cursor = require("ui.cursor")
 local knav = require("ui.control.keyboard_navigation")
 local private = require("ui.control.private")
-local shared_data = require("ui.shared_data")
-local control_data = shared_data.control
+local get_last_used_control_method = require("ui.control").get_last_used_control_method
 local draw_data_block_draw_operations = require("ui.draw_queue.draw_data").block_draw_operations
 local stack_manager = require("ui.stack_manager")
 local selection_outline_add_to_queue = require("ui.decorator.element.selection_outline").add_to_queue
@@ -22,6 +21,17 @@ local POP = 1
 local schedule_index = 0
 local scheduled_tasks = {}
 local scheduled_layers = {}
+
+local current_layer_is_active = false
+local current_layer = 0
+
+function layers.is_current_layer_active()
+    return current_layer_is_active
+end
+
+function layers.get_current_layer()
+    return current_layer
+end
 
 ---Initialize the stack with some layers
 ---@param ... function
@@ -74,9 +84,9 @@ local function reconfigure_layers()
     end
     schedule_index = 0
 
-    if control_data.last_used_control_method == "keyboard" then
+    if get_last_used_control_method() == "keyboard" then
         -- if keyboard navigation was used we need to find the best cell to select on the new top layer
-        control_data.current_layer_is_active = true
+        current_layer_is_active = true
         private.keyboard_navigation_reset()
         stack[length]() -- we have to run the new top layer (possibly again)
         private.keyboard_navigation_finish_layer_transition()
@@ -94,15 +104,15 @@ function layers.run()
         -- run inactive layers
         for i = 1, length - 1 do
             cursor.reset()
-            control_data.current_layer = i
+            current_layer = i
             stack[i]()
             stack_manager.clean_up()
         end
 
-        control_data.current_layer_is_active = true
+        current_layer_is_active = true
         -- make the top layer active
         cursor.reset()
-        control_data.current_layer = length
+        current_layer = length
         stack[length]()
         stack_manager.clean_up()
     end
@@ -118,7 +128,7 @@ function layers.run()
     reconfigure_layers()
 
     -- set this back to it's default
-    control_data.current_layer_is_active = false
+    current_layer_is_active = false
 end
 
 return layers

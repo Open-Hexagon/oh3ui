@@ -1,3 +1,5 @@
+local private = require("ui.control.private")
+
 local control = {
     -- only user facing api endpoints should be visible from this table
 
@@ -5,5 +7,10 @@ local control = {
     keyboard_navigation = require("ui.control.keyboard_navigation"),
     typing = require("ui.control.typing"),
 }
+
+
+function control.get_last_used_control_method()
+    return private.last_used_control_method
+end
 
 return control

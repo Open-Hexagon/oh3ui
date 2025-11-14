@@ -1,6 +1,6 @@
 local draw_operation = require("ui.draw_queue.draw_operation")
 local bit = require("bit")
-local band, bor = bit.band, bit.bor
+local band = bit.band
 
 local ID_POS = 1
 
@@ -146,7 +146,7 @@ function draw_data.make_pop_translation()
     return placement_index
 end
 
-local tstack = require("ui.shared_data").volatile.translate_stack
+local tstack = require("ui.stack_data").translate_stack
 
 ---Edits all placements so they are offset by the applied translations. This function should only be run once per frame.
 ---This saves us some work later.
@@ -232,7 +232,7 @@ function draw_data.add_draw_operation(id, ...)
     local slot = draw_list[slot_index]
 
     if as_overlay and band(id, 0xF00) == 0x100 then
-        id = bor(id, 0x200) -- normal and overlay differ by only one bit
+        id = id + 0x200
         as_overlay = false
     end
 

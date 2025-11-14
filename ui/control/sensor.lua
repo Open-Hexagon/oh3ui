@@ -62,6 +62,7 @@ function sensor.enable_intersection_checks()
     do_intersections = true
 end
 
+---@enum sensor_mode
 local sensor_mode = {
     block = 0x1,
     lazy = 0x2,

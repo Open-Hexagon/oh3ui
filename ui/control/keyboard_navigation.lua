@@ -1,10 +1,10 @@
 local events = require("ui.events")
 local bit = require("bit")
 local bor, band = bit.bor, bit.band
-local shared_data = require("ui.shared_data")
-local control_data = shared_data.control
 local disable_intersection_checks = require("ui.control.sensor").disable_intersection_checks
 local private = require("ui.control.private")
+local is_suppressed = require("ui.suppress").is_suppressed
+local is_current_layer_active = require("ui.layers").is_current_layer_active
 
 local keyboard_navigation = {}
 
@@ -292,7 +292,7 @@ end
 ---|"both" make this cell both the default and escape cell
 ---@return integer cell_id id number of this cell
 function keyboard_navigation.make_cell(mode)
-    if not control_data.current_layer_is_active then
+    if not is_current_layer_active() then
         return 0
     end
 
@@ -302,7 +302,7 @@ function keyboard_navigation.make_cell(mode)
     cell_x[last_cell_id] = nil
     cell_y[last_cell_id] = nil
     cell_text_input_state[last_cell_id] = nil
-    cell_keepout[last_cell_id] = control_data.keepout_enabled
+    cell_keepout[last_cell_id] = is_suppressed()
 
     if mode == "default" or mode == "both" then
         default_cell_id = last_cell_id
@@ -439,7 +439,7 @@ end
 ---@param col_span? integer
 ---@param row_span? integer
 function keyboard_navigation.grid_cell(x, y, col_span, row_span)
-    if last_cell_id == 0 or control_data.keepout_enabled then
+    if last_cell_id == 0 or is_suppressed() then
         return
     end
 
@@ -743,7 +743,7 @@ local function iterate_events()
         local name, key = event[1], event[2]
 
         if name == "keypressed" then
-            control_data.last_used_control_method = "keyboard"
+            private.last_used_control_method = "keyboard"
             is_repeat = event[4]
             if key == "right" or key == "left" or key == "down" or key == "up" then
                 -- only the arrow keys set the mouse to be invisible
@@ -815,7 +815,7 @@ local function iterate_events()
                 end
             end
         elseif name == "keyreleased" then
-            control_data.last_used_control_method = "keyboard"
+            private.last_used_control_method = "keyboard"
             -- clear the holding_key field if that key was released.
             if key_to_action[key] == held_action then
                 held_action = nil

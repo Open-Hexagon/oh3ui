@@ -10,7 +10,7 @@ local stack_manager = require("ui.stack_manager")
 local aeb = require("ui.area.aeb")
 local ep = require("ui.element_parameters")
 local view_request = require("ui.area.view_request")
-local volatile_data = require("ui.shared_data").volatile
+local stack_data = require("ui.stack_data")
 local selection_outline_add_to_queue = require("ui.decorator.element.selection_outline").add_to_queue
 local draw_queue = require("ui.draw_queue")
 local draw_data_add_draw_operation = require("ui.draw_queue.draw_data").add_draw_operation
@@ -95,7 +95,7 @@ function scroll.start(state)
     aeb.push(false) -- this gets turned into a true if a view request was made
     aeb.push(state) -- state
     aeb.push(view_request.top_index) -- aeb_index of the next (up) state
-    view_request.top_index = volatile_data.aeb_index -- put the new view request top index
+    view_request.top_index = stack_data.aeb_index -- put the new view request top index
 
     aeb.push_frame_header("scroll") -- (5)
 

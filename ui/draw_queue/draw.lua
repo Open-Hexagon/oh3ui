@@ -9,7 +9,7 @@ local theme = require("ui.theme")
 local view_request = require("ui.area.view_request")
 local draw_queue = require("ui.draw_queue")
 local bit = require("bit")
-local band, bor = bit.band, bit.bor
+local band = bit.band
 
 --[[
     * Aside: How ui scaling and transformations are done
@@ -197,6 +197,8 @@ return function()
                     -- we cannot reuse the placememt
                     draw_queue.rectangle_outline(tx1, ty1, tx2, ty2, theme.get_xterm_color(213), 2, 0, 0)
                 end
+            elseif id == op_ids.set_shader then
+                love.graphics.setShader(item[2])
             elseif id == op_ids.view_request_export_picture_frame then
                 view_request.add_picture_frame_data(
                     item[2],
