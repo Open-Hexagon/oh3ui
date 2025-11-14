@@ -66,11 +66,7 @@ function love.run()
     -- keep this always on when using the ui
     love.keyboard.setKeyRepeat(true)
 
-    -- ui.init(empty_grid)
-    ui.init(example_menu)
-    -- ui.init(scroll_example)
-    -- ui.init(collapse_example)
-    -- ui.init(scroll_resizing)
+    ui.layer.push(example_menu)
 
     return function()
         -- Process events

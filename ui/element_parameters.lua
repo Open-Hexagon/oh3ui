@@ -69,6 +69,6 @@ ep.view_request_padding = ep.scrollbar_thickness * 1.5
 ep.view_request_speed = 10 -- this is the reciprocal of the time it takes for the animation
 ep.view_request_scrollbar_cooldown_time = 1.5 -- starting from an auto-scroll, the scrollbars will remain visible for this amount of time
 
-ep.collapse_speed = 100--1800 -- px/sec
+ep.collapse_speed = 1800 -- px/sec
 
 return ep

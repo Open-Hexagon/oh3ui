@@ -1,7 +1,7 @@
 local events = require("ui.events")
 local utf8 = require("utf8")
 local settings = require("ui.settings")
-local private = require("ui.control.private")
+local control_backend = require("ui.control.backend")
 local utf8_sub = require("ui.text.utf8_sub")
 
 local typing = {}
@@ -77,7 +77,7 @@ local function set_target(entry_state)
     cursor_flash_timer = 0
 end
 
-private.typing_set_target = set_target
+control_backend.typing_set_target = set_target
 
 ---Stops editing text for the current target
 ---@param method typing_stop_methods
@@ -87,14 +87,14 @@ local function unset_target(method)
     target = nil
 end
 
---#region private functions
--- These functions are installed into the private table so they're hidden from the user
+--#region backend functions
+-- These functions are installed into the backend table so they're hidden from the user
 
 ---Evaluates typing events
 ---@return integer? goto_cell contains the text entry keyboard navigation cell id if, after evaluation, the target was unset
 ---@return typing_stop_methods tab_direction direction to tab if needed
 ---@nodiscard
-function private.typing_evaluate()
+function control_backend.typing_evaluate()
     started_editing_state = nil
     stopped_editing_state = nil
 
@@ -106,11 +106,11 @@ function private.typing_evaluate()
     for event in events.iterate("^[tk]e") do
         local name, is_repeat = event[1], event[4]
         if name == "textinput" then
-            private.last_used_control_method = "typing"
-            private.typing_insert_character(target, event[2])
+            control_backend.last_used_control_method = "typing"
+            control_backend.typing_insert_character(target, event[2])
             cursor_flash_timer = 0
         elseif name == "keypressed" then
-            private.last_used_control_method = "typing"
+            control_backend.last_used_control_method = "typing"
             local key = event[3]
             if key == "left" then
                 if target._text_entry_char_position > 0 then
@@ -199,7 +199,7 @@ function private.typing_evaluate()
     return nil, "escape"
 end
 
-function private.typing_evaluate_without_events()
+function control_backend.typing_evaluate_without_events()
     started_editing_state = nil
     stopped_editing_state = nil
 end
@@ -241,7 +241,7 @@ do
             end
         else
             -- tell keyboard navigation that this cell is a text entry
-            private.keyboard_navigation_configure_cell_as_text_input(cell_id, state, global)
+            control_backend.keyboard_navigation_configure_cell_as_text_input(cell_id, state, global)
             if mnav.get_clicked(sensor_id) or knav.get_action(cell_id) == kba.activate then
                 set_target(state)
             end

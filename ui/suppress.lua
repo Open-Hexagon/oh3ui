@@ -16,9 +16,6 @@ local keepout_level = 0
 
 local suppress = {}
 
--- TODO keepout is when interaction is disabled for an area but there are no visual changes
--- TODO disabled is when interaction is disabled and elements are greyed out
-
 function suppress.push_keepout()
     keepout_level = keepout_level + 1
 end

@@ -2,9 +2,9 @@ local events = require("ui.events")
 local bit = require("bit")
 local bor, band = bit.bor, bit.band
 local disable_intersection_checks = require("ui.control.sensor").disable_intersection_checks
-local private = require("ui.control.private")
+local control_backend = require("ui.control.backend")
 local is_suppressed = require("ui.suppress").is_suppressed
-local is_current_layer_active = require("ui.layers").is_current_layer_active
+local layer_status = require("ui.layers.status")
 
 local keyboard_navigation = {}
 
@@ -257,32 +257,6 @@ local function is_valid_cell_id(cell_id)
     return cell_id >= 0 and cell_id <= last_cell_id
 end
 
---#region private functions
--- These functions are installed into the private table so they're hidden from the user
-
----Resets all data. Gets ready for the next frame
-function private.keyboard_navigation_reset()
-    erase_grid()
-    last_cell_id = 0
-    current_cell_id = 0
-    escape_cell_id = nil
-    default_cell_id = nil
-    first_gridded_cell_id = nil
-    last_gridded_cell_id = nil
-end
-
----This only gets called when a layer transitions happens. Finds the best cell to select.
-function private.keyboard_navigation_finish_layer_transition()
-    held_action = nil
-    force_selection_has_changed = true
-    if default_cell_id then
-        keyboard_navigation.jump_to_cell(default_cell_id)
-    else
-        keyboard_navigation.jump_to_first()
-    end
-end
---#endregion
-
 --#region Cell Controls
 
 ---Create a keyboard navigation cell which can be selected. The order in which these are called determines the tab order.
@@ -292,7 +266,7 @@ end
 ---|"both" make this cell both the default and escape cell
 ---@return integer cell_id id number of this cell
 function keyboard_navigation.make_cell(mode)
-    if not is_current_layer_active() then
+    if not layer_status.current_layer_is_active then
         return 0
     end
 
@@ -317,15 +291,15 @@ function keyboard_navigation.make_cell(mode)
     return last_cell_id
 end
 
---#region private functions
--- These functions are installed into the private table so they're hidden from the user
+--#region backend functions
+-- These functions are installed into the backend table so they're hidden from the user
 
 ---Informs keyboard navigation that a cell is meant for a text entry and thus certain actions should behave differently when interacting with this cell.
 ---If 0 is passed in as the cell id, it is silently ignored.
 ---@param cell_id integer
 ---@param state table
 ---@param global boolean?
-function private.keyboard_navigation_configure_cell_as_text_input(cell_id, state, global)
+function control_backend.keyboard_navigation_configure_cell_as_text_input(cell_id, state, global)
     if not is_valid_cell_id(cell_id) then
         error(string.format("bad cell id %d", cell_id))
     end
@@ -457,22 +431,25 @@ end
 --#endregion
 
 --#region Selection Operations
+-- Some of these operations go into the backend
 
 ---Deselects any cell, returning keyboard navigation to its initial state.
-function keyboard_navigation.deselect()
+local function deselect()
     selected_cell_id = 0
     grid_x, grid_y = nil, nil
 end
 
+control_backend.keyboard_navigation_deselect = deselect
+
 ---Moves the selection to a specified cell id in the tab ordered table.
 ---Will jump to the cell even if it's in a keepout zone.
 ---@param new_selection integer
-function keyboard_navigation.jump_to_cell(new_selection)
+local function jump_to_cell(new_selection)
     if not is_valid_cell_id(new_selection) then
         error(string.format("can't jump to cell %d", new_selection))
     end
     if new_selection == 0 then
-        keyboard_navigation.deselect()
+        deselect()
     else
         selected_cell_id = new_selection
         grid_x = cell_x[new_selection]
@@ -480,42 +457,48 @@ function keyboard_navigation.jump_to_cell(new_selection)
     end
 end
 
+control_backend.keyboard_navigation_jump_to_cell = jump_to_cell
+
 ---Moves the selection to the first in the tab order list.
-function keyboard_navigation.jump_to_first()
-    keyboard_navigation.jump_to_cell(1)
+local function jump_to_first()
+    jump_to_cell(1)
 end
 
 ---Moves the selection to the first in the tab order list.
-function keyboard_navigation.jump_to_last()
-    keyboard_navigation.jump_to_cell(last_cell_id)
+local function jump_to_last()
+    jump_to_cell(last_cell_id)
 end
 
 ---Jumps 1 forward in the tab order. Wraps around if the end is reached.
-function keyboard_navigation.tab_forward()
+local function tab_forward()
     if selected_cell_id >= last_cell_id then
-        keyboard_navigation.jump_to_first()
+        jump_to_first()
     else
         repeat -- make sure we're not in a keepout zone
             selected_cell_id = selected_cell_id + 1
         until not cell_keepout[selected_cell_id]
-        keyboard_navigation.jump_to_cell(selected_cell_id)
+        jump_to_cell(selected_cell_id)
     end
 end
 
+control_backend.keyboard_navigation_tab_forward = tab_forward
+
 ---Jumps 1 backwards in the tab order. Wraps around if the beginning is reached.
-function keyboard_navigation.tab_backwards()
+local function tab_backwards()
     if selected_cell_id <= 1 then
-        keyboard_navigation.jump_to_last()
+        jump_to_last()
     else
         repeat -- make sure we're not in a keepout zone
             selected_cell_id = selected_cell_id - 1
         until not cell_keepout[selected_cell_id]
-        keyboard_navigation.jump_to_cell(selected_cell_id)
+        jump_to_cell(selected_cell_id)
     end
 end
 
+control_backend.keyboard_navigation_tab_backwards = tab_backwards
+
 ---Jumps 1 page forwards in the tab order. Does not wrap.
-function keyboard_navigation.page_forward()
+local function page_forward()
     if selected_cell_id == last_cell_id then
         return
     end
@@ -523,11 +506,11 @@ function keyboard_navigation.page_forward()
     if selected_cell_id > last_cell_id then
         selected_cell_id = last_cell_id
     end
-    keyboard_navigation.jump_to_cell(selected_cell_id)
+    jump_to_cell(selected_cell_id)
 end
 
 ---Jumps 1 page backwards in the tab order. Does not wrap.
-function keyboard_navigation.page_backwards()
+local function page_backwards()
     if selected_cell_id == 1 then
         return
     end
@@ -535,7 +518,7 @@ function keyboard_navigation.page_backwards()
     if selected_cell_id < 1 then
         selected_cell_id = 1
     end
-    keyboard_navigation.jump_to_cell(selected_cell_id)
+    jump_to_cell(selected_cell_id)
 end
 
 --#endregion
@@ -593,9 +576,9 @@ end
 ---@param action keyboard_action
 local function tab_navigate(action)
     if action == kba.right or action == kba.down then
-        keyboard_navigation.tab_forward()
+        tab_forward()
     elseif action == kba.left or action == kba.up then
-        keyboard_navigation.tab_backwards()
+        tab_backwards()
     else
         -- luacov: disable
         error("bad navigation action")
@@ -607,9 +590,9 @@ end
 ---@param action keyboard_action
 local function page_navigate(action)
     if action == kba.right or action == kba.down then
-        keyboard_navigation.page_forward()
+        page_forward()
     elseif action == kba.left or action == kba.up then
-        keyboard_navigation.page_backwards()
+        page_backwards()
     else
         -- luacov: disable
         error("bad navigation action")
@@ -619,9 +602,9 @@ end
 
 local function enter_grid(action)
     if action == kba.right or action == kba.down then
-        keyboard_navigation.jump_to_cell(first_gridded_cell_id)
+        jump_to_cell(first_gridded_cell_id)
     elseif action == kba.left or action == kba.up then
-        keyboard_navigation.jump_to_cell(last_gridded_cell_id)
+        jump_to_cell(last_gridded_cell_id)
     else
         -- luacov: disable
         error("bad navigation action")
@@ -668,7 +651,7 @@ local function navigate_grid(action)
     local original_selection = get_grid_cell(grid_x, grid_y)
     if original_selection < 0 then
         -- if the grid cursor is not on a proper cell, jump to the first cell as fallback
-        keyboard_navigation.jump_to_first()
+        jump_to_first()
         return nil
     end
 
@@ -680,7 +663,7 @@ local function navigate_grid(action)
         -- Our grid position started in the void
         if encountered_cell < 1 then
             -- we found an op_cell, jump to the first cell as fallback
-            keyboard_navigation.jump_to_first()
+            jump_to_first()
         else
             -- we found a normal cell
             grid_x, grid_y = outside_x, outside_y
@@ -743,7 +726,7 @@ local function iterate_events()
         local name, key = event[1], event[2]
 
         if name == "keypressed" then
-            private.last_used_control_method = "keyboard"
+            control_backend.last_used_control_method = "keyboard"
             is_repeat = event[4]
             if key == "right" or key == "left" or key == "down" or key == "up" then
                 -- only the arrow keys set the mouse to be invisible
@@ -763,7 +746,7 @@ local function iterate_events()
                     held_action = key_to_action[key]
                     if selected_cell_id == 0 then
                         if default_cell_id then
-                            keyboard_navigation.jump_to_cell(default_cell_id)
+                            jump_to_cell(default_cell_id)
                             action = kba.activate
                         end
                     else
@@ -776,32 +759,32 @@ local function iterate_events()
                     and escape_cell_id
                 then
                     held_action = key_to_action[key]
-                    keyboard_navigation.jump_to_cell(escape_cell_id)
+                    jump_to_cell(escape_cell_id)
                     action = kba.activate
                 end
 
             -- The below keys do not trigger actions. They only navigate
             elseif key == "tab" then
                 if love.keyboard.isDown("lshift", "rshift") then
-                    keyboard_navigation.tab_backwards()
+                    tab_backwards()
                 else
-                    keyboard_navigation.tab_forward()
+                    tab_forward()
                 end
             elseif key == "home" then
-                keyboard_navigation.jump_to_first()
+                jump_to_first()
             elseif key == "end" then
-                keyboard_navigation.jump_to_last()
+                jump_to_last()
             elseif key == "pageup" then
                 if selected_cell_id == 0 then
-                    keyboard_navigation.jump_to_last()
+                    jump_to_last()
                 else
-                    keyboard_navigation.page_backwards()
+                    page_backwards()
                 end
             elseif key == "pagedown" then
                 if selected_cell_id == 0 then
-                    keyboard_navigation.jump_to_first()
+                    jump_to_first()
                 else
-                    keyboard_navigation.page_forward()
+                    page_forward()
                 end
             elseif key == "backspace" or key == "delete" then
                 if selected_cell_id == 0 then
@@ -815,7 +798,7 @@ local function iterate_events()
                 end
             end
         elseif name == "keyreleased" then
-            private.last_used_control_method = "keyboard"
+            control_backend.last_used_control_method = "keyboard"
             -- clear the holding_key field if that key was released.
             if key_to_action[key] == held_action then
                 held_action = nil
@@ -824,7 +807,7 @@ local function iterate_events()
             if selected_cell_id == 0 then
                 typing_target = default_cell_id and cell_text_input_state[default_cell_id]
                 if typing_target then
-                    keyboard_navigation.jump_to_cell(default_cell_id)
+                    jump_to_cell(default_cell_id)
                     typing_action = key
                     break
                 end
@@ -844,17 +827,17 @@ local function iterate_events()
     return action, is_repeat, typing_target, typing_action
 end
 
---#region private functions
--- These functions are installed into the private table so they're hidden from the user
+--#region backend functions
+-- These functions are installed into the backend table so they're hidden from the user
 
 ---Run the navigation logic using keypressed events
 ---@return table? typing_target
 ---@return string? typing_action
 ---@nodiscard
-function private.keyboard_navigation_evaluate()
+function control_backend.keyboard_navigation_evaluate()
     -- don't do anything if no cells were created
     if last_cell_id < 1 then
-        keyboard_navigation.evaluate_without_events()
+        control_backend.keyboard_navigation_evaluate_without_events()
         return
     end
 
@@ -864,25 +847,52 @@ function private.keyboard_navigation_evaluate()
     last_action, last_is_repeat, typing_target, typing_action = iterate_events()
 
     if force_selection_has_changed then
-        keyboard_navigation.selection_has_changed = true
+        control_backend.keyboard_navigation_selection_has_changed = true
         force_selection_has_changed = false
     else
-        keyboard_navigation.selection_has_changed = old_selection ~= selected_cell_id
+        control_backend.keyboard_navigation_selection_has_changed = old_selection ~= selected_cell_id
     end
 
     return typing_target, typing_action
 end
 
 ---Does the usual evaluation cleanup without iterating through the events
-function private.keyboard_navigation_evaluate_without_events()
+function control_backend.keyboard_navigation_evaluate_without_events()
     last_action, last_is_repeat = nil, false
     held_action = nil
 
     if force_selection_has_changed then
-        keyboard_navigation.selection_has_changed = true
+        control_backend.keyboard_navigation_selection_has_changed = true
         force_selection_has_changed = false
     else
-        keyboard_navigation.selection_has_changed = false
+        control_backend.keyboard_navigation_selection_has_changed = false
+    end
+end
+
+--#endregion
+
+--#region backend functions
+-- These functions are installed into the backend table so they're hidden from the user
+
+---Resets all data. Gets ready for the next frame
+function control_backend.keyboard_navigation_reset()
+    erase_grid()
+    last_cell_id = 0
+    current_cell_id = 0
+    escape_cell_id = nil
+    default_cell_id = nil
+    first_gridded_cell_id = nil
+    last_gridded_cell_id = nil
+end
+
+---This only gets called when a layer transitions happens. Finds the best cell to select.
+function control_backend.keyboard_navigation_finish_layer_transition()
+    held_action = nil
+    force_selection_has_changed = true
+    if default_cell_id then
+        jump_to_cell(default_cell_id)
+    else
+        jump_to_first()
     end
 end
 

@@ -2,6 +2,9 @@
 
 local events = require("ui.events")
 local layers = require("ui.layers")
+local layer_status = require("ui.layers.status")
+local stack_manager = require("ui.stack_manager")
+local text = require("ui.text")
 local settings = require("ui.settings")
 local draw_data = require("ui.draw_queue.draw_data")
 
@@ -104,18 +107,11 @@ local function run()
 end
 
 -- TODO global typing
--- TODO multiple page sizes in one layer
--- TODO on/off function that affect regions of a functions should push and pop instead of setting booleans
 
 local ui = {
     -- only user facing api endpoints should be visible from this table
 
-    draw = require("ui.draw_queue"), --OK
-    cursor = require("ui.cursor"), -- OK
-    theme = require("ui.theme"), -- OK
-    control = require("ui.control"), -- OK
-
-    -- OK
+    ---Normal elements.
     element = {
         const = require("ui.element_parameters"),
         button = require("ui.element.button"),
@@ -130,34 +126,75 @@ local ui = {
         toggle = require("ui.element.toggle"),
     },
 
-    -- OK
+    ---Two-part area elements.
     area_element = {
         background = require("ui.area.element.background"),
         collapse = require("ui.area.element.collapse"),
         scroll = require("ui.area.element.scroll"),
     },
 
-    -- OK
+    ---Decorator elements.
     decorator = {
         selection_outline = require("ui.decorator.element.selection_outline").set_placement,
         tooltip = require("ui.decorator.element.tooltip").tooltip,
     },
 
+    ---UI settings. These will live-update.
+    settings = require("ui.settings"),
+
+    ---Constants used by elements. Read-only.
     element_parameters = require("ui.element_parameters"),
 
-    effect = require("ui.effect"), -- OK
-    stack_manager = require("ui.stack_manager"), -- clean_up needs to be taken out
-    aeb = require("ui.area.aeb"), -- keepout needs to be made better
+    ---Colors used by the UI + some handy related functions.
+    theme = require("ui.theme"),
 
-    settings = require("ui.settings"), -- OK
-    new_id_table = require("ui.id_table"), -- OK
+    ---Stack manager. Locks/unlocks the cursor_stack, translate_stack, area_stack, and aeb_stack to prevent changes.
+    stack_manager = {
+        push_record = stack_manager.push_record,
+        pop_record = stack_manager.pop_record,
+    },
 
-    init = layers.init, -- if called twice, would break something
-    push_layer = layers.push, -- OK
-    pop_layer = layers.pop, -- OK
+    ---Area element balance stack. Can be used as a general purpose stack.
+    aeb = require("ui.area.aeb"),
 
-    push_event = events.add, -- OK
-    run = run, -- OK
+    ---Used to position and arrange elements.
+    cursor = require("ui.cursor"),
+
+    ---For drawing elements. The draw queue can be built out of order. Has some other uses.
+    draw = require("ui.draw_queue"),
+
+    ---For defining how to dontrol the UI.
+    control = require("ui.control"),
+
+    ---Functions for UI effects.
+    effect = require("ui.effect"),
+
+    ---Functions used to suppress certain element functionality.
+    suppress = require("ui.suppress"),
+
+    ---Makes id tables which can be used to store ui state
+    new_id_table = require("ui.id_table"),
+
+    ---UI layer controls.
+    layer = {
+        push = layers.push,
+        pop = layers.pop,
+        is_current_layer_active = layer_status.is_current_layer_active,
+        get_current_layer = layer_status.get_current_layer,
+    },
+
+    ---Text utilities
+    text = {
+        ansi = require("ui.text.ansi"),
+        search = require("ui.text.search"),
+        get_font = text.get_font,
+        get_icon_string = text.get_icon_string,
+        get_text_object = text.get_text_object,
+    },
+
+    ---Core functions
+    push_event = events.add,
+    run = run,
 }
 
 return ui

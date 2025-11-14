@@ -2,7 +2,7 @@ local ep = require("ui.element_parameters")
 local stack_data = require("ui.stack_data")
 local aeb_stack = stack_data.aeb_stack
 local follow = require("ui.effect").follow
-local knav = require("ui.control.keyboard_navigation")
+local control_backend = require("ui.control.backend")
 local draw_queue = require("ui.draw_queue")
 local mnav = require("ui.control.mouse_navigation")
 local settings = require("ui.settings")
@@ -41,7 +41,7 @@ function view_request.update_auto_scroll(view_pid)
         return
     end
 
-    if knav.selection_has_changed then
+    if control_backend.keyboard_navigation_selection_has_changed then
         view_request.time = scrollbar_cooldown_time
         just_initiated = true
     end
@@ -235,7 +235,7 @@ function view_request.update_collapses()
     end
 
     local current_index = view_request.collapse_top_index
-    if knav.selection_has_changed then
+    if control_backend.keyboard_navigation_selection_has_changed then
         while current_index do
             aeb_stack[current_index - 1] = true -- set the "contains selection" field
             aeb_stack[current_index - 2] = true -- set the "selection has changed" field

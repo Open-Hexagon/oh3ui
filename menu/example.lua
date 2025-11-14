@@ -12,20 +12,20 @@ local kba = knav.actions
 local wmode = knav.wrapping_mode
 local settings = ui.settings
 local typing = ui.control.typing
-local ansi = require("ui.text.ansi")
-local search = require("ui.text.search")
+local ansi = ui.text.ansi
+local search = ui.text.search
 
 -- Elements
-local button = require("ui.element.button")
-local cycle_button = require("ui.element.cycle_button")
-local icon_button = require("ui.element.icon_button")
-local icon_cycle_button = require("ui.element.icon_cycle_button")
-local numeric_input = require("ui.element.numeric_input")
-local slider = require("ui.element.slider")
-local switch = require("ui.element.switch")
-local toggle = require("ui.element.toggle")
-local toggle_hex = require("ui.element.toggle_hex")
-local checkbox = require("ui.element.checkbox")
+local button = ui.element.button
+local cycle_button = ui.element.cycle_button
+local icon_button = ui.element.icon_button
+local icon_cycle_button = ui.element.icon_cycle_button
+local numeric_input = ui.element.numeric_input
+local slider = ui.element.slider
+local switch = ui.element.switch
+local toggle = ui.element.toggle
+local toggle_hex = ui.element.toggle_hex
+local checkbox = ui.element.checkbox
 
 local tooltip = ui.decorator.tooltip
 local selection_outline = ui.decorator.selection_outline
@@ -218,7 +218,7 @@ Rerum ducimus tenetur fugit.
         knav.grid_cell(1, 15)
         button("open scroll example", 16)
         if mnav.get_clicked() == mb.left or knav.get_action() == kba.activate then
-            ui.push_layer(scroll_example_menu)
+            ui.layer.push(scroll_example_menu)
         end
     end
 

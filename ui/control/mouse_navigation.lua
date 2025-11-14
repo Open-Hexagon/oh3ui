@@ -9,9 +9,9 @@ local bit = require("bit")
 local bor = bit.bor
 local draw_data = require("ui.draw_queue.draw_data")
 local op_ids = require("ui.draw_queue.draw_operation")
-local private = require("ui.control.private")
+local control_backend = require("ui.control.backend")
 local is_suppressed = require("ui.suppress").is_suppressed
-local is_current_layer_active = require("ui.layers").is_current_layer_active
+local layer_status = require("ui.layers.status")
 
 local mouse_navigation = {
     -- this frame's mouse position (not screen coordinates)
@@ -102,7 +102,7 @@ function mouse_navigation.make_sensor(sensor_id, ...)
     end
 
     local placement_id = draw_data.make_placement(placement.left, placement.top, placement.right, placement.bottom)
-    if is_current_layer_active() then
+    if layer_status.current_layer_is_active then
         draw_data.add_draw_operation(
             op_ids.mouse_sensor,
             placement_id,
@@ -196,8 +196,8 @@ function mouse_navigation.get_stopped_dragging(sensor_id)
     return nil
 end
 
---#region private functions
--- These functions are installed into the private table so they're hidden from the user
+--#region backend functions
+-- These functions are installed into the backend table so they're hidden from the user
 
 ---@param event_name string
 local function event_filter(event_name)
@@ -205,7 +205,7 @@ local function event_filter(event_name)
 end
 
 ---Update mouse output. Should be run at the start of a frame.
-function private.mouse_navigation_evaluate()
+function control_backend.mouse_navigation_evaluate()
     -- Get mouse positions
     local screen_x, screen_y = love.mouse.getPosition()
     mouse_navigation.x, mouse_navigation.y = love.graphics.inverseTransformPoint(screen_x, screen_y)
@@ -225,13 +225,13 @@ function private.mouse_navigation_evaluate()
 
         if name == "wheelmoved" then
             -- Scrolling updates the last used method
-            private.last_used_control_method = "mouse"
+            control_backend.last_used_control_method = "mouse"
 
             -- Record wheel movement
             mouse_navigation.wheel_dx = mouse_navigation.wheel_dx + x
             mouse_navigation.wheel_dy = mouse_navigation.wheel_dy + y
         elseif name == "mousemoved" then
-            private.last_used_control_method = "mouse"
+            control_backend.last_used_control_method = "mouse"
 
             -- Any mouse movement sets makes the cursor visible
             love.mouse.setVisible(true)
@@ -270,7 +270,7 @@ function private.mouse_navigation_evaluate()
 
             if name == "mousepressed" then
                 -- Pressing updates the last used method
-                private.last_used_control_method = "mouse"
+                control_backend.last_used_control_method = "mouse"
 
                 if mouse_navigation.holding then
                     -- Pressing another button while holding stops holding
@@ -289,7 +289,7 @@ function private.mouse_navigation_evaluate()
                 end
             elseif name == "mousereleased" then
                 -- Releasing updates the last used method
-                private.last_used_control_method = "mouse"
+                control_backend.last_used_control_method = "mouse"
 
                 if mouse_navigation.holding then
                     -- Releasing the same button that is being held is a click. If not then holding is stopped.
@@ -321,7 +321,7 @@ function private.mouse_navigation_evaluate()
     end
 end
 
-function private.mouse_navigation_reset()
+function control_backend.mouse_navigation_reset()
     sensor.clear()
     last_sensor_id = 0
     last_manual_sensor_id = 0
