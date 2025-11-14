@@ -1,5 +1,5 @@
 local unittest = require("tests.unittest")
-local sensor = require("ui.control.mouse_navigation.sensor")
+local sensor = require("ui.control.sensor")
 local smode = sensor.sensor_mode
 local bor = require("bit").bor
 

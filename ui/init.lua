@@ -5,37 +5,6 @@ local layers = require("ui.layers")
 local settings = require("ui.settings")
 local draw_data = require("ui.draw_queue.draw_data")
 
-local ui = {
-    draw = require("ui.draw_queue"),
-    cursor = require("ui.cursor"),
-    element = {
-        button = require("ui.element.button"),
-        checkbox = require("ui.element.checkbox"),
-        cycle_button = require("ui.element.cycle_button"),
-        icon_button = require("ui.element.icon_button"),
-        icon_cycle_button = require("ui.element.icon_cycle_button"),
-        numeric_input = require("ui.element.numeric_input"),
-        slider = require("ui.element.slider"),
-        switch = require("ui.element.switch"),
-        toggle_hex = require("ui.element.toggle_hex"),
-        toggle = require("ui.element.toggle"),
-    },
-    area_element = {
-        background = require("ui.area.element.background"),
-        collapse = require("ui.area.element.collapse"),
-        scroll = require("ui.area.element.scroll"),
-    },
-    decorator = {
-        selection_outline = require("ui.decorator.element.selection_outline").set_placement,
-        tooltip = require("ui.decorator.element.tooltip").tooltip,
-    },
-}
-
----Push a love event to the event sequence.
----All love events should be pushed at the very beginning of a frame.
-ui.push_event = events.add
-ui.init = layers.init
-
 local function start()
     -- The red grid shows screen space
     -- luacov: disable
@@ -103,7 +72,7 @@ end
 local layers_run = layers.run
 local draw_queue_draw = require("ui.draw_queue.draw")
 local view_request_evaluate = require("ui.area.view_request").evaluate
-local control_evaluate = require("ui.control").evaluate
+local control_evaluate = require("ui.control.evaluate")
 local selection_outline_reset = require("ui.decorator.element.selection_outline").reset
 local events_clear = events.clear
 
@@ -128,10 +97,67 @@ local function finish()
 end
 
 ---Runs the ui. Must be called every frame
-function ui.run()
+local function run()
     start()
     layers_run()
     finish()
 end
+
+-- TODO global typing
+-- TODO multiple page sizes in one layer
+-- TODO on/off function that affect regions of a functions should push and pop instead of setting booleans
+
+local ui = {
+    -- only user facing api endpoints should be visible from this table
+
+    draw = require("ui.draw_queue"), --OK
+    cursor = require("ui.cursor"), -- OK
+    theme = require("ui.theme"), -- OK
+    control = require("ui.control"), -- OK
+
+    -- OK
+    element = {
+        const = require("ui.element_parameters"),
+        button = require("ui.element.button"),
+        checkbox = require("ui.element.checkbox"),
+        cycle_button = require("ui.element.cycle_button"),
+        icon_button = require("ui.element.icon_button"),
+        icon_cycle_button = require("ui.element.icon_cycle_button"),
+        numeric_input = require("ui.element.numeric_input"),
+        slider = require("ui.element.slider"),
+        switch = require("ui.element.switch"),
+        toggle_hex = require("ui.element.toggle_hex"),
+        toggle = require("ui.element.toggle"),
+    },
+
+    -- OK
+    area_element = {
+        background = require("ui.area.element.background"),
+        collapse = require("ui.area.element.collapse"),
+        scroll = require("ui.area.element.scroll"),
+    },
+
+    -- OK
+    decorator = {
+        selection_outline = require("ui.decorator.element.selection_outline").set_placement,
+        tooltip = require("ui.decorator.element.tooltip").tooltip,
+    },
+
+    element_parameters = require("ui.element_parameters"),
+
+    effect = require("ui.effect"), -- OK
+    stack_manager = require("ui.stack_manager"), -- clean_up needs to be taken out
+    aeb = require("ui.area.aeb"), -- keepout needs to be made better
+
+    settings = require("ui.settings"), -- OK
+    new_id_table = require("ui.id_table"), -- OK
+
+    init = layers.init, -- if called twice, would break something
+    push_layer = layers.push, -- OK
+    pop_layer = layers.pop, -- OK
+
+    push_event = events.add, -- OK
+    run = run, -- OK
+}
 
 return ui

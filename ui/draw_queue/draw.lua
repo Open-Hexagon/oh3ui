@@ -1,6 +1,6 @@
 local scissor_stack = require("ui.draw_queue.scissor_stack")
 local extmath = require("ui.extmath")
-local sensor = require("ui.control.mouse_navigation.sensor")
+local sensor = require("ui.control.sensor")
 local warning = require("ui.warning")
 local draw_data = require("ui.draw_queue.draw_data")
 local op_ids = require("ui.draw_queue.draw_operation")
@@ -8,6 +8,8 @@ local settings = require("ui.settings")
 local theme = require("ui.theme")
 local view_request = require("ui.area.view_request")
 local draw_queue = require("ui.draw_queue")
+local bit = require("bit")
+local band, bor = bit.band, bit.bor
 
 --[[
     * Aside: How ui scaling and transformations are done
@@ -208,8 +210,8 @@ return function()
                 )
 
             -- * overlay
-            elseif id >= op_ids.overlay_rectangle and id < op_ids.overlay_rectangle + 100 then
-                draw_data.add_draw_operation(id - (op_ids.overlay_rectangle - op_ids.rectangle), unpack(item, 2))
+            elseif band(id, 0xF00) == 0x300 then
+                draw_data.add_draw_operation(id - 0x200, unpack(item, 2))
 
             -- * other
             elseif id == op_ids.unused_reservation then

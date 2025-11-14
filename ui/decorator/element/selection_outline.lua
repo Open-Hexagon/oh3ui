@@ -1,4 +1,4 @@
-local decorator = require("ui.decorator")
+local ep = require("ui.element_parameters")
 local cursor = require("ui.cursor")
 local placement = cursor.placement
 local theme = require("ui.theme")
@@ -6,7 +6,7 @@ local view_request = require("ui.area.view_request")
 local draw_queue = require("ui.draw_queue")
 local extmath = require("ui.extmath")
 
-local outset, line_width = decorator.selection_outline_outset, decorator.selection_outline_line_width
+local outset, line_width = ep.selection_outline_outset, ep.selection_outline_line_width
 
 local INACTIVE, READY, DONE = 0, 1, 2
 
@@ -25,9 +25,7 @@ local selection_outline = {}
 ---Also requests scroll regions to put the location into view
 function selection_outline.set_placement()
     if mode == INACTIVE then
-        cursor.area_expansion_off()
-        cursor.place()
-        cursor.area_expansion_on()
+        cursor.place(nil, nil, true)
 
         view_request.update_collapses()
 
@@ -86,9 +84,7 @@ end
 ---This function behaves like an element and will call cursor.place.
 ---Note: add_to_queue uses the current selection outline mask. Any calls to intersect mask after add_to_queue is called won't do anything.
 function selection_outline.intersect_mask()
-    cursor.area_expansion_off()
-    cursor.place()
-    cursor.area_expansion_on()
+    cursor.place(nil, nil, true)
 
     if hidden then -- don't actually do anything if already hidden
         return

@@ -3,7 +3,8 @@ local bit = require("bit")
 local bor, band = bit.bor, bit.band
 local shared_data = require("ui.shared_data")
 local control_data = shared_data.control
-local hover_off = require("ui.control.mouse_navigation.sensor").disable_intersection_checks
+local disable_intersection_checks = require("ui.control.sensor").disable_intersection_checks
+local private = require("ui.control.private")
 
 local keyboard_navigation = {}
 
@@ -256,8 +257,11 @@ local function is_valid_cell_id(cell_id)
     return cell_id >= 0 and cell_id <= last_cell_id
 end
 
+--#region private functions
+-- These functions are installed into the private table so they're hidden from the user
+
 ---Resets all data. Gets ready for the next frame
-function keyboard_navigation.reset()
+function private.keyboard_navigation_reset()
     erase_grid()
     last_cell_id = 0
     current_cell_id = 0
@@ -268,7 +272,7 @@ function keyboard_navigation.reset()
 end
 
 ---This only gets called when a layer transitions happens. Finds the best cell to select.
-function keyboard_navigation.finish_layer_transition()
+function private.keyboard_navigation_finish_layer_transition()
     held_action = nil
     force_selection_has_changed = true
     if default_cell_id then
@@ -277,6 +281,7 @@ function keyboard_navigation.finish_layer_transition()
         keyboard_navigation.jump_to_first()
     end
 end
+--#endregion
 
 --#region Cell Controls
 
@@ -312,12 +317,15 @@ function keyboard_navigation.make_cell(mode)
     return last_cell_id
 end
 
+--#region private functions
+-- These functions are installed into the private table so they're hidden from the user
+
 ---Informs keyboard navigation that a cell is meant for a text entry and thus certain actions should behave differently when interacting with this cell.
 ---If 0 is passed in as the cell id, it is silently ignored.
 ---@param cell_id integer
 ---@param state table
 ---@param global boolean?
-function keyboard_navigation.configure_cell_as_text_input(cell_id, state, global)
+function private.keyboard_navigation_configure_cell_as_text_input(cell_id, state, global)
     if not is_valid_cell_id(cell_id) then
         error(string.format("bad cell id %d", cell_id))
     end
@@ -328,6 +336,8 @@ function keyboard_navigation.configure_cell_as_text_input(cell_id, state, global
 
     -- TODO add global typing
 end
+
+--#endregion
 
 ---Changes the currently recognized cell id.
 ---Can be used to revert the current cell back to a previously made cell.
@@ -455,6 +465,7 @@ function keyboard_navigation.deselect()
 end
 
 ---Moves the selection to a specified cell id in the tab ordered table.
+---Will jump to the cell even if it's in a keepout zone.
 ---@param new_selection integer
 function keyboard_navigation.jump_to_cell(new_selection)
     if not is_valid_cell_id(new_selection) then
@@ -738,7 +749,7 @@ local function iterate_events()
                 -- only the arrow keys set the mouse to be invisible
                 -- since if you're using the arrow keys you're probably going to keep on using the keyboard
                 love.mouse.setVisible(false)
-                hover_off()
+                disable_intersection_checks()
 
                 action = navigate_grid(key_to_action[key])
 
@@ -833,10 +844,14 @@ local function iterate_events()
     return action, is_repeat, typing_target, typing_action
 end
 
+--#region private functions
+-- These functions are installed into the private table so they're hidden from the user
+
 ---Run the navigation logic using keypressed events
 ---@return table? typing_target
 ---@return string? typing_action
-function keyboard_navigation.evaluate()
+---@nodiscard
+function private.keyboard_navigation_evaluate()
     -- don't do anything if no cells were created
     if last_cell_id < 1 then
         keyboard_navigation.evaluate_without_events()
@@ -859,7 +874,7 @@ function keyboard_navigation.evaluate()
 end
 
 ---Does the usual evaluation cleanup without iterating through the events
-function keyboard_navigation.evaluate_without_events()
+function private.keyboard_navigation_evaluate_without_events()
     last_action, last_is_repeat = nil, false
     held_action = nil
 
@@ -870,5 +885,7 @@ function keyboard_navigation.evaluate_without_events()
         keyboard_navigation.selection_has_changed = false
     end
 end
+
+--#endregion
 
 return keyboard_navigation

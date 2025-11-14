@@ -8,10 +8,10 @@ local extmath = require("ui.extmath")
 local typing = require("ui.control.typing")
 local draw_queue = require("ui.draw_queue")
 local label = draw_queue.by_cursor.label
-local decorator = require("ui.decorator")
+local ep = require("ui.element_parameters")
 
-local text_padding = decorator.tooltip_text_padding
-local tooltip_element_spacing = decorator.tooltip_element_spacing + text_padding
+local text_padding = ep.tooltip_text_padding
+local tooltip_element_spacing = ep.tooltip_element_spacing + text_padding
 
 local tooltip = {}
 

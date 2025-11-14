@@ -7,7 +7,8 @@ local smode = mnav.sensor_mode
 local slot = require("ui.draw_queue").by_cursor.slot
 local theme = require("ui.theme")
 local stack_manager = require("ui.stack_manager")
-local area_element = require("ui.area")
+local aeb = require("ui.area.aeb")
+local ep = require("ui.element_parameters")
 local view_request = require("ui.area.view_request")
 local volatile_data = require("ui.shared_data").volatile
 local selection_outline_add_to_queue = require("ui.decorator.element.selection_outline").add_to_queue
@@ -17,10 +18,10 @@ local view_request_export_picture_frame = require("ui.draw_queue.draw_operation"
 
 local scroll = {}
 
-local scrollbar_thickness = area_element.scrollbar_thickness
-local scrollbar_thickness_inactive = area_element.scrollbar_thickness_inactive
-local minimum_scrollbar_actuator_length = area_element.minimum_scrollbar_actuator_length
-local mouse_wheel_scroll_distance = area_element.mouse_wheel_scroll_distance
+local scrollbar_thickness = ep.scrollbar_thickness
+local scrollbar_thickness_inactive = ep.scrollbar_thickness_inactive
+local minimum_scrollbar_actuator_length = ep.minimum_scrollbar_actuator_length
+local mouse_wheel_scroll_distance = ep.mouse_wheel_scroll_distance
 
 --[[
     +--------+CCCCCCC <-- Content region surrounds all
@@ -73,30 +74,30 @@ function scroll.start(state)
     cursor.start_area() -- (4)
 
     -- save picture frame placement id in case of view request
-    area_element.aeb_push(picture_frame_id)
+    aeb.push(picture_frame_id)
 
     -- save transform id
-    area_element.aeb_push(tid)
+    aeb.push(tid)
 
     -- make a bunch of sensor ids (order does not matter)
-    area_element.aeb_push(mnav.declare_sensor_id())
-    area_element.aeb_push(mnav.declare_sensor_id())
-    area_element.aeb_push(mnav.declare_sensor_id())
-    area_element.aeb_push(mnav.declare_sensor_id())
-    area_element.aeb_push(mnav.declare_sensor_id())
+    aeb.push(mnav.declare_sensor_id())
+    aeb.push(mnav.declare_sensor_id())
+    aeb.push(mnav.declare_sensor_id())
+    aeb.push(mnav.declare_sensor_id())
+    aeb.push(mnav.declare_sensor_id())
 
     -- save literal cursor position for use later
-    area_element.aeb_push(projected_placement.bottom)
-    area_element.aeb_push(projected_placement.right)
-    area_element.aeb_push(projected_placement.top)
-    area_element.aeb_push(projected_placement.left)
+    aeb.push(projected_placement.bottom)
+    aeb.push(projected_placement.right)
+    aeb.push(projected_placement.top)
+    aeb.push(projected_placement.left)
 
-    area_element.aeb_push(false) -- this gets turned into a true if a view request was made
-    area_element.aeb_push(state) -- state
-    area_element.aeb_push(view_request.top_index) -- aeb_index of the next (up) state
+    aeb.push(false) -- this gets turned into a true if a view request was made
+    aeb.push(state) -- state
+    aeb.push(view_request.top_index) -- aeb_index of the next (up) state
     view_request.top_index = volatile_data.aeb_index -- put the new view request top index
 
-    area_element.aeb_push_frame_header("scroll") -- (5)
+    aeb.push_frame_header("scroll") -- (5)
 
     -- lock all stacks after we've done setup
     stack_manager.push_record() -- (6)
@@ -257,27 +258,27 @@ function scroll.finish(padding)
     -- Must come before cursor.remove_translation so the scroll request is made in the correct location
     selection_outline_add_to_queue()
 
-    area_element.aeb_pop_frame_header("scroll") -- (5)
+    aeb.pop_frame_header("scroll") -- (5)
 
-    view_request.top_index = area_element.aeb_pop() -- revert the view request top index
-    local state = area_element.aeb_pop() -- get the state back
-    local flagged_for_view_request = area_element.aeb_pop() -- get whether we're flagged for a view request
+    view_request.top_index = aeb.pop() -- revert the view request top index
+    local state = aeb.pop() -- get the state back
+    local flagged_for_view_request = aeb.pop() -- get whether we're flagged for a view request
 
     -- get back literal scroll area for mouse limits
-    local literal_scroll_left = area_element.aeb_pop()
-    local literal_scroll_top = area_element.aeb_pop()
-    local literal_scroll_right = area_element.aeb_pop()
-    local literal_scroll_bottom = area_element.aeb_pop()
+    local literal_scroll_left = aeb.pop()
+    local literal_scroll_top = aeb.pop()
+    local literal_scroll_right = aeb.pop()
+    local literal_scroll_bottom = aeb.pop()
 
     -- get back those sensor ids
-    local scroll_region = area_element.aeb_pop()
-    local h_act = area_element.aeb_pop()
-    local h_bar = area_element.aeb_pop()
-    local v_act = area_element.aeb_pop()
-    local v_bar = area_element.aeb_pop()
+    local scroll_region = aeb.pop()
+    local h_act = aeb.pop()
+    local h_bar = aeb.pop()
+    local v_act = aeb.pop()
+    local v_bar = aeb.pop()
 
-    local tid = area_element.aeb_pop()
-    local picture_frame_id = area_element.aeb_pop()
+    local tid = aeb.pop()
+    local picture_frame_id = aeb.pop()
 
     cursor.pop_translation() -- (3)
     draw_queue.pop_mask() -- (2)

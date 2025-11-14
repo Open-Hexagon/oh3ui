@@ -2,6 +2,7 @@
 
 local cursor = require("ui.cursor")
 local knav = require("ui.control.keyboard_navigation")
+local private = require("ui.control.private")
 local shared_data = require("ui.shared_data")
 local control_data = shared_data.control
 local draw_data_block_draw_operations = require("ui.draw_queue.draw_data").block_draw_operations
@@ -76,9 +77,9 @@ local function reconfigure_layers()
     if control_data.last_used_control_method == "keyboard" then
         -- if keyboard navigation was used we need to find the best cell to select on the new top layer
         control_data.current_layer_is_active = true
-        knav.reset()
+        private.keyboard_navigation_reset()
         stack[length]() -- we have to run the new top layer (possibly again)
-        knav.finish_layer_transition()
+        private.keyboard_navigation_finish_layer_transition()
         stack_manager.clean_up()
     else
         -- deactivate keyboard nav if something else was used

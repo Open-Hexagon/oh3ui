@@ -4,13 +4,14 @@
 local events = require("ui.events")
 local cursor = require("ui.cursor")
 local placement = cursor.placement
-local sensor = require("ui.control.mouse_navigation.sensor")
+local sensor = require("ui.control.sensor")
 local bit = require("bit")
 local bor = bit.bor
 local shared_data = require("ui.shared_data")
 local control_data = shared_data.control
 local draw_data = require("ui.draw_queue.draw_data")
 local op_ids = require("ui.draw_queue.draw_operation")
+local private = require("ui.control.private")
 
 local mouse_navigation = {
     -- this frame's mouse position (not screen coordinates)
@@ -34,8 +35,8 @@ local mouse_navigation = {
     stopped_dragging = nil,
 
     -- last press location (not screen coordinates)
-    press_x = nil,
-    press_y = nil,
+    press_x = -1,
+    press_y = -1,
 }
 
 mouse_navigation.sensor_mode = sensor.sensor_mode
@@ -190,8 +191,8 @@ function mouse_navigation.get_stopped_dragging(sensor_id)
     return nil
 end
 
-mouse_navigation.hover_off = sensor.disable_intersection_checks
-mouse_navigation.hover_on = sensor.enable_intersection_checks
+--#region private functions
+-- These functions are installed into the private table so they're hidden from the user
 
 ---@param event_name string
 local function event_filter(event_name)
@@ -199,7 +200,7 @@ local function event_filter(event_name)
 end
 
 ---Update mouse output. Should be run at the start of a frame.
-function mouse_navigation.evaluate()
+function private.mouse_navigation_evaluate()
     -- Get mouse positions
     local screen_x, screen_y = love.mouse.getPosition()
     mouse_navigation.x, mouse_navigation.y = love.graphics.inverseTransformPoint(screen_x, screen_y)
@@ -230,7 +231,7 @@ function mouse_navigation.evaluate()
             -- Any mouse movement sets makes the cursor visible
             love.mouse.setVisible(true)
             if not mouse_navigation.dragging then
-                mouse_navigation.hover_on()
+                sensor.enable_intersection_checks()
             end
 
             local dx, dy, istouch = a, b, c
@@ -252,7 +253,7 @@ function mouse_navigation.evaluate()
                 mouse_navigation.holding = nil
 
                 -- disable hover checks while dragging
-                mouse_navigation.hover_off()
+                sensor.disable_intersection_checks()
             end
 
             -- Record mouse movement
@@ -297,7 +298,7 @@ function mouse_navigation.evaluate()
                     mouse_navigation.dragging = nil
 
                     -- enable hover checks
-                    mouse_navigation.hover_on()
+                    sensor.enable_intersection_checks()
                 end
             end
         end
@@ -315,11 +316,13 @@ function mouse_navigation.evaluate()
     end
 end
 
-function mouse_navigation.reset()
+function private.mouse_navigation_reset()
     sensor.clear()
     last_sensor_id = 0
     last_manual_sensor_id = 0
     current_sensor_id = 0
 end
+
+--#endregion
 
 return mouse_navigation

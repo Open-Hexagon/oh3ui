@@ -8,7 +8,8 @@ local events = {}
 local sequence = {}
 local length = 0
 
----add an event to the queue for interactions to use
+---Push a love event to the event sequence.
+---All love events should be pushed at the very beginning of a frame.
 ---@param ... unknown
 function events.add(...)
     length = length + 1

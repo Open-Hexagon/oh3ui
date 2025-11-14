@@ -1,4 +1,6 @@
 local draw_operation = require("ui.draw_queue.draw_operation")
+local bit = require("bit")
+local band, bor = bit.band, bit.bor
 
 local ID_POS = 1
 
@@ -201,15 +203,16 @@ end
 --#endregion
 
 ---Adds an operation.
+---@param id integer
 ---@param ... any
-function draw_data.add_draw_operation(...)
+function draw_data.add_draw_operation(id, ...)
     if draw_data_is_blocked then
         return
     end
 
     local slot_index
 
-    if take_reservation_id then
+    if take_reservation_id and band(id, 0x1000) == 0 then
         -- take a reservation
 
         if res_list[take_reservation_id] == res_list[take_reservation_id - 1] then
@@ -227,16 +230,15 @@ function draw_data.add_draw_operation(...)
 
     draw_list[slot_index] = draw_list[slot_index] or {}
     local slot = draw_list[slot_index]
-    for i = 1, math.max(select("#", ...), #slot) do
-        slot[i] = select(i, ...)
+
+    if as_overlay and band(id, 0xF00) == 0x100 then
+        id = bor(id, 0x200) -- normal and overlay differ by only one bit
+        as_overlay = false
     end
 
-    if as_overlay then
-        local id, rect_id = slot[ID_POS], draw_operation.rectangle
-        if id >= rect_id and id < rect_id + 100 then
-            slot[ID_POS] = id + (draw_operation.overlay_rectangle - rect_id)
-        end
-        as_overlay = false
+    slot[ID_POS] = id
+    for i = 1, math.max(select("#", ...), #slot) do
+        slot[i + 1] = select(i, ...)
     end
 end
 
@@ -251,6 +253,7 @@ function draw_data.unblock_draw_operations()
 end
 
 ---The next added draw operation will be converted into an overlay element if appropriate.
+---Incompatible operations are ignored but do not de-assert this temporary state.
 ---Calling this multiple times does nothing.
 function draw_data.next_as_overlay()
     as_overlay = true
@@ -297,6 +300,7 @@ end
 
 ---The next added draw operation will fill in a slot in a reservation.
 ---Calling this multiple times in a row will only make the next draw operation take the last given res_id.
+---Incompatible operations are ignored but do not de-assert this temporary state.
 ---@param res_id integer the reservation id to fill
 function draw_data.next_takes_reservation(res_id)
     if draw_data_is_blocked then

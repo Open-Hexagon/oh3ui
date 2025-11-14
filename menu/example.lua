@@ -1,20 +1,17 @@
--- An example menu to figure out what the hell I'm doing
+local ui = require("ui")
 
-local id = require("ui.id_table")()
-local cursor = require("ui.cursor")
-local theme = require("ui.theme")
-local draw_by_cursor = require("ui.draw_queue").by_cursor
-local mnav = require("ui.control.mouse_navigation")
+local id = ui.new_id_table()
+local cursor = ui.cursor
+local theme = ui.theme
+local draw_by_cursor = ui.draw.by_cursor
+local mnav = ui.control.mouse_navigation
 local smode = mnav.sensor_mode
 local mb = mnav.buttons
-local knav = require("ui.control.keyboard_navigation")
+local knav = ui.control.keyboard_navigation
 local kba = knav.actions
 local wmode = knav.wrapping_mode
-local settings = require("ui.settings")
-local typing = require("ui.control.typing")
-local layers = require("ui.layers")
-local scroll_example_menu = require("ui.menu.scroll_example")
-local shared_data = require("ui.shared_data")
+local settings = ui.settings
+local typing = ui.control.typing
 local ansi = require("ui.text.ansi")
 local search = require("ui.text.search")
 
@@ -29,8 +26,11 @@ local switch = require("ui.element.switch")
 local toggle = require("ui.element.toggle")
 local toggle_hex = require("ui.element.toggle_hex")
 local checkbox = require("ui.element.checkbox")
-local tooltip = require("ui.decorator.element.tooltip").tooltip
-local selection_outline = require("ui.decorator.element.selection_outline").set_placement
+
+local tooltip = ui.decorator.tooltip
+local selection_outline = ui.decorator.selection_outline
+
+local scroll_example_menu = require("menu.scroll_example")
 
 local counter = 0
 
@@ -218,7 +218,7 @@ Rerum ducimus tenetur fugit.
         knav.grid_cell(1, 15)
         button("open scroll example", 16)
         if mnav.get_clicked() == mb.left or knav.get_action() == kba.activate then
-            layers.push(scroll_example_menu)
+            ui.push_layer(scroll_example_menu)
         end
     end
 

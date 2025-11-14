@@ -116,8 +116,6 @@ function cursor.reset(desired_width, desired_height)
 
     -- If true, elements that don't fit in the cursor will cause the cursor to reshape
     cursor.auto_reshape = true
-
-    cursor.area_expansion_on()
 end
 
 --#region snapshotting
@@ -506,8 +504,6 @@ cursor.get_translation = draw_data.get_translation
 -- Ending an area expands the area below, unless the no_propagate is true when calling finish_area
 -- Areas depend only on the cursor location. They are not affected by translations
 
-local do_area_expansion = true
-
 ---expands a specified area
 ---@param area table
 ---@param left number
@@ -515,7 +511,7 @@ local do_area_expansion = true
 ---@param right number
 ---@param bottom number
 local function expand_area(area, left, top, right, bottom)
-    if area and do_area_expansion then
+    if area then
         area.left = area.left == nil and left or math.min(area.left, left)
         area.top = area.top == nil and top or math.min(area.top, top)
         area.right = area.right == nil and right or math.max(area.right, right)
@@ -586,14 +582,6 @@ function cursor.finish_area(no_propagate)
     return exists
 end
 
-function cursor.area_expansion_off()
-    do_area_expansion = false
-end
-
-function cursor.area_expansion_on()
-    do_area_expansion = true
-end
-
 --#endregion
 
 ---Places the current cursor down. This will update both the last_placement and projected_placement tables.
@@ -603,7 +591,8 @@ end
 ---Placing a cursor will also expand areas.
 ---@param desired_width number? if provided, the placement will use this instead of cursor.width
 ---@param desired_height number? if provided, the placement will use this instead of cursor.height
-function cursor.place(desired_width, desired_height)
+---@param no_area_expansion boolean? if true, placement will not expand areas
+function cursor.place(desired_width, desired_height, no_area_expansion)
     local width, height = desired_width or cursor.width, desired_height or cursor.height
     local dx, dy = translate_stack[volatile_data.translate_index - 1], translate_stack[volatile_data.translate_index]
     local left, top, right, bottom = get_edges(cursor.x, cursor.y, cursor.anchor_x, cursor.anchor_y, width, height)
@@ -617,7 +606,9 @@ function cursor.place(desired_width, desired_height)
     projected_placement.bottom = bottom + dy
 
     -- expand the current area
-    expand_area(area_stack[volatile_data.area_index], left, top, right, bottom)
+    if not no_area_expansion then
+        expand_area(area_stack[volatile_data.area_index], left, top, right, bottom)
+    end
 
     -- update placement
     placement.x = cursor.x

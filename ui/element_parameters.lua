@@ -34,26 +34,41 @@
     end
 ]]
 
-local const = {}
+---Note: modifying values in this table will not live-update the appearance of elements since some elements will cache them
+local ep = {}
 
-const.toggle_width = 40
-const.toggle_height = 20
+ep.toggle_width = 40
+ep.toggle_height = 20
 
-const.checkbox_size = 20
+ep.slider_min_width = 100
+ep.slider_height = 20
 
-const.slider_min_width = 100
-const.slider_height = 20
+ep.switch_min_width = 100
+ep.switch_height = 20
+ep.switch_text_size = 16
+ep.switch_internal_padding = 2
 
-const.switch_min_width = 100
-const.switch_height = 20
-const.switch_text_size = 16
-const.switch_internal_padding = 2
+ep.numeric_input_min_width = 100
+ep.numeric_input_height = 20
+ep.numeric_input_lr_button_width = 16
+ep.numeric_input_text_size = 16
 
-const.numeric_input_min_width = 100
-const.numeric_input_height = 20
-const.numeric_input_lr_button_width = 16
-const.numeric_input_text_size = 16
+ep.checkbox_size = 22
 
-const.checkbox_size = 22
+ep.selection_outline_outset = 4
+ep.selection_outline_line_width = 2
 
-return const
+ep.tooltip_text_padding = 4
+ep.tooltip_element_spacing = 6
+
+ep.scrollbar_thickness = 8
+ep.scrollbar_thickness_inactive = ep.scrollbar_thickness * 0.5
+ep.minimum_scrollbar_actuator_length = 8
+ep.mouse_wheel_scroll_distance = 10 -- px/event
+ep.view_request_padding = ep.scrollbar_thickness * 1.5
+ep.view_request_speed = 10 -- this is the reciprocal of the time it takes for the animation
+ep.view_request_scrollbar_cooldown_time = 1.5 -- starting from an auto-scroll, the scrollbars will remain visible for this amount of time
+
+ep.collapse_speed = 1800 -- px/sec
+
+return ep

@@ -1,5 +1,6 @@
 local cursor = require("ui.cursor")
-local area_element = require("ui.area")
+local aeb = require("ui.area.aeb")
+local ep = require("ui.element_parameters")
 local stack_manager = require("ui.stack_manager")
 local mnav = require("ui.control.mouse_navigation")
 local mb = mnav.buttons
@@ -9,16 +10,15 @@ local selection_outline = require("ui.decorator.element.selection_outline")
 local follow = require("ui.effect").follow
 local volatile_data = require("ui.shared_data").volatile
 local view_request = require("ui.area.view_request")
-local decorator = require("ui.decorator")
 local draw_queue = require("ui.draw_queue")
 
-local selection_outline_cutoff = decorator.selection_outline_outset + decorator.selection_outline_line_width * 0.5
+local selection_outline_cutoff = ep.selection_outline_outset + ep.selection_outline_line_width * 0.5
 -- this is an arbitrary value, it only needs to be bigger than selection_outline_cutoff
 local selection_outline_cutoff3 = selection_outline_cutoff * 3
 
 local collapse = {}
 
-local speed = area_element.collapse_speed
+local speed = ep.collapse_speed
 
 ---@param state table
 ---@param anchor_pos "topleft"|"bottomright" The corner of the collapse area that won't move
@@ -34,21 +34,21 @@ function collapse.start(state, anchor_pos, clipping_side, no_auto_open, sensor_i
     -- guess the translation
     local tid = cursor.push_translation(state._last_dx or 0, state._last_dy or 0)
 
-    area_element.aeb_push(tid)
-    area_element.aeb_push(no_auto_open)
-    area_element.aeb_push(cursor.anchor_y) -- anchors should be preserved
-    area_element.aeb_push(cursor.anchor_x)
-    area_element.aeb_push(clipping_side)
-    area_element.aeb_push(anchor_pos)
-    area_element.aeb_push(mnav.get_clicked(sensor_id) == mb.left or knav.get_action(cell_id) == kba.activate)
-    area_element.aeb_push(res_id)
-    area_element.aeb_push(state)
-    area_element.aeb_push(false) -- selection has changed
-    area_element.aeb_push(false) -- contains selection
-    area_element.aeb_push(view_request.collapse_top_index) -- aeb_index of the next (up) state
+    aeb.push(tid)
+    aeb.push(no_auto_open)
+    aeb.push(cursor.anchor_y) -- anchors should be preserved
+    aeb.push(cursor.anchor_x)
+    aeb.push(clipping_side)
+    aeb.push(anchor_pos)
+    aeb.push(mnav.get_clicked(sensor_id) == mb.left or knav.get_action(cell_id) == kba.activate)
+    aeb.push(res_id)
+    aeb.push(state)
+    aeb.push(false) -- selection has changed
+    aeb.push(false) -- contains selection
+    aeb.push(view_request.collapse_top_index) -- aeb_index of the next (up) state
     view_request.collapse_top_index = volatile_data.aeb_index -- put the new view request top index
 
-    area_element.aeb_push_frame_header("collapse", not state.on and no_auto_open)
+    aeb.push_frame_header("collapse", not state.on and no_auto_open)
 
     stack_manager.push_record()
 end
@@ -56,28 +56,28 @@ end
 function collapse.finish()
     stack_manager.pop_record()
 
-    area_element.aeb_pop_frame_header("collapse")
+    aeb.pop_frame_header("collapse")
 
-    view_request.collapse_top_index = area_element.aeb_pop() -- revert the view request top index
-    local contains_selection = area_element.aeb_pop()
-    local selection_has_changed = area_element.aeb_pop()
-    local state = area_element.aeb_pop()
-    local res_id = area_element.aeb_pop()
-    local left_clicked = area_element.aeb_pop()
+    view_request.collapse_top_index = aeb.pop() -- revert the view request top index
+    local contains_selection = aeb.pop()
+    local selection_has_changed = aeb.pop()
+    local state = aeb.pop()
+    local res_id = aeb.pop()
+    local left_clicked = aeb.pop()
 
     local anchor_pos
-    if area_element.aeb_pop() == "topleft" then
+    if aeb.pop() == "topleft" then
         anchor_pos = 0
     else
         anchor_pos = 1
     end
 
     ---@type "left"|"top"|"right"|"bottom"
-    local clipping_side = area_element.aeb_pop()
-    local ax = area_element.aeb_pop() -- anchors should be preserved
-    local ay = area_element.aeb_pop()
-    local no_auto_open = area_element.aeb_pop()
-    local tid = area_element.aeb_pop()
+    local clipping_side = aeb.pop()
+    local ax = aeb.pop() -- anchors should be preserved
+    local ay = aeb.pop()
+    local no_auto_open = aeb.pop()
+    local tid = aeb.pop()
 
     cursor.pop_translation()
 

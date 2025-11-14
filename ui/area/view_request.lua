@@ -1,4 +1,4 @@
-local area_element = require("ui.area")
+local ep = require("ui.element_parameters")
 local volatile_data = require("ui.shared_data").volatile
 local aeb_stack = volatile_data.aeb_stack
 local follow = require("ui.effect").follow
@@ -8,9 +8,9 @@ local mnav = require("ui.control.mouse_navigation")
 local settings = require("ui.settings")
 local theme = require("ui.theme")
 
-local padding = area_element.view_request_padding
-local base_speed = area_element.view_request_speed
-local scrollbar_cooldown_time = area_element.view_request_scrollbar_cooldown_time
+local padding = ep.view_request_padding
+local base_speed = ep.view_request_speed
+local scrollbar_cooldown_time = ep.view_request_scrollbar_cooldown_time
 
 local view_request = {
     -- The index of the top state

@@ -46,11 +46,9 @@ end
 
 -- luacov: enable
 
-local collapse_example = require("menu.collapse_example")
-local empty_grid = require("menu.empty_grid")
 local example_menu = require("menu.example")
 local scroll_example = require("menu.scroll_example")
-local scroll_resizing = require("menu.scroll_resizing")
+
 local ui = require("ui")
 
 function love.run()

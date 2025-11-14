@@ -37,7 +37,7 @@ local theme = {}
 ---Gets an Xterm color by it's number.
 ---Check the xterm_colors.html file for a reference
 ---@param n integer 0-255
----@return table
+---@return number[]
 function theme.get_xterm_color(n)
     -- clamp number
     n = band(n, 0xff)
