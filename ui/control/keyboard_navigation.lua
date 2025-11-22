@@ -4,7 +4,7 @@ local bor, band = bit.bor, bit.band
 local disable_intersection_checks = require("ui.control.sensor").disable_intersection_checks
 local control_backend = require("ui.control.backend")
 local is_suppressed = require("ui.suppress").is_suppressed
-local layer_status = require("ui.layers.status")
+local layers = require("ui.layer")
 
 local keyboard_navigation = {}
 
@@ -270,7 +270,7 @@ end
 ---|"both" make this cell both the default and escape cell
 ---@return integer cell_id id number of this cell
 function keyboard_navigation.make_cell(mode)
-    if not layer_status.current_layer_is_active then
+    if not layers.is_current_layer_active() then
         return 0
     end
 
@@ -899,7 +899,7 @@ function control_backend.keyboard_navigation_configure_cell_as_text_input(cell_i
     if not is_valid_cell_id(cell_id) then
         error(string.format("bad cell id %d", cell_id))
     end
-    if cell_id == 0 or not layer_status.current_layer_is_active then
+    if cell_id == 0 or not layers.is_current_layer_active() then
         return
     end
     cell_text_input_state[cell_id] = state

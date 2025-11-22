@@ -79,12 +79,10 @@ function theme.get_xterm_color(n)
 end
 
 ---Currently used text font
----@type text_font_path
-theme.font_path = text.font.default
+theme.font_path = "assets/OpenSquare.ttf"
 
 ---Currently used icon font
----@type icon_font_path
-theme.icon_font_path = text.icon_font.default
+theme.icon_font_path = "assets/bootstrap-icons.ttf"
 
 -- primitive colors
 theme.black = theme.get_xterm_color(0)

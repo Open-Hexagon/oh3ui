@@ -11,7 +11,7 @@ local draw_data = require("ui.draw_queue.draw_data")
 local op_ids = require("ui.draw_queue.draw_operation")
 local control_backend = require("ui.control.backend")
 local is_suppressed = require("ui.suppress").is_suppressed
-local layer_status = require("ui.layers.status")
+local layers = require("ui.layer")
 
 local mouse_navigation = {
     -- this frame's mouse position (not screen coordinates)
@@ -102,7 +102,7 @@ function mouse_navigation.make_sensor(sensor_id, ...)
     end
 
     local placement_id = draw_data.make_placement(placement.left, placement.top, placement.right, placement.bottom)
-    if layer_status.current_layer_is_active then
+    if layers.is_current_layer_active() then
         draw_data.add_draw_operation(
             op_ids.mouse_sensor,
             placement_id,

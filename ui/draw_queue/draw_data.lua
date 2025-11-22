@@ -5,7 +5,6 @@ local band = bit.band
 local ID_POS = 1
 
 local draw_data = {}
-local draw_data_is_blocked = true
 
 ---List of placements. Always in order.
 local placement_list = {}
@@ -146,7 +145,7 @@ function draw_data.make_pop_translation()
     return placement_index
 end
 
-local tstack = require("ui.stack_data").translate_stack
+local tstack = require("ui.stack_manager.stack_data").translate_stack
 
 ---Edits all placements so they are offset by the applied translations. This function should only be run once per frame.
 ---This saves us some work later.
@@ -206,10 +205,6 @@ end
 ---@param id integer
 ---@param ... any
 function draw_data.add_draw_operation(id, ...)
-    if draw_data_is_blocked then
-        return
-    end
-
     local slot_index
 
     if take_reservation_id and band(id, 0x1000) == 0 then
@@ -242,16 +237,6 @@ function draw_data.add_draw_operation(id, ...)
     end
 end
 
----Blocks the addition of any further draw operations.
----Operations are enabled again after draw_data is reset is called.
-function draw_data.block_draw_operations()
-    draw_data_is_blocked = true
-end
-
-function draw_data.unblock_draw_operations()
-    draw_data_is_blocked = false
-end
-
 ---The next added draw operation will be converted into an overlay element if appropriate.
 ---Incompatible operations are ignored but do not de-assert this temporary state.
 ---Calling this multiple times does nothing.
@@ -266,10 +251,6 @@ end
 ---@return integer res_id use this reference id to later fill in reservation slots
 ---@nodiscard
 function draw_data.reserve_draw_slots(n)
-    if draw_data_is_blocked then
-        return 0
-    end
-
     if n < 1 then
         error("can't reserve less than 1 slot")
     end
@@ -303,10 +284,6 @@ end
 ---Incompatible operations are ignored but do not de-assert this temporary state.
 ---@param res_id integer the reservation id to fill
 function draw_data.next_takes_reservation(res_id)
-    if draw_data_is_blocked then
-        return
-    end
-
     if not (res_id > 0 and res_id <= res_index) then
         error("bad reservation id")
     end
@@ -344,7 +321,7 @@ function draw_data.iterate()
     end)
 end
 
-function draw_data.reset()
+function draw_data.clear()
     placement_index = 0
     draw_index = 0
     res_index = 0

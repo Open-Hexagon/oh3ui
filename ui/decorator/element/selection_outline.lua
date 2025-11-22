@@ -70,7 +70,7 @@ function selection_outline.add_to_queue()
 end
 
 ---Should be called at the end of the frame.
-function selection_outline.reset()
+function selection_outline.clean_up()
     mode = INACTIVE
     hidden = false
     mask_left, mask_top, mask_right, mask_bottom = nil, nil, nil, nil

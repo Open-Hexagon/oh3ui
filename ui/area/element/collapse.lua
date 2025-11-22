@@ -8,7 +8,7 @@ local knav = require("ui.control.keyboard_navigation")
 local kba = knav.actions
 local selection_outline = require("ui.decorator.element.selection_outline")
 local follow = require("ui.effect").follow
-local stack_data = require("ui.stack_data")
+local stack_data = require("ui.stack_manager.stack_data")
 local view_request = require("ui.area.view_request")
 local draw_queue = require("ui.draw_queue")
 

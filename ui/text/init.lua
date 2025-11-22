@@ -6,15 +6,8 @@ local json = require("extlibs.json.json")
 local text_cache = require("ui.text.cache")
 
 local text = {
-    ---@enum text_font_path
-    font = {
-        default = "assets/OpenSquare.ttf",
-    },
-
-    ---@enum icon_font_path
-    icon_font = {
-        default = "assets/bootstrap-icons.ttf",
-    },
+    ansi = require("ui.text.ansi"),
+    search = require("ui.text.search"),
 }
 
 ---Cache of fonts based on file used and size

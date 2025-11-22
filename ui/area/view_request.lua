@@ -1,5 +1,5 @@
 local ep = require("ui.element_parameters")
-local stack_data = require("ui.stack_data")
+local stack_data = require("ui.stack_manager.stack_data")
 local aeb_stack = stack_data.aeb_stack
 local follow = require("ui.effect").follow
 local control_backend = require("ui.control.backend")

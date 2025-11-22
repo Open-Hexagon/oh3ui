@@ -1,7 +1,7 @@
 ---The cursor represents a rectangular area on screen and is used as
 ---a tool for positioning and aligning ui elements.
 
-local stack_data = require("ui.stack_data")
+local stack_data = require("ui.stack_manager.stack_data")
 local draw_data = require("ui.draw_queue.draw_data")
 
 local cursor = {}
@@ -79,7 +79,7 @@ setmetatable(cursor, {
             elseif c == "b" then
                 v = cursor.y + (1 - cursor.anchor_y) * cursor.height
             else
-                error(string.format("`%s` is an invalid swizzling character", c))
+                error(string.format("`%s` is an invalid swizzling character", c), 2)
             end
             e_table_index = e_table_index + 1
             e_table[e_table_index] = v

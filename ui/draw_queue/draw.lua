@@ -46,8 +46,6 @@ local band = bit.band
 ---Execute all queued commands.
 ---This will also reset everything related to the queue
 return function()
-    draw_data.unblock_draw_operations()
-
     local id, x1, y1, x2, y2, x3, y3, mode, rx, ry, line_width, r, g, b, a
     local width, height, half_width, radius, rotation, segments, text_object, sensor_id
     local tx1, ty1, tx2, ty2

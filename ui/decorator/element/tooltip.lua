@@ -96,7 +96,7 @@ function tooltip.tooltip(edge, str, font_size, align, wrap_limit)
     cursor.pop()
 end
 
-function tooltip.reset()
+function tooltip.clean_up()
     if is_active then
         time = time + love.timer.getDelta()
     else

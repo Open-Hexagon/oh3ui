@@ -1,119 +1,125 @@
 ---ui api endpoints
 
 local events = require("ui.events")
-local layers = require("ui.layers")
-local layer_status = require("ui.layers.status")
-local stack_manager = require("ui.stack_manager")
+local layer_backend = require("ui.layer.backend")
 local text = require("ui.text")
 local settings = require("ui.settings")
 local draw_data = require("ui.draw_queue.draw_data")
-
-local function start()
-    -- The red grid shows screen space
-    -- luacov: disable
-    if settings.overlay_grid then
-        love.graphics.setLineWidth(2)
-        love.graphics.setColor(1, 0, 0, 0.2)
-
-        local width, height = love.graphics.getDimensions()
-
-        local x = 0
-        while x < width do
-            love.graphics.line(x, 0, x, height)
-            x = x + settings.overlay_grid
-        end
-        x = width
-        love.graphics.line(x, 0, x, height)
-
-        local y = 0
-        while y < height do
-            love.graphics.line(0, y, width, y)
-            y = y + settings.overlay_grid
-        end
-        y = height
-        love.graphics.line(0, y, width, y)
-    end
-    -- luacov: enable
-
-    -- scale immediately so that screen space positions can be accounted for in any transforms and inverseTransforms
-    love.graphics.push()
-    love.graphics.scale(settings.scale)
-
-    ---The green grid shows scaled space.
-    ---This is where drawn graphics end up, but not everything is affected by graphics transforms.
-    -- luacov: disable
-    if settings.overlay_grid then
-        love.graphics.setLineWidth(2)
-        love.graphics.setColor(0, 1, 0, 0.2)
-
-        local width, height = love.graphics.getDimensions()
-
-        local x = 0
-        while x < width do
-            love.graphics.line(x, 0, x, height)
-            x = x + settings.overlay_grid
-        end
-        x = width
-        love.graphics.line(x, 0, x, height)
-
-        local y = 0
-        while y < height do
-            love.graphics.line(0, y, width, y)
-            y = y + settings.overlay_grid
-        end
-        y = height
-        love.graphics.line(0, y, width, y)
-
-        -- Show scaled mouse position
-        x, y = love.mouse.getPosition()
-        love.graphics.transformPoint(x, y)
-        love.graphics.circle("line", x, y, 4)
-    end
-    -- luacov: enable
-end
-
-local layers_run = layers.run
+local selection_outline = require("ui.decorator.element.selection_outline")
 local draw_queue_draw = require("ui.draw_queue.draw")
 local view_request_evaluate = require("ui.area.view_request").evaluate
 local control_evaluate = require("ui.control.evaluate")
-local selection_outline_reset = require("ui.decorator.element.selection_outline").reset
-local events_clear = events.clear
+local tooltip = require("ui.decorator.element.tooltip")
 
-local function finish()
-    -- draw in order
-    draw_data.bake_translations()
-    draw_queue_draw()
-    draw_data.reset()
+---This red grid shows screen space
+local function overlay_screen_grid()
+    -- luacov: disable
+    if not settings.overlay_grid then
+        return
+    end
 
-    -- for auto-scrolling with keyboard nav
-    view_request_evaluate()
+    love.graphics.setLineWidth(2)
+    love.graphics.setColor(1, 0, 0, 0.2)
 
-    -- evaluate control methods
-    control_evaluate()
+    local width, height = love.graphics.getDimensions()
 
-    -- undo scaling
-    love.graphics.pop()
+    local x = 0
+    while x < width do
+        love.graphics.line(x, 0, x, height)
+        x = x + settings.overlay_grid
+    end
+    x = width
+    love.graphics.line(x, 0, x, height)
 
-    -- clean up
-    events_clear()
-    selection_outline_reset()
+    local y = 0
+    while y < height do
+        love.graphics.line(0, y, width, y)
+        y = y + settings.overlay_grid
+    end
+    y = height
+    love.graphics.line(0, y, width, y)
+    -- luacov: enable
+end
+
+---This green grid shows scaled space.
+---This is where drawn graphics end up, but not everything is affected by graphics transforms.
+local function overlay_scaled_grid()
+    -- luacov: disable
+    if not settings.overlay_grid then
+        return
+    end
+
+    love.graphics.setLineWidth(2)
+    love.graphics.setColor(0, 1, 0, 0.2)
+
+    local width, height = love.graphics.getDimensions()
+
+    local x = 0
+    while x < width do
+        love.graphics.line(x, 0, x, height)
+        x = x + settings.overlay_grid
+    end
+    x = width
+    love.graphics.line(x, 0, x, height)
+
+    local y = 0
+    while y < height do
+        love.graphics.line(0, y, width, y)
+        y = y + settings.overlay_grid
+    end
+    y = height
+    love.graphics.line(0, y, width, y)
+
+    -- Show scaled mouse position
+    x, y = love.mouse.getPosition()
+    love.graphics.transformPoint(x, y)
+    love.graphics.circle("line", x, y, 4)
+    -- luacov: enable
 end
 
 ---Runs the ui. Must be called every frame
 local function run()
-    start()
-    layers_run()
-    finish()
-end
+    do -- prepare
+        overlay_screen_grid()
+        -- scale immediately so that screen space positions can be accounted for in any transforms and inverseTransforms
+        love.graphics.push()
+        love.graphics.scale(settings.scale)
+        overlay_scaled_grid()
+    end
 
--- TODO global typing
+    do -- run
+        layer_backend.run_all()
+        -- add the selection outline if it wasn't already done by any of the area elements
+        selection_outline.add_to_queue()
+    end
+
+    do -- evaluate
+        -- draw in order
+        draw_data.bake_translations()
+        draw_queue_draw()
+
+        -- for auto-scrolling with keyboard nav
+        view_request_evaluate()
+
+        -- evaluate control methods
+        control_evaluate()
+    end
+
+    do -- clean up
+        layer_backend.prepare_for_next_frame()
+        tooltip.clean_up()
+        selection_outline.clean_up()
+        draw_data.clear()
+        events.clear()
+        love.graphics.pop()
+    end
+end
 
 local ui = {
     -- only user facing api endpoints should be visible from this table
 
     ---Normal elements.
     element = {
-        const = require("ui.element_parameters"),
         button = require("ui.element.button"),
         checkbox = require("ui.element.checkbox"),
         cycle_button = require("ui.element.cycle_button"),
@@ -149,10 +155,7 @@ local ui = {
     theme = require("ui.theme"),
 
     ---Stack manager. Locks/unlocks the cursor_stack, translate_stack, area_stack, and aeb_stack to prevent changes.
-    stack_manager = {
-        push_record = stack_manager.push_record,
-        pop_record = stack_manager.pop_record,
-    },
+    stack_manager = require("ui.stack_manager"),
 
     ---Area element balance stack. Can be used as a general purpose stack.
     aeb = require("ui.area.aeb"),
@@ -176,21 +179,10 @@ local ui = {
     new_id_table = require("ui.id_table"),
 
     ---UI layer controls.
-    layer = {
-        push = layers.push,
-        pop = layers.pop,
-        is_current_layer_active = layer_status.is_current_layer_active,
-        get_current_layer = layer_status.get_current_layer,
-    },
+    layer = require("ui.layer"),
 
     ---Text utilities
-    text = {
-        ansi = require("ui.text.ansi"),
-        search = require("ui.text.search"),
-        get_font = text.get_font,
-        get_icon_string = text.get_icon_string,
-        get_text_object = text.get_text_object,
-    },
+    text = require("ui.text"),
 
     ---Core functions
     push_event = events.add,
