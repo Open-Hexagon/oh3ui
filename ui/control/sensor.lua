@@ -51,6 +51,7 @@ local hover_set = sensor.hover_set
 
 local z_list = {}
 local index = 0
+local SIZEOF_Z_ITEM = 6
 
 ---Disables checking of intersections. The hover_set will stay empty.
 function sensor.disable_intersection_checks()
@@ -80,13 +81,13 @@ sensor.sensor_mode = sensor_mode
 ---@param right number
 ---@param bottom number
 function sensor.push(sensor_id, mode, left, top, right, bottom)
-    index = index + 1
-    if z_list[index] then
-        z_list[index][1], z_list[index][2], z_list[index][3], z_list[index][4], z_list[index][5], z_list[index][6] =
-            sensor_id, mode, left, top, right, bottom
-    else
-        z_list[index] = { sensor_id, mode, left, top, right, bottom }
-    end
+    index = index + SIZEOF_Z_ITEM
+    z_list[index - 5] = sensor_id
+    z_list[index - 4] = mode
+    z_list[index - 3] = left
+    z_list[index - 2] = top
+    z_list[index - 1] = right
+    z_list[index] = bottom
 end
 
 ---Uses the z_list to add sensor ids to update the hover set.
@@ -106,11 +107,11 @@ function sensor.evaluate(mouse_screen_x, mouse_screen_y)
     -- holds the sensor id of the last encountered lazy intersection
     local last_lazy_intersection
 
-    for i = index, 1, -1 do
+    for i = index, 1, -SIZEOF_Z_ITEM do
         -- get sensor id, intersection mode, and bounds
-        local sensor_id = z_list[i][1]
-        local mode = z_list[i][2]
-        local x1, y1, x2, y2 = unpack(z_list[i], 3, 6)
+        local sensor_id = z_list[i - 5]
+        local mode = z_list[i - 4]
+        local x1, y1, x2, y2 = unpack(z_list, i - 3, i)
 
         -- check intersection, leave immediately if we aren't intersecting
         if not extmath.point_in_aligned_rectangle(mouse_screen_x, mouse_screen_y, x1, y1, x2, y2) then
