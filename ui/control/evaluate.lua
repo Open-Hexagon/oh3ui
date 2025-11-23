@@ -1,53 +1,55 @@
+local control = require("ui.control")
 local typing = require("ui.control.typing")
-local control_backend = require("ui.control.backend")
+local mouse_navigation = require("ui.control.mouse_navigation")
+local keyboard_navigation = require("ui.control.keyboard_navigation")
 
 return function()
-    control_backend.mouse_navigation_evaluate()
+    mouse_navigation.evaluate()
 
     if typing.is_editing_any_text() then
-        local goto_cell, tab_direction = control_backend.typing_evaluate()
+        local goto_cell, tab_direction = typing.evaluate()
 
         -- do immediate keyboard navigation
         if goto_cell then
-            control_backend.last_used_control_method = "keyboard"
+            control.last_used_control_method = "keyboard"
 
-            control_backend.keyboard_navigation_jump_to_cell(goto_cell)
+            keyboard_navigation.jump_to_cell(goto_cell)
             if tab_direction == "tab_down" then
-                control_backend.keyboard_navigation_tab_forward()
+                keyboard_navigation.tab_forward()
             elseif tab_direction == "tab_up" then
-                control_backend.keyboard_navigation_tab_backwards()
+                keyboard_navigation.tab_backwards()
             end
         end
 
         -- do keyboard_navigation clean up
-        control_backend.keyboard_navigation_evaluate_without_events()
+        keyboard_navigation.evaluate_without_events()
     else
         -- do typing cleanup
-        control_backend.typing_evaluate_without_events()
+        typing.evaluate_without_events()
 
-        local typing_target, typing_action = control_backend.keyboard_navigation_evaluate()
+        local typing_target, typing_action = keyboard_navigation.evaluate()
 
         -- do immediate text editing
         if typing_target then
-            control_backend.last_used_control_method = "typing"
+            control.last_used_control_method = "typing"
 
-            control_backend.typing_set_target(typing_target)
+            typing.set_target(typing_target)
             if typing_action == "backspace" then
                 if love.keyboard.isDown("lctrl", "rctrl") then
-                    control_backend.typing_truncate(typing_target)
+                    typing.truncate(typing_target)
                 else
-                    control_backend.typing_backspace_character(typing_target)
+                    typing.backspace_character(typing_target)
                 end
             elseif typing_action == "delete" then
                 -- delete is recognized but doesn't do anything since the cursor is always put at the end of the text
             else
                 ---if typing_target exists then so should typing_action
                 ---@cast typing_action string
-                control_backend.typing_insert_character(typing_target, typing_action)
+                typing.insert_character(typing_target, typing_action)
             end
         end
     end
 
-    control_backend.keyboard_navigation_reset()
-    control_backend.mouse_navigation_reset()
+    keyboard_navigation.reset()
+    mouse_navigation.reset()
 end

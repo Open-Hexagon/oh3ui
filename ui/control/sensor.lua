@@ -42,10 +42,10 @@ local sensor = {
 
     ---The one sensor id that will be dragged if dragging is initiated
     preemptive_drag_id = nil,
-}
 
--- If false, disables mouse intersection checks. The hover set will be empty.
-local do_intersections = true
+    -- If false, disables mouse intersection checks. The hover set will be empty.
+    do_intersections = true,
+}
 
 local hover_set = sensor.hover_set
 
@@ -55,12 +55,12 @@ local SIZEOF_Z_ITEM = 6
 
 ---Disables checking of intersections. The hover_set will stay empty.
 function sensor.disable_intersection_checks()
-    do_intersections = false
+    sensor.do_intersections = false
 end
 
 ---Enables checking of intersections. The hover_set is allowed to contain sensor ids.
 function sensor.enable_intersection_checks()
-    do_intersections = true
+    sensor.do_intersections = true
 end
 
 ---@enum sensor_mode
@@ -100,7 +100,7 @@ function sensor.evaluate(mouse_screen_x, mouse_screen_y)
     end
     sensor.preemptive_drag_id = nil
 
-    if not do_intersections then
+    if not sensor.do_intersections then
         return
     end
 

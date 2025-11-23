@@ -1,6 +1,9 @@
 local layer_backend = require("ui.layer.backend")
 local scheduled_tasks = layer_backend.scheduled_tasks
 local scheduled_layers = layer_backend.scheduled_layers
+local layer_status = require("ui.layer.status")
+local layer_status = require("ui.layer.status")
+
 
 local layer = {}
 
@@ -25,12 +28,7 @@ function layer.pop()
     end
 end
 
-function layer.is_current_layer_active()
-    return layer_backend.current_layer_is_active
-end
-
-function layer.get_current_layer()
-    return layer_backend.current_layer
-end
+layer.is_current_layer_active = layer_status.is_current_layer_active
+layer.get_current_layer = layer_status.get_current_layer
 
 return layer

@@ -4,7 +4,7 @@ local bor, band = bit.bor, bit.band
 local disable_intersection_checks = require("ui.control.sensor").disable_intersection_checks
 local control_backend = require("ui.control.backend")
 local is_suppressed = require("ui.suppress").is_suppressed
-local layers = require("ui.layer")
+local layer_status = require("ui.layer.status")
 
 local keyboard_navigation = {}
 
@@ -178,6 +178,13 @@ function keyboard_navigation.get_grid_location()
     return grid_x, grid_y
 end
 
+---Sets the current grid location.
+---@param x integer
+---@param y integer
+function keyboard_navigation.set_grid_location(x, y)
+    grid_x, grid_y = x, y
+end
+
 --#endregion
 
 ---An ordered list of created cells
@@ -257,8 +264,28 @@ local held_action
 ---Used to trigger a scroll view request when a layer transition happens
 local force_selection_has_changed = false
 
+local selection_has_changed = false
+
 local function is_valid_cell_id(cell_id)
     return cell_id >= 0 and cell_id <= last_cell_id
+end
+
+---Gets the currently selected cell id
+---@return integer
+---@nodiscard
+function keyboard_navigation.get_selected_cell_id()
+    return selected_cell_id
+end
+
+---Gets the id of the last cell that has a actual grid position
+---@return integer
+---@nodiscard
+function keyboard_navigation.get_last_gridded_cell_id()
+    return last_gridded_cell_id
+end
+
+function keyboard_navigation.has_selection_just_changed()
+    return selection_has_changed
 end
 
 --#region Cell Controls
@@ -270,7 +297,7 @@ end
 ---|"both" make this cell both the default and escape cell
 ---@return integer cell_id id number of this cell
 function keyboard_navigation.make_cell(mode)
-    if not layers.is_current_layer_active() then
+    if not layer_status.is_current_layer_active() then
         return 0
     end
 
@@ -316,8 +343,6 @@ end
 --#endregion
 
 --#region Conditions
-
----You can use is_selected and get_action to get immediate values from the navigation.
 
 ---Returns true if the last created cell or specified cell is selected
 ---@param cell_id? integer
@@ -413,15 +438,12 @@ end
 --#endregion
 
 --#region Selection Operations
--- Some of these operations go into the backend
 
 ---Deselects any cell, returning keyboard navigation to its initial state.
 local function deselect()
     selected_cell_id = 0
     grid_x, grid_y = nil, nil
 end
-
-control_backend.keyboard_navigation_deselect = deselect
 keyboard_navigation.deselect = deselect
 
 ---Moves the selection to a specified cell id in the tab ordered table.
@@ -439,8 +461,7 @@ local function jump_to_cell(new_selection)
         grid_y = cell_y[new_selection]
     end
 end
-
-control_backend.keyboard_navigation_jump_to_cell = jump_to_cell
+keyboard_navigation.jump_to_cell = jump_to_cell
 
 ---Moves the selection to the first in the tab order list.
 local function jump_to_first()
@@ -463,8 +484,7 @@ local function tab_forward()
         jump_to_cell(selected_cell_id)
     end
 end
-
-control_backend.keyboard_navigation_tab_forward = tab_forward
+keyboard_navigation.tab_forward = tab_forward
 
 ---Jumps 1 backwards in the tab order. Wraps around if the beginning is reached.
 local function tab_backwards()
@@ -477,8 +497,7 @@ local function tab_backwards()
         jump_to_cell(selected_cell_id)
     end
 end
-
-control_backend.keyboard_navigation_tab_backwards = tab_backwards
+keyboard_navigation.tab_backwards = tab_backwards
 
 ---Jumps 1 page forwards in the tab order. Does not wrap.
 local function page_forward()
@@ -820,17 +839,14 @@ local function iterate_events()
     return action, is_repeat, typing_target, typing_action
 end
 
---#region backend functions
--- These functions are installed into the backend table so they're hidden from the user
-
 ---Run the navigation logic using keypressed events
 ---@return table? typing_target
 ---@return string? typing_action
 ---@nodiscard
-function control_backend.keyboard_navigation_evaluate()
+function keyboard_navigation.evaluate()
     -- don't do anything if no cells were created
     if last_cell_id < 1 then
-        control_backend.keyboard_navigation_evaluate_without_events()
+        keyboard_navigation.evaluate_without_events()
         return
     end
 
@@ -840,35 +856,30 @@ function control_backend.keyboard_navigation_evaluate()
     last_action, last_is_repeat, typing_target, typing_action = iterate_events()
 
     if force_selection_has_changed then
-        control_backend.keyboard_navigation_selection_has_changed = true
+        selection_has_changed = true
         force_selection_has_changed = false
     else
-        control_backend.keyboard_navigation_selection_has_changed = old_selection ~= selected_cell_id
+        selection_has_changed = old_selection ~= selected_cell_id
     end
 
     return typing_target, typing_action
 end
 
 ---Does the usual evaluation cleanup without iterating through the events
-function control_backend.keyboard_navigation_evaluate_without_events()
+function keyboard_navigation.evaluate_without_events()
     last_action, last_is_repeat = nil, false
     held_action = nil
 
     if force_selection_has_changed then
-        control_backend.keyboard_navigation_selection_has_changed = true
+        selection_has_changed = true
         force_selection_has_changed = false
     else
-        control_backend.keyboard_navigation_selection_has_changed = false
+        selection_has_changed = false
     end
 end
 
---#endregion
-
---#region backend functions
--- These functions are installed into the backend table so they're hidden from the user
-
 ---Resets all data. Gets ready for the next frame
-function control_backend.keyboard_navigation_reset()
+function keyboard_navigation.reset()
     erase_grid()
     last_cell_id = 0
     current_cell_id = 0
@@ -880,7 +891,7 @@ function control_backend.keyboard_navigation_reset()
 end
 
 ---This only gets called when a layer transitions happens. Finds the best cell to select.
-function control_backend.keyboard_navigation_finish_layer_transition()
+function keyboard_navigation.finish_layer_transition()
     held_action = nil
     force_selection_has_changed = true
     if default_cell_id then
@@ -895,11 +906,11 @@ end
 ---@param cell_id integer
 ---@param state table
 ---@param global boolean?
-function control_backend.keyboard_navigation_configure_cell_as_text_input(cell_id, state, global)
+function keyboard_navigation.configure_cell_as_text_input(cell_id, state, global)
     if not is_valid_cell_id(cell_id) then
         error(string.format("bad cell id %d", cell_id))
     end
-    if cell_id == 0 or not layers.is_current_layer_active() then
+    if cell_id == 0 or not layer_status.is_current_layer_active() then
         return
     end
     cell_text_input_state[cell_id] = state
@@ -908,7 +919,5 @@ function control_backend.keyboard_navigation_configure_cell_as_text_input(cell_i
         global_typing_cell_id = cell_id
     end
 end
-
---#endregion
 
 return keyboard_navigation

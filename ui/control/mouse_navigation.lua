@@ -196,16 +196,13 @@ function mouse_navigation.get_stopped_dragging(sensor_id)
     return nil
 end
 
---#region backend functions
--- These functions are installed into the backend table so they're hidden from the user
-
 ---@param event_name string
 local function event_filter(event_name)
     return string.match(event_name, "mouse[prm]") or event_name == "wheelmoved"
 end
 
 ---Update mouse output. Should be run at the start of a frame.
-function control_backend.mouse_navigation_evaluate()
+function mouse_navigation.evaluate()
     -- Get mouse positions
     local screen_x, screen_y = love.mouse.getPosition()
     mouse_navigation.x, mouse_navigation.y = love.graphics.inverseTransformPoint(screen_x, screen_y)
@@ -321,13 +318,11 @@ function control_backend.mouse_navigation_evaluate()
     end
 end
 
-function control_backend.mouse_navigation_reset()
+function mouse_navigation.reset()
     sensor.clear()
     last_sensor_id = 0
     last_manual_sensor_id = 0
     current_sensor_id = 0
 end
-
---#endregion
 
 return mouse_navigation

@@ -6,7 +6,7 @@ local mnav = require("ui.control.mouse_navigation")
 local mb = mnav.buttons
 local knav = require("ui.control.keyboard_navigation")
 local wmode = knav.wrapping_mode
-local layers = require("ui.layers")
+local layers = require("ui.layer")
 local kba = knav.actions
 
 local background = require("ui.area.element.background")

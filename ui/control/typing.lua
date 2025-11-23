@@ -2,6 +2,7 @@ local events = require("ui.events")
 local utf8 = require("utf8")
 local settings = require("ui.settings")
 local control_backend = require("ui.control.backend")
+local keyboard_navigation = require("ui.control.keyboard_navigation")
 local utf8_sub = require("ui.text.utf8_sub")
 
 local typing = {}
@@ -70,31 +71,55 @@ end
 
 ---Starts editing text for a state table. Cursor will be placed at the end of the line.
 ---@param entry_state table
-local function set_target(entry_state)
+function typing.set_target(entry_state)
     entry_state._text_entry_char_position = utf8.len(entry_state.text)
     target = entry_state
     started_editing_state = entry_state
     cursor_flash_timer = 0
 end
 
-control_backend.typing_set_target = set_target
-
 ---Stops editing text for the current target
 ---@param method typing_stop_methods
-local function unset_target(method)
+function typing.unset_target(method)
     last_interaction_method = method
     stopped_editing_state = target
     target = nil
 end
 
---#region backend functions
--- These functions are installed into the backend table so they're hidden from the user
+---Inserts a character into the state
+---@param state table
+---@param char string
+function typing.insert_character(state, char)
+    state.text = utf8_sub(state.text, 1, state._text_entry_char_position)
+        .. char
+        .. utf8_sub(state.text, state._text_entry_char_position + 1, -1)
+    state._text_entry_char_position = state._text_entry_char_position + 1
+end
+
+---Deletes all text in the state
+---@param state table
+function typing.truncate(state)
+    state.text = ""
+    state._text_entry_char_position = 0
+end
+
+---Uses backspace on the state
+---@param state table
+function typing.backspace_character(state)
+    if state._text_entry_char_position > 0 then
+        state.text = utf8_sub(state.text, 1, state._text_entry_char_position - 1)
+            .. utf8_sub(state.text, state._text_entry_char_position + 1, -1)
+        state._text_entry_char_position = state._text_entry_char_position - 1
+
+        state._text_entry_text_offset = 0
+    end
+end
 
 ---Evaluates typing events
 ---@return integer? goto_cell contains the text entry keyboard navigation cell id if, after evaluation, the target was unset
 ---@return typing_stop_methods tab_direction direction to tab if needed
 ---@nodiscard
-function control_backend.typing_evaluate()
+function typing.evaluate()
     started_editing_state = nil
     stopped_editing_state = nil
 
@@ -107,7 +132,7 @@ function control_backend.typing_evaluate()
         local name, is_repeat = event[1], event[4]
         if name == "textinput" then
             control_backend.last_used_control_method = "typing"
-            control_backend.typing_insert_character(target, event[2])
+            typing.insert_character(target, event[2])
             cursor_flash_timer = 0
         elseif name == "keypressed" then
             control_backend.last_used_control_method = "typing"
@@ -166,26 +191,26 @@ function control_backend.typing_evaluate()
                 cursor_flash_timer = 0
             elseif key == "escape" then
                 -- unsets the target but doesn't move the keyboard selection
-                unset_target("escape")
+                typing.unset_target("escape")
                 break
             elseif key == "up" then
                 -- unsets the target and reverse tabs the keyboard selection
-                unset_target("tab_up")
+                typing.unset_target("tab_up")
                 return target_cell_id, "tab_up"
             elseif key == "down" then
                 -- unsets the target and tabs the keyboard selection
-                unset_target("tab_down")
+                typing.unset_target("tab_down")
                 return target_cell_id, "tab_down"
             elseif key == "tab" then
                 -- unsets the target and tabs or reverse tabs the keyboard selection
                 local tab_method = love.keyboard.isDown("lshift", "rshift") and "tab_up" or "tab_down"
-                unset_target(tab_method)
+                typing.unset_target(tab_method)
                 return target_cell_id, tab_method
             elseif key == "return" then
                 -- not spammable
                 if not is_repeat then
                     -- unsets the target and tabs the keyboard selection
-                    unset_target("tab_down")
+                    typing.unset_target("tab_down")
                     return target_cell_id, "tab_down"
                 end
             end
@@ -199,12 +224,10 @@ function control_backend.typing_evaluate()
     return nil, "escape"
 end
 
-function control_backend.typing_evaluate_without_events()
+function typing.evaluate_without_events()
     started_editing_state = nil
     stopped_editing_state = nil
 end
-
---#endregion
 
 do
     local mnav = require("ui.control.mouse_navigation")
@@ -237,13 +260,13 @@ do
             target_cell_id = cell_id
             -- ! if a click happens within a single frame, this won't trigger
             if not mnav.is_hovering(sensor_id) and mnav.holding then
-                unset_target("click_out")
+                typing.unset_target("click_out")
             end
         else
             -- tell keyboard navigation that this cell is a text entry
-            control_backend.keyboard_navigation_configure_cell_as_text_input(cell_id, state, global)
+            keyboard_navigation.configure_cell_as_text_input(cell_id, state, global)
             if mnav.get_clicked(sensor_id) or knav.get_action(cell_id) == kba.activate then
-                set_target(state)
+                typing.set_target(state)
             end
         end
     end

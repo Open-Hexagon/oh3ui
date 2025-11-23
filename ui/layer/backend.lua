@@ -3,13 +3,13 @@
 local cursor = require("ui.cursor")
 local control_backend = require("ui.control.backend")
 local stack_manager_backend = require("ui.stack_manager.backend")
+local keyboard_navigation = require("ui.control.keyboard_navigation")
+local layer_status = require("ui.layer.status")
 
 local layer_backend = {
     schedule_index = 0,
     scheduled_tasks = {},
     scheduled_layers = {},
-    current_layer_is_active = false,
-    current_layer = 0,
 }
 
 -- Higher index layers will show up on top of lower index layers
@@ -18,22 +18,22 @@ local length = 0
 
 ---Run the functions for all the layers
 function layer_backend.run_all()
-    layer_backend.current_layer_is_active = false
+    layer_status.current_layer_is_active = false
 
     -- check if layer 1 exists
     if length > 0 then
         -- run inactive layers
         for i = 1, length - 1 do
             cursor.reset()
-            layer_backend.current_layer = i
+            layer_status.current_layer = i
             stack[i]()
             stack_manager_backend.clean_up()
         end
 
-        layer_backend.current_layer_is_active = true
+        layer_status.current_layer_is_active = true
         -- make the top layer active
         cursor.reset()
-        layer_backend.current_layer = length
+        layer_status.current_layer = length
         stack[length]()
         stack_manager_backend.clean_up()
     end
@@ -60,16 +60,16 @@ function layer_backend.prepare_for_next_frame()
     end
     layer_backend.schedule_index = 0
 
-    if control_backend.last_used_control_method == "keyboard" then
+    if control_backend.get_last_used_control_method() == "keyboard" then
         -- if keyboard navigation was used we need to find the best cell to select on the new top layer
-        layer_backend.current_layer_is_active = true
-        control_backend.keyboard_navigation_reset()
+        layer_status.current_layer_is_active = true
+        keyboard_navigation.reset()
         stack[length]() -- we have to run the new top layer (possibly again)
-        control_backend.keyboard_navigation_finish_layer_transition()
+        keyboard_navigation.finish_layer_transition()
         stack_manager_backend.clean_up()
     else
         -- deactivate keyboard nav if something else was used
-        control_backend.keyboard_navigation_deselect()
+        keyboard_navigation.deselect()
     end
 end
 
