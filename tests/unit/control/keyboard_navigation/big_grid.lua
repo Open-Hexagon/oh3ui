@@ -1,7 +1,7 @@
 local knav = require("ui.control.keyboard_navigation")
+local backend = require("ui.control.backend")
 local events = require("ui.events")
-local shared_data = require("ui.stack_data")
-local control_data = shared_data.control
+local layer_backend = require("ui.layer.backend")
 local unittest = require("tests.unittest")
 
 local common = require("tests.unit.control.keyboard_navigation.common")
@@ -17,7 +17,7 @@ function T.set_up()
         6 0 0 5 5
     ]]
 
-    control_data.current_layer_is_active = true
+    layer_backend.current_layer_is_active = true
 
     knav.make_cell()
     knav.grid_cell(1, 1)
@@ -35,7 +35,7 @@ function T.set_up()
     knav.make_cell()
     knav.grid_cell(1, 4)
 
-    control_data.current_layer_is_active = false
+    layer_backend.current_layer_is_active = false
 end
 
 function T.tear_down()
@@ -43,37 +43,37 @@ function T.tear_down()
 end
 
 function T.test_6ru()
-    knav.jump_to_cell(6)
+    backend.keyboard_navigation_jump_to_cell(6)
     events.add("keypressed", "right")
     events.add("keypressed", "up")
-    knav.evaluate()
-    unittest.assert(common.get_selected_cell_info() == 2)
+    backend.keyboard_navigation_evaluate()
+    unittest.assert(knav.get_selected_cell_id() == 2)
 end
 
 function T.test_6rru()
-    knav.jump_to_cell(6)
+    backend.keyboard_navigation_jump_to_cell(6)
     events.add("keypressed", "right")
     events.add("keypressed", "right")
     events.add("keypressed", "up")
-    knav.evaluate()
-    unittest.assert(common.get_selected_cell_info() == 3)
+    backend.keyboard_navigation_evaluate()
+    unittest.assert(knav.get_selected_cell_id() == 3)
 end
 
 function T.test_3dl()
-    knav.jump_to_cell(3)
+    backend.keyboard_navigation_jump_to_cell(3)
     events.add("keypressed", "down")
     events.add("keypressed", "left")
-    knav.evaluate()
-    unittest.assert(common.get_selected_cell_info() == 4)
+    backend.keyboard_navigation_evaluate()
+    unittest.assert(knav.get_selected_cell_id() == 4)
 end
 
 function T.test_3ddl()
-    knav.jump_to_cell(3)
+    backend.keyboard_navigation_jump_to_cell(3)
     events.add("keypressed", "down")
     events.add("keypressed", "down")
     events.add("keypressed", "left")
-    knav.evaluate()
-    unittest.assert(common.get_selected_cell_info() == 6)
+    backend.keyboard_navigation_evaluate()
+    unittest.assert(knav.get_selected_cell_id() == 6)
 end
 
 return T

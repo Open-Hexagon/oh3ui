@@ -1,14 +1,13 @@
-local upvalue = require("tests.upvalue")
 local knav = require("ui.control.keyboard_navigation")
 local kba = knav.actions
 local wmode = knav.wrapping_mode
 local events = require("ui.events")
-local enable_intersection_checks = require("ui.control.sensor").enable_intersection_checks
+local sensor = require("ui.control.sensor")
 local common = require("tests.unit.control.keyboard_navigation.common")
-local shared_data = require("ui.stack_data")
-local control_data = shared_data.control
+local layer_backend = require("ui.layer.backend")
 local unittest = require("tests.unittest")
 local monkeypatch = require("tests.monkeypatch")
+local backend = require("ui.control.backend")
 
 local T = {}
 
@@ -30,18 +29,18 @@ function T.tear_down()
 end
 
 function T.test_mouse_hiding()
-    control_data.current_layer_is_active = true
+    layer_backend.current_layer_is_active = true
 
     knav.make_cell()
     knav.grid_cell(1, 1)
 
-    control_data.current_layer_is_active = false
+    layer_backend.current_layer_is_active = false
 
     mouse_is_visible = nil
     events.add("keypressed", "right")
-    knav.evaluate()
+    backend.keyboard_navigation_evaluate()
     unittest.assert(mouse_is_visible == false)
-    unittest.assert(upvalue.get_by_name(enable_intersection_checks, "do_intersections") == false)
+    unittest.assert(sensor.do_intersections == false)
 end
 
 function T.test_negative_page_length()
@@ -49,17 +48,17 @@ function T.test_negative_page_length()
 end
 
 function T.test_inactive()
-    control_data.current_layer_is_active = false
+    layer_backend.current_layer_is_active = false
 
     unittest.assert(knav.make_cell() == 0)
-    unittest.assert(control_data.current_cell_id == 0)
+    unittest.assert(knav.get_current_cell_id() == 0)
     knav.grid_cell(1, 1)
-    unittest.assert(upvalue.get_by_name(knav.grid_cell, "last_gridded_cell_id") == nil)
+    unittest.assert(knav.get_last_gridded_cell_id() == nil)
 end
 
 function T.test_too_far()
     knav.set_wrapping(wmode.horizontal)
-    control_data.current_layer_is_active = true
+    layer_backend.current_layer_is_active = true
 
     knav.make_cell()
     knav.grid_cell(1, 1)
@@ -67,14 +66,14 @@ function T.test_too_far()
     knav.make_cell()
     knav.grid_cell(300, 1)
 
-    control_data.current_layer_is_active = false
+    layer_backend.current_layer_is_active = false
 
     events.add("keypressed", "right")
 
-    knav.jump_to_cell(1)
+    backend.keyboard_navigation_jump_to_cell(1)
     unittest.assert_error(knav.evaluate)
 
-    knav.jump_to_cell(2)
+    backend.keyboard_navigation_jump_to_cell(2)
     unittest.assert_error(knav.evaluate)
 
     knav.set_wrapping()
@@ -88,7 +87,7 @@ function T.test_bad_grid_fill()
 end
 
 function T.test_bad_jump_to_cell()
-    control_data.current_layer_is_active = true
+    layer_backend.current_layer_is_active = true
 
     knav.make_cell()
     knav.grid_cell(1, 1)
@@ -96,14 +95,14 @@ function T.test_bad_jump_to_cell()
     knav.make_cell()
     knav.grid_cell(2, 1)
 
-    control_data.current_layer_is_active = false
+    layer_backend.current_layer_is_active = false
 
-    unittest.assert_error(knav.jump_to_cell, nil, -1)
-    unittest.assert_error(knav.jump_to_cell, nil, 3)
+    unittest.assert_error(backend.keyboard_navigation_jump_to_cell, nil, -1)
+    unittest.assert_error(backend.keyboard_navigation_jump_to_cell, nil, 3)
 end
 
 function T.test_jump_to_cell()
-    control_data.current_layer_is_active = true
+    layer_backend.current_layer_is_active = true
 
     knav.make_cell()
     knav.grid_cell(3, 6)
@@ -111,29 +110,32 @@ function T.test_jump_to_cell()
     knav.make_cell()
     knav.grid_cell(5, 4)
 
-    control_data.current_layer_is_active = false
+    layer_backend.current_layer_is_active = false
 
-    knav.jump_to_cell(1)
-    id, x, y = common.get_selected_cell_info()
+    backend.keyboard_navigation_jump_to_cell(1)
+    id = knav.get_selected_cell_id()
+    x, y = knav.get_grid_location()
     unittest.assert(id == 1)
     unittest.assert(x == 3)
     unittest.assert(y == 6)
 
-    knav.jump_to_cell(2)
-    id, x, y = common.get_selected_cell_info()
+    backend.keyboard_navigation_jump_to_cell(2)
+    id = knav.get_selected_cell_id()
+    x, y = knav.get_grid_location()
     unittest.assert(id == 2)
     unittest.assert(x == 5)
     unittest.assert(y == 4)
 
-    knav.jump_to_cell(0)
-    id, x, y = common.get_selected_cell_info()
+    backend.keyboard_navigation_jump_to_cell(0)
+    id = knav.get_selected_cell_id()
+    x, y = knav.get_grid_location()
     unittest.assert(id == 0)
     unittest.assert(x == nil)
     unittest.assert(y == nil)
 end
 
 function T.test_wrapping_reencounter()
-    control_data.current_layer_is_active = true
+    layer_backend.current_layer_is_active = true
 
     knav.make_cell()
     knav.grid_cell(1, 1)
@@ -144,17 +146,18 @@ function T.test_wrapping_reencounter()
     knav.make_cell()
     knav.grid_cell(1, 2, 2, 1)
 
-    control_data.current_layer_is_active = false
+    layer_backend.current_layer_is_active = false
 
     knav.set_wrapping(wmode.horizontal)
-    knav.jump_to_cell(2)
+    backend.keyboard_navigation_jump_to_cell(2)
 
     events.add("keypressed", "down")
     -- ! we are at grid position (2,2) in between these two events
     events.add("keypressed", "right")
-    knav.evaluate()
+    backend.keyboard_navigation_evaluate()
 
-    id, x, y = common.get_selected_cell_info()
+    id = knav.get_selected_cell_id()
+    x, y = knav.get_grid_location()
     unittest.assert(id == 3)
     -- ! reencountering the same cell when wrapping doesn't actually move the grid position
     unittest.assert(x == 2)
@@ -168,7 +171,7 @@ function T.test_wrapping_points()
     ... -1 | 0 0 X 0 1 1 0 2 0 -2 | -1 ...
     ]]
 
-    control_data.current_layer_is_active = true
+    layer_backend.current_layer_is_active = true
 
     knav.make_cell()
     knav.grid_cell(5, 1, 2, 1)
@@ -178,38 +181,42 @@ function T.test_wrapping_points()
 
     knav.fill_grid(knav.op_cell.wrap, 10, 1)
 
-    control_data.current_layer_is_active = false
+    layer_backend.current_layer_is_active = false
 
     events.add("keypressed", "right")
 
     knav.fill_grid(knav.op_cell.barrier, 3, 1)
-    knav.jump_to_cell(2)
-    knav.evaluate()
-    id, x, y = common.get_selected_cell_info()
+    backend.keyboard_navigation_jump_to_cell(2)
+    backend.keyboard_navigation_evaluate()
+    id = knav.get_selected_cell_id()
+    x, y = knav.get_grid_location()
     unittest.assert(id == 1)
     unittest.assert(x == 5)
     unittest.assert(y == 1)
 
     knav.fill_grid(knav.op_cell.page, 3, 1)
-    knav.jump_to_cell(2)
-    knav.evaluate()
-    id, x, y = common.get_selected_cell_info()
+    backend.keyboard_navigation_jump_to_cell(2)
+    backend.keyboard_navigation_evaluate()
+    id = knav.get_selected_cell_id()
+    x, y = knav.get_grid_location()
     unittest.assert(id == 1)
     unittest.assert(x == 5)
     unittest.assert(y == 1)
 
     knav.fill_grid(knav.op_cell.redirect, 3, 1)
-    knav.jump_to_cell(2)
-    knav.evaluate()
-    id, x, y = common.get_selected_cell_info()
+    backend.keyboard_navigation_jump_to_cell(2)
+    backend.keyboard_navigation_evaluate()
+    id = knav.get_selected_cell_id()
+    x, y = knav.get_grid_location()
     unittest.assert(id == 1)
     unittest.assert(x == 5)
     unittest.assert(y == 1)
 
     knav.fill_grid(knav.op_cell.tab, 3, 1)
-    knav.jump_to_cell(2)
-    knav.evaluate()
-    id, x, y = common.get_selected_cell_info()
+    backend.keyboard_navigation_jump_to_cell(2)
+    backend.keyboard_navigation_evaluate()
+    id = knav.get_selected_cell_id()
+    x, y = knav.get_grid_location()
     unittest.assert(id == 1)
     unittest.assert(x == 5)
     unittest.assert(y == 1)
@@ -221,7 +228,7 @@ function T.test_evaluate_with_no_cells_or_events()
     upvalue.set_by_name(knav.evaluate_without_events, "last_is_repeat", true)
     upvalue.set_by_name(knav.evaluate_without_events, "held_action", kba.activate)
 
-    knav.evaluate()
+    backend.keyboard_navigation_evaluate()
 
     local a, b, c = upvalue.get_by_name(knav.evaluate_without_events, "last_action", "last_is_repeat", "held_action")
 
@@ -231,50 +238,50 @@ function T.test_evaluate_with_no_cells_or_events()
 end
 
 function T.test_invalid_grid_position()
-    control_data.current_layer_is_active = true
+    layer_backend.current_layer_is_active = true
 
     knav.make_cell()
     knav.grid_cell(4, 2)
 
-    control_data.current_layer_is_active = false
+    layer_backend.current_layer_is_active = false
 
-    knav.jump_to_cell(1)
+    backend.keyboard_navigation_jump_to_cell(1)
 
-    upvalue.set_by_name(knav.deselect, "grid_x", -1)
-    upvalue.set_by_name(knav.deselect, "grid_y", -1)
+    knav.set_grid_location(-1, -1)
 
     events.add("keypressed", "right")
-    knav.evaluate()
+    backend.keyboard_navigation_evaluate()
 
-    id, x, y = common.get_selected_cell_info()
+    id = knav.get_selected_cell_id()
+    x, y = knav.get_grid_location()
     unittest.assert(id == 1)
     unittest.assert(x == 4)
     unittest.assert(y == 2)
 end
 
 function T.test_selection_has_changed()
-    control_data.current_layer_is_active = true
+    layer_backend.current_layer_is_active = true
 
     knav.make_cell()
     knav.grid_cell(1, 1)
     knav.make_cell()
     knav.grid_cell(2, 1)
 
-    control_data.current_layer_is_active = false
+    layer_backend.current_layer_is_active = false
 
-    knav.selection_has_changed = false
+    backend.keyboard_navigation_selection_has_changed = false
 
-    knav.jump_to_cell(1)
+    backend.keyboard_navigation_jump_to_cell(1)
 
     events.add("keypressed", "right")
-    knav.evaluate()
+    backend.keyboard_navigation_evaluate()
     events.clear()
 
-    unittest.assert(knav.selection_has_changed == true)
+    unittest.assert(backend.keyboard_navigation_selection_has_changed == true)
 
-    knav.evaluate()
+    backend.keyboard_navigation_evaluate()
 
-    unittest.assert(knav.selection_has_changed == false)
+    unittest.assert(backend.keyboard_navigation_selection_has_changed == false)
 end
 
 return T

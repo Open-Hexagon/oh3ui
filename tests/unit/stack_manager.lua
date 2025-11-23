@@ -1,6 +1,4 @@
-local monkeypatch = require("tests.monkeypatch")
-local volatile_data = require("ui.stack_data").volatile
-local draw_queue = require("ui.draw_queue")
+local stack_data = require("ui.stack_manager.stack_data")
 local unittest = require("tests.unittest")
 local stack_manager = require("ui.stack_manager")
 
@@ -8,89 +6,89 @@ local T = {}
 
 function T.tear_down()
     -- cursor snapshots
-    volatile_data.cursor_index = 0 -- index of the last pushed snapshot
-    volatile_data.cursor_base_index = 0
+    stack_data.cursor_index = 0 -- index of the last pushed snapshot
+    stack_data.cursor_base_index = 0
 
     -- cursor translations
-    volatile_data.translate_index = 2 -- index of the last pushed translation
-    volatile_data.translate_base_index = 2
+    stack_data.translate_index = 2 -- index of the last pushed translation
+    stack_data.translate_base_index = 2
 
     -- cursor areas
-    volatile_data.area_index = 0 -- index of the last started area
-    volatile_data.area_base_index = 0
+    stack_data.area_index = 0 -- index of the last started area
+    stack_data.area_base_index = 0
 
-    volatile_data.mask_index = 0 -- number of masks applied
-    volatile_data.mask_base_index = 0
+    stack_data.mask_index = 0 -- number of masks applied
+    stack_data.mask_base_index = 0
 
     -- area element balance stack for two-part area elements
-    volatile_data.aeb_index = 0
-    volatile_data.aeb_base_index = 0
+    stack_data.aeb_index = 0
+    stack_data.aeb_base_index = 0
 
-    volatile_data.record_stack_index = 0
+    stack_data.record_stack_index = 0
 end
 
 function T.test_cursor_index()
-    volatile_data.cursor_index = 10
+    stack_data.cursor_index = 10
 
     stack_manager.push_record()
 
-    unittest.assert(volatile_data.cursor_index == 10)
-    unittest.assert(volatile_data.cursor_base_index == 10)
+    unittest.assert(stack_data.cursor_index == 10)
+    unittest.assert(stack_data.cursor_base_index == 10)
 
-    volatile_data.cursor_index = 15
+    stack_data.cursor_index = 15
 
     stack_manager.pop_record()
 
-    unittest.assert(volatile_data.cursor_index == 10)
-    unittest.assert(volatile_data.cursor_base_index == 0)
+    unittest.assert(stack_data.cursor_index == 10)
+    unittest.assert(stack_data.cursor_base_index == 0)
 end
 
 function T.test_translate_index()
-    volatile_data.translate_index = 10
+    stack_data.translate_index = 10
 
     stack_manager.push_record()
 
-    unittest.assert(volatile_data.translate_index == 10)
-    unittest.assert(volatile_data.translate_base_index == 10)
+    unittest.assert(stack_data.translate_index == 10)
+    unittest.assert(stack_data.translate_base_index == 10)
 
-    volatile_data.translate_index = 15
+    stack_data.translate_index = 15
 
     stack_manager.pop_record()
 
-    unittest.assert(volatile_data.translate_index == 10)
-    unittest.assert(volatile_data.translate_base_index == 2)
+    unittest.assert(stack_data.translate_index == 10)
+    unittest.assert(stack_data.translate_base_index == 2)
 end
 
 function T.test_area_index()
-    volatile_data.area_index = 10
+    stack_data.area_index = 10
 
     stack_manager.push_record()
 
-    unittest.assert(volatile_data.area_index == 10)
-    unittest.assert(volatile_data.area_base_index == 10)
+    unittest.assert(stack_data.area_index == 10)
+    unittest.assert(stack_data.area_base_index == 10)
 
-    volatile_data.area_index = 15
+    stack_data.area_index = 15
 
     stack_manager.pop_record()
 
-    unittest.assert(volatile_data.area_index == 10)
-    unittest.assert(volatile_data.area_base_index == 0)
+    unittest.assert(stack_data.area_index == 10)
+    unittest.assert(stack_data.area_base_index == 0)
 end
 
 function T.test_aeb_index()
-    volatile_data.aeb_index = 10
+    stack_data.aeb_index = 10
 
     stack_manager.push_record()
 
-    unittest.assert(volatile_data.aeb_index == 10)
-    unittest.assert(volatile_data.aeb_base_index == 10)
+    unittest.assert(stack_data.aeb_index == 10)
+    unittest.assert(stack_data.aeb_base_index == 10)
 
-    volatile_data.aeb_index = 15
+    stack_data.aeb_index = 15
 
     stack_manager.pop_record()
 
-    unittest.assert(volatile_data.aeb_index == 10)
-    unittest.assert(volatile_data.aeb_base_index == 0)
+    unittest.assert(stack_data.aeb_index == 10)
+    unittest.assert(stack_data.aeb_base_index == 0)
 end
 
 function T.test_record_underflow()
@@ -98,32 +96,32 @@ function T.test_record_underflow()
 end
 
 function T.test_clean_up()
-    volatile_data.cursor_index = 1
-    volatile_data.cursor_base_index = 1
-    unittest.assert_error(stack_manager.clean_up)
-    unittest.assert(volatile_data.cursor_index == 0)
-    unittest.assert(volatile_data.cursor_base_index == 0)
+    stack_data.cursor_index = 1
+    stack_data.cursor_base_index = 1
+    unittest.assert_error(stack_manager._clean_up)
+    unittest.assert(stack_data.cursor_index == 0)
+    unittest.assert(stack_data.cursor_base_index == 0)
 
-    volatile_data.translate_index = 6
-    volatile_data.translate_base_index = 6
-    unittest.assert_error(stack_manager.clean_up)
-    unittest.assert(volatile_data.translate_index == 2)
-    unittest.assert(volatile_data.translate_base_index == 2)
+    stack_data.translate_index = 6
+    stack_data.translate_base_index = 6
+    unittest.assert_error(stack_manager._clean_up)
+    unittest.assert(stack_data.translate_index == 2)
+    unittest.assert(stack_data.translate_base_index == 2)
 
-    volatile_data.area_index = 1
-    volatile_data.area_base_index = 1
-    unittest.assert_error(stack_manager.clean_up)
-    unittest.assert(volatile_data.area_index == 0)
-    unittest.assert(volatile_data.area_base_index == 0)
+    stack_data.area_index = 1
+    stack_data.area_base_index = 1
+    unittest.assert_error(stack_manager._clean_up)
+    unittest.assert(stack_data.area_index == 0)
+    unittest.assert(stack_data.area_base_index == 0)
 
-    volatile_data.aeb_index = 1
-    volatile_data.aeb_base_index = 1
-    unittest.assert_error(stack_manager.clean_up)
-    volatile_data.aeb_index = 0
-    volatile_data.aeb_base_index = 0
+    stack_data.aeb_index = 1
+    stack_data.aeb_base_index = 1
+    unittest.assert_error(stack_manager._clean_up)
+    stack_data.aeb_index = 0
+    stack_data.aeb_base_index = 0
 
     stack_manager.push_record()
-    unittest.assert_error(stack_manager.clean_up)
+    unittest.assert_error(stack_manager._clean_up)
 end
 
 return T

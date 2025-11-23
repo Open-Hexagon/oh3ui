@@ -14,8 +14,6 @@ function T.set_up()
     cursor.width, cursor.height = 10, 10
     cursor.anchor_x, cursor.anchor_y = 0, 0
     cursor.auto_reshape = false
-
-    cursor.area_expansion_on()
 end
 
 function T.tear_down()
@@ -169,7 +167,7 @@ function T.test_put_empty_area()
     cursor.finish_area()
 end
 
-function T.test_area_expansion_toggle()
+function T.test_no_area_expansion()
     cursor.start_area()
 
     cursor.x = 0
@@ -178,9 +176,7 @@ function T.test_area_expansion_toggle()
 
     cursor.x = 100
     cursor.y = 100
-    cursor.area_expansion_off()
-    cursor.place()
-    cursor.area_expansion_on()
+    cursor.place(nil, nil, true)
 
     cursor.put_area()
 

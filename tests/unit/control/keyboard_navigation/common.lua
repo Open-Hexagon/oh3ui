@@ -1,9 +1,8 @@
 local enable_intersection_checks = require("ui.control.sensor").enable_intersection_checks
 local knav = require("ui.control.keyboard_navigation")
+local backend = require("ui.control.backend")
 local events = require("ui.events")
-local shared_data = require("ui.stack_data")
-local control_data = shared_data.control
-local upvalue = require("tests.upvalue")
+local layer_backend = require("ui.layer.backend")
 
 local common = {
     unittest_ignore = true,
@@ -11,20 +10,16 @@ local common = {
 
 function common.reset_all()
     events.clear()
-    control_data.current_layer_is_active = false
+    layer_backend.current_layer_is_active = false
     enable_intersection_checks()
 
     knav.set_wrapping()
     knav.set_page_length(1)
 
     -- need all for complete reset
-    knav.reset()
-    knav.deselect()
-    knav.evaluate_without_events()
-end
-
-function common.get_selected_cell_info()
-    return upvalue.get_by_name(knav.deselect, "selected_cell_id", "grid_x", "grid_y")
+    backend.keyboard_navigation_reset()
+    backend.keyboard_navigation_deselect()
+    backend.keyboard_navigation_evaluate_without_events()
 end
 
 return common

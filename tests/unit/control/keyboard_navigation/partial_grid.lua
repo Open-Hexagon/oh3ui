@@ -1,7 +1,6 @@
 local knav = require("ui.control.keyboard_navigation")
 local events = require("ui.events")
-local shared_data = require("ui.stack_data")
-local control_data = shared_data.control
+local layer_backend = require("ui.layer.backend")
 local unittest = require("tests.unittest")
 local monkeypatch = require("tests.monkeypatch")
 
@@ -32,7 +31,7 @@ function T.set_up()
         7 8 0
     ]]
 
-    control_data.current_layer_is_active = true
+    layer_backend.current_layer_is_active = true
 
     knav.make_cell()
 
@@ -56,7 +55,7 @@ function T.set_up()
 
     knav.make_cell()
 
-    control_data.current_layer_is_active = false
+    layer_backend.current_layer_is_active = false
 end
 
 function T.tear_down()
