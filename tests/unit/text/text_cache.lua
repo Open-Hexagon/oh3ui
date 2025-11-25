@@ -7,7 +7,6 @@ local T = {}
 local time = 0
 
 function T.set_up_case()
-    unittest.skip_if(os.getenv("HEADLESS"), "this test cannot be run in headless mode")
     love.timer.getTime = monkeypatch.replace(love.timer.getTime, function()
         return time
     end)
@@ -27,12 +26,12 @@ function T.test_text_cache()
         _ = text_cache.get(love.graphics.getFont(), "Hello" .. i, math.huge, "left")
     end
 
-    -- advance time by 1
-    time = 1
+    -- advance time
+    time = 1000
     -- this should set the usage of earlier text objects to 0
     _ = text_cache.get(love.graphics.getFont(), "A", math.huge, "left")
-    -- advance time by 1
-    time = 2
+    -- advance time
+    time = 2000
     -- this should clear the cache of earlier text objects to 0
     _ = text_cache.get(love.graphics.getFont(), "A", math.huge, "left")
 

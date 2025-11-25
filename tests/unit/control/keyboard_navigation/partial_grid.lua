@@ -1,6 +1,7 @@
+---@diagnostic disable: discard-returns
 local knav = require("ui.control.keyboard_navigation")
 local events = require("ui.events")
-local layer_backend = require("ui.layer.backend")
+local layer_status = require("ui.layer.status")
 local unittest = require("tests.unittest")
 local monkeypatch = require("tests.monkeypatch")
 
@@ -31,7 +32,7 @@ function T.set_up()
         7 8 0
     ]]
 
-    layer_backend.current_layer_is_active = true
+    layer_status.current_layer_is_active = true
 
     knav.make_cell()
 
@@ -55,7 +56,7 @@ function T.set_up()
 
     knav.make_cell()
 
-    layer_backend.current_layer_is_active = false
+    layer_status.current_layer_is_active = false
 end
 
 function T.tear_down()
@@ -65,25 +66,25 @@ end
 function T.test_initial_move()
     events.add("keypressed", "right")
     knav.evaluate()
-    unittest.assert(common.get_selected_cell_info() == 3)
+    unittest.assert(knav.get_selected_cell_id() == 3)
     knav.deselect()
     events.clear()
 
     events.add("keypressed", "down")
     knav.evaluate()
-    unittest.assert(common.get_selected_cell_info() == 3)
+    unittest.assert(knav.get_selected_cell_id() == 3)
     knav.deselect()
     events.clear()
 
     events.add("keypressed", "left")
     knav.evaluate()
-    unittest.assert(common.get_selected_cell_info() == 8)
+    unittest.assert(knav.get_selected_cell_id() == 8)
     knav.deselect()
     events.clear()
 
     events.add("keypressed", "up")
     knav.evaluate()
-    unittest.assert(common.get_selected_cell_info() == 8)
+    unittest.assert(knav.get_selected_cell_id() == 8)
     knav.deselect()
     events.clear()
 end
@@ -95,32 +96,37 @@ function T.test_tabbing()
     events.add("keypressed", "tab")
 
     knav.evaluate()
-    id, x, y = common.get_selected_cell_info()
+    id = knav.get_selected_cell_id()
+    x, y = knav.get_grid_location()
 
     unittest.assert(id == 2)
     unittest.assert(x == nil)
     unittest.assert(y == nil)
 
     knav.evaluate()
-    id, x, y = common.get_selected_cell_info()
+    id = knav.get_selected_cell_id()
+    x, y = knav.get_grid_location()
     unittest.assert(id == 4)
     unittest.assert(x == 1)
     unittest.assert(y == 2)
 
     knav.evaluate()
-    id, x, y = common.get_selected_cell_info()
+    id = knav.get_selected_cell_id()
+    x, y = knav.get_grid_location()
     unittest.assert(id == 6)
     unittest.assert(x == nil)
     unittest.assert(y == nil)
 
     knav.evaluate()
-    id, x, y = common.get_selected_cell_info()
+    id = knav.get_selected_cell_id()
+    x, y = knav.get_grid_location()
     unittest.assert(id == 8)
     unittest.assert(x == 2)
     unittest.assert(y == 3)
 
     knav.evaluate()
-    id, x, y = common.get_selected_cell_info()
+    id = knav.get_selected_cell_id()
+    x, y = knav.get_grid_location()
     unittest.assert(id == 1)
     unittest.assert(x == nil)
     unittest.assert(y == nil)
@@ -133,31 +139,36 @@ function T.test_shift_tabbing()
     events.add("keypressed", "tab")
 
     knav.evaluate()
-    id, x, y = common.get_selected_cell_info()
+    id = knav.get_selected_cell_id()
+    x, y = knav.get_grid_location()
     unittest.assert(id == 8)
     unittest.assert(x == 2)
     unittest.assert(y == 3)
 
     knav.evaluate()
-    id, x, y = common.get_selected_cell_info()
+    id = knav.get_selected_cell_id()
+    x, y = knav.get_grid_location()
     unittest.assert(id == 6)
     unittest.assert(x == nil)
     unittest.assert(y == nil)
 
     knav.evaluate()
-    id, x, y = common.get_selected_cell_info()
+    id = knav.get_selected_cell_id()
+    x, y = knav.get_grid_location()
     unittest.assert(id == 4)
     unittest.assert(x == 1)
     unittest.assert(y == 2)
 
     knav.evaluate()
-    id, x, y = common.get_selected_cell_info()
+    id = knav.get_selected_cell_id()
+    x, y = knav.get_grid_location()
     unittest.assert(id == 2)
     unittest.assert(x == nil)
     unittest.assert(y == nil)
 
     knav.evaluate()
-    id, x, y = common.get_selected_cell_info()
+    id = knav.get_selected_cell_id()
+    x, y = knav.get_grid_location()
     unittest.assert(id == 9)
     unittest.assert(x == nil)
     unittest.assert(y == nil)
@@ -167,69 +178,69 @@ function T.test_pageup()
     knav.set_page_length(3)
     events.add("keypressed", "pageup")
     knav.evaluate()
-    unittest.assert(common.get_selected_cell_info() == 9)
+    unittest.assert(knav.get_selected_cell_id() == 9)
     knav.evaluate()
-    unittest.assert(common.get_selected_cell_info() == 6)
+    unittest.assert(knav.get_selected_cell_id() == 6)
     knav.evaluate()
-    unittest.assert(common.get_selected_cell_info() == 3)
+    unittest.assert(knav.get_selected_cell_id() == 3)
     knav.evaluate()
-    unittest.assert(common.get_selected_cell_info() == 1)
+    unittest.assert(knav.get_selected_cell_id() == 1)
     knav.evaluate()
-    unittest.assert(common.get_selected_cell_info() == 1)
+    unittest.assert(knav.get_selected_cell_id() == 1)
 end
 
 function T.test_pagedn()
     knav.set_page_length(3)
     events.add("keypressed", "pagedown")
     knav.evaluate()
-    unittest.assert(common.get_selected_cell_info() == 1)
+    unittest.assert(knav.get_selected_cell_id() == 1)
     knav.evaluate()
-    unittest.assert(common.get_selected_cell_info() == 4)
+    unittest.assert(knav.get_selected_cell_id() == 4)
     knav.evaluate()
-    unittest.assert(common.get_selected_cell_info() == 7)
+    unittest.assert(knav.get_selected_cell_id() == 7)
     knav.evaluate()
-    unittest.assert(common.get_selected_cell_info() == 9)
+    unittest.assert(knav.get_selected_cell_id() == 9)
     knav.evaluate()
-    unittest.assert(common.get_selected_cell_info() == 9)
+    unittest.assert(knav.get_selected_cell_id() == 9)
 end
 
 function T.test_home()
     events.add("keypressed", "home")
     knav.jump_to_cell(5)
     knav.evaluate()
-    unittest.assert(common.get_selected_cell_info() == 1)
+    unittest.assert(knav.get_selected_cell_id() == 1)
 end
 
 function T.test_end()
     events.add("keypressed", "end")
     knav.jump_to_cell(5)
     knav.evaluate()
-    unittest.assert(common.get_selected_cell_info() == 9)
+    unittest.assert(knav.get_selected_cell_id() == 9)
 end
 
 function T.test_using_arrow_keys_on_cell_with_no_grid_position()
     knav.jump_to_cell(5)
     events.add("keypressed", "right")
     knav.evaluate()
-    unittest.assert(common.get_selected_cell_info() == 6)
+    unittest.assert(knav.get_selected_cell_id() == 6)
     events.clear()
 
     knav.jump_to_cell(5)
     events.add("keypressed", "down")
     knav.evaluate()
-    unittest.assert(common.get_selected_cell_info() == 6)
+    unittest.assert(knav.get_selected_cell_id() == 6)
     events.clear()
 
     knav.jump_to_cell(5)
     events.add("keypressed", "left")
     knav.evaluate()
-    unittest.assert(common.get_selected_cell_info() == 4)
+    unittest.assert(knav.get_selected_cell_id() == 4)
     events.clear()
 
     knav.jump_to_cell(5)
     events.add("keypressed", "up")
     knav.evaluate()
-    unittest.assert(common.get_selected_cell_info() == 4)
+    unittest.assert(knav.get_selected_cell_id() == 4)
     events.clear()
 end
 

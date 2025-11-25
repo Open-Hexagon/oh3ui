@@ -1,5 +1,3 @@
-local control_backend = require("ui.control.backend")
-
 local control = {
 
     mouse_navigation = require("ui.control.mouse_navigation"),
@@ -7,6 +5,6 @@ local control = {
     typing = require("ui.control.typing"),
 }
 
-control.get_last_used_control_method = control_backend.get_last_used_control_method
+control.get_last_used_control_method = require("ui.control.control_data").get_last_used_control_method
 
 return control

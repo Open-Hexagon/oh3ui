@@ -2,11 +2,13 @@ local events = require("ui.events")
 local bit = require("bit")
 local bor, band = bit.bor, bit.band
 local disable_intersection_checks = require("ui.control.sensor").disable_intersection_checks
-local control_backend = require("ui.control.backend")
+local control_data = require("ui.control.control_data")
 local is_suppressed = require("ui.suppress").is_suppressed
 local layer_status = require("ui.layer.status")
 
 local keyboard_navigation = {}
+
+--#region enums
 
 ---@enum keyboard_action
 keyboard_navigation.actions = {
@@ -16,7 +18,6 @@ keyboard_navigation.actions = {
     up = 3,
     down = 4,
 }
-
 local kba = keyboard_navigation.actions
 
 ---Operational grid cell values that trigger special actions when navigating with arrow keys.
@@ -30,8 +31,17 @@ keyboard_navigation.op_cell = {
     redirect = -4, -- when encountered, any navigation movement is cancelled and the arrow key input is saved as the last input instead
     page = -5, -- when encountered, navigation is jumped to the previous or next page
 }
-
 local op_cell = keyboard_navigation.op_cell
+
+---@enum wrapping_mode
+keyboard_navigation.wrapping_mode = {
+    horizontal = 0x01, -- if grid_x is out of bounds, navigation will see wrap op cells
+    tab = 0x02, -- if grid_x is out of bounds, navigation will see tab op cells
+    redirect = 0x04, -- if grid_x is out of bounds, navigation will see redirect op cells
+    page = 0x08, -- if grid_x is out of bounds, navigation will see page op cells
+    vertical = 0x10, -- if grid_y is out of bounds, navigation will see wrap op cells
+}
+local wmode = keyboard_navigation.wrapping_mode
 
 ---Converts love2d key names to keyboard actions
 local key_to_action = {
@@ -44,29 +54,11 @@ local key_to_action = {
     ["up"] = kba.up,
 }
 
+--#endregion
+
+--#region variables
+
 local page_length = 1
-
----Sets how many items forward or backwards to move when encountering the page op_cell or using the pageup or pagedown keys
----@param n integer
-function keyboard_navigation.set_page_length(n)
-    if n < 1 then
-        error("page length cannot be less than 1")
-    end
-    page_length = n
-end
-
---#region wrapping
-
----@enum wrapping_mode
-keyboard_navigation.wrapping_mode = {
-    horizontal = 0x01, -- if grid_x is out of bounds, navigation will see wrap op cells
-    tab = 0x02, -- if grid_x is out of bounds, navigation will see tab op cells
-    redirect = 0x04, -- if grid_x is out of bounds, navigation will see redirect op cells
-    page = 0x08, -- if grid_x is out of bounds, navigation will see page op cells
-    vertical = 0x10, -- if grid_y is out of bounds, navigation will see wrap op cells
-}
-
-local wmode = keyboard_navigation.wrapping_mode
 
 ---A bit packed integer that influences what `get_grid_cell` sees when it looks outside the bounds of the grid.\
 ---**Bit packing**
@@ -83,11 +75,84 @@ local wmode = keyboard_navigation.wrapping_mode
 ---@type integer
 local wrapping_mode = 0
 
----Set navigation behavior of grid borders.
----@param ... wrapping_mode list of wrapping mode enums
-function keyboard_navigation.set_wrapping(...)
-    wrapping_mode = bor(0, ...)
-end
+---An ordered list of created cells
+local cell_x = {}
+local cell_y = {}
+local cell_text_input_state = {}
+local cell_keepout = {}
+
+---The cell id that is used to check for selection and actions
+---The cell id 0 will never be assigned normally
+---@type integer
+local current_cell_id = 0
+
+---Holds the index of the last created cell.
+local last_cell_id = 0
+
+---The index of the currently selected cell.
+---0 indicates no selection.
+---Usually survives between frames
+local selected_cell_id = 0
+
+---The id of the cell that gets activated if escape is pressed.
+---nil means there was no cell set.
+local escape_cell_id
+
+---The id of the cell that gets activated if enter is pressed while nothing is selected
+---nil means there was no cell set.
+local default_cell_id
+
+---The id of the cell that's globally accessible for typing. This is stronger than the default cell if it also has a text input.
+---nil means there was no cell set.
+local global_typing_cell_id
+
+---The id of the first cell that has a actual grid position.
+---nil means no cells exist on the grid
+local first_gridded_cell_id
+
+---The id of the last cell that has a actual grid position.
+---nil means no cells exist on the grid
+local last_gridded_cell_id
+
+--[[
+    Action behavior:
+
+    A = some action
+    _ = no action or false
+    T = true
+    P = press event
+    p = repeated press event
+    . = OS key-repeat delay
+    R = release event
+
+    (Not to scale. Illustrative purposes only)
+    events           P......p p p p p p p p p pR
+    held_action     __AAAAAAAAAAAAAAAAAAAAAAAAAA__
+    last_action     __A______A_A_A_A_A_A_A_A_A_A__
+    last_is_repeat  _________T_T_T_T_T_T_T_T_T_T__
+                    frames -->
+]]
+
+---The last performed keyboard action. Nil if there was no action.
+---There only needs to be one since the keyboard can only interact with one thing at a time.
+---@type keyboard_action?
+local last_action
+
+---The whether the last keyboard action is a repeated one
+---There only needs to be one since the keyboard can only interact with one thing at a time.
+---@type boolean
+local last_is_repeat = false
+
+---The action that is currently being held down. Only the latest made action is considered "held".
+---The held action is not reasserted on repeated keypresses.
+---@type keyboard_action?
+local held_action
+
+---Forces for 1 frame to say that the selection has changed.
+---Used to trigger a scroll view request when a layer transition happens
+local force_selection_has_changed = false
+
+local selection_has_changed = false
 
 --#endregion
 
@@ -187,87 +252,21 @@ end
 
 --#endregion
 
----An ordered list of created cells
-local cell_x = {}
-local cell_y = {}
-local cell_text_input_state = {}
-local cell_keepout = {}
+--#region setters and getters
 
----The cell id that is used to check for selection and actions
----The cell id 0 will never be assigned normally
----@type integer
-local current_cell_id = 0
+---Sets how many items forward or backwards to move when encountering the page op_cell or using the pageup or pagedown keys
+---@param n integer
+function keyboard_navigation.set_page_length(n)
+    if n < 1 then
+        error("page length cannot be less than 1")
+    end
+    page_length = n
+end
 
----Holds the index of the last created cell.
-local last_cell_id = 0
-
----The index of the currently selected cell.
----0 indicates no selection.
----Usually survives between frames
-local selected_cell_id = 0
-
----The id of the cell that gets activated if escape is pressed.
----nil means there was no cell set.
-local escape_cell_id
-
----The id of the cell that gets activated if enter is pressed while nothing is selected
----nil means there was no cell set.
-local default_cell_id
-
----The id of the cell that's globally accessible for typing. This is stronger than the default cell if it also has a text input.
----nil means there was no cell set.
-local global_typing_cell_id
-
----The id of the first cell that has a actual grid position.
----nil means no cells exist on the grid
-local first_gridded_cell_id
-
----The id of the last cell that has a actual grid position.
----nil means no cells exist on the grid
-local last_gridded_cell_id
-
---[[
-    Action behavior:
-
-    A = some action
-    _ = no action or false
-    T = true
-    P = press event
-    p = repeated press event
-    . = OS key-repeat delay
-    R = release event
-
-    (Not to scale. Illustrative purposes only)
-    events           P......p p p p p p p p p pR
-    held_action     __AAAAAAAAAAAAAAAAAAAAAAAAAA__
-    last_action     __A______A_A_A_A_A_A_A_A_A_A__
-    last_is_repeat  _________T_T_T_T_T_T_T_T_T_T__
-                    frames -->
-]]
-
----The last performed keyboard action. Nil if there was no action.
----There only needs to be one since the keyboard can only interact with one thing at a time.
----@type keyboard_action?
-local last_action
-
----The whether the last keyboard action is a repeated one
----There only needs to be one since the keyboard can only interact with one thing at a time.
----@type boolean
-local last_is_repeat = false
-
----The action that is currently being held down. Only the latest made action is considered "held".
----The held action is not reasserted on repeated keypresses.
----@type keyboard_action?
-local held_action
-
----Forces for 1 frame to say that the selection has changed.
----Used to trigger a scroll view request when a layer transition happens
-local force_selection_has_changed = false
-
-local selection_has_changed = false
-
-local function is_valid_cell_id(cell_id)
-    return cell_id >= 0 and cell_id <= last_cell_id
+---Set navigation behavior of grid borders.
+---@param ... wrapping_mode list of wrapping mode enums
+function keyboard_navigation.set_wrapping(...)
+    wrapping_mode = bor(0, ...)
 end
 
 ---Gets the currently selected cell id
@@ -284,9 +283,18 @@ function keyboard_navigation.get_last_gridded_cell_id()
     return last_gridded_cell_id
 end
 
+---Returns true if the keyboard selection has just changed
+---@return boolean
+---@nodiscard
 function keyboard_navigation.has_selection_just_changed()
     return selection_has_changed
 end
+
+local function is_valid_cell_id(cell_id)
+    return cell_id >= 0 and cell_id <= last_cell_id
+end
+
+--#endregion
 
 --#region Cell Controls
 
@@ -614,8 +622,6 @@ local function enter_grid(action)
     end
 end
 
---#endregion
-
 ---Navigates the grid given a directional keyboard action
 ---@param action keyboard_action keyboard direction action number
 ---@return keyboard_action? redirected_action action number if navigation was redirected
@@ -714,6 +720,8 @@ local function navigate_grid(action)
     return nil
 end
 
+--#endregion
+
 ---Iterates through keyboard events and returns an action and whether it was a from a repeated keyboard input.
 ---Also updates the `holding_key` variable.
 ---@return keyboard_action? action Keyboard action. Nil if there was none.
@@ -728,7 +736,7 @@ local function iterate_events()
         local name, key = event[1], event[2]
 
         if name == "keypressed" then
-            control_backend.last_used_control_method = "keyboard"
+            control_data.last_used_control_method = "keyboard"
             is_repeat = event[4]
             if key == "right" or key == "left" or key == "down" or key == "up" then
                 -- only the arrow keys set the mouse to be invisible
@@ -800,7 +808,7 @@ local function iterate_events()
                 end
             end
         elseif name == "keyreleased" then
-            control_backend.last_used_control_method = "keyboard"
+            control_data.last_used_control_method = "keyboard"
             -- clear the holding_key field if that key was released.
             if key_to_action[key] == held_action then
                 held_action = nil

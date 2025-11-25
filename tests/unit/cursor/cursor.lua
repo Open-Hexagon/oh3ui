@@ -5,6 +5,12 @@ local unittest = require("tests.unittest")
 
 local T = {}
 
+local screen_width, screen_height
+
+function T.set_up_case()
+    screen_width, screen_height = love.graphics.getDimensions()
+end
+
 function T.set_up()
     stack_manager.push_record()
 
@@ -587,6 +593,114 @@ function T.test_place()
         unittest.assert(placement.x == 50)
         unittest.assert(placement.y == 50)
     end
+end
+
+function T.test_v_squeeze()
+    cursor.width, cursor.height = 100, 100
+    cursor.v_squeeze(10)
+    unittest.assert(cursor.x == 0)
+    unittest.assert(cursor.y == 10)
+    unittest.assert(cursor.width == 100)
+    unittest.assert(cursor.height == 80)
+    unittest.assert(cursor.anchor_x == 0)
+    unittest.assert(cursor.anchor_y == 0)
+end
+
+function T.test_h_squeeze()
+    cursor.width, cursor.height = 100, 100
+    cursor.h_squeeze(10)
+    unittest.assert(cursor.x == 10)
+    unittest.assert(cursor.y == 0)
+    unittest.assert(cursor.width == 80)
+    unittest.assert(cursor.height == 100)
+    unittest.assert(cursor.anchor_x == 0)
+    unittest.assert(cursor.anchor_y == 0)
+end
+
+function T.test_v_stretch()
+    cursor.width, cursor.height = 100, 100
+    cursor.v_stretch(10)
+    unittest.assert(cursor.x == 0)
+    unittest.assert(cursor.y == -10)
+    unittest.assert(cursor.width == 100)
+    unittest.assert(cursor.height == 120)
+    unittest.assert(cursor.anchor_x == 0)
+    unittest.assert(cursor.anchor_y == 0)
+end
+
+function T.test_h_stretch()
+    cursor.width, cursor.height = 100, 100
+    cursor.h_stretch(10)
+    unittest.assert(cursor.x == -10)
+    unittest.assert(cursor.y == 0)
+    unittest.assert(cursor.width == 120)
+    unittest.assert(cursor.height == 100)
+    unittest.assert(cursor.anchor_x == 0)
+    unittest.assert(cursor.anchor_y == 0)
+end
+
+function T.test_clip_left()
+    cursor.width, cursor.height = 100, 100
+    cursor.clip_left(10)
+    unittest.assert(cursor.x == 10)
+    unittest.assert(cursor.y == 0)
+    unittest.assert(cursor.width == 90)
+    unittest.assert(cursor.height == 100)
+    unittest.assert(cursor.anchor_x == 0)
+    unittest.assert(cursor.anchor_y == 0)
+end
+
+function T.test_clip_top()
+    cursor.width, cursor.height = 100, 100
+    cursor.clip_top(10)
+    unittest.assert(cursor.x == 0)
+    unittest.assert(cursor.y == 10)
+    unittest.assert(cursor.width == 100)
+    unittest.assert(cursor.height == 90)
+    unittest.assert(cursor.anchor_x == 0)
+    unittest.assert(cursor.anchor_y == 0)
+end
+
+function T.test_clip_right()
+    cursor.x, cursor.y = 100, 100
+    cursor.width, cursor.height = 100, 100
+    cursor.anchor_x, cursor.anchor_y = 1, 1
+    cursor.clip_right(10)
+    unittest.assert(cursor.x == 90)
+    unittest.assert(cursor.y == 100)
+    unittest.assert(cursor.width == 90)
+    unittest.assert(cursor.height == 100)
+    unittest.assert(cursor.anchor_x == 1)
+    unittest.assert(cursor.anchor_y == 1)
+end
+
+function T.test_clip_bottom()
+    cursor.x, cursor.y = 100, 100
+    cursor.width, cursor.height = 100, 100
+    cursor.anchor_x, cursor.anchor_y = 1, 1
+    cursor.clip_bottom(10)
+    unittest.assert(cursor.x == 100)
+    unittest.assert(cursor.y == 90)
+    unittest.assert(cursor.width == 100)
+    unittest.assert(cursor.height == 90)
+    unittest.assert(cursor.anchor_x == 1)
+    unittest.assert(cursor.anchor_y == 1)
+end
+
+function T.test_full_width()
+    cursor.full_width()
+    unittest.assert(cursor.width == screen_width)
+end
+
+function T.test_full_height()
+    cursor.full_height()
+    unittest.assert(cursor.height == screen_height)
+end
+
+function T.test_full_screen()
+    cursor.full_screen()
+    unittest.assert(cursor.width == screen_width)
+    unittest.assert(cursor.height == screen_height)
 end
 
 return T

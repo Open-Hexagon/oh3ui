@@ -1,7 +1,8 @@
 local draw_data = require("ui.draw_queue.draw_data")
 local set_shader_op_id = require("ui.draw_queue.draw_operation").set_shader
 
-local disabled_shader = love.graphics.newShader([[
+local disabled_shader
+love.graphics.newShader([[
 vec4 effect(vec4 color, Image tex, vec2 texture_coords, vec2 screen_coords)
 {
     vec4 texturecolor = Texel(tex, texture_coords);

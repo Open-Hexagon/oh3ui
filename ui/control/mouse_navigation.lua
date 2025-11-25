@@ -9,7 +9,7 @@ local bit = require("bit")
 local bor = bit.bor
 local draw_data = require("ui.draw_queue.draw_data")
 local op_ids = require("ui.draw_queue.draw_operation")
-local control_backend = require("ui.control.backend")
+local control_data = require("ui.control.control_data")
 local is_suppressed = require("ui.suppress").is_suppressed
 local layers = require("ui.layer")
 
@@ -222,13 +222,13 @@ function mouse_navigation.evaluate()
 
         if name == "wheelmoved" then
             -- Scrolling updates the last used method
-            control_backend.last_used_control_method = "mouse"
+            control_data.last_used_control_method = "mouse"
 
             -- Record wheel movement
             mouse_navigation.wheel_dx = mouse_navigation.wheel_dx + x
             mouse_navigation.wheel_dy = mouse_navigation.wheel_dy + y
         elseif name == "mousemoved" then
-            control_backend.last_used_control_method = "mouse"
+            control_data.last_used_control_method = "mouse"
 
             -- Any mouse movement sets makes the cursor visible
             love.mouse.setVisible(true)
@@ -267,7 +267,7 @@ function mouse_navigation.evaluate()
 
             if name == "mousepressed" then
                 -- Pressing updates the last used method
-                control_backend.last_used_control_method = "mouse"
+                control_data.last_used_control_method = "mouse"
 
                 if mouse_navigation.holding then
                     -- Pressing another button while holding stops holding
@@ -286,7 +286,7 @@ function mouse_navigation.evaluate()
                 end
             elseif name == "mousereleased" then
                 -- Releasing updates the last used method
-                control_backend.last_used_control_method = "mouse"
+                control_data.last_used_control_method = "mouse"
 
                 if mouse_navigation.holding then
                     -- Releasing the same button that is being held is a click. If not then holding is stopped.

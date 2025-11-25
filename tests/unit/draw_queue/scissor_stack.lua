@@ -3,10 +3,6 @@ local ss = require("ui.draw_queue.scissor_stack")
 
 local T = {}
 
-function T.set_up_case()
-    unittest.skip_if(os.getenv("HEADLESS"), "this test cannot be run in headless mode")
-end
-
 local x, y, w, h
 
 function T.test_intersect()

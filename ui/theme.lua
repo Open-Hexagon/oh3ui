@@ -38,6 +38,7 @@ local theme = {}
 ---Check the xterm_colors.html file for a reference
 ---@param n integer 0-255
 ---@return number[]
+---@nodiscard
 function theme.get_xterm_color(n)
     -- clamp number
     n = band(n, 0xff)
@@ -126,6 +127,7 @@ theme.mix = mix
 ---@return number
 ---@return number
 ---@return number
+---@nodiscard
 function theme.alpha_mod_unpack(c, a)
     return c[1], c[2], c[3], a
 end

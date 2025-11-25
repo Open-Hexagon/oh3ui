@@ -1,8 +1,7 @@
 ---ui api endpoints
 
 local events = require("ui.events")
-local layer_backend = require("ui.layer.backend")
-local text = require("ui.text")
+local layer = require("ui.layer")
 local settings = require("ui.settings")
 local draw_data = require("ui.draw_queue.draw_data")
 local selection_outline = require("ui.decorator.element.selection_outline")
@@ -88,7 +87,7 @@ local function run()
     end
 
     do -- run
-        layer_backend.run_all()
+        layer.run_all()
         -- add the selection outline if it wasn't already done by any of the area elements
         selection_outline.add_to_queue()
     end
@@ -106,7 +105,7 @@ local function run()
     end
 
     do -- clean up
-        layer_backend.prepare_for_next_frame()
+        layer.prepare_for_next_frame()
         tooltip.clean_up()
         selection_outline.clean_up()
         draw_data.clear()
@@ -179,7 +178,7 @@ local ui = {
     new_id_table = require("ui.id_table"),
 
     ---UI layer controls.
-    layer = require("ui.layer"),
+    layer = layer,
 
     ---Text utilities
     text = require("ui.text"),

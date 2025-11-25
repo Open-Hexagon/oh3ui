@@ -98,30 +98,30 @@ end
 function T.test_clean_up()
     stack_data.cursor_index = 1
     stack_data.cursor_base_index = 1
-    unittest.assert_error(stack_manager._clean_up)
+    unittest.assert_error(stack_manager.clean_up)
     unittest.assert(stack_data.cursor_index == 0)
     unittest.assert(stack_data.cursor_base_index == 0)
 
     stack_data.translate_index = 6
     stack_data.translate_base_index = 6
-    unittest.assert_error(stack_manager._clean_up)
+    unittest.assert_error(stack_manager.clean_up)
     unittest.assert(stack_data.translate_index == 2)
     unittest.assert(stack_data.translate_base_index == 2)
 
     stack_data.area_index = 1
     stack_data.area_base_index = 1
-    unittest.assert_error(stack_manager._clean_up)
+    unittest.assert_error(stack_manager.clean_up)
     unittest.assert(stack_data.area_index == 0)
     unittest.assert(stack_data.area_base_index == 0)
 
     stack_data.aeb_index = 1
     stack_data.aeb_base_index = 1
-    unittest.assert_error(stack_manager._clean_up)
+    unittest.assert_error(stack_manager.clean_up)
     stack_data.aeb_index = 0
     stack_data.aeb_base_index = 0
 
     stack_manager.push_record()
-    unittest.assert_error(stack_manager._clean_up)
+    unittest.assert_error(stack_manager.clean_up)
 end
 
 return T

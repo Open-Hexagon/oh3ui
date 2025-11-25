@@ -19,7 +19,7 @@ function ansi.to_sequence(color, text)
     return string.format("\x1b[38;4;%d;%d;%d;%dm%s", r, g, b, a, text)
 end
 
----Extracts the next escape sequence and its following text. Returns nil if none was found. 
+---Extracts the next escape sequence and its following text. Returns nil if none was found.
 ---@param seq string string to search
 ---@param init integer? start searching from this position
 ---@return number[]|nil color is nil if nothing was found

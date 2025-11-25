@@ -8,8 +8,4 @@ function love.conf(t)
     t.window.usedpiscale = true
     t.window.vsync = 0
     t.window.msaa = 4
-
-    if os.getenv("HEADLESS") then
-        t.modules.window = false
-    end
 end
