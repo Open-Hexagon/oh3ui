@@ -211,7 +211,7 @@ function draw_data.add_draw_operation(id, ...)
         -- take a reservation
 
         if res_list[take_reservation_id] == res_list[take_reservation_id - 1] then
-            error("reservation is full")
+            error("reservation is full", 2)
         end
 
         res_list[take_reservation_id] = res_list[take_reservation_id] + 1

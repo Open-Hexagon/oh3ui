@@ -1,12 +1,18 @@
 ---Unit testing fixture
 
+local buffer = require("string.buffer")
+
 local unittest = {
     verbose = false,
     pattern = nil,
 }
 
-local YK_FAILED_ASSERT = 0x7977a0ab
-local YK_SKIPPED = 0xaddd85fa
+-- stats
+local total_tests = 0
+local tests_passed = 0
+local tests_failed = 0
+local tests_skipped = 0
+local tests_errored = 0
 
 ---Build and return a list of tests from a directory, files may implement certain functions to run tests. The list is flat.
 ---@param test_cases table
@@ -46,12 +52,8 @@ local function discover_tests(test_cases, start_dir, name_pattern)
     end
 end
 
--- stats
-local total_tests = 0
-local tests_passed = 0
-local tests_failed = 0
-local tests_skipped = 0
-local tests_errored = 0
+local YK_FAILED_ASSERT = debug.upvalueid(discover_tests, 1)
+local YK_SKIPPED = debug.upvalueid(discover_tests, 2)
 
 local function add_pass(msg)
     tests_passed = tests_passed + 1
@@ -124,30 +126,61 @@ function unittest.assert_error(fn, msg, ...)
     end
 end
 
----asserts that lists are equal
+---Asserts that lists are equal. Gives detailed info about what doesn't match.
+---Only checks lengths and integer keys 1 and above.
 ---@param t1 table
 ---@param t2 table
-function unittest.assert_equal_lists(t1, t2)
+---@param msg string?
+function unittest.assert_equal_lists(t1, t2, msg)
     has_assertions = true
     local l1 = #t1
     local l2 = #t2
     if l1 ~= l2 then
         local loc_info = debug.getinfo(2, "Sl")
-        coroutine.yield(
-            YK_FAILED_ASSERT,
-            string.format("table lengths are not equal #t1 == %d, #t2 == %d", l1, l2),
-            string.format("%s:%s:", loc_info.short_src, loc_info.currentline)
-        )
+        if msg then
+            coroutine.yield(
+                YK_FAILED_ASSERT,
+                string.format("%s (table lengths are not equal #t1 == %d, #t2 == %d)", msg, l1, l2),
+                string.format("%s:%s:", loc_info.short_src, loc_info.currentline)
+            )
+        else
+            coroutine.yield(
+                YK_FAILED_ASSERT,
+                string.format("table lengths are not equal #t1 == %d, #t2 == %d", l1, l2),
+                string.format("%s:%s:", loc_info.short_src, loc_info.currentline)
+            )
+        end
     end
     for i = 1, l1 do
         if t1[i] ~= t2[i] then
             local loc_info = debug.getinfo(2, "Sl")
-            coroutine.yield(
-                YK_FAILED_ASSERT,
-                string.format("table items at index %d are not equal", i),
-                string.format("%s:%s:", loc_info.short_src, loc_info.currentline)
-            )
+            if msg then
+                coroutine.yield(
+                    YK_FAILED_ASSERT,
+                    string.format("%s (table items at index %d are not equal)", msg, i),
+                    string.format("%s:%s:", loc_info.short_src, loc_info.currentline)
+                )
+            else
+                coroutine.yield(
+                    YK_FAILED_ASSERT,
+                    string.format("table items at index %d are not equal", i),
+                    string.format("%s:%s:", loc_info.short_src, loc_info.currentline)
+                )
+            end
         end
+    end
+end
+
+---Asserts that two objects are equal by using LuaJIT serialization.
+---May throw an error when attempting to check unsupported object types, circular references or deeply nested tables.
+---@param o1 any
+---@param o2 any
+---@param msg string?
+function unittest.assert_equal_objects(o1, o2, msg)
+    has_assertions = true
+    if buffer.encode(o1) ~= buffer.encode(o2) then
+        local loc_info = debug.getinfo(2, "Sl")
+        coroutine.yield(YK_FAILED_ASSERT, msg, string.format("%s:%s:", loc_info.short_src, loc_info.currentline))
     end
 end
 
