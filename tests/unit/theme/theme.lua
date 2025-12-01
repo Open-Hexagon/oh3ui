@@ -25,6 +25,7 @@ function T.test_xterm_colors()
     end
     for i = 0, 255 do
         unittest.assert_equal_lists(lut[i], theme.get_xterm_color(i))
+        unittest.assert_equal_lists(lut[i], theme[i + 1])
     end
     f:close()
 end

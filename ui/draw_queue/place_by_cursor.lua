@@ -35,8 +35,10 @@ end
 ---@param color number[]? overrides the default color
 ---@param mode? "fill"|"line" default is "fill"
 ---@param line_width number? only used in line mode
+---@param rx number?
+---@param ry number?
 ---@return integer placement_id
-function place_by_cursor.rectangle(color, mode, line_width)
+function place_by_cursor.rectangle(color, mode, line_width, rx, ry)
     cursor.place()
     return place_by_value.rectangle(
         mode or "fill",
@@ -45,8 +47,8 @@ function place_by_cursor.rectangle(color, mode, line_width)
         placement.right,
         placement.bottom,
         color or theme.default,
-        0,
-        0,
+        rx or 0,
+        ry or 0,
         line_width or 1
     )
 end
@@ -54,8 +56,10 @@ end
 ---Rectangle outline primitive. Never reshapes the cursor.
 ---@param color number[]? overrides the default color
 ---@param line_width number?
+---@param rx number?
+---@param ry number?
 ---@return integer placement_id
-function place_by_cursor.rectangle_outline(color, line_width)
+function place_by_cursor.rectangle_outline(color, line_width, rx, ry)
     cursor.place()
     return place_by_value.rectangle_outline(
         placement.left,
@@ -64,8 +68,28 @@ function place_by_cursor.rectangle_outline(color, line_width)
         placement.bottom,
         color or theme.default,
         line_width or 1,
-        0,
-        0
+        rx or 0,
+        ry or 0
+    )
+end
+
+---Rectangle inline primitive. Never reshapes the cursor.
+---@param color number[]? overrides the default color
+---@param line_width number?
+---@param rx number?
+---@param ry number?
+---@return integer placement_id
+function place_by_cursor.rectangle_inline(color, line_width, rx, ry)
+    cursor.place()
+    return place_by_value.rectangle_inline(
+        placement.left,
+        placement.top,
+        placement.right,
+        placement.bottom,
+        color or theme.default,
+        line_width or 1,
+        rx or 0,
+        ry or 0
     )
 end
 
@@ -114,7 +138,7 @@ end
 ---@param color number[]? overrides the default color
 ---@param sides integer? create regular polygons instead
 ---@param rotation number? only useful if the number of sides is small
----@param mode string? "fill" or "line" (default is "fill")
+---@param mode? "fill"|"line" "fill" or "line" (default is "fill")
 ---@param line_width number?
 ---@return integer point_id
 function place_by_cursor.circle(color, sides, rotation, mode, line_width)

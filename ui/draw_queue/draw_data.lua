@@ -194,7 +194,9 @@ function draw_data.bake_translations()
             tindex = tindex - 2
             i = i + 1
         else
+            -- luacov: disable
             error("invalid placement operation")
+            -- luacov: enable
         end
     end
 end

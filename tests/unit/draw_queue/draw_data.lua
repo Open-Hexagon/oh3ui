@@ -14,13 +14,16 @@ function T.test_bake_translations()
     table.insert(ids, draw_data.make_placement(1, 2, 3, 4))
     table.insert(ids, draw_data.make_point(4, 4))
     table.insert(ids, draw_data.make_point_cluster(1, 2, 3, 4, 5, 6, 7, 8))
-    draw_data.make_push_translation(10, 10)
-    table.insert(ids, draw_data.make_placement(1, 2, 3, 4))
+    local edit = draw_data.make_push_translation(15, 15)
+    table.insert(ids, draw_data.dup_placement(ids[2]))
     table.insert(ids, draw_data.make_point(4, 4))
     table.insert(ids, draw_data.make_point_cluster(1, 2, 3, 4, 5, 6, 7, 8))
     draw_data.make_pop_translation()
     draw_data.make_pop_translation()
     table.insert(ids, draw_data.make_point(9, 9))
+    table.insert(ids, draw_data.make_point_cluster(1, 2, 3, 4, 5, 6, 7, 8))
+
+    draw_data.edit_translation(edit, 10, 10)
 
     draw_data.bake_translations()
 
@@ -35,6 +38,7 @@ function T.test_bake_translations()
     unittest.assert_equal_lists({ draw_data.get_point_cluster(ids[7]) }, { 21, 22, 23, 24, 25, 26, 27, 28 })
 
     unittest.assert_equal_lists({ draw_data.get_point(ids[8]) }, { 9, 9 })
+    unittest.assert_equal_lists({ draw_data.get_point_cluster(ids[9]) }, { 1, 2, 3, 4, 5, 6, 7, 8 })
 end
 
 return T

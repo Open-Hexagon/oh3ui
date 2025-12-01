@@ -154,6 +154,7 @@ return function()
                 scissor_stack.push(tx1, ty1, tx2, ty2)
 
                 -- overlay masks
+                -- luacov: disable
                 if settings.overlay_masks then
                     -- we can reuse the placement
                     draw_data.add_draw_operation(
@@ -165,6 +166,7 @@ return function()
                         unpack(theme.get_xterm_color(157))
                     )
                 end
+                -- luacov: enable
             elseif id == op_ids.pop_scissor then
                 scissor_stack.pop()
             elseif id == op_ids.mouse_sensor then
@@ -189,12 +191,14 @@ return function()
                 end
 
                 -- overlay mouse sensors
+                -- luacov: disable
                 if tx1 and settings.overlay_mouse_sensors then
                     tx1, ty1 = love.graphics.inverseTransformPoint(tx1, ty1)
                     tx2, ty2 = love.graphics.inverseTransformPoint(tx2, ty2)
                     -- we cannot reuse the placememt
                     draw_queue.rectangle_outline(tx1, ty1, tx2, ty2, theme.get_xterm_color(213), 2, 0, 0)
                 end
+                -- luacov: enable
             elseif id == op_ids.set_shader then
                 love.graphics.setShader(item[2])
             elseif id == op_ids.view_request_export_picture_frame then
