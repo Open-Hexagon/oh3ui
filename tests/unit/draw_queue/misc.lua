@@ -77,10 +77,7 @@ function T.tear_down_case()
     scissor_stack.push = history.get_original(scissor_stack.push)
     sensor.push = history.get_original(sensor.push)
 
-    love.graphics.origin()
-    history.clear()
-    draw_data.clear()
-    cursor.reset()
+    T.set_up()
 end
 
 function T.test_pop_mask()

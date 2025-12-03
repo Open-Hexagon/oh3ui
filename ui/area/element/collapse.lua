@@ -1,6 +1,6 @@
 local cursor = require("ui.cursor")
 local aeb = require("ui.area.aeb")
-local ep = require("ui.element_parameters")
+local econf = require("ui.element_conf")
 local stack_manager = require("ui.stack_manager")
 local mnav = require("ui.control.mouse_navigation")
 local mb = mnav.buttons
@@ -12,13 +12,13 @@ local stack_data = require("ui.stack_manager.stack_data")
 local view_request = require("ui.area.view_request")
 local draw_queue = require("ui.draw_queue")
 
-local selection_outline_cutoff = ep.selection_outline_outset + ep.selection_outline_line_width * 0.5
+local selection_outline_cutoff = econf.selection_outline_outset + econf.selection_outline_line_width * 0.5
 -- this is an arbitrary value, it only needs to be bigger than selection_outline_cutoff
 local selection_outline_cutoff3 = selection_outline_cutoff * 3
 
 local collapse = {}
 
-local speed = ep.collapse_speed
+local speed = econf.collapse_speed
 
 ---@param state table
 ---@param anchor_pos "topleft"|"bottomright" The corner of the collapse area that won't move

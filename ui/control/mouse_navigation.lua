@@ -201,7 +201,7 @@ local function event_filter(event_name)
     return string.match(event_name, "mouse[prm]") or event_name == "wheelmoved"
 end
 
----Update mouse output. Should be run at the start of a frame.
+---Update mouse output.
 function mouse_navigation.evaluate()
     -- Get mouse positions
     local screen_x, screen_y = love.mouse.getPosition()
@@ -243,7 +243,7 @@ function mouse_navigation.evaluate()
             if
                 mouse_navigation.holding
                 and math.abs(press_bubble_x - screen_x) + math.abs(press_bubble_y - screen_y)
-                    >= (istouch and press_bubble_touch_radius or press_bubble_radius)
+                    > (istouch and press_bubble_touch_radius or press_bubble_radius)
             then
                 -- start dragging
                 mouse_navigation.started_dragging = mouse_navigation.holding

@@ -1,4 +1,4 @@
-local ep = require("ui.element_parameters")
+local econf = require("ui.element_conf")
 local cursor = require("ui.cursor")
 local theme = require("ui.theme")
 local draw_by_cursor = require("ui.draw_queue").by_cursor
@@ -47,14 +47,14 @@ return function(state)
     end
 
     cursor.auto_reshape = true
-    draw_by_cursor.icon("square-fill", ep.checkbox_size, background_color)
+    draw_by_cursor.icon("square-fill", econf.checkbox_size, background_color)
     draw_by_cursor.icon(
         "square",
-        ep.checkbox_size,
+        econf.checkbox_size,
         (mnav.is_hovering() or knav.is_selected()) and theme.widget_outline_highlight or theme.widget_outline
     )
     if state.position > 0 then
-        draw_by_cursor.icon(select(state.position, "stop-fill", "check"), ep.checkbox_size, theme.white)
+        draw_by_cursor.icon(select(state.position, "stop-fill", "check"), econf.checkbox_size, theme.white)
     end
     mnav.make_sensor(sid, smode.block)
 

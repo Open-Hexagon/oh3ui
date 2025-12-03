@@ -2,7 +2,7 @@
 
 local bit = require("bit")
 local band, bor, rshift, lshift = bit.band, bit.bor, bit.rshift, bit.lshift
-local extmath = require("ui.extmath")
+local extmath = require("extmath")
 local text = require("ui.text")
 
 ---Converts an integer to a color table with alpha set to 1

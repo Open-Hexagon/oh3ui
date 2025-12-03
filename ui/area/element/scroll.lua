@@ -1,14 +1,14 @@
 local cursor = require("ui.cursor")
 local projected_placement = cursor.projected_placement
 local placement = cursor.placement
-local extmath = require("ui.extmath")
+local extmath = require("extmath")
 local mnav = require("ui.control.mouse_navigation")
 local smode = mnav.sensor_mode
 local slot = require("ui.draw_queue").by_cursor.slot
 local theme = require("ui.theme")
 local stack_manager = require("ui.stack_manager")
 local aeb = require("ui.area.aeb")
-local ep = require("ui.element_parameters")
+local econf = require("ui.element_conf")
 local view_request = require("ui.area.view_request")
 local stack_data = require("ui.stack_manager.stack_data")
 local selection_outline_add_to_queue = require("ui.decorator.element.selection_outline").add_to_queue
@@ -18,10 +18,10 @@ local view_request_export_picture_frame = require("ui.draw_queue.draw_operation"
 
 local scroll = {}
 
-local scrollbar_thickness = ep.scrollbar_thickness
-local scrollbar_thickness_inactive = ep.scrollbar_thickness_inactive
-local minimum_scrollbar_actuator_length = ep.minimum_scrollbar_actuator_length
-local mouse_wheel_scroll_distance = ep.mouse_wheel_scroll_distance
+local scrollbar_thickness = econf.scrollbar_thickness
+local scrollbar_thickness_inactive = econf.scrollbar_thickness_inactive
+local minimum_scrollbar_actuator_length = econf.minimum_scrollbar_actuator_length
+local mouse_wheel_scroll_distance = econf.mouse_wheel_scroll_distance
 
 --[[
     +--------+CCCCCCC <-- Content region surrounds all

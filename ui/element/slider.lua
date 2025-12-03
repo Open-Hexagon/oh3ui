@@ -2,8 +2,8 @@ local cursor = require("ui.cursor")
 local projected_placement = cursor.projected_placement
 local theme = require("ui.theme")
 local draw_by_cursor = require("ui.draw_queue").by_cursor
-local ep = require("ui.element_parameters")
-local extmath = require("ui.extmath")
+local econf = require("ui.element_conf")
+local extmath = require("extmath")
 local knav = require("ui.control.keyboard_navigation")
 local kba = knav.actions
 local mnav = require("ui.control.mouse_navigation")
@@ -11,8 +11,8 @@ local mb = mnav.buttons
 local smode = mnav.sensor_mode
 local selection_outline = require("ui.decorator.element.selection_outline").set_placement
 
-local actuator_radius = ep.slider_height / 2
-local slot_height = ep.slider_height / 2
+local actuator_radius = econf.slider_height / 2
+local slot_height = econf.slider_height / 2
 
 ---returns the closest position from 0 to positions - 1
 ---@param value number
@@ -53,8 +53,8 @@ return function(state, min, max, positions, show_positions, kb_step, kb_fast_ste
 
     cursor.push() -- (1)
 
-    local full_width = math.max(ep.slider_min_width, cursor.width)
-    cursor.place(full_width, ep.slider_height)
+    local full_width = math.max(econf.slider_min_width, cursor.width)
+    cursor.place(full_width, econf.slider_height)
     cursor.change_anchor(0, 0.5)
 
     -- absolute min and max slider coordinate positions
@@ -135,8 +135,8 @@ return function(state, min, max, positions, show_positions, kb_step, kb_fast_ste
     -- draw actuator
     cursor.x = fill_width + cursor.x
     cursor.anchor_x = 0.5
-    cursor.width = ep.slider_height
-    cursor.height = ep.slider_height
+    cursor.width = econf.slider_height
+    cursor.height = econf.slider_height
     draw_by_cursor.circle(theme.widget_actuator)
     draw_by_cursor.circle_outline(
         (mnav.is_hovering() or dragging) and theme.widget_actuator_outline_highlight or theme.widget_actuator_outline

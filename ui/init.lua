@@ -148,7 +148,7 @@ local ui = {
     settings = require("ui.settings"),
 
     ---Constants used by elements. Read-only.
-    element_parameters = require("ui.element_parameters"),
+    element_parameters = require("ui.element_conf"),
 
     ---Colors used by the UI + some handy related functions.
     theme = require("ui.theme"),

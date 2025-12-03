@@ -1,9 +1,9 @@
 local cursor = require("ui.cursor")
 local placement = cursor.placement
 local draw_by_cursor = require("ui.draw_queue").by_cursor
-local ep = require("ui.element_parameters")
+local econf = require("ui.element_conf")
 local theme = require("ui.theme")
-local extmath = require("ui.extmath")
+local extmath = require("extmath")
 local draw_queue = require("ui.draw_queue")
 local mnav = require("ui.control.mouse_navigation")
 local mb = mnav.buttons
@@ -12,14 +12,14 @@ local follow = require("ui.effect").follow
 local selection_outline = require("ui.decorator.element.selection_outline").set_placement
 local knav = require("ui.control.keyboard_navigation")
 
-local indiameter = ep.toggle_height
+local indiameter = econf.toggle_height
 local diameter = extmath.from_inradius(indiameter, 6)
 
 local inradius = indiameter * 0.5
 local radius = diameter * 0.5
 
 local half_radius = radius * 0.5
-local travel_distance = ep.toggle_width - diameter
+local travel_distance = econf.toggle_width - diameter
 
 local function draw_base_shape(color)
     local x0 = placement.left
@@ -54,7 +54,7 @@ return function(state)
     cursor.push()
     do
         -- establish element size and sensor region
-        cursor.place(ep.toggle_width, ep.toggle_height)
+        cursor.place(econf.toggle_width, econf.toggle_height)
         mnav.make_sensor(nil, smode.block)
 
         local clicked = mnav.get_clicked()

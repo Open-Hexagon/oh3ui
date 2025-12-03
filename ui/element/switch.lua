@@ -1,6 +1,6 @@
 local cursor = require("ui.cursor")
 local theme = require("ui.theme")
-local ep = require("ui.element_parameters")
+local econf = require("ui.element_conf")
 local follow = require("ui.effect").follow
 local knav = require("ui.control.keyboard_navigation")
 local kba = knav.actions
@@ -30,8 +30,8 @@ return function(state, ...)
 
     cursor.push() -- (1)
 
-    local full_width = math.max(ep.switch_height, cursor.width)
-    cursor.place(full_width, ep.slider_height)
+    local full_width = math.max(econf.switch_height, cursor.width)
+    cursor.place(full_width, econf.slider_height)
 
     cursor.change_anchor(0.5)
 
@@ -65,9 +65,9 @@ return function(state, ...)
         draw_queue.next_takes_reservation(sel_bg_res)
         draw_by_cursor.rectangle(button_color)
 
-        cursor.inset(ep.switch_internal_padding)
+        cursor.inset(econf.switch_internal_padding)
         draw_by_cursor.push_mask()
-        draw_by_cursor.label(select(i, ...), ep.switch_text_size, "left", false)
+        draw_by_cursor.label(select(i, ...), econf.switch_text_size, "left", false)
         draw_queue.pop_mask()
     end
 

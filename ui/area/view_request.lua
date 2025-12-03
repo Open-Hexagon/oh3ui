@@ -1,4 +1,4 @@
-local ep = require("ui.element_parameters")
+local econf = require("ui.element_conf")
 local stack_data = require("ui.stack_manager.stack_data")
 local aeb_stack = stack_data.aeb_stack
 local follow = require("ui.effect").follow
@@ -8,9 +8,9 @@ local knav = require("ui.control.keyboard_navigation")
 local settings = require("ui.settings")
 local theme = require("ui.theme")
 
-local padding = ep.view_request_padding
-local base_speed = ep.view_request_speed
-local scrollbar_cooldown_time = ep.view_request_scrollbar_cooldown_time
+local padding = econf.view_request_padding
+local base_speed = econf.view_request_speed
+local scrollbar_cooldown_time = econf.view_request_scrollbar_cooldown_time
 
 local view_request = {
     -- The index of the top state

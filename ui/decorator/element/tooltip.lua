@@ -3,15 +3,15 @@ local placement = cursor.placement
 local theme = require("ui.theme")
 local mnav = require("ui.control.mouse_navigation")
 local knav = require("ui.control.keyboard_navigation")
-local extmath = require("ui.extmath")
+local extmath = require("extmath")
 local typing = require("ui.control.typing")
 local draw_queue = require("ui.draw_queue")
 local label = draw_queue.by_cursor.label
-local ep = require("ui.element_parameters")
+local econf = require("ui.element_conf")
 local get_last_used_control_method = require("ui.control").get_last_used_control_method
 
-local text_padding = ep.tooltip_text_padding
-local tooltip_element_spacing = ep.tooltip_element_spacing + text_padding
+local text_padding = econf.tooltip_text_padding
+local tooltip_element_spacing = econf.tooltip_element_spacing + text_padding
 
 local tooltip = {}
 

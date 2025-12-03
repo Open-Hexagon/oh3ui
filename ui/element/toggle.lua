@@ -1,6 +1,6 @@
 local cursor = require("ui.cursor")
 local draw_by_cursor = require("ui.draw_queue").by_cursor
-local ep = require("ui.element_parameters")
+local econf = require("ui.element_conf")
 local theme = require("ui.theme")
 local mnav = require("ui.control.mouse_navigation")
 local mb = mnav.buttons
@@ -9,7 +9,7 @@ local knav = require("ui.control.keyboard_navigation")
 local follow = require("ui.effect").follow
 local selection_outline = require("ui.decorator.element.selection_outline").set_placement
 
-local travel_distance = ep.toggle_width - ep.toggle_height
+local travel_distance = econf.toggle_width - econf.toggle_height
 
 ---Two-position toggle switch element.
 ---This element ignores the cursor size and will reshape the cursor.
@@ -22,7 +22,7 @@ return function(state)
     cursor.push()
     do
         -- establish element size and sensor region
-        cursor.place(ep.toggle_width, ep.toggle_height)
+        cursor.place(econf.toggle_width, econf.toggle_height)
         mnav.make_sensor(nil, smode.block)
 
         local clicked = mnav.get_clicked()
@@ -41,8 +41,8 @@ return function(state)
 
             -- draw the actuator
             cursor.change_anchor(0, 0)
-            cursor.width = ep.toggle_height
-            cursor.height = ep.toggle_height
+            cursor.width = econf.toggle_height
+            cursor.height = econf.toggle_height
             cursor.x = cursor.x + state._toggle_actuator_position * travel_distance
 
             draw_by_cursor.circle(theme.widget_actuator)

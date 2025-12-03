@@ -1,12 +1,12 @@
-local ep = require("ui.element_parameters")
+local econf = require("ui.element_conf")
 local cursor = require("ui.cursor")
 local placement = cursor.placement
 local theme = require("ui.theme")
 local view_request = require("ui.area.view_request")
 local draw_queue = require("ui.draw_queue")
-local extmath = require("ui.extmath")
+local extmath = require("extmath")
 
-local outset, line_width = ep.selection_outline_outset, ep.selection_outline_line_width
+local outset, line_width = econf.selection_outline_outset, econf.selection_outline_line_width
 
 local INACTIVE, READY, DONE = 0, 1, 2
 
