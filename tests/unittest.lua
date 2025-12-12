@@ -406,6 +406,9 @@ function unittest.main()
     )
 
     -- causes love2d to exit immediately
+    if tests_failed > 0 or tests_errored > 0 then
+        return 1
+    end
     return 0
 end
 

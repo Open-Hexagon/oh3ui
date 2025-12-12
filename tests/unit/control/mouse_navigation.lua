@@ -226,6 +226,6 @@ function T.test_slight_drag_click_in_one_frame() end
 
 function T.test_drag_in_one_frame() end
 
-function T.isolated_release() end
+function T.test_isolated_release() end
 
 return T
