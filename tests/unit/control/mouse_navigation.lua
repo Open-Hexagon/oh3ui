@@ -143,245 +143,77 @@ function T.test_simple_click()
     end
 end
 
-local press_bubble_radius = 2
+local press_bubble_radius = 4
 local press_bubble_touch_radius = 6
 
-function T.test_dragging_x()
-    for x = -20, 20 do
-        local dist = math.abs(x)
-        love.graphics.scale(math.max(0.5, dist / 2)) -- this should not affect results
+for test, values in pairs({
+    test_dragging_x = { bubble_radius = press_bubble_radius, axis = "x", is_touch = false },
+    test_touch_dragging_x = { bubble_radius = press_bubble_touch_radius, axis = "x", is_touch = true },
+    test_dragging_y = { bubble_radius = press_bubble_radius, axis = "y", is_touch = false },
+    test_touch_dragging_y = { bubble_radius = press_bubble_touch_radius, axis = "y", is_touch = true },
+}) do
+    T[test] = function()
+        for u = -20, 20 do
+            local dist = math.abs(u)
+            love.graphics.scale(math.max(0.5, dist / 2)) -- this should not affect results
 
-        zero()
+            zero()
 
-        down(1)
-        run()
-        unittest.assert(mnav.clicked == nil)
-        unittest.assert(mnav.holding == 1)
-        unittest.assert(mnav.dragging == nil)
-        unittest.assert(mnav.started_dragging == nil)
-        unittest.assert(mnav.stopped_dragging == nil)
+            down(1)
+            run()
+            unittest.assert(mnav.clicked == nil)
+            unittest.assert(mnav.holding == 1)
+            unittest.assert(mnav.dragging == nil)
+            unittest.assert(mnav.started_dragging == nil)
+            unittest.assert(mnav.stopped_dragging == nil)
 
-        for i = 1, dist do
-            move(extmath.sgn(x), 0)
+            for i = 1, dist do
+                if values.axis == "x" then
+                    move(extmath.sgn(u), 0, values.is_touch)
+                else
+                    move(0, extmath.sgn(u), values.is_touch)
+                end
+                run()
+
+                if i <= values.bubble_radius then
+                    unittest.assert(mnav.clicked == nil)
+                    unittest.assert(mnav.holding == 1, tostring(mnav.holding))
+                    unittest.assert(mnav.dragging == nil)
+                    unittest.assert(mnav.started_dragging == nil)
+                    unittest.assert(mnav.stopped_dragging == nil)
+                elseif i == values.bubble_radius + 1 then
+                    unittest.assert(mnav.clicked == nil)
+                    unittest.assert(mnav.holding == nil)
+                    unittest.assert(mnav.dragging == 1)
+                    unittest.assert(mnav.started_dragging == 1)
+                    unittest.assert(mnav.stopped_dragging == nil)
+                else
+                    unittest.assert(mnav.clicked == nil)
+                    unittest.assert(mnav.holding == nil)
+                    unittest.assert(mnav.dragging == 1)
+                    unittest.assert(mnav.started_dragging == nil)
+                    unittest.assert(mnav.stopped_dragging == nil)
+                end
+            end
+
+            up(1)
             run()
 
-            if i <= press_bubble_radius then
-                unittest.assert(mnav.clicked == nil)
-                unittest.assert(mnav.holding == 1)
+            if dist <= values.bubble_radius then
+                unittest.assert(mnav.clicked == 1)
+                unittest.assert(mnav.holding == nil)
                 unittest.assert(mnav.dragging == nil)
                 unittest.assert(mnav.started_dragging == nil)
-                unittest.assert(mnav.stopped_dragging == nil)
-            elseif i == press_bubble_radius + 1 then
-                unittest.assert(mnav.clicked == nil)
-                unittest.assert(mnav.holding == nil)
-                unittest.assert(mnav.dragging == 1)
-                unittest.assert(mnav.started_dragging == 1)
                 unittest.assert(mnav.stopped_dragging == nil)
             else
                 unittest.assert(mnav.clicked == nil)
                 unittest.assert(mnav.holding == nil)
-                unittest.assert(mnav.dragging == 1)
-                unittest.assert(mnav.started_dragging == nil)
-                unittest.assert(mnav.stopped_dragging == nil)
-            end
-        end
-
-        up(1)
-        run()
-
-        if dist <= press_bubble_radius then
-            unittest.assert(mnav.clicked == 1)
-            unittest.assert(mnav.holding == nil)
-            unittest.assert(mnav.dragging == nil)
-            unittest.assert(mnav.started_dragging == nil)
-            unittest.assert(mnav.stopped_dragging == nil)
-        else
-            unittest.assert(mnav.clicked == nil)
-            unittest.assert(mnav.holding == nil)
-            unittest.assert(mnav.dragging == nil)
-            unittest.assert(mnav.started_dragging == nil)
-            unittest.assert(mnav.stopped_dragging == 1)
-        end
-
-        love.graphics.origin()
-    end
-end
-
-function T.test_touch_dragging_x()
-    for x = -20, 20 do
-        local dist = math.abs(x)
-        love.graphics.scale(math.max(0.5, dist / 2)) -- this should not affect results
-
-        zero()
-
-        down(1)
-        run()
-        unittest.assert(mnav.clicked == nil)
-        unittest.assert(mnav.holding == 1)
-        unittest.assert(mnav.dragging == nil)
-        unittest.assert(mnav.started_dragging == nil)
-        unittest.assert(mnav.stopped_dragging == nil)
-
-        for i = 1, dist do
-            move(extmath.sgn(x), 0, true)
-            run()
-
-            if i <= press_bubble_touch_radius then
-                unittest.assert(mnav.clicked == nil)
-                unittest.assert(mnav.holding == 1)
                 unittest.assert(mnav.dragging == nil)
                 unittest.assert(mnav.started_dragging == nil)
-                unittest.assert(mnav.stopped_dragging == nil)
-            elseif i == press_bubble_touch_radius + 1 then
-                unittest.assert(mnav.clicked == nil)
-                unittest.assert(mnav.holding == nil)
-                unittest.assert(mnav.dragging == 1)
-                unittest.assert(mnav.started_dragging == 1)
-                unittest.assert(mnav.stopped_dragging == nil)
-            else
-                unittest.assert(mnav.clicked == nil)
-                unittest.assert(mnav.holding == nil)
-                unittest.assert(mnav.dragging == 1)
-                unittest.assert(mnav.started_dragging == nil)
-                unittest.assert(mnav.stopped_dragging == nil)
+                unittest.assert(mnav.stopped_dragging == 1)
             end
-        end
 
-        up(1)
-        run()
-
-        if dist <= press_bubble_touch_radius then
-            unittest.assert(mnav.clicked == 1)
-            unittest.assert(mnav.holding == nil)
-            unittest.assert(mnav.dragging == nil)
-            unittest.assert(mnav.started_dragging == nil)
-            unittest.assert(mnav.stopped_dragging == nil)
-        else
-            unittest.assert(mnav.clicked == nil)
-            unittest.assert(mnav.holding == nil)
-            unittest.assert(mnav.dragging == nil)
-            unittest.assert(mnav.started_dragging == nil)
-            unittest.assert(mnav.stopped_dragging == 1)
-        end
-    end
-end
-
-function T.test_dragging_y()
-    for y = -20, 20 do
-        local dist = math.abs(y)
-        love.graphics.scale(math.max(0.5, dist / 2)) -- this should not affect results
-
-        zero()
-
-        down(1)
-        run()
-        unittest.assert(mnav.clicked == nil)
-        unittest.assert(mnav.holding == 1)
-        unittest.assert(mnav.dragging == nil)
-        unittest.assert(mnav.started_dragging == nil)
-        unittest.assert(mnav.stopped_dragging == nil)
-
-        for i = 1, dist do
-            move(0, extmath.sgn(y))
-            run()
-
-            if i <= press_bubble_radius then
-                unittest.assert(mnav.clicked == nil)
-                unittest.assert(mnav.holding == 1)
-                unittest.assert(mnav.dragging == nil)
-                unittest.assert(mnav.started_dragging == nil)
-                unittest.assert(mnav.stopped_dragging == nil)
-            elseif i == press_bubble_radius + 1 then
-                unittest.assert(mnav.clicked == nil)
-                unittest.assert(mnav.holding == nil)
-                unittest.assert(mnav.dragging == 1)
-                unittest.assert(mnav.started_dragging == 1)
-                unittest.assert(mnav.stopped_dragging == nil)
-            else
-                unittest.assert(mnav.clicked == nil)
-                unittest.assert(mnav.holding == nil)
-                unittest.assert(mnav.dragging == 1)
-                unittest.assert(mnav.started_dragging == nil)
-                unittest.assert(mnav.stopped_dragging == nil)
-            end
-        end
-
-        up(1)
-        run()
-
-        if dist <= press_bubble_radius then
-            unittest.assert(mnav.clicked == 1)
-            unittest.assert(mnav.holding == nil)
-            unittest.assert(mnav.dragging == nil)
-            unittest.assert(mnav.started_dragging == nil)
-            unittest.assert(mnav.stopped_dragging == nil)
-        else
-            unittest.assert(mnav.clicked == nil)
-            unittest.assert(mnav.holding == nil)
-            unittest.assert(mnav.dragging == nil)
-            unittest.assert(mnav.started_dragging == nil)
-            unittest.assert(mnav.stopped_dragging == 1)
-        end
-
-        love.graphics.origin()
-    end
-end
-
-function T.test_touch_dragging_y()
-    for y = -20, 20 do
-        local dist = math.abs(y)
-        love.graphics.scale(math.max(0.5, dist / 2)) -- this should not affect results
-
-        zero()
-
-        down(1)
-        run()
-        unittest.assert(mnav.clicked == nil)
-        unittest.assert(mnav.holding == 1)
-        unittest.assert(mnav.dragging == nil)
-        unittest.assert(mnav.started_dragging == nil)
-        unittest.assert(mnav.stopped_dragging == nil)
-
-        for i = 1, dist do
-            move(0, extmath.sgn(y), true)
-            run()
-
-            if i <= press_bubble_touch_radius then
-                unittest.assert(mnav.clicked == nil)
-                unittest.assert(mnav.holding == 1)
-                unittest.assert(mnav.dragging == nil)
-                unittest.assert(mnav.started_dragging == nil)
-                unittest.assert(mnav.stopped_dragging == nil)
-            elseif i == press_bubble_touch_radius + 1 then
-                unittest.assert(mnav.clicked == nil)
-                unittest.assert(mnav.holding == nil)
-                unittest.assert(mnav.dragging == 1)
-                unittest.assert(mnav.started_dragging == 1)
-                unittest.assert(mnav.stopped_dragging == nil)
-            else
-                unittest.assert(mnav.clicked == nil)
-                unittest.assert(mnav.holding == nil)
-                unittest.assert(mnav.dragging == 1)
-                unittest.assert(mnav.started_dragging == nil)
-                unittest.assert(mnav.stopped_dragging == nil)
-            end
-        end
-
-        up(1)
-        run()
-
-        if dist <= press_bubble_touch_radius then
-            unittest.assert(mnav.clicked == 1)
-            unittest.assert(mnav.holding == nil)
-            unittest.assert(mnav.dragging == nil)
-            unittest.assert(mnav.started_dragging == nil)
-            unittest.assert(mnav.stopped_dragging == nil)
-        else
-            unittest.assert(mnav.clicked == nil)
-            unittest.assert(mnav.holding == nil)
-            unittest.assert(mnav.dragging == nil)
-            unittest.assert(mnav.started_dragging == nil)
-            unittest.assert(mnav.stopped_dragging == 1)
+            love.graphics.origin()
         end
     end
 end

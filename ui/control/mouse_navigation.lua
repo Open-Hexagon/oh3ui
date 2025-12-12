@@ -57,7 +57,7 @@ local latest_dragging_id
 ---Center of the bubble that decides whether the cursor has moved too much.
 ---Uses screen coordinates since we don't want the bubble changing size based on UI scaling.
 local press_bubble_x, press_bubble_y
-local press_bubble_radius = 2
+local press_bubble_radius = 4
 local press_bubble_touch_radius = 6
 
 ---The sensor id that will be used to check for hovering.
