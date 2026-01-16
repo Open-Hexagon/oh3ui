@@ -22,6 +22,10 @@ local mouse_navigation = {
     screen_dx = 0,
     screen_dy = 0,
 
+    -- change in coordinates from last frame (not screen coordinates)
+    dx = 0,
+    dy = 0,
+
     -- wheel movement
     wheel_dx = 0,
     wheel_dy = 0,
@@ -305,6 +309,9 @@ function mouse_navigation.evaluate()
             end
         end
     end
+
+    mouse_navigation.dx, mouse_navigation.dy =
+        love.graphics.inverseTransformPoint(mouse_navigation.screen_dx, mouse_navigation.screen_dy)
 
     -- evaluate the hover_set
     if mouse_navigation.holding then

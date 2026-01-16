@@ -64,10 +64,11 @@ econf.tooltip_element_spacing = 6
 econf.scrollbar_thickness = 8
 econf.scrollbar_thickness_inactive = econf.scrollbar_thickness * 0.5
 econf.minimum_scrollbar_actuator_length = 8
-econf.mouse_wheel_scroll_distance = 10 -- px/event
 econf.view_request_padding = econf.scrollbar_thickness * 1.5
 econf.view_request_speed = 10 -- this is the reciprocal of the time it takes for the animation
 econf.view_request_scrollbar_cooldown_time = 1.5 -- starting from an auto-scroll, the scrollbars will remain visible for this amount of time
+econf.mouse_wheel_scroll_sensitivity = 200
+econf.mouse_wheel_scroll_vel_decay = 10
 
 econf.collapse_speed = 1800 -- px/sec
 

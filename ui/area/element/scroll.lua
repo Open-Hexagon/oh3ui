@@ -21,7 +21,8 @@ local scroll = {}
 local scrollbar_thickness = econf.scrollbar_thickness
 local scrollbar_thickness_inactive = econf.scrollbar_thickness_inactive
 local minimum_scrollbar_actuator_length = econf.minimum_scrollbar_actuator_length
-local mouse_wheel_scroll_distance = econf.mouse_wheel_scroll_distance
+local mouse_wheel_scroll_sensitivity = econf.mouse_wheel_scroll_sensitivity
+local mouse_wheel_scroll_vel_decay = econf.mouse_wheel_scroll_vel_decay
 
 --[[
     +--------+CCCCCCC <-- Content region surrounds all
@@ -54,6 +55,8 @@ function scroll.start(state)
     if not state.initialized then
         state.scroll_dist_x = 0
         state.scroll_dist_y = 0
+        state.scroll_vel_x = 0
+        state.scroll_vel_y = 0
         state.initialized = true
     end
 
@@ -61,7 +64,7 @@ function scroll.start(state)
     cursor.push() -- (1)
 
     -- mask away everything outside of the region
-    -- ! this has to come before apply_translation!
+    -- ! this has to come before push_translation!
     local picture_frame_id = draw_queue.by_cursor.push_mask() -- (2)
 
     -- move the contents of the scroll area
@@ -106,144 +109,9 @@ end
 local mouse_offset_x
 local mouse_offset_y
 
----Horizontal mouse interaction
----@param state table
----@param dist_limit_left number left scroll translation limit
----@param dist_limit_right number right scroll translation limit
----@param literal_scroll_left number literal position of the left side of the scroll region
----@param literal_scroll_right number literal position of the right side of the scroll region
----@param actuator_width number width of the actuator
----@param literal_actuator_left number literal position of the left side of the actuator
----@param scroll_region integer sensor id of the scroll region
----@param h_bar integer sensor id of the horizontal scroll bar
----@param h_act integer sensor_id of the horizontal scroll actuator
-local function do_horizontal_mouse_interaction(
-    state,
-    dist_limit_left,
-    dist_limit_right,
-    literal_scroll_left,
-    literal_scroll_right,
-    actuator_width,
-    literal_actuator_left,
-    scroll_region,
-    h_bar,
-    h_act
-)
-    local half_actuator_width = actuator_width * 0.5
-
-    local mouse_limit_left, mouse_limit_right =
-        literal_scroll_left + half_actuator_width, literal_scroll_right - half_actuator_width
-
-    -- goto location if the bar is held outside of the actuator
-    if mnav.get_holding(h_bar) and not mnav.is_hovering(h_act) then
-        state.scroll_dist_x = extmath.map(
-            extmath.clamp(mnav.x, mouse_limit_left, mouse_limit_right),
-            mouse_limit_left,
-            mouse_limit_right,
-            dist_limit_left,
-            dist_limit_right
-        )
-    end
-
-    -- move the scrollbar and scroll region if dragging
-    if mnav.get_dragging(h_act) then
-        if mnav.get_started_dragging(h_act) then
-            mouse_offset_x = mnav.press_x - (literal_actuator_left + half_actuator_width)
-        end
-        state.scroll_dist_x = extmath.map(
-            extmath.clamp(mnav.x - mouse_offset_x, mouse_limit_left, mouse_limit_right),
-            mouse_limit_left,
-            mouse_limit_right,
-            dist_limit_left,
-            dist_limit_right
-        )
-    else
-        -- mouse wheel (disabled if dragging)
-        if mnav.wheel_dx ~= 0 then
-            state.scroll_dist_x = state.scroll_dist_x + mnav.wheel_dx * -mouse_wheel_scroll_distance
-        end
-    end
-
-    -- scroll if dragging on the scroll region
-    if mnav.get_dragging(scroll_region) then
-        if mnav.get_started_dragging(scroll_region) then
-            mouse_offset_x = mnav.press_x - state.scroll_dist_x
-        end
-        state.scroll_dist_x = mnav.x - mouse_offset_x
-    end
-end
-
----Vertical mouse interaction
----@param state table
----@param dist_limit_top number top scroll translation limit
----@param dist_limit_bottom number bottom scroll translation limit
----@param literal_scroll_top number literal position of the top side of the scroll region
----@param literal_scroll_bottom number literal position of the bottom side of the scroll region
----@param actuator_height number height of the actuator
----@param literal_actuator_top number literal position of the top side of the actuator
----@param scroll_region integer sensor id of the scroll region
----@param v_bar integer sensor id of the vertical scroll bar
----@param v_act integer sensor_id of the vertical scroll actuator
-local function do_vertical_mouse_interaction(
-    state,
-    dist_limit_top,
-    dist_limit_bottom,
-    literal_scroll_top,
-    literal_scroll_bottom,
-    actuator_height,
-    literal_actuator_top,
-    scroll_region,
-    v_bar,
-    v_act
-)
-    local half_actuator_size = actuator_height * 0.5
-
-    local mouse_limit_top, mouse_limit_bottom =
-        literal_scroll_top + half_actuator_size, literal_scroll_bottom - half_actuator_size
-
-    -- goto location if the bar is held outside of the actuator
-    if mnav.get_holding(v_bar) and not mnav.is_hovering(v_act) then
-        state.scroll_dist_y = extmath.map(
-            extmath.clamp(mnav.y, mouse_limit_top, mouse_limit_bottom),
-            mouse_limit_top,
-            mouse_limit_bottom,
-            dist_limit_top,
-            dist_limit_bottom
-        )
-    end
-
-    -- move the scrollbar and region if dragging
-    if mnav.get_dragging(v_act) then
-        if mnav.get_started_dragging(v_act) then
-            mouse_offset_y = (mnav.press_y - (literal_actuator_top + half_actuator_size))
-        end
-        state.scroll_dist_y = extmath.map(
-            extmath.clamp(mnav.y - mouse_offset_y, mouse_limit_top, mouse_limit_bottom),
-            mouse_limit_top,
-            mouse_limit_bottom,
-            dist_limit_top,
-            dist_limit_bottom
-        )
-    else
-        -- mouse wheel (disabled if dragging)
-        if mnav.wheel_dy ~= 0 then
-            state.scroll_dist_y = state.scroll_dist_y + mnav.wheel_dy * mouse_wheel_scroll_distance
-        end
-    end
-
-    -- scroll if dragging on the scroll region
-    if mnav.get_dragging(scroll_region) then
-        if mnav.get_started_dragging(scroll_region) then
-            mouse_offset_y = mnav.press_y - state.scroll_dist_y
-        end
-        state.scroll_dist_y = mnav.y - mouse_offset_y
-    end
-end
-
 local function get_actuator_size(content_size, scroll_size)
     return math.max(scroll_size * scroll_size / content_size, minimum_scrollbar_actuator_length)
 end
-
 ---Finishes the current scroll region
 ---@param padding number scroll area padding
 ---@return boolean at_left
@@ -251,6 +119,15 @@ end
 ---@return boolean at_right
 ---@return boolean at_bottom
 function scroll.finish(padding)
+    local content_width, content_height, content_left, content_top, content_right, content_bottom
+    local scroll_width, scroll_height, scroll_left, scroll_top, scroll_right, scroll_bottom
+    local dist_limit_right, dist_limit_left, dist_limit_bottom, dist_limit_top
+    local interacting_with_mouse
+    local h_actuator_size, half_h_actuator_size, mouse_limit_left, mouse_limit_right
+    local v_actuator_size, half_v_actuator_size, mouse_limit_top, mouse_limit_bottom
+    local at_left, at_top, at_right, at_bottom = false, false, false, false
+    local vel_decay_factor
+
     -- deal with stack stuff
     stack_manager.pop_record() -- (6)
 
@@ -284,35 +161,33 @@ function scroll.finish(padding)
     draw_queue.pop_mask() -- (2)
 
     if not cursor.finish_area(true) then -- (4)
-        -- scroll region is empty
-        cursor.pop() -- (1)
-        return false, false, false, false
+        goto scroll_is_empty
     end
 
     cursor.outset(padding)
 
-    -- cursor pop (1) happens later
+    -- cursor pop (1) happens at the end
 
     -- element functionality begins here:
     -- peek combine to get the size of the content area (must enclose the original scroll area)
     cursor.combine(true)
-    local content_width, content_height = cursor.width, cursor.height
-    local content_left, content_top, content_right, content_bottom = cursor.ltrb()
+    content_width, content_height = cursor.width, cursor.height
+    content_left, content_top, content_right, content_bottom = cursor.ltrb()
 
     -- peek to get the original scroll area size
     cursor.peek()
-    local scroll_width, scroll_height = cursor.width, cursor.height
-    local scroll_left, scroll_top, scroll_right, scroll_bottom = cursor.ltrb()
+    scroll_width, scroll_height = cursor.width, cursor.height
+    scroll_left, scroll_top, scroll_right, scroll_bottom = cursor.ltrb()
 
     -- get scroll area translation distance limits
     -- should be <= 0 (negative values scroll right)
-    local dist_limit_right = scroll_right - content_right
+    dist_limit_right = scroll_right - content_right
     -- should be >= 0 (positive values scroll up)
-    local dist_limit_left = scroll_left - content_left
+    dist_limit_left = scroll_left - content_left
     -- should be <= 0 (negative values scroll down)
-    local dist_limit_bottom = scroll_bottom - content_bottom
+    dist_limit_bottom = scroll_bottom - content_bottom
     -- should be >= 0 (positive values scroll up)
-    local dist_limit_top = scroll_top - content_top
+    dist_limit_top = scroll_top - content_top
 
     -- clamp before drawing anything because content sizes may have changed since last time
     state.scroll_dist_x = extmath.clamp(state.scroll_dist_x, dist_limit_right, dist_limit_left)
@@ -331,121 +206,238 @@ function scroll.finish(padding)
         )
     end
 
-    -- actuator sizes
-    local h_actuator_size = get_actuator_size(content_width, scroll_width)
-    local v_actuator_size = get_actuator_size(content_height, scroll_height)
-
-    local possibly_interacting = mnav.is_hovering(scroll_region)
+    interacting_with_mouse = mnav.is_hovering(scroll_region)
         or mnav.get_dragging(scroll_region)
         or mnav.get_dragging(h_act)
         or mnav.get_dragging(v_act)
 
-    if possibly_interacting or view_request.time > 0 then
-        if content_width > scroll_width then
-            -- set scrollbar location
-            cursor.change_anchor(0, 1)
-            cursor.height = scrollbar_thickness
+    if not (interacting_with_mouse or view_request.time > 0) then
+        goto skip_all_scrolling
+    end
 
-            -- make scroll bar sensor
-            mnav.make_sensor(h_bar, smode.block)
+    if content_width <= scroll_width then
+        goto horizontal_scrolling_continue
+    end
 
-            -- set actuator location
-            cursor.width = h_actuator_size
-            cursor.x = extmath.map(
-                state.scroll_dist_x,
-                dist_limit_right,
-                dist_limit_left,
-                scroll_right - h_actuator_size,
-                scroll_left
-            )
+    h_actuator_size = get_actuator_size(content_width, scroll_width)
 
-            -- make scroll bar actuator sensor
-            mnav.make_sensor(h_act, smode.draggable)
+    --#region HORIZONTAL SCROLLING DRAWING
 
-            -- shrink the actuator if needed
-            if not (mnav.is_hovering(h_bar) or mnav.get_dragging(h_act)) then
-                cursor.height = scrollbar_thickness_inactive
-            end
+    -- set scrollbar location
+    cursor.change_anchor(0, 1)
+    cursor.height = scrollbar_thickness
 
-            -- draw the actuator
-            slot((mnav.get_dragging(h_act) or mnav.get_holding(h_act)) and theme.grabbed_scrollbar or theme.scrollbar)
+    -- make scroll bar sensor
+    mnav.make_sensor(h_bar, smode.block)
 
-            if possibly_interacting then
-                do_horizontal_mouse_interaction(
-                    state,
-                    dist_limit_left,
-                    dist_limit_right,
-                    literal_scroll_left,
-                    literal_scroll_right,
-                    h_actuator_size,
-                    projected_placement.left,
-                    scroll_region,
-                    h_bar,
-                    h_act
-                )
-            end
+    -- set actuator location
+    cursor.width = h_actuator_size
+    cursor.x =
+        extmath.map(state.scroll_dist_x, dist_limit_right, dist_limit_left, scroll_right - h_actuator_size, scroll_left)
+
+    -- make scroll bar actuator sensor
+    mnav.make_sensor(h_act, smode.draggable)
+
+    -- shrink the actuator if needed
+    if not (mnav.is_hovering(h_bar) or mnav.get_dragging(h_act)) then
+        cursor.height = scrollbar_thickness_inactive
+    end
+
+    -- draw the actuator
+    slot((mnav.get_dragging(h_act) or mnav.get_holding(h_act)) and theme.grabbed_scrollbar or theme.scrollbar)
+
+    --#endregion HORIZONTAL SCROLLING DRAWING
+
+    if not interacting_with_mouse then
+        goto horizontal_scrolling_continue
+    end
+
+    --#region HORIZONTAL SCROLLING INTERACTION
+
+    half_h_actuator_size = h_actuator_size * 0.5
+
+    mouse_limit_left, mouse_limit_right =
+        literal_scroll_left + half_h_actuator_size, literal_scroll_right - half_h_actuator_size
+
+    -- goto location if the bar is held outside of the actuator
+    if mnav.get_holding(h_bar) and not mnav.is_hovering(h_act) then
+        state.scroll_vel_x = 0
+        state.scroll_dist_x = extmath.map(
+            extmath.clamp(mnav.x, mouse_limit_left, mouse_limit_right),
+            mouse_limit_left,
+            mouse_limit_right,
+            dist_limit_left,
+            dist_limit_right
+        )
+    end
+
+    -- move the scrollbar and scroll region if dragging
+    if mnav.get_dragging(h_act) then
+        state.scroll_vel_x = 0
+        if mnav.get_started_dragging(h_act) then
+            mouse_offset_x = mnav.press_x - (projected_placement.left + half_h_actuator_size)
         end
-
-        if content_height > scroll_height then
-            cursor.peek()
-
-            -- set scrollbar location
-            cursor.change_anchor(1, 0)
-            cursor.width = scrollbar_thickness
-
-            mnav.make_sensor(v_bar, smode.block)
-
-            -- set actuator location
-            cursor.height = v_actuator_size
-            cursor.y = extmath.map(
-                state.scroll_dist_y,
-                dist_limit_bottom,
-                dist_limit_top,
-                scroll_bottom - v_actuator_size,
-                scroll_top
-            )
-
-            mnav.make_sensor(v_act, smode.draggable)
-
-            -- shrink the actuator if needed
-            if not (mnav.is_hovering(v_bar) or mnav.get_dragging(v_act)) then
-                cursor.width = scrollbar_thickness_inactive
-            end
-
-            -- draw the actuator
-            slot((mnav.get_dragging(v_act) or mnav.get_holding(v_act)) and theme.grabbed_scrollbar or theme.scrollbar)
-
-            if possibly_interacting then
-                do_vertical_mouse_interaction(
-                    state,
-                    dist_limit_top,
-                    dist_limit_bottom,
-                    literal_scroll_top,
-                    literal_scroll_bottom,
-                    v_actuator_size,
-                    projected_placement.top,
-                    scroll_region,
-                    v_bar,
-                    v_act
-                )
-            end
+        state.scroll_dist_x = extmath.map(
+            extmath.clamp(mnav.x - mouse_offset_x, mouse_limit_left, mouse_limit_right),
+            mouse_limit_left,
+            mouse_limit_right,
+            dist_limit_left,
+            dist_limit_right
+        )
+    else
+        -- mouse wheel (disabled if dragging)
+        if mnav.wheel_dx ~= 0 then
+            state.scroll_vel_x = state.scroll_vel_x + mnav.wheel_dx * -mouse_wheel_scroll_sensitivity
         end
     end
 
-    cursor.pop() -- (1)
+    -- scroll if dragging on the scroll region
+    if mnav.get_dragging(scroll_region) then
+        state.scroll_vel_x = 0
+        if mnav.get_started_dragging(scroll_region) then
+            mouse_offset_x = mnav.press_x - state.scroll_dist_x
+        end
+        state.scroll_dist_x = mnav.x - mouse_offset_x
+    end
+    -- letting go while moving while dragging the scroll region sets the velocity so the scroll coasts
+    if mnav.get_stopped_dragging(scroll_region) then
+        state.scroll_vel_x = mnav.dx
+    end
 
-    state.scroll_dist_x = extmath.clamp(state.scroll_dist_x, dist_limit_right, dist_limit_left)
-    state.scroll_dist_y = extmath.clamp(state.scroll_dist_y, dist_limit_bottom, dist_limit_top)
+    --#endregion HORIZONTAL SCROLLING INTERACTION
+
+    ::horizontal_scrolling_continue::
+
+    if content_height <= scroll_height then
+        goto vertical_scrolling_continue
+    end
+
+    -- peek to get the original scroll area size
+    cursor.peek()
+
+    v_actuator_size = get_actuator_size(content_height, scroll_height)
+
+    --#region VERTICAL SCROLLING DRAWING
+
+    -- set scrollbar location
+    cursor.change_anchor(1, 0)
+    cursor.width = scrollbar_thickness
+
+    mnav.make_sensor(v_bar, smode.block)
+
+    -- set actuator location
+    cursor.height = v_actuator_size
+    cursor.y =
+        extmath.map(state.scroll_dist_y, dist_limit_bottom, dist_limit_top, scroll_bottom - v_actuator_size, scroll_top)
+
+    mnav.make_sensor(v_act, smode.draggable)
+
+    -- shrink the actuator if needed
+    if not (mnav.is_hovering(v_bar) or mnav.get_dragging(v_act)) then
+        cursor.width = scrollbar_thickness_inactive
+    end
+
+    -- draw the actuator
+    slot((mnav.get_dragging(v_act) or mnav.get_holding(v_act)) and theme.grabbed_scrollbar or theme.scrollbar)
+
+    --#endregion VERTICAL SCROLLING DRAWING
+
+    if not interacting_with_mouse then
+        goto vertical_scrolling_continue
+    end
+
+    --#region VERTICAL SCROLLING INTERACTION
+
+    half_v_actuator_size = v_actuator_size * 0.5
+
+    mouse_limit_top, mouse_limit_bottom =
+        literal_scroll_top + half_v_actuator_size, literal_scroll_bottom - half_v_actuator_size
+
+    -- goto location if the bar is held outside of the actuator
+    if mnav.get_holding(v_bar) and not mnav.is_hovering(v_act) then
+        state.scroll_vel_y = 0
+        state.scroll_dist_y = extmath.map(
+            extmath.clamp(mnav.y, mouse_limit_top, mouse_limit_bottom),
+            mouse_limit_top,
+            mouse_limit_bottom,
+            dist_limit_top,
+            dist_limit_bottom
+        )
+    end
+
+    -- move the scrollbar and region if dragging
+    if mnav.get_dragging(v_act) then
+        state.scroll_vel_y = 0
+        if mnav.get_started_dragging(v_act) then
+            mouse_offset_y = (mnav.press_y - (projected_placement.top + half_v_actuator_size))
+        end
+        state.scroll_dist_y = extmath.map(
+            extmath.clamp(mnav.y - mouse_offset_y, mouse_limit_top, mouse_limit_bottom),
+            mouse_limit_top,
+            mouse_limit_bottom,
+            dist_limit_top,
+            dist_limit_bottom
+        )
+    else
+        -- mouse wheel (disabled if dragging)
+        if mnav.wheel_dy ~= 0 then
+            state.scroll_vel_y = state.scroll_vel_y + mnav.wheel_dy * mouse_wheel_scroll_sensitivity
+        end
+    end
+
+    -- scroll if dragging on the scroll region
+    if mnav.get_dragging(scroll_region) then
+        state.scroll_vel_y = 0
+        if mnav.get_started_dragging(scroll_region) then
+            mouse_offset_y = mnav.press_y - state.scroll_dist_y
+        end
+        state.scroll_dist_y = mnav.y - mouse_offset_y
+    end
+    -- letting go while moving while dragging the scroll region sets the velocity so the scroll coasts
+    if mnav.get_stopped_dragging(scroll_region) then
+        state.scroll_vel_y = mnav.dy
+    end
+
+    --#endregion VERTICAL SCROLLING INTERACTION
+
+    ::vertical_scrolling_continue::
+
+    ::skip_all_scrolling::
+
+    -- edit scroll distances
+    state.scroll_dist_x = extmath.clamp(
+        state.scroll_dist_x + state.scroll_vel_x * love.timer.getDelta(),
+        dist_limit_right,
+        dist_limit_left
+    )
+
+    state.scroll_dist_y = extmath.clamp(
+        state.scroll_dist_y + state.scroll_vel_y * love.timer.getDelta(),
+        dist_limit_bottom,
+        dist_limit_top
+    )
+
+    -- decay velocity
+    vel_decay_factor = math.min(love.timer.getDelta() * mouse_wheel_scroll_vel_decay, 1)
+    state.scroll_vel_x = state.scroll_vel_x - state.scroll_vel_x * vel_decay_factor
+    state.scroll_vel_y = state.scroll_vel_y - state.scroll_vel_y * vel_decay_factor
+
+    cursor.peek()
 
     cursor.edit_translation(tid, state.scroll_dist_x, state.scroll_dist_y)
 
     -- scroll region sensor is made last so it has the highest priority
     mnav.make_sensor(scroll_region, smode.draggable)
 
-    local at_left = state.scroll_dist_x == dist_limit_left
-    local at_top = state.scroll_dist_y == dist_limit_top
-    local at_right = state.scroll_dist_x == dist_limit_right
-    local at_bottom = state.scroll_dist_y == dist_limit_bottom
+    -- these values are true if the scroll region is at the content limits
+    at_left = state.scroll_dist_x == dist_limit_left
+    at_top = state.scroll_dist_y == dist_limit_top
+    at_right = state.scroll_dist_x == dist_limit_right
+    at_bottom = state.scroll_dist_y == dist_limit_bottom
+
+    ::scroll_is_empty::
+
+    cursor.pop() -- (1)
 
     return at_left, at_top, at_right, at_bottom
 end
