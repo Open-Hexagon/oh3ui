@@ -75,9 +75,11 @@ return function(state, min, max, positions, show_positions, kb_step, kb_fast_ste
     local kb_action = knav.get_action()
     if kb_action then
         if kb_action == kba.left then
-            state.position = state.position - (state._slider_kb_hold_seconds > kb_hold_seconds and kb_fast_step or kb_step)
+            state.position = state.position
+                - (state._slider_kb_hold_seconds > kb_hold_seconds and kb_fast_step or kb_step)
         elseif kb_action == kba.right then
-            state.position = state.position + (state._slider_kb_hold_seconds > kb_hold_seconds and kb_fast_step or kb_step)
+            state.position = state.position
+                + (state._slider_kb_hold_seconds > kb_hold_seconds and kb_fast_step or kb_step)
         end
         state.position = extmath.clamp(state.position, 0, divisions)
         state.value = extmath.map(state.position, 0, divisions, min, max)

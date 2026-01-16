@@ -72,6 +72,7 @@ end
 ---Starts editing text for a state table. Cursor will be placed at the end of the line.
 ---@param entry_state table
 function typing.set_target(entry_state)
+    love.keyboard.setTextInput(true)
     entry_state._text_entry_char_position = utf8.len(entry_state.text)
     target = entry_state
     started_editing_state = entry_state
@@ -81,6 +82,7 @@ end
 ---Stops editing text for the current target
 ---@param method typing_stop_methods
 function typing.unset_target(method)
+    love.keyboard.setTextInput(false)
     last_interaction_method = method
     stopped_editing_state = target
     target = nil

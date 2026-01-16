@@ -9,7 +9,6 @@ local mnav = require("ui.control.mouse_navigation")
 local mb = mnav.buttons
 local smode = mnav.sensor_mode
 
-
 ---Checkbox with a intermediate state that can only be accessed by manually setting the position field.
 ---Will reshape the cursor
 ---@param state table state table
