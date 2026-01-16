@@ -241,7 +241,6 @@ function T.test_evaluate_with_no_cells_or_events()
     unittest.assert(knav.get_action(1) == kba.right)
     unittest.assert(knav.get_holding(1) == kba.right)
 
-
     common.reset_all()
     knav.evaluate()
 

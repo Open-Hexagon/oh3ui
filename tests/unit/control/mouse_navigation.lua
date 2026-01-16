@@ -220,12 +220,54 @@ end
 
 -- degenerate cases
 
-function T.test_click_in_one_frame() end
+function T.test_click_in_one_frame()
+    down(1)
+    up(1)
+    run()
 
-function T.test_slight_drag_click_in_one_frame() end
+    unittest.assert(mnav.clicked == 1)
+    unittest.assert(mnav.holding == nil)
+    unittest.assert(mnav.dragging == nil)
+    unittest.assert(mnav.started_dragging == nil)
+    unittest.assert(mnav.stopped_dragging == nil)
+end
 
-function T.test_drag_in_one_frame() end
+function T.test_slight_drag_click_in_one_frame()
+    down(1)
+    move(1, 0)
+    up(1)
+    run()
 
-function T.test_isolated_release() end
+    unittest.assert(mnav.clicked == 1)
+    unittest.assert(mnav.holding == nil)
+    unittest.assert(mnav.dragging == nil)
+    unittest.assert(mnav.started_dragging == nil)
+    unittest.assert(mnav.stopped_dragging == nil)
+end
+
+function T.test_drag_in_one_frame()
+    down(1)
+    move(20, 0)
+    up(1)
+    run()
+
+    -- this is still detected as a regular click since the mouse position isn't updated multiple times in one frame
+    unittest.assert(mnav.clicked == 1)
+    unittest.assert(mnav.holding == nil)
+    unittest.assert(mnav.dragging == nil)
+    unittest.assert(mnav.started_dragging == nil)
+    unittest.assert(mnav.stopped_dragging == nil)
+end
+
+function T.test_isolated_release()
+    up(1)
+    run()
+
+    unittest.assert(mnav.clicked == nil)
+    unittest.assert(mnav.holding == nil)
+    unittest.assert(mnav.dragging == nil)
+    unittest.assert(mnav.started_dragging == nil)
+    unittest.assert(mnav.stopped_dragging == nil)
+end
 
 return T
