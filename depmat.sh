@@ -1,3 +1,3 @@
 #!/bin/bash
 
-luadepgraph -m ui --dot | ./tools/adjmat > depmat.out
+luadepgraph -m ui --dot | ./tools/adjmat > depmat.csv

@@ -1,5 +1,5 @@
 love.AppImage
 luacov.report.out
 luacov.stats.out
-depmat.out
+depmat.csv
 .vscode/

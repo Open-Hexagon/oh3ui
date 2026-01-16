@@ -4,6 +4,7 @@ local names = {}
 local mat = {}
 
 local node1, node2, node_name, node_color, n, line, line_num
+local max_name_len = 0
 
 line = io.stdin:read("*l")
 line_num = 1
@@ -20,6 +21,7 @@ while line do
             node_name = node_name .. " (external)"
         end
         names[node1] = node_name
+        max_name_len = math.max(max_name_len, #node_name)
         mat[node1] = {}
         goto continue
     end
@@ -57,23 +59,16 @@ while n > 0 do
     n = math.floor(n / 10)
 end
 
--- print numbered list of modules
-for i = 1, name_count do
-    print(("%%%dd: %%s"):format(max_digits):format(i, names[i]))
-end
-io.write("\n")
-
 -- print matrix header
-io.write("requires -->\n")
-io.write("^", string.rep(" ", max_digits - 1), "|")
+io.write((" "):rep(max_digits), ",", (" "):rep(max_name_len), ",")
 for i = 1, name_count do
-    io.write(("%%%dd|"):format(max_digits):format(i))
+    io.write(("%%%dd"):format(max_digits):format(i), ",")
 end
 io.write("\n")
 
 -- print matrix
 for i = 1, name_count do
-    io.write(("%%%dd|"):format(max_digits):format(i))
+    io.write(("%%%dd"):format(max_digits):format(i), ",", (" "):rep(max_name_len - #names[i]), names[i], ",")
     for j = 1, name_count do
         if i == j then
             n = "-"
@@ -82,7 +77,7 @@ for i = 1, name_count do
         else
             n = " "
         end
-        io.write(string.rep(n, max_digits), "|")
+        io.write((" "):rep(max_digits - 1), n, ",")
     end
     io.write("\n")
 end
