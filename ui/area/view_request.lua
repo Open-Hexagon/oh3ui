@@ -69,8 +69,6 @@ function view_request.update_auto_scroll(view_pid)
             -- next state index
             current_index = aeb_stack[current_index]
         end
-
-        -- mode = VR_START
     end
 end
 

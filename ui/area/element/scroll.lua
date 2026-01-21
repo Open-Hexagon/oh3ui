@@ -11,6 +11,7 @@ local aeb = require("ui.area.aeb")
 local econf = require("ui.element_conf")
 local view_request = require("ui.area.view_request")
 local stack_data = require("ui.stack_manager.stack_data")
+local aeb_stack = stack_data.aeb_stack
 local selection_outline_add_to_queue = require("ui.decorator.element.selection_outline").add_to_queue
 local draw_queue = require("ui.draw_queue")
 local draw_data_add_draw_operation = require("ui.draw_queue.draw_data").add_draw_operation
@@ -88,6 +89,7 @@ function scroll.start(state)
     aeb.push(mnav.declare_sensor_id())
     aeb.push(mnav.declare_sensor_id())
     aeb.push(mnav.declare_sensor_id())
+    aeb.push(mnav.declare_sensor_id())
 
     -- save literal cursor position for use later
     aeb.push(projected_placement.bottom)
@@ -127,6 +129,7 @@ function scroll.finish(padding)
     local v_actuator_size, half_v_actuator_size, mouse_limit_top, mouse_limit_bottom
     local at_left, at_top, at_right, at_bottom = false, false, false, false
     local vel_decay_factor
+    local up_state
 
     -- deal with stack stuff
     stack_manager.pop_record() -- (6)
@@ -149,6 +152,7 @@ function scroll.finish(padding)
 
     -- get back those sensor ids
     local scroll_region = aeb.pop()
+    local scroll_region_wheel_detector = aeb.pop()
     local h_act = aeb.pop()
     local h_bar = aeb.pop()
     local v_act = aeb.pop()
@@ -286,7 +290,7 @@ function scroll.finish(padding)
         )
     else
         -- mouse wheel (disabled if dragging)
-        if mnav.wheel_dx ~= 0 then
+        if mnav.is_hovering(scroll_region_wheel_detector) and mnav.wheel_dx ~= 0 then
             state.scroll_vel_x = state.scroll_vel_x + mnav.wheel_dx * -mouse_wheel_scroll_sensitivity
         end
     end
@@ -380,7 +384,7 @@ function scroll.finish(padding)
         )
     else
         -- mouse wheel (disabled if dragging)
-        if mnav.wheel_dy ~= 0 then
+        if mnav.is_hovering(scroll_region_wheel_detector) and mnav.wheel_dy ~= 0 then
             state.scroll_vel_y = state.scroll_vel_y + mnav.wheel_dy * mouse_wheel_scroll_sensitivity
         end
     end
@@ -404,29 +408,50 @@ function scroll.finish(padding)
 
     ::skip_all_scrolling::
 
-    -- edit scroll distances
-    state.scroll_dist_x = extmath.clamp(
-        state.scroll_dist_x + state.scroll_vel_x * love.timer.getDelta(),
-        dist_limit_right,
-        dist_limit_left
-    )
-
-    state.scroll_dist_y = extmath.clamp(
-        state.scroll_dist_y + state.scroll_vel_y * love.timer.getDelta(),
-        dist_limit_bottom,
-        dist_limit_top
-    )
-
-    -- decay velocity
     vel_decay_factor = math.min(love.timer.getDelta() * mouse_wheel_scroll_vel_decay, 1)
+
+    -- change scroll distances based on velocity
+
+    state.scroll_dist_x = state.scroll_dist_x + state.scroll_vel_x * love.timer.getDelta()
+    -- apply limits
+    if state.scroll_dist_x < dist_limit_right then
+        state.scroll_dist_x = dist_limit_right
+        at_right = true -- using this as a temporary value
+    elseif state.scroll_dist_x > dist_limit_left then
+        state.scroll_dist_x = dist_limit_left
+        at_right = true
+    end
+    -- decay velocity
     state.scroll_vel_x = state.scroll_vel_x - state.scroll_vel_x * vel_decay_factor
+    -- pass the velocity value up to a higher scroll state so they can scroll if this scroll is at it's limit
+    if view_request.top_index and at_right then
+        up_state = aeb_stack[view_request.top_index - 1]
+        up_state.scroll_vel_x = up_state.scroll_vel_x + state.scroll_vel_x
+        state.scroll_vel_x = 0
+    end
+
+    -- same as above but for y axis
+    state.scroll_dist_y = state.scroll_dist_y + state.scroll_vel_y * love.timer.getDelta()
+    if state.scroll_dist_y < dist_limit_bottom then
+        state.scroll_dist_y = dist_limit_bottom
+        at_bottom = true
+    elseif state.scroll_dist_y > dist_limit_top then
+        state.scroll_dist_y = dist_limit_top
+        at_bottom = true
+    end
     state.scroll_vel_y = state.scroll_vel_y - state.scroll_vel_y * vel_decay_factor
+    if view_request.top_index and at_bottom then
+        up_state = aeb_stack[view_request.top_index - 1]
+        up_state.scroll_vel_y = up_state.scroll_vel_y + state.scroll_vel_y
+        state.scroll_vel_y = 0
+    end
 
     cursor.peek()
 
     cursor.edit_translation(tid, state.scroll_dist_x, state.scroll_dist_y)
 
     -- scroll region sensor is made last so it has the highest priority
+    mnav.make_sensor(scroll_region_wheel_detector, smode.lazy)
     mnav.make_sensor(scroll_region, smode.draggable)
 
     -- these values are true if the scroll region is at the content limits

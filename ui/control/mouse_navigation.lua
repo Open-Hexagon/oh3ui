@@ -178,6 +178,14 @@ function mouse_navigation.get_dragging(sensor_id)
     return nil
 end
 
+---Gets whether a sensor can be dragged now
+---@param sensor_id integer?
+---@return boolean
+---@nodiscard
+function mouse_navigation.can_drag(sensor_id)
+    return (sensor_id or current_sensor_id) == sensor.preemptive_drag_id
+end
+
 ---Gets the mouse button that just started dragging the current sensor, if any.
 ---@param sensor_id integer?
 ---@return mouse_button?
