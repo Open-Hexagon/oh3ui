@@ -198,7 +198,7 @@ function place_by_cursor.label(str, size, align, wrap, color, font_path)
 
     local cursor_width_before = cursor.width
     local wrap_limit = wrap and (cursor_width_before * settings.scale) or math.huge
-    local font = text.get_font(size * settings.scale, font_path or theme.font_path)
+    local font = text.get_font(size * settings.scale, font_path)
 
     -- get a new text object
     local text_object = text.get_text_object(font, str, wrap_limit, align)
@@ -249,12 +249,13 @@ end
 ---@param icon_name string icon name
 ---@param size number icon override icon size in pixels (works like a font)
 ---@param color number[]? override text color
+---@param font_path string? override font
 ---@return integer point_id
-function place_by_cursor.icon(icon_name, size, color)
+function place_by_cursor.icon(icon_name, size, color, font_path)
     cursor.push()
 
-    local str = text.get_icon_string(icon_name, theme.icon_font_path)
-    local font = text.get_font(size * settings.scale, theme.icon_font_path)
+    local str = text.get_icon_string(icon_name, font_path)
+    local font = text.get_font(size * settings.scale, font_path)
 
     local text_object = text.get_text_object(font, str, math.huge, "left")
 

@@ -3,7 +3,6 @@
 local bit = require("bit")
 local band, bor, rshift, lshift = bit.band, bit.bor, bit.rshift, bit.lshift
 local extmath = require("extmath")
-local text = require("ui.text")
 
 ---Converts an integer to a color table with alpha set to 1
 ---@param x integer
@@ -80,10 +79,10 @@ function theme.get_xterm_color(n)
 end
 
 ---Currently used text font
-theme.font_path = "assets/OpenSquare.ttf"
+theme.font_path = "assets/open-pentagon.ttf"
 
 ---Currently used icon font
-theme.icon_font_path = "assets/bootstrap-icons.ttf"
+theme.icon_font_path = "assets/open-pentagon.ttf"
 
 -- primitive colors
 theme.black = theme.get_xterm_color(0)

@@ -14,6 +14,7 @@ local settings = ui.settings
 local typing = ui.control.typing
 local ansi = ui.text.ansi
 local search = ui.text.search
+local text = ui.text
 
 -- Elements
 local button = ui.element.button
@@ -51,7 +52,7 @@ return function()
     counter = (counter + 1) % 60
     cursor.change_anchor(0)
 
-    cursor.push_translation(100, 100)
+    cursor.push_translation(50, 50)
 
     knav.set_wrapping(wmode.redirect, wmode.vertical)
     knav.set_page_length(2)
@@ -213,7 +214,7 @@ Rerum ducimus tenetur fugit.
     end
 
     do
-        cursor.width = 150
+        cursor.width = 200
         cursor.height = 20
         knav.make_cell()
         knav.grid_cell(1, 15)
@@ -236,7 +237,17 @@ Rerum ducimus tenetur fugit.
         cursor.shift_down(40)
         cursor.width = id.slider.value
         cursor.change_anchor(id.slider_anchor_x.value, id.slider_anchor_y.value)
-        draw_by_cursor.label(colored_text, 16, align, id.toggle.on)
+        cursor.height = 40
+        draw_by_cursor.rectangle_outline(theme.yellow, 1)
+        draw_by_cursor.label(
+            text.replace_icon_sequences(
+                "\x1c&debug-full-mono-character-block; X\x1c&square;g \x1c&debug-full-mono-character-block;\n\x1c&square;XXXX"
+            ),
+            40,
+            align,
+            id.toggle.on
+        )
+        draw_by_cursor.rectangle_inline(theme.green, 1)
     end
 
     cursor.pop_translation()

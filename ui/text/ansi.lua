@@ -1,5 +1,6 @@
 local buffer = require("string.buffer")
 local bit = require("bit")
+local theme = require("ui.theme")
 local band = bit.band
 
 local ansi = {}
@@ -28,8 +29,12 @@ end
 ---@return integer|nil end_pos
 ---@nodiscard
 function ansi.from_sequence(seq, init)
-    local start_pos, end_pos, r, g, b, a, str = string.find(seq, "\x1b%[38;4;(%d+);(%d+);(%d+);(%d+)m([^\x1b]*)", init)
+    local start_pos, end_pos, r, g, b, a, str = string.find(seq, "\x1b%[38;4;(%d*);(%d*);(%d*);(%d*)m([^\x1b]*)", init)
     if start_pos then
+        r = tonumber(r) or 0
+        g = tonumber(g) or 0
+        b = tonumber(b) or 0
+        a = tonumber(a) or 0
         return { r / 255, g / 255, b / 255, a / 255 }, str, start_pos, end_pos
     end
     return nil, "", 0, 0
@@ -58,12 +63,24 @@ end
 function ansi.string_to_colored_text(text)
     local coloredtext = {}
     local start_pos, end_pos, r, g, b, a, str
-    local init_pos = 1
+    local init_pos
+
+    -- catch any leading text and use the default theme color
+    start_pos, end_pos, str = string.find(text, "^([^\x1b]*)")
+    if end_pos > 0 then
+        table.insert(coloredtext, theme.text_color)
+        table.insert(coloredtext, str)
+    end
+    init_pos = end_pos + 1
     repeat
         start_pos, end_pos, r, g, b, a, str =
-            string.find(text, "\x1b%[38;4;(%d+);(%d+);(%d+);(%d+)m([^\x1b]*)", init_pos)
+            string.find(text, "\x1b%[38;4;(%d*);(%d*);(%d*);(%d*)m([^\x1b]*)", init_pos)
         if end_pos then
             init_pos = end_pos + 1
+            r = tonumber(r) or 0
+            g = tonumber(g) or 0
+            b = tonumber(b) or 0
+            a = tonumber(a) or 0
             table.insert(coloredtext, { r / 255, g / 255, b / 255, a / 255 })
             table.insert(coloredtext, str)
         end
