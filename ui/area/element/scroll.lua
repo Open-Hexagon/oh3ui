@@ -408,8 +408,6 @@ function scroll.finish(padding)
 
     ::skip_all_scrolling::
 
-    vel_decay_factor = math.min(love.timer.getDelta() * mouse_wheel_scroll_vel_decay, 1)
-
     -- change scroll distances based on velocity
 
     state.scroll_dist_x = state.scroll_dist_x + state.scroll_vel_x * love.timer.getDelta()
@@ -421,8 +419,6 @@ function scroll.finish(padding)
         state.scroll_dist_x = dist_limit_left
         at_right = true
     end
-    -- decay velocity
-    state.scroll_vel_x = state.scroll_vel_x - state.scroll_vel_x * vel_decay_factor
     -- pass the velocity value up to a higher scroll state so they can scroll if this scroll is at it's limit
     if view_request.top_index and at_right then
         up_state = aeb_stack[view_request.top_index - 1]
@@ -439,12 +435,16 @@ function scroll.finish(padding)
         state.scroll_dist_y = dist_limit_top
         at_bottom = true
     end
-    state.scroll_vel_y = state.scroll_vel_y - state.scroll_vel_y * vel_decay_factor
     if view_request.top_index and at_bottom then
         up_state = aeb_stack[view_request.top_index - 1]
         up_state.scroll_vel_y = up_state.scroll_vel_y + state.scroll_vel_y
         state.scroll_vel_y = 0
     end
+
+    -- decay velocity
+    vel_decay_factor = math.min(love.timer.getDelta() * mouse_wheel_scroll_vel_decay, 1)
+    state.scroll_vel_x = state.scroll_vel_x - state.scroll_vel_x * vel_decay_factor
+    state.scroll_vel_y = state.scroll_vel_y - state.scroll_vel_y * vel_decay_factor
 
     cursor.peek()
 
