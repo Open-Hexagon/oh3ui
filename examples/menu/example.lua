@@ -1,4 +1,4 @@
-local ui = require("ui")
+local ui = require("ohui")
 
 local id = ui.new_id_table()
 local cursor = ui.cursor

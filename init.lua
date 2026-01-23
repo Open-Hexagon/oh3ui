@@ -1,3 +1,7 @@
+-- add to package.path so everything can be found
+local path = ...
+package.path = package.path .. string.format("./%s/?.lua;./%s/?/init.lua;", path, path)
+
 ---ui api endpoints
 
 local events = require("ui.events")

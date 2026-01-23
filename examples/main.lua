@@ -2,7 +2,8 @@
 -- disable coverage while parsing arguments
 
 local argparse = require("argparse")
-local ui_settings = require("ui.settings")
+local ui = require("ohui")
+local ui_settings = ui.settings
 local unittest = require("tests.unittest")
 
 local parser = argparse("ohce", "open hexagon community edition")
@@ -47,9 +48,7 @@ end
 -- luacov: enable
 
 local example_menu = require("menu.example")
-local scroll_example = require("menu.scroll_example")
-
-local ui = require("ui")
+-- local scroll_example = require("menu.scroll_example")
 
 function love.run()
     if unittest_mode then
