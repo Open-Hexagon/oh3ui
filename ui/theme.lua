@@ -79,10 +79,10 @@ function theme.get_xterm_color(n)
 end
 
 ---Currently used text font
-theme.font_path = "assets/open-pentagon.ttf"
+theme.font_path = nil
 
 ---Currently used icon font
-theme.icon_font_path = "assets/open-pentagon.ttf"
+theme.icon_font_path = nil
 
 -- primitive colors
 theme.black = theme.get_xterm_color(0)

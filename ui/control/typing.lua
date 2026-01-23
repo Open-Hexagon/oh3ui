@@ -280,7 +280,7 @@ do
     ---@param hint_color number[]? override hint text color
     ---@param font_path string? override font path
     function typing.draw_text_entry(size, hint, text_color, hint_color, font_path)
-        local font = text.get_font(size * settings.scale, font_path or theme.font_path)
+        local font = text.get_font(size * settings.scale, font_path)
         local text_cursor_height = (font:getBaseline() - font:getDescent()) / settings.scale
 
         cursor.push()

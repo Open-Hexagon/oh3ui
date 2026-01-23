@@ -6,6 +6,9 @@ local ui = require("ohui")
 local ui_settings = ui.settings
 local unittest = require("tests.unittest")
 
+-- ui.theme.font_path = "assets/open-pentagon.ttf"
+-- ui.theme.icon_font_path = "assets/open-pentagon.ttf"
+
 local parser = argparse("ohce", "open hexagon community edition")
 
 parser:flag("-e --print-events", "enable printing of events")

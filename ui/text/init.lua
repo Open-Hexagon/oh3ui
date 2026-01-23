@@ -22,6 +22,9 @@ local font_cache = {}
 ---@nodiscard
 function text.get_font(size, font_path)
     font_path = font_path or theme.font_path
+    if not font_path then
+        error("theme.font_path is not set!")
+    end
     font_cache[font_path] = font_cache[font_path] or {}
     local font = font_cache[font_path][size]
     if not font then
@@ -47,6 +50,9 @@ local icon_font_table_cache = {}
 ---@nodiscard
 function text.get_icon_string(icon_name, icon_font_path)
     icon_font_path = icon_font_path or theme.icon_font_path
+    if not icon_font_path then
+        error("theme.icon_font_path is not set!")
+    end
     -- try to find the table in the cache
     local icon_table = icon_font_table_cache[icon_font_path]
     if not icon_table then
