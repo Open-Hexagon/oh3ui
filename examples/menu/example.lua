@@ -15,6 +15,7 @@ local typing = ui.control.typing
 local ansi = ui.text.ansi
 local search = ui.text.search
 local text = ui.text
+local suppress = ui.suppress
 
 -- Elements
 local button = ui.element.button
@@ -119,6 +120,7 @@ Rerum ducimus tenetur fugit.
         settings.scale = id.slider_coarse.value
     end
     cursor.shift_down(10)
+    suppress.push_disable()
 
     -- Switch
     cursor.width = 150
@@ -134,6 +136,7 @@ Rerum ducimus tenetur fugit.
         knav.deselect()
     end
     cursor.shift_down(10)
+    suppress.pop_disable()
 
     knav.make_cell()
     knav.grid_cell(1, 7)
