@@ -131,5 +131,12 @@ function theme.alpha_mod_unpack(c, a)
     return c[1], c[2], c[3], a
 end
 
+---sets the underlying default value for theme entry
+---@param k any
+---@param v any
+function theme.set_default(k, v)
+    theme[k] = v
+end
+
 -- allows setting values in the table to overwrite them but restores default when set to nil
 return setmetatable({}, { __index = theme })
