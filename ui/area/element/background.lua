@@ -20,7 +20,7 @@ end
 ---@param color table?
 function background.finish(pad, color)
     stack_manager.pop_record()
-    local _ = aeb.pop_frame_header("background")
+    aeb.pop_frame_header("background")
     local res_id = aeb.pop()
 
     if cursor.finish_area() then

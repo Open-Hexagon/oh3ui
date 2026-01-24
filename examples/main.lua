@@ -67,6 +67,9 @@ function love.run()
 
     -- keep this always on when using the ui
     love.keyboard.setKeyRepeat(true)
+    if ui.settings.is_desktop then
+        love.keyboard.setTextInput(true)
+    end
 
     ui.layer.push(example_menu)
 
