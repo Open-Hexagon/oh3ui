@@ -1,6 +1,7 @@
 -- add to package.path so everything can be found
+-- love2d has its own require path
 local path = ...
-package.path = package.path .. string.format("./%s/?.lua;./%s/?/init.lua;", path, path)
+love.filesystem.setRequirePath(love.filesystem.getRequirePath() .. string.format(";%s/?.lua;%s/?/init.lua", path, path))
 
 ---ui api endpoints
 
