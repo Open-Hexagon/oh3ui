@@ -1,7 +1,37 @@
--- add to package.path so everything can be found
--- love2d has its own require path
-local path = ...
-love.filesystem.setRequirePath(love.filesystem.getRequirePath() .. string.format(";%s/?.lua;%s/?/init.lua", path, path))
+local super_modname = ...
+
+---custom loader that only looks for files inside this folder
+---@param modname string
+---@return function
+local function loader(modname)
+    local error_str = ""
+
+    local super_modname_path = super_modname:gsub("%.", "/")
+    local modname_path = modname:gsub("%.", "/")
+
+    local path1 = string.format("%s/%s/%s.lua", love.filesystem.getSource(), super_modname_path, modname_path)
+    local path2 = string.format("%s/%s/%s/init.lua", love.filesystem.getSource(), super_modname_path, modname_path)
+
+    local chunk = loadfile(path1)
+    if not chunk then
+        error_str = error_str .. string.format("\n\t[ohui internal error] no file '%s'", path1)
+        chunk = loadfile(path2)
+        if not chunk then
+            error_str = error_str .. string.format("\n\t[ohui internal error] no file '%s'", path2)
+            return error_str
+        end
+    end
+
+    return chunk
+end
+
+-- do some package trickery to make require only search within this folder
+
+local old_package_loaded = package.loaded
+local old_package_loaders = package.loaders
+
+package.loaded = {}
+package.loaders = { package.loaders[1], loader }
 
 ---ui api endpoints
 
@@ -197,5 +227,8 @@ local ui = {
     push_event = events.add,
     run = run,
 }
+
+package.loaded = old_package_loaded
+package.loaders = old_package_loaders
 
 return ui
