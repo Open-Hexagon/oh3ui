@@ -1,7 +1,7 @@
 local platform = love.system.getOS()
 
 local settings = {
-    scale = nil,
+    scale = 1,
     strict = nil,
     overlay_grid = nil,
     overlay_masks = nil,
