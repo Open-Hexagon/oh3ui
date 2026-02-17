@@ -1,5 +1,5 @@
 local scissor_stack = require("ui.draw_queue.scissor_stack")
-local extmath = require("extmath")
+local extmath = require("ui.extmath")
 local sensor = require("ui.control.sensor")
 local warning = require("ui.warning")
 local draw_data = require("ui.draw_queue.draw_data")

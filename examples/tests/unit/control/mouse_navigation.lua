@@ -4,7 +4,7 @@ local monkeypatch = require("tests.monkeypatch")
 local unittest = require("tests.unittest")
 local control_data = require("ui.control.control_data")
 local sensor = require("ui.control.sensor")
-local extmath = require("extmath")
+local extmath = require("ui.extmath")
 
 local T = {}
 

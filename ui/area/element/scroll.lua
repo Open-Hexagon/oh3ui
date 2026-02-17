@@ -1,6 +1,6 @@
 local cursor = require("ui.cursor")
 local projected_placement = cursor.projected_placement
-local extmath = require("extmath")
+local extmath = require("ui.extmath")
 local mnav = require("ui.control.mouse_navigation")
 local smode = mnav.sensor_mode
 local slot = require("ui.draw_queue").by_cursor.slot

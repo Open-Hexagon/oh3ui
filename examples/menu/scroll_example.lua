@@ -1,19 +1,21 @@
-local cursor = require("ui.cursor")
-local id = require("ui.id_table")()
-local theme = require("ui.theme")
-local draw_by_cursor = require("ui.draw_queue").by_cursor
-local mnav = require("ui.control.mouse_navigation")
+local ui = require("ohui")
+
+local cursor = ui.cursor
+local id = ui.new_id_table()
+local theme = ui.theme
+local draw_by_cursor = ui.draw.by_cursor
+local mnav = ui.control.mouse_navigation
 local mb = mnav.buttons
-local knav = require("ui.control.keyboard_navigation")
+local knav = ui.control.keyboard_navigation
 local wmode = knav.wrapping_mode
-local layers = require("ui.layer")
+local layers = ui.layer
 local kba = knav.actions
 
-local background = require("ui.area.element.background")
-local collapse = require("ui.area.element.collapse")
-local scroll = require("ui.area.element.scroll")
+local background = ui.area_element.background
+local collapse = ui.area_element.collapse
+local scroll = ui.area_element.scroll
 
-local button = require("ui.element.button")
+local button = ui.element.button
 
 return function()
     draw_by_cursor.rectangle({ 0, 0, 0, 0.8 })

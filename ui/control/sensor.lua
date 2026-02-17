@@ -32,7 +32,7 @@ Dragging
 - The lowest (earliest created) sensor will be dragged
 ]]
 
-local extmath = require("extmath")
+local extmath = require("ui.extmath")
 local bit = require("bit")
 local band = bit.band
 
