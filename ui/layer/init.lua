@@ -9,8 +9,14 @@ local scheduled_tasks = {}
 local scheduled_layers = {}
 
 -- Higher index layers will show up on top of lower index layers
-local stack = {}
-local length = 0
+local layer_stack = {}
+local layer_stack_index = 0
+
+---@type function?
+local scheduled_pinned_layer
+local should_update = false
+---@type function?
+local pinned_layer
 
 local layer = {}
 
@@ -35,6 +41,13 @@ function layer.pop()
     end
 end
 
+---Sets a new pinned layer
+---@param layer_fn function
+function layer.set_pinned_layer(layer_fn)
+    scheduled_pinned_layer = layer_fn
+    should_update = true
+end
+
 layer.is_current_layer_active = layer_status.is_current_layer_active
 layer.get_current_layer = layer_status.get_current_layer
 
@@ -43,20 +56,28 @@ function layer.run_all()
     layer_status.current_layer_is_active = false
 
     -- check if layer 1 exists
-    if length > 0 then
+    if layer_stack_index > 0 then
         -- run inactive layers
-        for i = 1, length - 1 do
+        for i = 1, layer_stack_index - 1 do
             cursor.reset()
             layer_status.current_layer = i
-            stack[i]()
+            layer_stack[i]()
             stack_manager.clean_up()
         end
 
         layer_status.current_layer_is_active = true
         -- make the top layer active
         cursor.reset()
-        layer_status.current_layer = length
-        stack[length]()
+        layer_status.current_layer = layer_stack_index
+        layer_stack[layer_stack_index]()
+        stack_manager.clean_up()
+    end
+
+    if pinned_layer then
+        layer_status.current_layer_is_active = false
+        cursor.reset()
+        layer_status.current_layer = -1
+        pinned_layer()
         stack_manager.clean_up()
     end
 end
@@ -68,25 +89,30 @@ function layer.prepare_for_next_frame()
 
     for i = 1, schedule_index do
         if scheduled_tasks[i] == "push" then
-            length = length + 1
-            stack[length] = scheduled_layers[i]
+            layer_stack_index = layer_stack_index + 1
+            layer_stack[layer_stack_index] = scheduled_layers[i]
         elseif scheduled_tasks[i] == "pop" then
-            if length == 0 then
+            if layer_stack_index == 0 then
                 error("cannot pop layer: reached bottom of layer stack")
             end
-            stack[length] = nil
-            length = length - 1
+            layer_stack[layer_stack_index] = nil
+            layer_stack_index = layer_stack_index - 1
         else
             error("invalid layer schedule task")
         end
     end
     schedule_index = 0
 
+    if should_update then
+        pinned_layer = scheduled_pinned_layer
+        should_update = false
+    end
+
     if control_data.get_last_used_control_method() == "keyboard" then
         -- if keyboard navigation was used we need to find the best cell to select on the new top layer
         layer_status.current_layer_is_active = true
         keyboard_navigation.reset()
-        stack[length]() -- we have to run the new top layer (possibly again)
+        layer_stack[layer_stack_index]() -- we have to run the new top layer (possibly again)
         keyboard_navigation.finish_layer_transition()
         stack_manager.clean_up()
     else

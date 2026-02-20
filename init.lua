@@ -193,6 +193,7 @@ local ui = {
     layer = {
         push = layer.push,
         pop = layer.pop,
+        set_pinned_layer = layer.set_pinned_layer,
         is_current_layer_active = layer.is_current_layer_active,
         get_current_layer = layer.get_current_layer,
     },
