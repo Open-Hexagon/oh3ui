@@ -272,22 +272,104 @@ end
 ---The line will be placed at about cursor.y and extend from edge.left to edge.right.
 ---@param color number[]?
 ---@param line_width number?
+---@param position number? override position in cursor placement
 ---@return integer point_cluster_id
-function place_by_cursor.hline(color, line_width)
+function place_by_cursor.hline(color, line_width, position)
+    position = position or cursor.anchor_y
+    line_width = line_width or 1
     cursor.place()
-    local y = placement.y - cursor.anchor_y + 0.5
-    return place_by_value.line(line_width or 1, color or theme.default, placement.left, y, placement.right, y)
+    local y
+    if position then
+        y = placement.top + (placement.bottom - placement.top - line_width) * position + 0.5 * line_width
+    else
+        y = placement.y + (0.5 - cursor.anchor_y) * line_width
+    end
+    return place_by_value.line(line_width, color or theme.default, placement.left, y, placement.right, y)
 end
 
 ---Vertical line primitive. Never reshapes the cursor.
 ---The line will be placed at about cursor.x and extend from edge.top to edge.bottom.
 ---@param color number[]?
 ---@param line_width number?
+---@param position number? override position in cursor placement
 ---@return integer point_cluster_id
-function place_by_cursor.vline(color, line_width)
+function place_by_cursor.vline(color, line_width, position)
+    position = position or cursor.anchor_x
+    line_width = line_width or 1
     cursor.place()
-    local x = placement.x - cursor.anchor_x + 0.5
-    return place_by_value.line(line_width or 1, color or theme.default, x, placement.top, x, placement.bottom)
+    local x
+    if position then
+        x = placement.left + (placement.right - placement.left - line_width) * position + 0.5 * line_width
+    else
+        x = placement.x + (0.5 - cursor.anchor_x) * line_width
+    end
+    return place_by_value.line(line_width, color or theme.default, x, placement.top, x, placement.bottom)
+end
+
+local function v_line_edge(color, line_width, mode, base, dir)
+    line_width = line_width or 1
+    local x
+    if mode == "outside" then
+        x = base - 0.5 * line_width * dir
+    elseif mode == "center" then
+        x = base
+    else
+        x = base + 0.5 * line_width * dir
+    end
+    return place_by_value.line(line_width, color or theme.default, x, placement.top, x, placement.bottom)
+end
+
+---Draws a line on the left edge of the cursor. Never reshapes the cursor.
+---@param color number[]?
+---@param line_width number?
+---@param mode? "inside"|"outside"|"center"
+---@return integer
+function place_by_cursor.left_line(color, line_width, mode)
+    cursor.place()
+    return v_line_edge(color, line_width, mode, placement.left, 1)
+end
+
+---Draws a line on the right edge of the cursor. Never reshapes the cursor.
+---@param color number[]?
+---@param line_width number?
+---@param mode? "inside"|"outside"|"center"
+---@return integer
+function place_by_cursor.right_line(color, line_width, mode)
+    cursor.place()
+    return v_line_edge(color, line_width, mode, placement.right, -1)
+end
+
+local function h_line_edge(color, line_width, mode, base, dir)
+    line_width = line_width or 1
+    local y
+    if mode == "outside" then
+        y = base - 0.5 * line_width * dir
+    elseif mode == "center" then
+        y = base
+    else
+        y = base + 0.5 * line_width * dir
+    end
+    return place_by_value.line(line_width, color or theme.default, placement.left, y, placement.right, y)
+end
+
+---Draws a line on the top edge of the cursor. Never reshapes the cursor.
+---@param color number[]?
+---@param line_width number?
+---@param mode? "inside"|"outside"|"center"
+---@return integer
+function place_by_cursor.top_line(color, line_width, mode)
+    cursor.place()
+    return h_line_edge(color, line_width, mode, placement.top, 1)
+end
+
+---Draws a line on the bottom edge of the cursor. Never reshapes the cursor.
+---@param color number[]?
+---@param line_width number?
+---@param mode? "inside"|"outside"|"center"
+---@return integer
+function place_by_cursor.bottom_line(color, line_width, mode)
+    cursor.place()
+    return h_line_edge(color, line_width, mode, placement.bottom, -1)
 end
 
 return place_by_cursor
