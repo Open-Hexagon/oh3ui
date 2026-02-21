@@ -99,7 +99,7 @@ function place_by_value.circle_outline(x, y, radius, line_width, color, segments
 end
 
 ---Add a polygon to the queue
----@param mode string
+---@param mode love.DrawMode
 ---@param color number[]
 ---@param line_width number
 ---@param x1 number 1st point x coordinate

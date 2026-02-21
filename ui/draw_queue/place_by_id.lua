@@ -86,7 +86,7 @@ end
 
 ---Add a polygon to the queue
 ---@param point_cluster_id integer
----@param mode string
+---@param mode love.DrawMode
 ---@param line_width number
 ---@param r number
 ---@param g number
