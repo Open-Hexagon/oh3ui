@@ -83,7 +83,6 @@ local function overlay_scaled_grid()
 
     -- Show scaled mouse position
     x, y = love.mouse.getPosition()
-    love.graphics.transformPoint(x, y)
     love.graphics.circle("line", x, y, 4)
     -- luacov: enable
 end
