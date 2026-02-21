@@ -17,7 +17,7 @@ function T.set_up()
         7 8 9
     ]]
 
-    layer_status.current_layer_is_active = true
+    layer_status.knav_allowed = true
 
     knav.make_cell()
     knav.grid_cell(1, 1)
@@ -46,7 +46,7 @@ function T.set_up()
     knav.make_cell()
     knav.grid_cell(3, 3)
 
-    layer_status.current_layer_is_active = false
+    layer_status.knav_allowed = false
 end
 
 function T.tear_down()

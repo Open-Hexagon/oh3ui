@@ -190,13 +190,7 @@ local ui = {
     new_id_table = require("ui.id_table"),
 
     ---UI layer controls.
-    layer = {
-        push = layer.push,
-        pop = layer.pop,
-        set_pinned_layer = layer.set_pinned_layer,
-        is_current_layer_active = layer.is_current_layer_active,
-        get_current_layer = layer.get_current_layer,
-    },
+    layer = require("ui.layer"),
 
     ---Text utilities
     text = require("ui.text"),

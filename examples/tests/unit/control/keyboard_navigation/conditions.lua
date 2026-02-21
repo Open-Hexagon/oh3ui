@@ -22,7 +22,7 @@ function T.set_up()
         -4 |  3  | -4
     ]]
 
-    layer_status.current_layer_is_active = true
+    layer_status.knav_allowed = true
 
     knav.fill_grid(knav.op_cell.redirect, 1, 1)
 
@@ -37,7 +37,7 @@ function T.set_up()
     knav.make_cell("escape")
     knav.grid_cell(1, 5)
 
-    layer_status.current_layer_is_active = false
+    layer_status.knav_allowed = false
 
     knav.set_wrapping(wmode.redirect)
 end

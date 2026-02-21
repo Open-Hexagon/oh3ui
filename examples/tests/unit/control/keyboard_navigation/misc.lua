@@ -29,12 +29,12 @@ function T.tear_down()
 end
 
 function T.test_mouse_hiding()
-    layer_status.current_layer_is_active = true
+    layer_status.knav_allowed = true
 
     knav.make_cell()
     knav.grid_cell(1, 1)
 
-    layer_status.current_layer_is_active = false
+    layer_status.knav_allowed = false
 
     mouse_is_visible = nil
     events.add("keypressed", "right")
@@ -48,7 +48,7 @@ function T.test_negative_page_length()
 end
 
 function T.test_inactive()
-    layer_status.current_layer_is_active = false
+    layer_status.knav_allowed = false
 
     unittest.assert(knav.make_cell() == 0)
     unittest.assert(knav.get_current_cell_id() == 0)
@@ -58,7 +58,7 @@ end
 
 function T.test_too_far()
     knav.set_wrapping(wmode.horizontal)
-    layer_status.current_layer_is_active = true
+    layer_status.knav_allowed = true
 
     knav.make_cell()
     knav.grid_cell(1, 1)
@@ -66,7 +66,7 @@ function T.test_too_far()
     knav.make_cell()
     knav.grid_cell(300, 1)
 
-    layer_status.current_layer_is_active = false
+    layer_status.knav_allowed = false
 
     events.add("keypressed", "right")
 
@@ -87,7 +87,7 @@ function T.test_bad_grid_fill()
 end
 
 function T.test_bad_jump_to_cell()
-    layer_status.current_layer_is_active = true
+    layer_status.knav_allowed = true
 
     knav.make_cell()
     knav.grid_cell(1, 1)
@@ -95,14 +95,14 @@ function T.test_bad_jump_to_cell()
     knav.make_cell()
     knav.grid_cell(2, 1)
 
-    layer_status.current_layer_is_active = false
+    layer_status.knav_allowed = false
 
     unittest.assert_error(knav.jump_to_cell, nil, -1)
     unittest.assert_error(knav.jump_to_cell, nil, 3)
 end
 
 function T.test_jump_to_cell()
-    layer_status.current_layer_is_active = true
+    layer_status.knav_allowed = true
 
     knav.make_cell()
     knav.grid_cell(3, 6)
@@ -110,7 +110,7 @@ function T.test_jump_to_cell()
     knav.make_cell()
     knav.grid_cell(5, 4)
 
-    layer_status.current_layer_is_active = false
+    layer_status.knav_allowed = false
 
     knav.jump_to_cell(1)
     id = knav.get_selected_cell_id()
@@ -135,7 +135,7 @@ function T.test_jump_to_cell()
 end
 
 function T.test_wrapping_reencounter()
-    layer_status.current_layer_is_active = true
+    layer_status.knav_allowed = true
 
     knav.make_cell()
     knav.grid_cell(1, 1)
@@ -146,7 +146,7 @@ function T.test_wrapping_reencounter()
     knav.make_cell()
     knav.grid_cell(1, 2, 2, 1)
 
-    layer_status.current_layer_is_active = false
+    layer_status.knav_allowed = false
 
     knav.set_wrapping(wmode.horizontal)
     knav.jump_to_cell(2)
@@ -171,7 +171,7 @@ function T.test_wrapping_points()
     ... -1 | 0 0 X 0 1 1 0 2 0 -2 | -1 ...
     ]]
 
-    layer_status.current_layer_is_active = true
+    layer_status.knav_allowed = true
 
     knav.make_cell()
     knav.grid_cell(5, 1, 2, 1)
@@ -181,7 +181,7 @@ function T.test_wrapping_points()
 
     knav.fill_grid(knav.op_cell.wrap, 10, 1)
 
-    layer_status.current_layer_is_active = false
+    layer_status.knav_allowed = false
 
     events.add("keypressed", "right")
 
@@ -225,12 +225,12 @@ end
 function T.test_evaluate_with_no_cells_or_events()
     knav.set_wrapping(wmode.redirect)
 
-    layer_status.current_layer_is_active = true
+    layer_status.knav_allowed = true
 
     knav.make_cell()
     knav.grid_cell(1, 1)
 
-    layer_status.current_layer_is_active = false
+    layer_status.knav_allowed = false
 
     knav.jump_to_cell(1)
     events.add("keypressed", "right")
@@ -250,12 +250,12 @@ function T.test_evaluate_with_no_cells_or_events()
 end
 
 function T.test_invalid_grid_position()
-    layer_status.current_layer_is_active = true
+    layer_status.knav_allowed = true
 
     knav.make_cell()
     knav.grid_cell(4, 2)
 
-    layer_status.current_layer_is_active = false
+    layer_status.knav_allowed = false
 
     knav.jump_to_cell(1)
 
@@ -272,14 +272,14 @@ function T.test_invalid_grid_position()
 end
 
 function T.test_selection_has_changed()
-    layer_status.current_layer_is_active = true
+    layer_status.knav_allowed = true
 
     knav.make_cell()
     knav.grid_cell(1, 1)
     knav.make_cell()
     knav.grid_cell(2, 1)
 
-    layer_status.current_layer_is_active = false
+    layer_status.knav_allowed = false
 
     knav.evaluate()
     unittest.assert(knav.has_selection_just_changed() == false)

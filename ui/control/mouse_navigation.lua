@@ -106,7 +106,7 @@ function mouse_navigation.make_sensor(sensor_id, ...)
     end
 
     local placement_id = draw_data.make_placement(placement.left, placement.top, placement.right, placement.bottom)
-    if layers.is_current_layer_active() then
+    if layers.is_mnav_allowed_on_current_layer() then
         draw_data.add_draw_operation(
             op_ids.mouse_sensor,
             placement_id,

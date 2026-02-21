@@ -1,14 +1,19 @@
 local status = {
-    current_layer_is_active = false,
-    current_layer = 0,
+    knav_allowed = false,
+    mnav_allowed = false,
+    current_layer_number = 0,
 }
 
-function status.is_current_layer_active()
-    return status.current_layer_is_active
+function status.is_knav_allowed_on_current_layer()
+    return status.knav_allowed
 end
 
-function status.get_current_layer()
-    return status.current_layer
+function status.is_mnav_allowed_on_current_layer()
+    return status.mnav_allowed
+end
+
+function status.get_current_layer_number()
+    return status.current_layer_number
 end
 
 return status

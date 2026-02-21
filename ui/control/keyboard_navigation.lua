@@ -305,7 +305,7 @@ end
 ---|"both" make this cell both the default and escape cell
 ---@return integer cell_id id number of this cell
 function keyboard_navigation.make_cell(mode)
-    if not layer_status.is_current_layer_active() then
+    if not layer_status.is_knav_allowed_on_current_layer() then
         return 0
     end
 
@@ -918,7 +918,7 @@ function keyboard_navigation.configure_cell_as_text_input(cell_id, state, global
     if not is_valid_cell_id(cell_id) then
         error(string.format("bad cell id %d", cell_id))
     end
-    if cell_id == 0 or not layer_status.is_current_layer_active() then
+    if cell_id == 0 or not layer_status.is_knav_allowed_on_current_layer() then
         return
     end
     cell_text_input_state[cell_id] = state
