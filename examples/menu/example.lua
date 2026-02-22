@@ -223,7 +223,7 @@ Rerum ducimus tenetur fugit.
         knav.grid_cell(1, 15)
         button("open scroll example", 16)
         if mnav.get_clicked() == mb.left or knav.get_action() == kba.activate then
-            ui.layer.push(scroll_example_menu)
+            ui.layer.push({ main = scroll_example_menu })
         end
     end
 

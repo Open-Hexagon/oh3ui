@@ -223,7 +223,7 @@ function layer_manager.prepare_for_next_frame()
         -- if keyboard navigation was used we need to find the best cell to select on the new top layer
         layer_status.knav_allowed = true
         keyboard_navigation.reset()
-        layer_stack[layer_stack_index]() -- we have to run the new top layer (possibly again)
+        layer_stack[layer_stack_index].main() -- we have to run the new top layer (possibly again)
         keyboard_navigation.finish_layer_transition()
         stack_manager.clean_up()
     else

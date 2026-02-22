@@ -71,7 +71,7 @@ function love.run()
         love.keyboard.setTextInput(true)
     end
 
-    ui.layer.push(example_menu)
+    ui.layer.push({ main = example_menu })
 
     return function()
         -- Process events
