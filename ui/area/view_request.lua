@@ -26,7 +26,7 @@ local view_request = {
 
 local pf_data = {}
 local pf_data_index = 0
-local pf_data_size = 11
+local pf_data_size = 8
 
 local just_initiated = false
 local view_location_placement_id
@@ -79,23 +79,17 @@ function view_request.add_picture_frame_data(
     dist_limit_top,
     dist_limit_right,
     dist_limit_bottom,
-    pf_left,
-    pf_top,
-    pf_right,
-    pf_bottom
+    pf_placement_id
 )
     pf_data_index = pf_data_index + pf_data_size
 
-    -- there are two speed values at -9 and -10 here but they are purposely preserved between frames
-    pf_data[pf_data_index - 8] = state
-    pf_data[pf_data_index - 7] = dist_limit_left
-    pf_data[pf_data_index - 6] = dist_limit_top
-    pf_data[pf_data_index - 5] = dist_limit_right
-    pf_data[pf_data_index - 4] = dist_limit_bottom
-    pf_data[pf_data_index - 3] = pf_left
-    pf_data[pf_data_index - 2] = pf_top
-    pf_data[pf_data_index - 1] = pf_right
-    pf_data[pf_data_index] = pf_bottom
+    -- there are two speed values at -6 and -7 here but they are purposely preserved between frames
+    pf_data[pf_data_index - 5] = state
+    pf_data[pf_data_index - 4] = dist_limit_left
+    pf_data[pf_data_index - 3] = dist_limit_top
+    pf_data[pf_data_index - 2] = dist_limit_right
+    pf_data[pf_data_index - 1] = dist_limit_bottom
+    pf_data[pf_data_index] = pf_placement_id
 end
 
 local function calculate_speed_heuristic(v_left, v_top, v_right, v_bottom)
@@ -105,15 +99,12 @@ local function calculate_speed_heuristic(v_left, v_top, v_right, v_bottom)
     local move_distance, speed
 
     for i = pf_data_size, pf_data_index, pf_data_size do
-        state = pf_data[i - 8]
-        dist_limit_left = pf_data[i - 7]
-        dist_limit_top = pf_data[i - 6]
-        dist_limit_right = pf_data[i - 5]
-        dist_limit_bottom = pf_data[i - 4]
-        pf_left = pf_data[i - 3]
-        pf_top = pf_data[i - 2]
-        pf_right = pf_data[i - 1]
-        pf_bottom = pf_data[i]
+        state = pf_data[i - 5]
+        dist_limit_left = pf_data[i - 4]
+        dist_limit_top = pf_data[i - 3]
+        dist_limit_right = pf_data[i - 2]
+        dist_limit_bottom = pf_data[i - 1]
+        pf_left, pf_top, pf_right, pf_bottom = draw_queue.get_placement(pf_data[i])
 
         -- x movement
         move_distance = 0
@@ -127,7 +118,7 @@ local function calculate_speed_heuristic(v_left, v_top, v_right, v_bottom)
             move_distance = math.max(pf_right - v_right, dist_limit_right - state.scroll_dist_x)
             speed = move_distance * base_speed
         end
-        pf_data[i - 10] = math.abs(speed)
+        pf_data[i - 7] = math.abs(speed)
         v_left = v_left + move_distance -- move the requested area for the next iteration
         v_right = v_right + move_distance
 
@@ -143,7 +134,7 @@ local function calculate_speed_heuristic(v_left, v_top, v_right, v_bottom)
             move_distance = math.max(pf_bottom - v_bottom, dist_limit_bottom - state.scroll_dist_y)
             speed = move_distance * base_speed
         end
-        pf_data[i - 9] = math.abs(speed)
+        pf_data[i - 6] = math.abs(speed)
         v_top = v_top + move_distance -- move the requested area for the next iteration
         v_bottom = v_bottom + move_distance
     end
@@ -178,13 +169,10 @@ function view_request.evaluate()
     local x_speed, y_speed
 
     for i = pf_data_size, pf_data_index, pf_data_size do
-        x_speed = pf_data[i - 10]
-        y_speed = pf_data[i - 9]
-        state = pf_data[i - 8]
-        pf_left = pf_data[i - 3]
-        pf_top = pf_data[i - 2]
-        pf_right = pf_data[i - 1]
-        pf_bottom = pf_data[i]
+        x_speed = pf_data[i - 7]
+        y_speed = pf_data[i - 6]
+        state = pf_data[i - 5]
+        pf_left, pf_top, pf_right, pf_bottom = draw_queue.get_placement(pf_data[i])
 
         -- x movement
         target = nil

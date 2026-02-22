@@ -13,8 +13,6 @@ local stack_data = require("ui.stack_manager.stack_data")
 local aeb_stack = stack_data.aeb_stack
 local selection_outline_add_to_queue = require("ui.decorator.element.selection_outline").add_to_queue
 local draw_queue = require("ui.draw_queue")
-local draw_data_add_draw_operation = require("ui.draw_queue.draw_data").add_draw_operation
-local view_request_export_picture_frame = require("ui.draw_queue.draw_operation").view_request_export_picture_frame
 
 local scroll = {}
 
@@ -198,15 +196,7 @@ function scroll.finish(padding)
 
     -- If flagged by a view request, export picture frame data
     if flagged_for_view_request then
-        draw_data_add_draw_operation(
-            view_request_export_picture_frame,
-            state,
-            dist_limit_left,
-            dist_limit_top,
-            dist_limit_right,
-            dist_limit_bottom,
-            picture_frame_id
-        )
+        view_request.add_picture_frame_data(state, dist_limit_left, dist_limit_top, dist_limit_right, dist_limit_bottom, picture_frame_id)
     end
 
     interacting_with_mouse = mnav.is_hovering(scroll_region)
