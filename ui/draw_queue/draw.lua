@@ -210,9 +210,9 @@ return function()
                 warning(
                     string.format(
                         "unused reservation slot with res_id %d, slot number %d of %d",
+                        item[2],
                         item[3],
-                        item[4],
-                        item[5]
+                        item[4]
                     )
                 )
             else

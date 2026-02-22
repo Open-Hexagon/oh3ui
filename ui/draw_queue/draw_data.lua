@@ -270,9 +270,9 @@ function draw_data.reserve_draw_slots(n)
         draw_list[draw_index + i] = draw_list[draw_index + i] or {}
         local slot = draw_list[draw_index + i]
         slot[ID_POS] = draw_operation.unused_reservation
-        slot[3] = res_index
-        slot[4] = i
-        slot[5] = n
+        slot[2] = res_index
+        slot[3] = i
+        slot[4] = n
     end
 
     -- set the list_index to the end of the reservation
