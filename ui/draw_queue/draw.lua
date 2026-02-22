@@ -6,7 +6,6 @@ local draw_data = require("ui.draw_queue.draw_data")
 local op_ids = require("ui.draw_queue.draw_operation")
 local settings = require("ui.settings")
 local theme = require("ui.theme")
-local view_request = require("ui.area.view_request")
 local draw_queue = require("ui.draw_queue")
 local bit = require("bit")
 local band = bit.band
@@ -201,17 +200,6 @@ return function()
                 -- luacov: enable
             elseif id == op_ids.set_shader then
                 love.graphics.setShader(item[2])
-            elseif id == op_ids.view_request_export_picture_frame then
-                view_request.add_picture_frame_data(
-                    item[2],
-                    -- distance limits
-                    item[3],
-                    item[4],
-                    item[5],
-                    item[6],
-                    -- picture frame area
-                    draw_data.get_placement(item[7])
-                )
 
             -- * overlay
             elseif band(id, 0xF00) == 0x300 then

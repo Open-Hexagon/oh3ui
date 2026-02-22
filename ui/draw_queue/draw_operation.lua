@@ -22,7 +22,6 @@ local draw_operation = {
     pop_scissor = 0x202,
     mouse_sensor = 0x203, -- behaves like a normal draw operation
     set_shader = 0x1204, -- cannot be reserved
-    view_request_export_picture_frame = 0x1206, -- cannot be reserved
 
     -- overlay draw operations
     -- these are identical to the draw operations except that they get put at the end of the draw_list
