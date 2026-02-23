@@ -156,7 +156,8 @@ function layer_manager.run_all()
             stack_manager.clean_up()
         end
 
-        layer_status.knav_allowed = true -- keyboard navigation is only enabled for the topmost layer
+        layer_status.knav_allowed = true
+        layer_status.mnav_allowed = true
         cursor.reset()
         layer_counter = layer_counter + 1
         layer_status.current_layer_number = layer_counter
