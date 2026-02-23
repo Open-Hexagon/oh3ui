@@ -196,7 +196,14 @@ function scroll.finish(padding)
 
     -- If flagged by a view request, export picture frame data
     if flagged_for_view_request then
-        view_request.add_picture_frame_data(state, dist_limit_left, dist_limit_top, dist_limit_right, dist_limit_bottom, picture_frame_id)
+        view_request.add_picture_frame_data(
+            state,
+            dist_limit_left,
+            dist_limit_top,
+            dist_limit_right,
+            dist_limit_bottom,
+            picture_frame_id
+        )
     end
 
     interacting_with_mouse = mnav.is_hovering(scroll_region)
