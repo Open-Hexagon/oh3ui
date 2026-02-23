@@ -141,7 +141,8 @@ layer_manager.get_current_layer_number = layer_status.get_current_layer_number
 function layer_manager.run_all()
     local layer_counter = 0
 
-    layer_status.mnav_allowed = true -- mouse navigation is enabled for all active layers
+    -- TODO: maybe have an option that allows certain layers to pass mouse inputs to lower layers.
+    layer_status.mnav_allowed = false
     layer_status.knav_allowed = false
 
     -- run normal layers
