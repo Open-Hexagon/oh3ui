@@ -23,8 +23,8 @@ end
 ---@param g number
 ---@param b number
 ---@param a number
-function place_by_id.rectangle(placement_id, mode, rx, ry, line_width, r, b, g, a)
-    draw_data.add_draw_operation(op_ids.rectangle, placement_id, mode, rx, ry, line_width, r, b, g, a)
+function place_by_id.rectangle(placement_id, mode, rx, ry, line_width, r, g, b, a)
+    draw_data.add_draw_operation(op_ids.rectangle, placement_id, mode, rx, ry, line_width, r, g, b, a)
 end
 
 ---Add a rectangle outline to the queue (the outer edges of the drawn line matches the placement)
@@ -36,8 +36,8 @@ end
 ---@param g number
 ---@param b number
 ---@param a number
-function place_by_id.rectangle_outline(placement_id, line_width, rx, ry, r, b, g, a)
-    draw_data.add_draw_operation(op_ids.rectangle_outline, placement_id, line_width, rx, ry, r, b, g, a)
+function place_by_id.rectangle_outline(placement_id, line_width, rx, ry, r, g, b, a)
+    draw_data.add_draw_operation(op_ids.rectangle_outline, placement_id, line_width, rx, ry, r, g, b, a)
 end
 
 ---Add a rectangle inline to the queue (the inner edges of the drawn line matches the placement)
@@ -49,8 +49,8 @@ end
 ---@param g number
 ---@param b number
 ---@param a number
-function place_by_id.rectangle_inline(placement_id, line_width, rx, ry, r, b, g, a)
-    draw_data.add_draw_operation(op_ids.rectangle_inline, placement_id, line_width, rx, ry, r, b, g, a)
+function place_by_id.rectangle_inline(placement_id, line_width, rx, ry, r, g, b, a)
+    draw_data.add_draw_operation(op_ids.rectangle_inline, placement_id, line_width, rx, ry, r, g, b, a)
 end
 
 ---Add a circle to the queue. Can also be used to make regular polygons.
@@ -64,9 +64,9 @@ end
 ---@param g number
 ---@param b number
 ---@param a number
-function place_by_id.circle(point_id, mode, radius, line_width, segments, rotation, r, b, g, a)
+function place_by_id.circle(point_id, mode, radius, line_width, segments, rotation, r, g, b, a)
     rotation = rotation or 0
-    draw_data.add_draw_operation(op_ids.circle, point_id, mode, radius, r, b, g, a, line_width, rotation, segments)
+    draw_data.add_draw_operation(op_ids.circle, point_id, mode, radius, r, g, b, a, line_width, rotation, segments)
 end
 
 ---Add a circle outline to the queue. Can also be used to make regular polygons.
@@ -79,9 +79,9 @@ end
 ---@param g number
 ---@param b number
 ---@param a number
-function place_by_id.circle_outline(point_id, radius, line_width, segments, rotation, r, b, g, a)
+function place_by_id.circle_outline(point_id, radius, line_width, segments, rotation, r, g, b, a)
     rotation = rotation or 0
-    draw_data.add_draw_operation(op_ids.circle_outline, point_id, radius, line_width, r, b, g, a, rotation, segments)
+    draw_data.add_draw_operation(op_ids.circle_outline, point_id, radius, line_width, r, g, b, a, rotation, segments)
 end
 
 ---Add a polygon to the queue
@@ -92,8 +92,8 @@ end
 ---@param g number
 ---@param b number
 ---@param a number
-function place_by_id.polygon(point_cluster_id, mode, line_width, r, b, g, a)
-    draw_data.add_draw_operation(op_ids.polygon, point_cluster_id, mode, line_width, r, b, g, a)
+function place_by_id.polygon(point_cluster_id, mode, line_width, r, g, b, a)
+    draw_data.add_draw_operation(op_ids.polygon, point_cluster_id, mode, line_width, r, g, b, a)
 end
 
 ---Add a multiline to the queue
@@ -103,8 +103,8 @@ end
 ---@param g number
 ---@param b number
 ---@param a number
-function place_by_id.line(point_cluster_id, line_width, r, b, g, a)
-    draw_data.add_draw_operation(op_ids.line, point_cluster_id, line_width, r, b, g, a)
+function place_by_id.line(point_cluster_id, line_width, r, g, b, a)
+    draw_data.add_draw_operation(op_ids.line, point_cluster_id, line_width, r, g, b, a)
 end
 
 ---Add text to the queue
@@ -114,8 +114,8 @@ end
 ---@param g number
 ---@param b number
 ---@param a number
-function place_by_id.text(point_id, text_object, r, b, g, a)
-    draw_data.add_draw_operation(op_ids.text, point_id, text_object, r, b, g, a)
+function place_by_id.text(point_id, text_object, r, g, b, a)
+    draw_data.add_draw_operation(op_ids.text, point_id, text_object, r, g, b, a)
 end
 
 return place_by_id
