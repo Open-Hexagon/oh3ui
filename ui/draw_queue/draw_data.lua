@@ -62,6 +62,22 @@ function draw_data.dup_placement(id)
     return draw_data.make_placement(draw_data.get_placement(id))
 end
 
+---edits a placement
+---@param id integer
+---@param left number
+---@param top number
+---@param right number
+---@param bottom number
+function draw_data.edit_placement(id, left, top, right, bottom)
+    if placement_list[id] ~= "placement" then
+        error("id is not a placement")
+    end
+    placement_list[id + 1] = left
+    placement_list[id + 2] = top
+    placement_list[id + 3] = right
+    placement_list[id + 4] = bottom
+end
+
 ---makes a coordinate point
 ---@param x number
 ---@param y number

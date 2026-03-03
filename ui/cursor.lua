@@ -584,6 +584,12 @@ end
 
 --#endregion
 
+---puts the current placement into a draw data placement
+---@param id integer
+function cursor.put_placement(id)
+    draw_data.edit_placement(id, placement.left, placement.top, placement.right, placement.bottom)
+end
+
 ---Places the current cursor down. This will update both the last_placement and projected_placement tables.
 ---Translations will be applied to ONLY the projected_placement table.
 ---Desired width and height are for elements that don't fit the cursor.

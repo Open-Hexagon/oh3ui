@@ -16,6 +16,7 @@ local draw_queue = {
     make_placement = draw_data.make_placement,
     get_placement = draw_data.get_placement,
     dup_placement = draw_data.dup_placement,
+    edit_placement = draw_data.edit_placement,
     make_point = draw_data.make_point,
     get_point = draw_data.get_point,
     make_point_cluster = draw_data.make_point_cluster,
