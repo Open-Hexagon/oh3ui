@@ -306,8 +306,9 @@ function place_by_cursor.vline(color, line_width, position)
     return place_by_value.line(line_width, color or theme.default, x, placement.top, x, placement.bottom)
 end
 
-local function v_line_edge(color, line_width, mode, base, dir)
+local function v_line_edge(color, line_width, mode, base, dir, inset)
     line_width = line_width or 1
+    inset = inset or 0
     local x
     if mode == "outside" then
         x = base - 0.5 * line_width * dir
@@ -316,31 +317,41 @@ local function v_line_edge(color, line_width, mode, base, dir)
     else
         x = base + 0.5 * line_width * dir
     end
-    return place_by_value.line(line_width, color or theme.default, x, placement.top, x, placement.bottom)
+    return place_by_value.line(
+        line_width,
+        color or theme.default,
+        x,
+        placement.top + inset,
+        x,
+        placement.bottom - inset
+    )
 end
 
 ---Draws a line on the left edge of the cursor. Never reshapes the cursor.
 ---@param color number[]?
 ---@param line_width number?
 ---@param mode? "inside"|"outside"|"center"
+---@param inset number?
 ---@return integer
-function place_by_cursor.left_line(color, line_width, mode)
+function place_by_cursor.left_line(color, line_width, mode, inset)
     cursor.place()
-    return v_line_edge(color, line_width, mode, placement.left, 1)
+    return v_line_edge(color, line_width, mode, placement.left, 1, inset)
 end
 
 ---Draws a line on the right edge of the cursor. Never reshapes the cursor.
 ---@param color number[]?
 ---@param line_width number?
 ---@param mode? "inside"|"outside"|"center"
+---@param inset number?
 ---@return integer
-function place_by_cursor.right_line(color, line_width, mode)
+function place_by_cursor.right_line(color, line_width, mode, inset)
     cursor.place()
-    return v_line_edge(color, line_width, mode, placement.right, -1)
+    return v_line_edge(color, line_width, mode, placement.right, -1, inset)
 end
 
-local function h_line_edge(color, line_width, mode, base, dir)
+local function h_line_edge(color, line_width, mode, base, dir, inset)
     line_width = line_width or 1
+    inset = inset or 0
     local y
     if mode == "outside" then
         y = base - 0.5 * line_width * dir
@@ -349,17 +360,25 @@ local function h_line_edge(color, line_width, mode, base, dir)
     else
         y = base + 0.5 * line_width * dir
     end
-    return place_by_value.line(line_width, color or theme.default, placement.left, y, placement.right, y)
+    return place_by_value.line(
+        line_width,
+        color or theme.default,
+        placement.left + inset,
+        y,
+        placement.right - inset,
+        y
+    )
 end
 
 ---Draws a line on the top edge of the cursor. Never reshapes the cursor.
 ---@param color number[]?
 ---@param line_width number?
 ---@param mode? "inside"|"outside"|"center"
+---@param inset number?
 ---@return integer
-function place_by_cursor.top_line(color, line_width, mode)
+function place_by_cursor.top_line(color, line_width, mode, inset)
     cursor.place()
-    return h_line_edge(color, line_width, mode, placement.top, 1)
+    return h_line_edge(color, line_width, mode, placement.top, 1, inset)
 end
 
 ---Draws a line on the bottom edge of the cursor. Never reshapes the cursor.
@@ -367,9 +386,9 @@ end
 ---@param line_width number?
 ---@param mode? "inside"|"outside"|"center"
 ---@return integer
-function place_by_cursor.bottom_line(color, line_width, mode)
+function place_by_cursor.bottom_line(color, line_width, mode, inset)
     cursor.place()
-    return h_line_edge(color, line_width, mode, placement.bottom, -1)
+    return h_line_edge(color, line_width, mode, placement.bottom, -1, inset)
 end
 
 return place_by_cursor

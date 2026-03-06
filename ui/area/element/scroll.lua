@@ -112,14 +112,19 @@ local function get_actuator_size(content_size, scroll_size)
     return math.max(scroll_size * scroll_size / content_size, minimum_scrollbar_actuator_length)
 end
 ---Finishes the current scroll region
----@param padding number scroll area padding
+---@param scrollbar_inset number? insets the scrollbars away from the scroll region edges
+---@param padding number? scroll area padding
 ---@return boolean at_left
 ---@return boolean at_top
 ---@return boolean at_right
 ---@return boolean at_bottom
-function scroll.finish(padding)
+function scroll.finish(scrollbar_inset, padding)
+    padding = padding or 0
+    scrollbar_inset = scrollbar_inset or 0
+
     local content_width, content_height, content_left, content_top, content_right, content_bottom
     local scroll_width, scroll_height, scroll_left, scroll_top, scroll_right, scroll_bottom
+    local scrollbar_width, scrollbar_height, scrollbar_left, scrollbar_top, scrollbar_right, scrollbar_bottom
     local dist_limit_right, dist_limit_left, dist_limit_bottom, dist_limit_top
     local interacting_with_mouse
     local h_actuator_size, half_h_actuator_size, mouse_limit_left, mouse_limit_right
@@ -142,10 +147,10 @@ function scroll.finish(padding)
     local flagged_for_view_request = aeb.pop() -- get whether we're flagged for a view request
 
     -- get back literal scroll area for mouse limits
-    local literal_scroll_left = aeb.pop()
-    local literal_scroll_top = aeb.pop()
-    local literal_scroll_right = aeb.pop()
-    local literal_scroll_bottom = aeb.pop()
+    local literal_scroll_left = aeb.pop() + scrollbar_inset
+    local literal_scroll_top = aeb.pop() + scrollbar_inset
+    local literal_scroll_right = aeb.pop() - scrollbar_inset
+    local literal_scroll_bottom = aeb.pop() - scrollbar_inset
 
     -- get back those sensor ids
     local scroll_region = aeb.pop()
@@ -190,6 +195,14 @@ function scroll.finish(padding)
     -- should be >= 0 (positive values scroll up)
     dist_limit_top = scroll_top - content_top
 
+    -- scrollbar specific limits
+    scrollbar_left = scroll_left + scrollbar_inset
+    scrollbar_top = scroll_top + scrollbar_inset
+    scrollbar_right = scroll_right - scrollbar_inset
+    scrollbar_bottom = scroll_bottom - scrollbar_inset
+    scrollbar_width = scrollbar_right - scrollbar_left
+    scrollbar_height = scrollbar_bottom - scrollbar_top
+
     -- clamp before drawing anything because content sizes may have changed since last time
     state.scroll_dist_x = extmath.clamp(state.scroll_dist_x, dist_limit_right, dist_limit_left)
     state.scroll_dist_y = extmath.clamp(state.scroll_dist_y, dist_limit_bottom, dist_limit_top)
@@ -219,21 +232,28 @@ function scroll.finish(padding)
         goto horizontal_scrolling_continue
     end
 
-    h_actuator_size = get_actuator_size(content_width, scroll_width)
+    h_actuator_size = get_actuator_size(content_width, scrollbar_width)
 
     --#region HORIZONTAL SCROLLING DRAWING
 
     -- set scrollbar location
     cursor.change_anchor(0, 1)
-    cursor.height = scrollbar_thickness
+    cursor.height = scrollbar_thickness + scrollbar_inset
 
     -- make scroll bar sensor
     mnav.make_sensor(h_bar, smode.block)
 
     -- set actuator location
     cursor.width = h_actuator_size
-    cursor.x =
-        extmath.map(state.scroll_dist_x, dist_limit_right, dist_limit_left, scroll_right - h_actuator_size, scroll_left)
+    cursor.x = extmath.map(
+        state.scroll_dist_x,
+        dist_limit_right,
+        dist_limit_left,
+        scrollbar_right - h_actuator_size,
+        scrollbar_left
+    )
+
+    cursor.clip_bottom(scrollbar_inset)
 
     -- make scroll bar actuator sensor
     mnav.make_sensor(h_act, smode.draggable)
@@ -315,22 +335,29 @@ function scroll.finish(padding)
     -- peek to get the original scroll area size
     cursor.peek()
 
-    v_actuator_size = get_actuator_size(content_height, scroll_height)
+    v_actuator_size = get_actuator_size(content_height, scrollbar_height)
 
     --#region VERTICAL SCROLLING DRAWING
 
     -- set scrollbar location
     cursor.change_anchor(1, 0)
-    cursor.width = scrollbar_thickness
+    cursor.width = scrollbar_thickness + scrollbar_inset
 
     mnav.make_sensor(v_bar, smode.block)
 
     -- set actuator location
     cursor.height = v_actuator_size
-    cursor.y =
-        extmath.map(state.scroll_dist_y, dist_limit_bottom, dist_limit_top, scroll_bottom - v_actuator_size, scroll_top)
+    cursor.y = extmath.map(
+        state.scroll_dist_y,
+        dist_limit_bottom,
+        dist_limit_top,
+        scrollbar_bottom - v_actuator_size,
+        scrollbar_top
+    )
 
     mnav.make_sensor(v_act, smode.draggable)
+
+    cursor.clip_right(scrollbar_inset)
 
     -- shrink the actuator if needed
     if not (mnav.is_hovering(v_bar) or mnav.get_dragging(v_act)) then
