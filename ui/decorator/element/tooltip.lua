@@ -46,6 +46,7 @@ function tooltip.tooltip(edge, str, font_size, align, wrap_limit)
 
     cursor.push()
     cursor.auto_reshape = true
+    cursor.auto_area_expansion = false
 
     if edge == "left" then
         cursor.change_anchor(1, 0.5)

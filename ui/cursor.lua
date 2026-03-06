@@ -116,23 +116,27 @@ function cursor.reset(desired_width, desired_height)
 
     -- If true, elements that don't fit in the cursor will cause the cursor to reshape
     cursor.auto_reshape = true
+
+    -- If true, calling cursor.place will expand areas (if not overridden by options)
+    cursor.auto_area_expansion = true
 end
 
 --#region snapshotting
 
-local SIZEOF_CURSOR_SNAPSHOT = 7
+local SIZEOF_CURSOR_SNAPSHOT = 8
 
 ---Push a snapshot of the cursor, saving its current state for later.
 function cursor.push()
     local i = stack_data.cursor_index + SIZEOF_CURSOR_SNAPSHOT
 
-    cursor_stack[i - 6] = cursor.x
-    cursor_stack[i - 5] = cursor.y
-    cursor_stack[i - 4] = cursor.anchor_x
-    cursor_stack[i - 3] = cursor.anchor_y
-    cursor_stack[i - 2] = cursor.width
-    cursor_stack[i - 1] = cursor.height
-    cursor_stack[i] = cursor.auto_reshape
+    cursor_stack[i - 7] = cursor.auto_area_expansion
+    cursor_stack[i - 6] = cursor.auto_reshape
+    cursor_stack[i - 5] = cursor.x
+    cursor_stack[i - 4] = cursor.y
+    cursor_stack[i - 3] = cursor.anchor_x
+    cursor_stack[i - 2] = cursor.anchor_y
+    cursor_stack[i - 1] = cursor.width
+    cursor_stack[i] = cursor.height
 
     stack_data.cursor_index = i
 end
@@ -143,8 +147,8 @@ function cursor.peek()
     if i == stack_data.cursor_base_index then
         error("cursor snapshot stack underflow", 2)
     end
-    cursor.x, cursor.y, cursor.anchor_x, cursor.anchor_y, cursor.width, cursor.height, cursor.auto_reshape =
-        unpack(cursor_stack, i - 6, i)
+    cursor.auto_area_expansion, cursor.auto_reshape, cursor.x, cursor.y, cursor.anchor_x, cursor.anchor_y, cursor.width, cursor.height =
+        unpack(cursor_stack, i - 7, i)
 end
 
 ---Pop a snapshot of the cursor, returning it to the last pushed state.
@@ -184,7 +188,7 @@ function cursor.combine(peek)
 
     local i = stack_data.cursor_index
 
-    local new_left, new_top, new_right, new_bottom = get_edges(unpack(cursor_stack, i - 6, i - 1))
+    local new_left, new_top, new_right, new_bottom = get_edges(unpack(cursor_stack, i - 5, i))
     local left, top, right, bottom =
         get_edges(cursor.x, cursor.y, cursor.anchor_x, cursor.anchor_y, cursor.width, cursor.height)
 
@@ -597,8 +601,8 @@ end
 ---Placing a cursor will also expand areas.
 ---@param desired_width number? if provided, the placement will use this instead of cursor.width
 ---@param desired_height number? if provided, the placement will use this instead of cursor.height
----@param no_area_expansion boolean? if true, placement will not expand areas
-function cursor.place(desired_width, desired_height, no_area_expansion)
+---@param area_expansion_options? "yes"|"no" If nil, area expansion depends on auto_area_expansion. If no, forces areas to not expand. If yes, forces areas to expand.
+function cursor.place(desired_width, desired_height, area_expansion_options)
     local width, height = desired_width or cursor.width, desired_height or cursor.height
     local dx, dy = translate_stack[stack_data.translate_index - 1], translate_stack[stack_data.translate_index]
     local left, top, right, bottom = get_edges(cursor.x, cursor.y, cursor.anchor_x, cursor.anchor_y, width, height)
@@ -612,8 +616,14 @@ function cursor.place(desired_width, desired_height, no_area_expansion)
     projected_placement.bottom = bottom + dy
 
     -- expand the current area
-    if not no_area_expansion then
-        expand_area(area_stack[stack_data.area_index], left, top, right, bottom)
+    if area_expansion_options then
+        if area_expansion_options == "yes" then
+            expand_area(area_stack[stack_data.area_index], left, top, right, bottom)
+        end
+    else
+        if cursor.auto_area_expansion then
+            expand_area(area_stack[stack_data.area_index], left, top, right, bottom)
+        end
     end
 
     -- update placement

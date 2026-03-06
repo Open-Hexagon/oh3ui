@@ -25,7 +25,7 @@ local selection_outline = {}
 ---Also requests scroll regions to put the location into view
 function selection_outline.set_placement()
     if mode == INACTIVE then
-        cursor.place(nil, nil, true)
+        cursor.place(nil, nil, "no")
 
         view_request.update_collapses()
 
@@ -84,7 +84,7 @@ end
 ---This function behaves like an element and will call cursor.place.
 ---Note: add_to_queue uses the current selection outline mask. Any calls to intersect mask after add_to_queue is called won't do anything.
 function selection_outline.intersect_mask()
-    cursor.place(nil, nil, true)
+    cursor.place(nil, nil, "no")
 
     if hidden then -- don't actually do anything if already hidden
         return
@@ -97,7 +97,7 @@ function selection_outline.intersect_mask()
         mask_bottom = placement.bottom
     else
         mask_left, mask_top, mask_right, mask_bottom = extmath.aligned_rectangle_intersection(
-            mask_left,
+            mask_left --[[@as number]],
             mask_top,
             mask_right,
             mask_bottom,
