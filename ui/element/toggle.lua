@@ -14,8 +14,11 @@ local travel_distance = econf.toggle_width - econf.toggle_height
 ---Two-position toggle switch element.
 ---This element ignores the cursor size and will reshape the cursor.
 ---@param state table state table
+---@param custom_sensor integer? If given, element will use this sensor and won't make it's own 
 ---@return boolean on the "on" field of the state table
-return function(state)
+return function(state, custom_sensor)
+    local sid = custom_sensor
+
     -- animate normalized position
     state._toggle_actuator_position = follow(state._toggle_actuator_position, state.on and 1 or 0, 25)
 
@@ -23,9 +26,11 @@ return function(state)
     do
         -- establish element size and sensor region
         cursor.place(econf.toggle_width, econf.toggle_height)
-        mnav.make_sensor(nil, smode.block)
+        if not sid then
+            sid =  mnav.make_sensor(nil, smode.block)
+        end
 
-        local clicked = mnav.get_clicked()
+        local clicked = mnav.get_clicked(sid)
         if -- toggle state on
             clicked == mb.left -- left click
             or clicked == mb.right -- right click
