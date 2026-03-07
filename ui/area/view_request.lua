@@ -26,7 +26,7 @@ local view_request = {
 
 local pf_data = {}
 local pf_data_index = 0
-local pf_data_size = 10
+local pf_data_size = 12
 
 local just_initiated = false
 local view_location_placement_id
@@ -90,8 +90,9 @@ function view_request.add_picture_frame_data(
 )
     pf_data_index = pf_data_index + pf_data_size
 
-    -- there are two target values at -8 and -9 but they are purposely preserved between frames
-    -- there are two speed values at -6 and -7 but they are purposely preserved between frames
+    -- there are two target values at -8 and -9
+    -- there are two speed values at -6 and -7
+    -- there are more values past -5 that are purposely preserved between frames
     pf_data[pf_data_index - 5] = state
     pf_data[pf_data_index - 4] = dist_limit_left
     pf_data[pf_data_index - 3] = dist_limit_top
@@ -136,8 +137,10 @@ local function calculate_speeds_and_targets(v_left, v_top, v_right, v_bottom)
             move_distance = math.max(move_distance, dist_limit_right - state.scroll_dist_x)
             speed = move_distance * base_speed
         end
+        pf_data[i - 11] = state.scroll_dist_x
         pf_data[i - 9] = target
         pf_data[i - 7] = math.abs(speed)
+        state.scroll_vel_x = 0 -- stop the scroll from moving by other means
         v_left = v_left + move_distance -- move the requested area for the next iteration
         v_right = v_right + move_distance
 
@@ -159,8 +162,10 @@ local function calculate_speeds_and_targets(v_left, v_top, v_right, v_bottom)
             move_distance = math.max(move_distance, dist_limit_bottom - state.scroll_dist_y)
             speed = move_distance * base_speed
         end
+        pf_data[i - 10] = state.scroll_dist_y
         pf_data[i - 8] = target
         pf_data[i - 6] = math.abs(speed)
+        state.scroll_vel_y = 0 -- stop the scroll from moving by other means
         v_top = v_top + move_distance -- move the requested area for the next iteration
         v_bottom = v_bottom + move_distance
     end
@@ -171,13 +176,6 @@ function view_request.evaluate()
     auto_scroll_id = 0
 
     if view_request.time == 0 then
-        return
-    end
-
-    if mnav.holding then
-        view_request.time = 0
-        just_initiated = false
-        pf_data_index = 0
         return
     end
 
@@ -192,9 +190,11 @@ function view_request.evaluate()
     end
 
     local state
-    local x_speed, y_speed, x_target, y_target
+    local x_speed, y_speed, x_target, y_target, last_scroll_dist_x, last_scroll_dist_y
 
     for i = pf_data_size, pf_data_index, pf_data_size do
+        last_scroll_dist_x = pf_data[i - 11]
+        last_scroll_dist_y = pf_data[i - 10]
         x_target = pf_data[i - 9]
         y_target = pf_data[i - 8]
         x_speed = pf_data[i - 7]
@@ -203,12 +203,33 @@ function view_request.evaluate()
 
         -- x movement
         if x_target then
-            state.scroll_dist_x = follow(state.scroll_dist_x, x_target, x_speed)
+            -- Check against the last scroll distance. Any outside changes to the scroll distance will break the view request.
+            if last_scroll_dist_x == state.scroll_dist_x then
+                state.scroll_dist_x = follow(state.scroll_dist_x, x_target, x_speed)
+                if state.scroll_dist_x == x_target then
+                    pf_data[i - 9] = nil
+                else
+                    pf_data[i - 11] = state.scroll_dist_x
+                end
+            else
+                view_request.time = 0
+                goto movement_break
+            end
         end
 
         -- y movement
         if y_target then
-            state.scroll_dist_y = follow(state.scroll_dist_y, y_target, y_speed)
+            if last_scroll_dist_y == state.scroll_dist_y then
+                state.scroll_dist_y = follow(state.scroll_dist_y, y_target, y_speed)
+                if state.scroll_dist_y == y_target then
+                    pf_data[i - 8] = nil
+                else
+                    pf_data[i - 10] = state.scroll_dist_y
+                end
+            else
+                view_request.time = 0
+                goto movement_break
+            end
         end
     end
 
@@ -217,6 +238,8 @@ function view_request.evaluate()
     if view_request.time < 0 then
         view_request.time = 0
     end
+
+    ::movement_break::
 
     just_initiated = false
     pf_data_index = 0
