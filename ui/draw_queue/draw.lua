@@ -194,8 +194,8 @@ return function()
                 if tx1 and settings.overlay_mouse_sensors then
                     tx1, ty1 = love.graphics.inverseTransformPoint(tx1, ty1)
                     tx2, ty2 = love.graphics.inverseTransformPoint(tx2, ty2)
-                    -- we cannot reuse the placememt
-                    draw_queue.rectangle_outline(tx1, ty1, tx2, ty2, theme.get_xterm_color(213), 2, 0, 0)
+                    -- we cannot reuse the placement
+                    draw_queue.by_value.rectangle_outline(tx1, ty1, tx2, ty2, theme.get_xterm_color(213), 2, 0, 0)
                 end
                 -- luacov: enable
             elseif id == op_ids.set_shader then
