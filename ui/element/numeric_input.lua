@@ -44,7 +44,7 @@ return function(state, min, max, step, decimals, format)
 
     local center_width = cursor.width - econf.numeric_input_lr_button_width * 2
 
-    cursor.auto_reshape = false
+    cursor.auto_reshape = "no"
     cursor.change_anchor(0.5)
 
     cursor.push() -- (2)

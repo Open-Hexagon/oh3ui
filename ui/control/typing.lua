@@ -288,7 +288,7 @@ do
         local text_cursor_height = (font:getBaseline() - font:getDescent()) / settings.scale
 
         cursor.push()
-        cursor.auto_reshape = false
+        cursor.auto_reshape = "no"
         cursor.inset(4)
         draw_queue.by_cursor.push_mask()
 

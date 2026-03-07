@@ -58,7 +58,7 @@ return function(state, size, ...)
         button_color = theme.white
     end
 
-    cursor.auto_reshape = true
+    cursor.auto_reshape = "yes"
     icon(select(state.position, ...), size, button_color)
     mnav.make_sensor(sid, smode.block)
 

@@ -45,7 +45,7 @@ return function(state)
         background_color = theme.accent_color
     end
 
-    cursor.auto_reshape = true
+    cursor.auto_reshape = "yes"
     draw_by_cursor.icon("square-fill", econf.checkbox_size, background_color)
     draw_by_cursor.icon(
         "square",
