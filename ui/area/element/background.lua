@@ -28,8 +28,7 @@ function background.finish(pad, color)
         draw_queue.next_takes_reservation(res_id)
         rectangle(color)
     else
-        draw_queue.next_takes_reservation(res_id)
-        draw_queue.nop()
+        draw_queue.close_reservation(res_id)
     end
 end
 
