@@ -490,4 +490,14 @@ function scroll.finish(scrollbar_inset, padding)
     return at_left, at_top, at_right, at_bottom
 end
 
+---A special element that marks a location where a view request can be made.
+---This element must exist for the full duration of the view request.
+---@param activate boolean set this to true for just 1 frame to activate auto scrolling
+function scroll.auto_scroll_region(activate)
+    cursor.push()
+    cursor.auto_area_expansion = false
+    view_request.update_auto_scroll(draw_queue.by_cursor.blank(), activate)
+    cursor.pop()
+end
+
 return scroll

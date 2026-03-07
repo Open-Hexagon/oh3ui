@@ -5,6 +5,7 @@ local theme = require("ui.theme")
 local view_request = require("ui.area.view_request")
 local draw_queue = require("ui.draw_queue")
 local extmath = require("ui.extmath")
+local knav_has_selection_just_changed = require("ui.control.keyboard_navigation").has_selection_just_changed
 
 local outset, line_width = econf.selection_outline_outset, econf.selection_outline_line_width
 
@@ -54,7 +55,7 @@ end
 function selection_outline.add_to_queue()
     if mode == READY then
         -- update function must always run if we are ready, even if we've ended up hiding it.
-        view_request.update_auto_scroll(view_request_placement_id or placement_id)
+        view_request.update_auto_scroll(view_request_placement_id or placement_id, knav_has_selection_just_changed())
 
         if not hidden then
             if mask_left then

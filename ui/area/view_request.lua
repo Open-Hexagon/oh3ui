@@ -26,27 +26,34 @@ local view_request = {
 
 local pf_data = {}
 local pf_data_index = 0
-local pf_data_size = 8
+local pf_data_size = 10
 
 local just_initiated = false
 local view_location_placement_id
+local current_auto_scroll_id
+local auto_scroll_id = 0
 
----Sets up picture frame data for the view request. This needs to be called while building the draw_queue while inside of a scroll region.
+---Sets up picture frame data for the view request.
+---This needs to be called every frame during the view request while building the draw_queue while inside of a scroll region.
 ---This function will capture the current state of all relevant scroll regions for the request.
 ---Only the latest capture is honored.
 ---@param view_pid integer view location placement id
-function view_request.update_auto_scroll(view_pid)
+---@param activate boolean set this to true for just 1 frame to activate auto scrolling
+function view_request.update_auto_scroll(view_pid, activate)
     -- don't do anything if a scroll region isn't active
     if not view_request.top_index then
         return
     end
 
-    if knav.has_selection_just_changed() then
+    auto_scroll_id = auto_scroll_id + 1
+
+    if activate then
         view_request.time = scrollbar_cooldown_time
         just_initiated = true
+        current_auto_scroll_id = auto_scroll_id
     end
 
-    if view_request.time > 0 then
+    if view_request.time > 0 and auto_scroll_id == current_auto_scroll_id then
         view_location_placement_id = view_pid
 
         if settings.overlay_view_request then
@@ -83,7 +90,8 @@ function view_request.add_picture_frame_data(
 )
     pf_data_index = pf_data_index + pf_data_size
 
-    -- there are two speed values at -6 and -7 here but they are purposely preserved between frames
+    -- there are two target values at -8 and -9 but they are purposely preserved between frames
+    -- there are two speed values at -6 and -7 but they are purposely preserved between frames
     pf_data[pf_data_index - 5] = state
     pf_data[pf_data_index - 4] = dist_limit_left
     pf_data[pf_data_index - 3] = dist_limit_top
@@ -92,11 +100,13 @@ function view_request.add_picture_frame_data(
     pf_data[pf_data_index] = pf_placement_id
 end
 
-local function calculate_speed_heuristic(v_left, v_top, v_right, v_bottom)
+local function calculate_speeds_and_targets(v_left, v_top, v_right, v_bottom)
     local state
     local dist_limit_left, dist_limit_top, dist_limit_right, dist_limit_bottom
-    local pf_left, pf_top, pf_right, pf_bottom
-    local move_distance, speed
+    local pf_left, pf_top, pf_right, pf_bottom, pf_width, pf_height
+    local move_distance, speed, target
+    local v_width = v_right - v_left
+    local v_height = v_bottom - v_top
 
     for i = pf_data_size, pf_data_index, pf_data_size do
         state = pf_data[i - 5]
@@ -105,19 +115,28 @@ local function calculate_speed_heuristic(v_left, v_top, v_right, v_bottom)
         dist_limit_right = pf_data[i - 2]
         dist_limit_bottom = pf_data[i - 1]
         pf_left, pf_top, pf_right, pf_bottom = draw_queue.get_placement(pf_data[i])
+        pf_width = pf_right - pf_left
+        pf_height = pf_bottom - pf_top
 
         -- x movement
         move_distance = 0
         speed = 0
-        if v_left < pf_left then
+        target = nil
+        if v_width >= pf_width or v_left < pf_left then
+            -- this is forced if the view is bigger than the pf to always prioritize the left edge
             -- need to scroll left, move_distance is positive
-            move_distance = math.min(pf_left - v_left, dist_limit_left - state.scroll_dist_x)
+            move_distance = pf_left - v_left
+            target = state.scroll_dist_x + move_distance
+            move_distance = math.min(move_distance, dist_limit_left - state.scroll_dist_x)
             speed = move_distance * base_speed
         elseif v_right > pf_right then
             -- need to scroll right, move_distance is negative
-            move_distance = math.max(pf_right - v_right, dist_limit_right - state.scroll_dist_x)
+            move_distance = pf_right - v_right
+            target = state.scroll_dist_x + move_distance
+            move_distance = math.max(move_distance, dist_limit_right - state.scroll_dist_x)
             speed = move_distance * base_speed
         end
+        pf_data[i - 9] = target
         pf_data[i - 7] = math.abs(speed)
         v_left = v_left + move_distance -- move the requested area for the next iteration
         v_right = v_right + move_distance
@@ -125,15 +144,22 @@ local function calculate_speed_heuristic(v_left, v_top, v_right, v_bottom)
         -- y movement
         move_distance = 0
         speed = 0
-        if v_top < pf_top then
+        target = nil
+        if v_height >= pf_height or v_top < pf_top then
+            -- this is forced if the view is bigger than the pf to always prioritize the top edge
             -- need to scroll up, move_distance is positive
-            move_distance = math.min(pf_top - v_top, dist_limit_top - state.scroll_dist_y)
+            move_distance = pf_top - v_top
+            target = state.scroll_dist_y + move_distance
+            move_distance = math.min(move_distance, dist_limit_top - state.scroll_dist_y)
             speed = move_distance * base_speed
         elseif v_bottom > pf_bottom then
             -- need to scroll down, move_distance is negative
-            move_distance = math.max(pf_bottom - v_bottom, dist_limit_bottom - state.scroll_dist_y)
+            move_distance = pf_bottom - v_bottom
+            target = state.scroll_dist_y + move_distance
+            move_distance = math.max(move_distance, dist_limit_bottom - state.scroll_dist_y)
             speed = move_distance * base_speed
         end
+        pf_data[i - 8] = target
         pf_data[i - 6] = math.abs(speed)
         v_top = v_top + move_distance -- move the requested area for the next iteration
         v_bottom = v_bottom + move_distance
@@ -142,6 +168,8 @@ end
 
 -- Evaluates view requests. Must be run after the draw queue
 function view_request.evaluate()
+    auto_scroll_id = 0
+
     if view_request.time == 0 then
         return
     end
@@ -160,48 +188,27 @@ function view_request.evaluate()
     view_bottom = view_bottom + padding
 
     if just_initiated then
-        calculate_speed_heuristic(view_left, view_top, view_right, view_bottom)
+        calculate_speeds_and_targets(view_left, view_top, view_right, view_bottom)
     end
 
     local state
-    local pf_left, pf_top, pf_right, pf_bottom
-    local move_distance, target
-    local x_speed, y_speed
+    local x_speed, y_speed, x_target, y_target
 
     for i = pf_data_size, pf_data_index, pf_data_size do
+        x_target = pf_data[i - 9]
+        y_target = pf_data[i - 8]
         x_speed = pf_data[i - 7]
         y_speed = pf_data[i - 6]
         state = pf_data[i - 5]
-        pf_left, pf_top, pf_right, pf_bottom = draw_queue.get_placement(pf_data[i])
 
         -- x movement
-        target = nil
-        if view_left < pf_left then
-            -- need to scroll left, move_distance is positive
-            move_distance = pf_left - view_left
-            target = state.scroll_dist_x + move_distance
-        elseif view_right > pf_right then
-            -- need to scroll right, move_distance is negative
-            move_distance = pf_right - view_right
-            target = state.scroll_dist_x + move_distance
-        end
-        if target then
-            state.scroll_dist_x = follow(state.scroll_dist_x, target, x_speed)
+        if x_target then
+            state.scroll_dist_x = follow(state.scroll_dist_x, x_target, x_speed)
         end
 
         -- y movement
-        target = nil
-        if view_top < pf_top then
-            -- need to scroll up, move_distance is positive
-            move_distance = pf_top - view_top
-            target = state.scroll_dist_y + move_distance
-        elseif view_bottom > pf_bottom then
-            -- need to scroll down, move_distance is negative
-            move_distance = pf_bottom - view_bottom
-            target = state.scroll_dist_y + move_distance
-        end
-        if target then
-            state.scroll_dist_y = follow(state.scroll_dist_y, target, y_speed)
+        if y_target then
+            state.scroll_dist_y = follow(state.scroll_dist_y, y_target, y_speed)
         end
     end
 
