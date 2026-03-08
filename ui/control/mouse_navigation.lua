@@ -89,12 +89,13 @@ end
 ---Makes a new sensor element used to detect mouse hovering.
 ---Returns a new sensor id and sets the current_sensor_id to the new id.
 ---Behaves like a place_by_cursor draw_queue function.
+---Does not expand areas
 ---@param sensor_id? integer forces this sensor to be created with a certain id (must be negative)
 ---@param ... sensor_mode sensor modes
 ---@return integer sensor_id sensor id
 ---@return integer placement_id sensor placement id
 function mouse_navigation.make_sensor(sensor_id, ...)
-    cursor.place()
+    cursor.place(nil, nil, "no")
     if sensor_id then
         if sensor_id >= 0 then
             error(string.format("sensor id %d cannot be used", sensor_id))
