@@ -45,7 +45,7 @@ function tooltip.tooltip(edge, str, font_size, align, wrap_limit)
     is_active = true
 
     cursor.push()
-    cursor.auto_reshape = "yes"
+    cursor.auto_reshape = "both"
     cursor.auto_area_expansion = false
 
     if edge == "left" then

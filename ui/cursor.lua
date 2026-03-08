@@ -5,8 +5,8 @@ local stack_data = require("ui.stack_manager.stack_data")
 local draw_data = require("ui.draw_queue.draw_data")
 
 ---@class cursor
----@field auto_area_expansion boolean
----@field auto_reshape "yes"|"width"|"height"|"no"
+---@field auto_area_expansion boolean If true, calling cursor.place will expand areas (if not overridden by options)
+---@field auto_reshape "both"|"width"|"height"|"no" elements that don't fit in the cursor will cause the cursor to reshape it's width and/or height
 ---@field x number
 ---@field y number
 ---@field anchor_x number
@@ -124,11 +124,7 @@ function cursor.reset(desired_width, desired_height)
 
     cursor.anchor_x = 0
     cursor.anchor_y = 0
-
-    -- If true, elements that don't fit in the cursor will cause the cursor to reshape
-    cursor.auto_reshape = "yes"
-
-    -- If true, calling cursor.place will expand areas (if not overridden by options)
+    cursor.auto_reshape = "both"
     cursor.auto_area_expansion = true
 end
 
@@ -183,7 +179,7 @@ function cursor.do_auto_reshape()
     -- We only want the width and height to change.
     local width_new, height_new = cursor.width, cursor.height
     cursor.pop()
-    if cursor.auto_reshape == "yes" then
+    if cursor.auto_reshape == "both" then
         cursor.width, cursor.height = width_new, height_new
     elseif cursor.auto_reshape == "width" then
         cursor.width = width_new
