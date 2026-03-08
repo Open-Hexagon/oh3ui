@@ -4,9 +4,23 @@
 local stack_data = require("ui.stack_manager.stack_data")
 local draw_data = require("ui.draw_queue.draw_data")
 
+---**auto_reshape**
+---
+---When placing the cursor, the cursor can be reshaped. This field controls whether width or height gets affected.
+---+ "both": both width and height
+---+ "width": only width
+---+ "height": only height
+---+ "no": neither
+---
+---**auto_area_expansion**
+---
+---When placing the cursor, areas can be expanded. This field controls how that happens
+---+ "placement": areas will expand according to the new placement, accounting for any reshaping
+---+ "cursor": areas will expand according to the cursor, ignoring any reshaping
+---+ "no": areas will not expand
 ---@class cursor
----@field auto_area_expansion boolean If true, calling cursor.place will expand areas (if not overridden by options)
----@field auto_reshape "both"|"width"|"height"|"no" elements that don't fit in the cursor will cause the cursor to reshape it's width and/or height
+---@field auto_area_expansion "placement"|"cursor"|"no" see above
+---@field auto_reshape "both"|"width"|"height"|"no" see above
 ---@field x number
 ---@field y number
 ---@field anchor_x number
@@ -65,41 +79,6 @@ local function get_edges(x, y, anchor_x, anchor_y, width, height)
     return left, top, right, bottom
 end
 
-local e_table = {}
-local e_table_index = 0
-local function unpack_e_table()
-    return unpack(e_table, 1, e_table_index)
-end
-
----This metatable lets you "swizzle" for the edges of the cursor.
----Examples:
----cursor.ltrb() returns the left, top, right, and bottom edges in that order.
----cursor.rrtb() returns the right, right, top, and bottom edges in that order.
----These are not affected by translations, use the placement table for that.
-setmetatable(cursor, {
-    __index = function(_, key)
-        e_table_index = 0
-        for c in string.gmatch(key, ".") do
-            local v
-            if c == "l" then
-                v = cursor.x - cursor.anchor_x * cursor.width
-            elseif c == "t" then
-                v = cursor.y - cursor.anchor_y * cursor.height
-            elseif c == "r" then
-                v = cursor.x + (1 - cursor.anchor_x) * cursor.width
-            elseif c == "b" then
-                v = cursor.y + (1 - cursor.anchor_y) * cursor.height
-            else
-                error(string.format("`%s` is an invalid swizzling character", c), 2)
-            end
-            e_table_index = e_table_index + 1
-            e_table[e_table_index] = v
-        end
-
-        return unpack_e_table
-    end,
-})
-
 --#endregion
 
 local cursor_stack = stack_data.cursor_stack
@@ -125,7 +104,7 @@ function cursor.reset(desired_width, desired_height)
     cursor.anchor_x = 0
     cursor.anchor_y = 0
     cursor.auto_reshape = "both"
-    cursor.auto_area_expansion = true
+    cursor.auto_area_expansion = "placement"
 end
 
 --#region snapshotting
@@ -319,6 +298,27 @@ function cursor.clip_bottom(d)
     cursor.change_anchor(ax, ay)
 end
 
+---clips edges of the cursor
+---@param left number
+---@param top number
+---@param right number
+---@param bottom number
+function cursor.clip(left, top, right, bottom)
+    local ax, ay = cursor.anchor_x, cursor.anchor_y
+    local w, h
+    local l, t, r, b = get_edges(cursor.x, cursor.y, cursor.anchor_x, cursor.anchor_y, cursor.width, cursor.height)
+    l = l + left
+    t = t + top
+    r = r - right
+    b = b - bottom
+    w = r - l
+    h = b - t
+    cursor.x = l + w * ax
+    cursor.y = t + h * ay
+    cursor.width = w
+    cursor.height = h
+end
+
 ---Sets the cursor width to the width of the screen
 function cursor.full_width()
     local _
@@ -419,6 +419,10 @@ function cursor.v_subdivide(n, padding)
     return n, section_width
 end
 
+---Vertically splits the cursor in two and pushes both halves to the stack.
+---Popping twice will put the cursor on the left, then right panes.
+---@param left_pane_width number height of the top pane
+---@param reverse_order boolean? reverse pop order
 function cursor.v_split(left_pane_width, reverse_order)
     local x, ax, w = cursor.x, cursor.anchor_x, cursor.width
     local l = x - w * ax
@@ -460,6 +464,10 @@ function cursor.h_subdivide(n, padding)
     return n, section_height
 end
 
+---Horizontally splits the cursor in two and pushes both halves to the stack.
+---Popping twice will put the cursor on the top, then bottom panes.
+---@param top_pane_height number height of the top pane
+---@param reverse_order boolean? reverse pop order
 function cursor.h_split(top_pane_height, reverse_order)
     local y, ay, h = cursor.y, cursor.anchor_y, cursor.height
     local l = y - h * ay
@@ -644,6 +652,15 @@ function cursor.put_placement(id)
     draw_data.edit_placement(id, placement.left, placement.top, placement.right, placement.bottom)
 end
 
+---gets the cursor edges
+---@return number
+---@return number
+---@return number
+---@return number
+function cursor.get_edges()
+    return get_edges(cursor.x, cursor.y, cursor.anchor_x, cursor.anchor_y, cursor.width, cursor.height)
+end
+
 ---Places the current cursor down. This will update both the last_placement and projected_placement tables.
 ---Translations will be applied to ONLY the projected_placement table.
 ---Desired width and height are for elements that don't fit the cursor.
@@ -651,8 +668,9 @@ end
 ---Placing a cursor will also expand areas.
 ---@param desired_width number? if provided, the placement will use this instead of cursor.width
 ---@param desired_height number? if provided, the placement will use this instead of cursor.height
----@param area_expansion_options? "yes"|"no" If nil, area expansion depends on auto_area_expansion. If no, forces areas to not expand. If yes, forces areas to expand.
-function cursor.place(desired_width, desired_height, area_expansion_options)
+---@param area_expansion_mode? "placement"|"cursor"|"no" overrides auto area expansion
+function cursor.place(desired_width, desired_height, area_expansion_mode)
+    area_expansion_mode = area_expansion_mode or cursor.auto_area_expansion
     local width, height = desired_width or cursor.width, desired_height or cursor.height
     local dx, dy = translate_stack[stack_data.translate_index - 1], translate_stack[stack_data.translate_index]
     local left, top, right, bottom = get_edges(cursor.x, cursor.y, cursor.anchor_x, cursor.anchor_y, width, height)
@@ -665,17 +683,6 @@ function cursor.place(desired_width, desired_height, area_expansion_options)
     projected_placement.right = right + dx
     projected_placement.bottom = bottom + dy
 
-    -- expand the current area
-    if area_expansion_options then
-        if area_expansion_options == "yes" then
-            expand_area(area_stack[stack_data.area_index], left, top, right, bottom)
-        end
-    else
-        if cursor.auto_area_expansion then
-            expand_area(area_stack[stack_data.area_index], left, top, right, bottom)
-        end
-    end
-
     -- update placement
     placement.x = cursor.x
     placement.y = cursor.y
@@ -683,6 +690,18 @@ function cursor.place(desired_width, desired_height, area_expansion_options)
     placement.top = top
     placement.right = right
     placement.bottom = bottom
+
+    -- expand the current area
+    if area_expansion_mode == "placement" then
+        expand_area(area_stack[stack_data.area_index], left, top, right, bottom)
+    elseif area_expansion_mode == "cursor" then
+        left, top, right, bottom =
+            get_edges(cursor.x, cursor.y, cursor.anchor_x, cursor.anchor_y, cursor.width, cursor.height)
+        expand_area(area_stack[stack_data.area_index], left, top, right, bottom)
+    elseif area_expansion_mode == "no" then
+    else
+        error("invalid area expansion mode")
+    end
 
     -- reshape the cursor
     cursor.width, cursor.height = width, height

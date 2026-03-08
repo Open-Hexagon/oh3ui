@@ -178,12 +178,12 @@ function scroll.finish(scrollbar_inset, padding)
     -- peek combine to get the size of the content area (must enclose the original scroll area)
     cursor.combine(true)
     content_width, content_height = cursor.width, cursor.height
-    content_left, content_top, content_right, content_bottom = cursor.ltrb()
+    content_left, content_top, content_right, content_bottom = cursor.get_edges()
 
     -- peek to get the original scroll area size
     cursor.peek()
     scroll_width, scroll_height = cursor.width, cursor.height
-    scroll_left, scroll_top, scroll_right, scroll_bottom = cursor.ltrb()
+    scroll_left, scroll_top, scroll_right, scroll_bottom = cursor.get_edges()
 
     -- get scroll area translation distance limits
     -- should be <= 0 (negative values scroll right)
@@ -495,7 +495,7 @@ end
 ---@param activate boolean set this to true for just 1 frame to activate auto scrolling
 function scroll.auto_scroll_region(activate)
     cursor.push()
-    cursor.auto_area_expansion = false
+    cursor.auto_area_expansion = "no"
     view_request.update_auto_scroll(draw_queue.by_cursor.blank(), activate)
     cursor.pop()
 end
