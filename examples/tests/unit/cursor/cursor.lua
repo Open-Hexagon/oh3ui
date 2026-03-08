@@ -333,7 +333,7 @@ function T.test_h_split()
     cursor.width, cursor.height = 70, 70
 
     local n = 4
-    local a, b = cursor.h_split(n, 10)
+    local a, b = cursor.h_subdivide(n, 10)
     unittest.assert(a == n)
     unittest.assert(b == 10)
     for i = 1, n do
@@ -353,7 +353,7 @@ function T.test_v_split()
     cursor.width, cursor.height = 70, 70
 
     local n = 4
-    local a, b = cursor.v_split(n, 10)
+    local a, b = cursor.v_subdivide(n, 10)
     unittest.assert(a == n)
     unittest.assert(b == 10)
     for i = 1, n do

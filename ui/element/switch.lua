@@ -42,7 +42,7 @@ return function(state, ...)
 
     -- selection buttons
     local hovering = knav.is_selected()
-    local _, section_width = cursor.h_split(positions)
+    local _, section_width = cursor.h_subdivide(positions)
     for i = 1, positions do
         cursor.pop()
         mnav.make_sensor(nil, smode.block)

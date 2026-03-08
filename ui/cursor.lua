@@ -379,7 +379,7 @@ function cursor.h_array(n, padding)
     padding = padding or 0
     for i = n - 1, 0, -1 do
         cursor.push()
-        cursor_stack[stack_data.cursor_index - 6] = cursor.x + (cursor.width + padding) * i
+        cursor_stack[stack_data.cursor_index - 5] = cursor.x + (cursor.width + padding) * i
     end
 end
 
@@ -392,54 +392,90 @@ function cursor.v_array(n, padding)
     padding = padding or 0
     for i = n - 1, 0, -1 do
         cursor.push()
-        cursor_stack[stack_data.cursor_index - 5] = cursor.y + (cursor.height + padding) * i
+        cursor_stack[stack_data.cursor_index - 4] = cursor.y + (cursor.height + padding) * i
     end
 end
 
 ---Pushes n snapshots to the stack, such that when popping them,
 ---the cursor will move from left to right with padding within the bounding box of the current cursor.
----Cursors take on the shape formed by horizontally subdividing the current cursor with padding.
+---Cursors take on the shape formed by vertically subdividing the current cursor with padding.
 ---@param n integer number of sections to split into
 ---@param padding number? padding between sections
 ---@return integer n number of sections
 ---@return number section_width the width of each resulting section, not including padding
-function cursor.h_split(n, padding)
+function cursor.v_subdivide(n, padding)
     padding = padding or 0
     local section_width = (cursor.width - (n - 1) * padding) / n
     local left_edge = cursor.x - cursor.anchor_x * cursor.width
 
     for i = n - 1, 0, -1 do
         cursor.push()
-        cursor_stack[stack_data.cursor_index - 6] = left_edge
+        cursor_stack[stack_data.cursor_index - 5] = left_edge
             + (section_width + padding) * i
             + section_width * cursor.anchor_x
-        cursor_stack[stack_data.cursor_index - 2] = section_width
+        cursor_stack[stack_data.cursor_index - 1] = section_width
     end
 
     return n, section_width
 end
 
+function cursor.v_split(left_pane_width, reverse_order)
+    local x, ax, w = cursor.x, cursor.anchor_x, cursor.width
+    local l = x - w * ax
+    local right_pane_width = w - left_pane_width
+    local ileft, iright
+    cursor.push()
+    iright = stack_data.cursor_index
+    cursor.push()
+    ileft = stack_data.cursor_index
+    if reverse_order then
+        ileft, iright = iright, ileft
+    end
+    cursor_stack[ileft - 5] = l + left_pane_width * ax
+    cursor_stack[ileft - 1] = left_pane_width
+    cursor_stack[iright - 5] = l + left_pane_width + right_pane_width * ax
+    cursor_stack[iright - 1] = right_pane_width
+end
+
 ---Pushes n snapshots to the stack, such that when popping them,
 ---the cursor will move from top to bottom with padding within the bounding box of the current cursor.
----Cursors take on the shape formed by vertically subdividing the current cursor with padding.
+---Cursors take on the shape formed by horizontally subdividing the current cursor with padding.
 ---@param n integer number of sections to split into
 ---@param padding number? padding between sections
 ---@return integer n number of sections
 ---@return number section_height the height of each resulting section, not including padding
-function cursor.v_split(n, padding)
+function cursor.h_subdivide(n, padding)
     padding = padding or 0
     local section_height = (cursor.height - (n - 1) * padding) / n
     local top_edge = cursor.y - cursor.anchor_y * cursor.height
 
     for i = n - 1, 0, -1 do
         cursor.push()
-        cursor_stack[stack_data.cursor_index - 5] = top_edge
+        cursor_stack[stack_data.cursor_index - 4] = top_edge
             + (section_height + padding) * i
             + section_height * cursor.anchor_y
-        cursor_stack[stack_data.cursor_index - 1] = section_height
+        cursor_stack[stack_data.cursor_index] = section_height
     end
 
     return n, section_height
+end
+
+function cursor.h_split(top_pane_height, reverse_order)
+    local y, ay, h = cursor.y, cursor.anchor_y, cursor.height
+    local l = y - h * ay
+    local bottom_pane_height = h - top_pane_height
+    local itop, ibottom
+    cursor.push()
+    ibottom = stack_data.cursor_index
+    cursor.push()
+    itop = stack_data.cursor_index
+    if reverse_order then
+        itop, ibottom = ibottom, itop
+    end
+    cursor_stack[itop - 4] = l + top_pane_height * ay
+    cursor_stack[itop] = top_pane_height
+    cursor_stack[ibottom - 4] = l + top_pane_height + bottom_pane_height * ay
+    cursor_stack[ibottom] = bottom_pane_height
 end
 
 ---Move the cursor right by its own width
