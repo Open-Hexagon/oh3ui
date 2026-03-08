@@ -3,10 +3,10 @@ local stack_data = require("ui.stack_manager.stack_data")
 local aeb_stack = stack_data.aeb_stack
 local follow = require("ui.effect").follow
 local draw_queue = require("ui.draw_queue")
-local mnav = require("ui.control.mouse_navigation")
 local knav = require("ui.control.keyboard_navigation")
 local settings = require("ui.settings")
 local theme = require("ui.theme")
+local extmath = require("ui.extmath")
 
 local padding = econf.view_request_padding
 local base_speed = econf.view_request_speed
@@ -127,19 +127,18 @@ local function calculate_speeds_and_targets(v_left, v_top, v_right, v_bottom)
             -- this is forced if the view is bigger than the pf to always prioritize the left edge
             -- need to scroll left, move_distance is positive
             move_distance = pf_left - v_left
-            target = state.scroll_dist_x + move_distance
-            move_distance = math.min(move_distance, dist_limit_left - state.scroll_dist_x)
-            speed = move_distance * base_speed
         elseif v_right > pf_right then
             -- need to scroll right, move_distance is negative
             move_distance = pf_right - v_right
-            target = state.scroll_dist_x + move_distance
-            move_distance = math.max(move_distance, dist_limit_right - state.scroll_dist_x)
-            speed = move_distance * base_speed
+        end
+        if move_distance ~= 0 then
+            target = extmath.clamp(state.scroll_dist_x + move_distance, dist_limit_right, dist_limit_left)
+            move_distance = target - state.scroll_dist_y
+            speed = math.abs(move_distance * base_speed)
         end
         pf_data[i - 11] = state.scroll_dist_x
         pf_data[i - 9] = target
-        pf_data[i - 7] = math.abs(speed)
+        pf_data[i - 7] = speed
         state.scroll_vel_x = 0 -- stop the scroll from moving by other means
         v_left = v_left + move_distance -- move the requested area for the next iteration
         v_right = v_right + move_distance
@@ -152,19 +151,18 @@ local function calculate_speeds_and_targets(v_left, v_top, v_right, v_bottom)
             -- this is forced if the view is bigger than the pf to always prioritize the top edge
             -- need to scroll up, move_distance is positive
             move_distance = pf_top - v_top
-            target = state.scroll_dist_y + move_distance
-            move_distance = math.min(move_distance, dist_limit_top - state.scroll_dist_y)
-            speed = move_distance * base_speed
         elseif v_bottom > pf_bottom then
             -- need to scroll down, move_distance is negative
             move_distance = pf_bottom - v_bottom
-            target = state.scroll_dist_y + move_distance
-            move_distance = math.max(move_distance, dist_limit_bottom - state.scroll_dist_y)
-            speed = move_distance * base_speed
+        end
+        if move_distance ~= 0 then
+            target = extmath.clamp(state.scroll_dist_y + move_distance, dist_limit_bottom, dist_limit_top)
+            move_distance = target - state.scroll_dist_y
+            speed = math.abs(move_distance * base_speed)
         end
         pf_data[i - 10] = state.scroll_dist_y
         pf_data[i - 8] = target
-        pf_data[i - 6] = math.abs(speed)
+        pf_data[i - 6] = speed
         state.scroll_vel_y = 0 -- stop the scroll from moving by other means
         v_top = v_top + move_distance -- move the requested area for the next iteration
         v_bottom = v_bottom + move_distance
@@ -202,33 +200,29 @@ function view_request.evaluate()
         state = pf_data[i - 5]
 
         -- x movement
+        -- Check against the last scroll distance. Any outside changes to the scroll distance will break the view request.
+        if last_scroll_dist_x ~= state.scroll_dist_x then
+            view_request.time = 0
+            goto movement_break
+        end
         if x_target then
-            -- Check against the last scroll distance. Any outside changes to the scroll distance will break the view request.
-            if last_scroll_dist_x == state.scroll_dist_x then
-                state.scroll_dist_x = follow(state.scroll_dist_x, x_target, x_speed)
-                if state.scroll_dist_x == x_target then
-                    pf_data[i - 9] = nil
-                else
-                    pf_data[i - 11] = state.scroll_dist_x
-                end
-            else
-                view_request.time = 0
-                goto movement_break
+            state.scroll_dist_x = follow(state.scroll_dist_x, x_target, x_speed)
+            pf_data[i - 11] = state.scroll_dist_x
+            if state.scroll_dist_x == x_target then
+                pf_data[i - 9] = nil
             end
         end
 
         -- y movement
+        if last_scroll_dist_y ~= state.scroll_dist_y then
+            view_request.time = 0
+            goto movement_break
+        end
         if y_target then
-            if last_scroll_dist_y == state.scroll_dist_y then
-                state.scroll_dist_y = follow(state.scroll_dist_y, y_target, y_speed)
-                if state.scroll_dist_y == y_target then
-                    pf_data[i - 8] = nil
-                else
-                    pf_data[i - 10] = state.scroll_dist_y
-                end
-            else
-                view_request.time = 0
-                goto movement_break
+            state.scroll_dist_y = follow(state.scroll_dist_y, y_target, y_speed)
+            pf_data[i - 10] = state.scroll_dist_y
+            if state.scroll_dist_y == y_target then
+                pf_data[i - 8] = nil
             end
         end
     end
