@@ -26,7 +26,10 @@ local tooltip_text_color = { 0, 0, 0, 0 }
 ---@param font_size number
 ---@param align love.AlignMode
 ---@param wrap_limit number?
-function tooltip.tooltip(edge, str, font_size, align, wrap_limit)
+---@param sensor_id integer?
+---@param cell_id integer?
+---@param typing_state table?
+function tooltip.tooltip(edge, str, font_size, align, wrap_limit, sensor_id, cell_id, typing_state)
     if is_active then
         return
     end
@@ -34,9 +37,9 @@ function tooltip.tooltip(edge, str, font_size, align, wrap_limit)
     local method = get_last_used_control_method()
     if
         not (
-            method == "mouse" and (mnav.is_hovering() or mnav.get_dragging())
-            or method == "keyboard" and knav.is_selected()
-            or method == "typing" and typing.is_editing()
+            method == "mouse" and (mnav.is_hovering(sensor_id) or mnav.get_dragging(sensor_id))
+            or method == "keyboard" and knav.is_selected(cell_id)
+            or method == "typing" and typing.is_editing(typing_state)
         )
     then
         return
@@ -46,7 +49,7 @@ function tooltip.tooltip(edge, str, font_size, align, wrap_limit)
 
     cursor.push()
     cursor.auto_reshape = "both"
-    cursor.auto_area_expansion = false
+    cursor.auto_area_expansion = "no"
 
     if edge == "left" then
         cursor.change_anchor(1, 0.5)

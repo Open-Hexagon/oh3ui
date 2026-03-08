@@ -31,12 +31,14 @@ end
 ---@param max number max representable number in state.value
 ---@param positions integer number of valid slider positions
 ---@param show_positions boolean? show position lines; recommended if the slider is coarse.
+---@param custom_sensor integer? Use a custom cursor sensor. Don't forget to make it draggable!
 ---@param kb_step integer? how many positions to move when using keyboard navigation
 ---@param kb_fast_step integer? how many positions to move after holding a key for longer than the hold time
 ---@param kb_hold_seconds number? how long a key needs to be held before faster movement is activated in seconds
 ---@return number value the "value" field of the state table
 ---@return integer position the "position" field of the state table
-return function(state, min, max, positions, show_positions, kb_step, kb_fast_step, kb_hold_seconds)
+return function(state, min, max, positions, show_positions, custom_sensor, kb_step, kb_fast_step, kb_hold_seconds)
+    local sid = custom_sensor
     kb_step = kb_step or 1
     kb_fast_step = kb_fast_step or 5
     kb_hold_seconds = kb_hold_seconds or 1
@@ -52,6 +54,7 @@ return function(state, min, max, positions, show_positions, kb_step, kb_fast_ste
     end
 
     cursor.push() -- (1)
+    -- cursor.auto_area_expansion = "placement"
 
     local full_width = math.max(econf.slider_min_width, cursor.width)
     cursor.place(full_width, econf.slider_height)
@@ -64,7 +67,9 @@ return function(state, min, max, positions, show_positions, kb_step, kb_fast_ste
 
     cursor.push() -- (2)
 
-    mnav.make_sensor(nil, smode.block, smode.draggable)
+    if not sid then
+        sid = mnav.make_sensor(nil, smode.block, smode.draggable)
+    end
 
     if knav.get_holding() then
         state._slider_kb_hold_seconds = state._slider_kb_hold_seconds + love.timer.getDelta()
@@ -94,7 +99,7 @@ return function(state, min, max, positions, show_positions, kb_step, kb_fast_ste
 
     -- get fill width and update position
     local fill_width
-    local dragging, clicked = mnav.get_dragging() == mb.left, mnav.get_clicked() == mb.left
+    local dragging, clicked = mnav.get_dragging(sid) == mb.left, mnav.get_clicked(sid) == mb.left
     if dragging then
         -- draw using mouse position
         fill_width = clamped_mouse_x - projected_placement.x
@@ -122,6 +127,7 @@ return function(state, min, max, positions, show_positions, kb_step, kb_fast_ste
     -- position lines
     if show_positions then
         cursor.peek()
+        cursor.auto_area_expansion = "no"
         cursor.change_anchor(0.5)
         cursor.width = full_width - actuator_radius * 2
         cursor.height = cursor.height - 2 -- prevents lines from spilling over
@@ -141,7 +147,7 @@ return function(state, min, max, positions, show_positions, kb_step, kb_fast_ste
     cursor.height = econf.slider_height
     draw_by_cursor.circle(theme.widget_actuator)
     draw_by_cursor.circle_outline(
-        (mnav.is_hovering() or dragging) and theme.widget_actuator_outline_highlight or theme.widget_actuator_outline
+        (mnav.is_hovering(sid) or dragging) and theme.widget_actuator_outline_highlight or theme.widget_actuator_outline
     )
 
     cursor.pop() -- (2)
