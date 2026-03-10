@@ -11,11 +11,12 @@ local smode = mnav.sensor_mode
 ---Will reshape the cursor
 ---@param size number override icon size in pixels (works like a font)
 ---@param icon_name string icon name
+---@param custom_sensor integer? If given, element will use this sensor and won't make it's own
 ---@return mouse_button? clicked the "clicked" field of the state table
-return function(size, icon_name)
+return function(size, icon_name, custom_sensor)
     cursor.push()
 
-    local sid = mnav.declare_sensor_id()
+    local sid = custom_sensor or mnav.declare_sensor_id()
 
     local button_color
     if mnav.get_holding(sid) then
@@ -34,7 +35,9 @@ return function(size, icon_name)
 
     cursor.auto_reshape = "both"
     icon(icon_name, size, button_color)
-    mnav.make_sensor(sid, smode.block)
+    if not custom_sensor then
+        mnav.make_sensor(sid, smode.block)
+    end
 
     if knav.is_selected() then
         selection_outline()
