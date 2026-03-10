@@ -86,9 +86,10 @@ return function(state, min, max, positions, show_positions, custom_sensor, kb_st
             state.position = state.position
                 + (state._slider_kb_hold_seconds > kb_hold_seconds and kb_fast_step or kb_step)
         end
-        state.position = extmath.clamp(state.position, 0, divisions)
-        state.value = extmath.map(state.position, 0, divisions, min, max)
     end
+
+    state.position = extmath.clamp(state.position, 0, divisions)
+    state.value = extmath.map(state.position, 0, divisions, min, max)
 
     -- background slot
     cursor.height = slot_height
@@ -101,16 +102,14 @@ return function(state, min, max, positions, show_positions, custom_sensor, kb_st
     local fill_width
     local dragging, clicked = mnav.get_dragging(sid) == mb.left, mnav.get_clicked(sid) == mb.left
     if dragging then
-        -- draw using mouse position
-        fill_width = clamped_mouse_x - projected_placement.x
-
         -- set position and value
         state.position = get_closest_position(clamped_mouse_x, min_x, max_x, positions)
-        state.value = extmath.map(state.position, 0, divisions, min, max)
+
+        -- draw using mouse position
+        fill_width = clamped_mouse_x - projected_placement.x
     elseif clicked then
         -- set position and value
         state.position = get_closest_position(clamped_mouse_x, min_x, max_x, positions)
-        state.value = extmath.map(state.position, 0, divisions, min, max)
 
         -- draw using saved position
         fill_width = actuator_radius + state.position * step_size
