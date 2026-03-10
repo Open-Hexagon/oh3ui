@@ -22,14 +22,15 @@ local alpha = 0
 local tooltip_text_color = { 0, 0, 0, 0 }
 
 ---@param edge "left"|"top"|"right"|"bottom"
----@param str string
+---@param str string Tooltip text. If this is an empty string, the tooltip is not drawn but still behaves like it's active.
 ---@param font_size number
 ---@param align love.AlignMode
 ---@param wrap_limit number?
----@param sensor_id integer?
----@param cell_id integer?
----@param typing_state table?
-function tooltip.tooltip(edge, str, font_size, align, wrap_limit, sensor_id, cell_id, typing_state)
+---@param manual_activate any? set this to a truthy value to manually activate the tooltip
+---@param sensor_id integer? override current sensor_id
+---@param cell_id integer? override current cell_id
+---@param typing_state table? override current typing_state
+function tooltip.tooltip(edge, str, font_size, align, wrap_limit, manual_activate, sensor_id, cell_id, typing_state)
     if is_active then
         return
     end
@@ -37,7 +38,8 @@ function tooltip.tooltip(edge, str, font_size, align, wrap_limit, sensor_id, cel
     local method = get_last_used_control_method()
     if
         not (
-            method == "mouse" and (mnav.is_hovering(sensor_id) or mnav.get_dragging(sensor_id))
+            manual_activate
+            or method == "mouse" and (mnav.is_hovering(sensor_id) or mnav.get_dragging(sensor_id))
             or method == "keyboard" and knav.is_selected(cell_id)
             or method == "typing" and typing.is_editing(typing_state)
         )
@@ -46,6 +48,10 @@ function tooltip.tooltip(edge, str, font_size, align, wrap_limit, sensor_id, cel
     end
 
     is_active = true
+
+    if str == "" then
+        return
+    end
 
     cursor.push()
     cursor.auto_reshape = "both"
