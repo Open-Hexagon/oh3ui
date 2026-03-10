@@ -56,7 +56,7 @@ function view_request.update_auto_scroll(view_pid, activate)
     if view_request.time > 0 and auto_scroll_id == current_auto_scroll_id then
         view_location_placement_id = view_pid
 
-        if settings.overlay_view_request then
+        if settings.overlay_scroll then
             draw_queue.next_as_overlay()
             draw_queue.by_id.rectangle_inline(view_pid, 2, 0, 0, unpack(theme.get_xterm_color(75)))
 

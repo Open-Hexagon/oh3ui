@@ -42,7 +42,7 @@ ui_settings.strict = unittest_mode or arg_values.strict
 ui_settings.overlay_grid = arg_values.grid
 ui_settings.overlay_masks = arg_values.overlay_masks
 ui_settings.overlay_mouse_sensors = arg_values.overlay_mouse_sensors
-ui_settings.overlay_view_request = arg_values.overlay_view_request
+ui_settings.overlay_scroll = arg_values.overlay_scroll
 
 if arg_values.unittest and arg_values.coverage then
     require("luacov")

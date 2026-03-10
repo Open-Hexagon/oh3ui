@@ -143,11 +143,7 @@ local ui = {
     },
 
     ---Two-part area elements.
-    area_element = {
-        background = require("ui.area.element.background"),
-        collapse = require("ui.area.element.collapse"),
-        scroll = require("ui.area.element.scroll"),
-    },
+    area_element = require("ui.area"),
 
     ---Decorator elements.
     decorator = {

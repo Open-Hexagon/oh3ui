@@ -319,6 +319,15 @@ function cursor.clip(left, top, right, bottom)
     cursor.height = h
 end
 
+---pads edges of the cursor (inverse of clip)
+---@param left number
+---@param top number
+---@param right number
+---@param bottom number
+function cursor.pad(left, top, right, bottom)
+    cursor.clip(-left, -top, -right, -bottom)
+end
+
 ---Sets the cursor width to the width of the screen
 function cursor.full_width()
     local _

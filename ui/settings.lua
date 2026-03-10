@@ -6,7 +6,7 @@ local settings = {
     overlay_grid = nil,
     overlay_masks = nil,
     overlay_mouse_sensors = nil,
-    overlay_view_request = nil,
+    overlay_scroll = nil,
     is_desktop = not (platform == "Android" or platform == "iOS"),
 }
 

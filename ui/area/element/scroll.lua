@@ -1,9 +1,12 @@
+local draw_queue = require("ui.draw_queue")
 local cursor = require("ui.cursor")
 local projected_placement = cursor.projected_placement
 local extmath = require("ui.extmath")
 local mnav = require("ui.control.mouse_navigation")
 local smode = mnav.sensor_mode
-local slot = require("ui.draw_queue").by_cursor.slot
+local slot = draw_queue.by_cursor.slot
+local rectangle_outline = draw_queue.by_cursor.rectangle_outline
+local rectangle_inline = draw_queue.by_cursor.rectangle_inline
 local theme = require("ui.theme")
 local stack_manager = require("ui.stack_manager")
 local aeb = require("ui.area.aeb")
@@ -12,7 +15,7 @@ local view_request = require("ui.area.view_request")
 local stack_data = require("ui.stack_manager.stack_data")
 local aeb_stack = stack_data.aeb_stack
 local selection_outline_add_to_queue = require("ui.decorator.element.selection_outline").add_to_queue
-local draw_queue = require("ui.draw_queue")
+local settings = require("ui.settings")
 
 local scroll = {}
 
@@ -113,13 +116,15 @@ local function get_actuator_size(content_size, scroll_size)
 end
 ---Finishes the current scroll region
 ---@param scrollbar_inset number? insets the scrollbars away from the scroll region edges
----@param padding number? scroll area padding
+---@param pad number if this is the only given pad number, pads all sides with this number
+---@param pady number? if this and above are the only given pad numbers, pads left and right sides with pad and top and bottom sides with pady
+---@param padr number? see below
+---@param padb number? if this and all above are given, pads all sides with respective numbers
 ---@return boolean at_left
 ---@return boolean at_top
 ---@return boolean at_right
 ---@return boolean at_bottom
-function scroll.finish(scrollbar_inset, padding)
-    padding = padding or 0
+function scroll.finish(scrollbar_inset, pad, pady, padr, padb)
     scrollbar_inset = scrollbar_inset or 0
 
     local content_width, content_height, content_left, content_top, content_right, content_bottom
@@ -170,7 +175,20 @@ function scroll.finish(scrollbar_inset, padding)
         goto scroll_is_empty
     end
 
-    cursor.outset(padding)
+    if pad and pady and padr and padb then
+        cursor.pad(pad, pady, padr, padb)
+    elseif pad and pady then
+        cursor.pad(pad, pady, pad, pady)
+    elseif pad then
+        cursor.pad(pad, pad, pad, pad)
+    else
+        error("undefined padding combination")
+    end
+
+    if settings.overlay_scroll then
+        draw_queue.next_as_overlay()
+        rectangle_outline(theme.get_xterm_color(220), 2)
+    end
 
     -- cursor pop (1) happens at the end
 
@@ -182,6 +200,12 @@ function scroll.finish(scrollbar_inset, padding)
 
     -- peek to get the original scroll area size
     cursor.peek()
+
+    if settings.overlay_scroll then
+        draw_queue.next_as_overlay()
+        rectangle_inline(theme.get_xterm_color(49), 2)
+    end
+
     scroll_width, scroll_height = cursor.width, cursor.height
     scroll_left, scroll_top, scroll_right, scroll_bottom = cursor.get_edges()
 
