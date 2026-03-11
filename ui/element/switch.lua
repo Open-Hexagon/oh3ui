@@ -1,4 +1,5 @@
 local cursor = require("ui.cursor")
+local projected_placement = cursor.projected_placement
 local theme = require("ui.theme")
 local econf = require("ui.element_conf")
 local follow = require("ui.effect").follow
@@ -15,10 +16,12 @@ local selection_highlight_speed = 25
 
 ---N-position switch
 ---@param state table state table
+---@param custom_sensor integer? If given, element will use this sensor and won't make it's own
 ---@param ... string position names
 ---@return integer position the "position" field of the state table
-return function(state, ...)
+return function(state, custom_sensor, ...)
     local positions = select("#", ...)
+    local sid = custom_sensor
 
     if not state.initialized then
         if positions < 2 then
@@ -33,6 +36,10 @@ return function(state, ...)
     local full_width = math.max(econf.switch_height, cursor.width)
     cursor.place(full_width, econf.slider_height)
 
+    if not sid then
+        sid = mnav.make_sensor()
+    end
+
     cursor.change_anchor(0.5)
 
     cursor.push() -- (2)
@@ -41,22 +48,23 @@ return function(state, ...)
     local sel_hl_res = draw_queue.allocate_reservation(1)
 
     -- selection buttons
-    local hovering = knav.is_selected()
-    local _, section_width = cursor.h_subdivide(positions)
+    local _, section_width = cursor.v_subdivide(positions)
+    local left = projected_placement.left
+    local right = left + section_width
+    local is_inside
     for i = 1, positions do
+        is_inside = (left <= mnav.x and mnav.x < right)
+
         cursor.pop()
-        mnav.make_sensor(nil, smode.block)
-        if mnav.get_clicked() == mb.left then
+        if is_inside and mnav.get_clicked() == mb.left then
             state._switch_selection_highlight_speed = math.abs(state.position - i) * selection_highlight_speed
             state.position = i
         end
 
-        hovering = hovering or mnav.is_hovering()
-
         local button_color
-        if mnav.get_holding() == mb.left or i == state.position then
+        if (is_inside and mnav.get_holding() == mb.left) or i == state.position then
             button_color = theme.widget_background_highlight
-        elseif mnav.is_hovering() then
+        elseif is_inside and mnav.is_hovering() then
             button_color = theme.widget_background_brighter
         else
             button_color = theme.widget_background
@@ -69,6 +77,9 @@ return function(state, ...)
         draw_by_cursor.push_mask()
         draw_by_cursor.label(select(i, ...), econf.switch_text_size, "left", false)
         draw_queue.pop_mask()
+
+        left = right
+        right = right + section_width
     end
 
     -- keyboard navigation
@@ -105,8 +116,9 @@ return function(state, ...)
 
     cursor.pop() -- (2)
 
-    draw_by_cursor.rectangle_outline(hovering and theme.accent_color or theme.widget_outline)
-    mnav.make_sensor() -- this is so external click functions are correct
+    draw_by_cursor.rectangle_outline(
+        (mnav.is_hovering() or knav.is_selected()) and theme.accent_color or theme.widget_outline
+    )
     if knav.is_selected() then
         selection_outline()
     end
