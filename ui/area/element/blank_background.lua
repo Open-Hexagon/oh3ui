@@ -6,8 +6,10 @@ local draw_queue = require("ui.draw_queue")
 
 local blank_background = {}
 
-function blank_background.start()
-    local res_id = draw_queue.allocate_reservation(1)
+---starts a blank background
+---@param n integer how many draw_queue slots to reserve
+function blank_background.start(n)
+    local res_id = draw_queue.allocate_reservation(n)
     cursor.start_area()
 
     aeb.push(res_id)

@@ -21,6 +21,8 @@ local alpha = 0
 
 local tooltip_text_color = { 0, 0, 0, 0 }
 
+-- TODO: Make the tooltip dodge the edges of the screen
+
 ---@param edge "left"|"top"|"right"|"bottom"
 ---@param str string Tooltip text. If this is an empty string, the tooltip is not drawn but still behaves like it's active.
 ---@param font_size number
