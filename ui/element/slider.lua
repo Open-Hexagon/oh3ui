@@ -47,10 +47,27 @@ return function(state, min, max, positions, show_positions, custom_sensor, kb_st
 
     -- first time initialization
     if not state.initialized then
-        state._slider_kb_hold_seconds = 0
-        state.position = 0
-        state.value = min
         state.initialized = true
+        state._slider_kb_hold_seconds = 0
+
+        if type(state.value) == "number" then
+            -- derive initial position and value if state.value is given
+            state.position = get_closest_position(extmath.clamp(state.value, min, max), min, max, positions)
+            state.value = extmath.map(state.position, 0, divisions, min, max)
+            goto done
+        else
+            state.value = min
+        end
+
+        if type(state.position) == "number" then
+            -- derive initial position and value if state.position is given
+            state.position = math.floor(extmath.clamp(state.position, 1, positions))
+            state.value = extmath.map(state.position, 0, divisions, min, max)
+        else
+            state.position = 0
+        end
+
+        ::done::
     end
 
     cursor.push() -- (1)

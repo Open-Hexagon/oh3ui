@@ -11,6 +11,7 @@ local smode = mnav.sensor_mode
 local selection_outline = require("ui.decorator.element.selection_outline").set_placement
 local draw_queue = require("ui.draw_queue")
 local draw_by_cursor = draw_queue.by_cursor
+local extmath = require("ui.extmath")
 
 local selection_highlight_speed = 25
 
@@ -27,7 +28,12 @@ return function(state, custom_sensor, ...)
         if positions < 2 then
             error("At least 2 positions need to be provided for switch")
         end
-        state.position = 1
+        if type(state.position) == "number" then
+            -- correct initial position if was given externally
+            state.position = math.floor(extmath.clamp(state.position, 1, positions))
+        else
+            state.position = 1
+        end
         state.initialized = true
     end
 
@@ -37,7 +43,7 @@ return function(state, custom_sensor, ...)
     cursor.place(full_width, econf.slider_height)
 
     if not sid then
-        sid = mnav.make_sensor()
+        sid = mnav.make_sensor(nil, smode.block)
     end
 
     cursor.change_anchor(0.5)
