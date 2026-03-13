@@ -450,6 +450,13 @@ function cursor.v_split(left_pane_width, reverse_order)
     cursor_stack[iright - 1] = right_pane_width
 end
 
+---Same as v_split but with normalized left pane width
+---@param left_pane_percentage number percentage of cursor height for the top pane
+---@param reverse_order boolean? reverse pop order
+function cursor.v_split_norm(left_pane_percentage, reverse_order)
+    cursor.v_split(cursor.width * left_pane_percentage, reverse_order)
+end
+
 ---Pushes n snapshots to the stack, such that when popping them,
 ---the cursor will move from top to bottom with padding within the bounding box of the current cursor.
 ---Cursors take on the shape formed by horizontally subdividing the current cursor with padding.
@@ -493,6 +500,13 @@ function cursor.h_split(top_pane_height, reverse_order)
     cursor_stack[itop] = top_pane_height
     cursor_stack[ibottom - 4] = l + top_pane_height + bottom_pane_height * ay
     cursor_stack[ibottom] = bottom_pane_height
+end
+
+---Same as h_split but with normalized top pane height
+---@param top_pane_percentage number percentage of cursor height for the top pane
+---@param reverse_order boolean? reverse pop order
+function cursor.h_split_norm(top_pane_percentage, reverse_order)
+    cursor.h_split(cursor.height * top_pane_percentage, reverse_order)
 end
 
 ---Move the cursor right by its own width
