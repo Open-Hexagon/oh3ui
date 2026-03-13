@@ -31,4 +31,9 @@ function draw_queue.nop()
     draw_data.add_draw_operation(op_ids.nop)
 end
 
+---@param shader love.Shader?
+function draw_queue.set_shader(shader)
+    draw_data.add_draw_operation(op_ids.set_shader, shader)
+end
+
 return draw_queue

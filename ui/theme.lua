@@ -116,8 +116,9 @@ theme.grabbed_scrollbar = { 1, 1, 1, 0.6 }
 theme.tooltip_outline = theme.get_xterm_color(236)
 theme.tooltip_background = theme.get_xterm_color(234)
 
--- export the mix function
+-- export functions
 theme.mix = mix
+theme.i2c = i2c
 
 ---unpacks a color but replaces the alpha
 ---@param c table
