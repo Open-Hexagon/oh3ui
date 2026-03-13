@@ -195,7 +195,11 @@ return function()
                     tx1, ty1 = love.graphics.inverseTransformPoint(tx1, ty1)
                     tx2, ty2 = love.graphics.inverseTransformPoint(tx2, ty2)
                     -- we cannot reuse the placement
-                    draw_queue.by_value.rectangle_outline(tx1, ty1, tx2, ty2, theme.get_xterm_color(213), 2, 0, 0)
+                    if sensor.exclusive and sensor.exclusive ~= sensor_id then
+                        draw_queue.by_value.rectangle_outline(tx1, ty1, tx2, ty2, theme.get_xterm_color(96), 2, 0, 0)
+                    else
+                        draw_queue.by_value.rectangle_outline(tx1, ty1, tx2, ty2, theme.get_xterm_color(213), 2, 0, 0)
+                    end
                 end
                 -- luacov: enable
             elseif id == op_ids.set_shader then

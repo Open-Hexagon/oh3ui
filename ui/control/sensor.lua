@@ -45,6 +45,10 @@ local sensor = {
 
     -- If false, disables mouse intersection checks. The hover set will be empty.
     do_intersections = true,
+
+    -- If this sensor id is set, all other sensor ids behave as if they are disabled.
+    -- Gets cleared at the end of the frame so it must be re-asserted every frame.
+    exclusive = nil,
 }
 
 local hover_set = sensor.hover_set
@@ -118,6 +122,11 @@ function sensor.evaluate(mouse_screen_x, mouse_screen_y)
             goto continue
         end
 
+        -- if exclusive is given but not equal to current sensor_id, do the same thing as the disable flag
+        if sensor.exclusive and sensor.exclusive ~= sensor_id then
+            goto continue_with_block
+        end
+
         -- skip sensor if it's disabled; we still check if the sensor is blocking
         if band(mode, sensor_mode.disable) ~= 0 then
             goto continue_with_block
@@ -156,6 +165,7 @@ end
 
 function sensor.clear()
     index = 0
+    sensor.exclusive = nil
 end
 
 return sensor

@@ -244,10 +244,12 @@ do
     local text = require("ui.text")
     local theme = require("ui.theme")
     local draw_queue = require("ui.draw_queue")
-    local draw_queue_vline = draw_queue.by_cursor.vline
+    local sensor = require("ui.control.sensor")
+    local draw_queue_left_line = draw_queue.by_cursor.left_line
     local draw_queue_text = draw_queue.by_value.text
 
     ---Sets up a text entry. Uses the current sensor and cell ids for interaction.
+    ---Running this multiple times on the same state in one frame will cause undefined behavior.
     ---@param state table
     ---@param sensor_id integer? use a specific sensor id
     ---@param cell_id integer? use a specific cell id
@@ -264,8 +266,8 @@ do
 
         if typing.is_editing(state) then
             target_cell_id = cell_id
-            -- ! if a click happens within a single frame, this won't trigger
-            if not mnav.is_hovering(sensor_id) and mnav.holding then
+            sensor.exclusive = sensor_id
+            if not mnav.is_hovering(sensor_id) and mnav.clicked then
                 typing.unset_target("click_out")
             end
         else
@@ -340,9 +342,10 @@ do
             )
 
             -- draw the text cursor
+            cursor.auto_area_expansion = "no"
             if cursor_flash_timer < 0.5 then
                 cursor.x = cursor.x + cursor_offset
-                draw_queue_vline(theme.white, 1)
+                draw_queue_left_line(theme.white, 1, "inside")
             end
 
             -- cursor flash
