@@ -73,37 +73,30 @@ local current_sensor_id = 0
 ---Increments as sensors are made.
 local last_sensor_id = 0
 
----Holds the last manually created sensor id.
----Decreases as ids are declared (to avoid collisions with the automatically created ids)
-local last_manual_sensor_id = 0
-
 ---Returns a new sensor id. Can be used to forward declare sensor ids.
+---Sets the current_sensor_id to the new id.
 ---@return integer
----@nodiscard
 function mouse_navigation.declare_sensor_id()
-    last_manual_sensor_id = last_manual_sensor_id - 1
-    current_sensor_id = last_manual_sensor_id
-    return last_manual_sensor_id
+    last_sensor_id = last_sensor_id + 1
+    current_sensor_id = last_sensor_id
+    return last_sensor_id
 end
 
 ---Makes a new sensor element used to detect mouse hovering.
 ---Returns a new sensor id and sets the current_sensor_id to the new id.
 ---Behaves like a place_by_cursor draw_queue function.
----Does not expand areas
----@param sensor_id? integer forces this sensor to be created with a certain id (must be negative)
+---Does not expand areas.
+---If multiple sensors get the same id, it is undefined behavior.
+---@param sensor_id? integer forces this sensor to be created with a certain id
 ---@param ... sensor_mode sensor modes
 ---@return integer sensor_id sensor id
 ---@return integer placement_id sensor placement id
 function mouse_navigation.make_sensor(sensor_id, ...)
     cursor.place(nil, nil, "no")
     if sensor_id then
-        if sensor_id >= 0 then
-            error(string.format("sensor id %d cannot be used", sensor_id))
-        end
         current_sensor_id = sensor_id
     else
-        last_sensor_id = last_sensor_id + 1
-        current_sensor_id = last_sensor_id
+        mouse_navigation.declare_sensor_id()
     end
 
     local placement_id = draw_data.make_placement(placement.left, placement.top, placement.right, placement.bottom)
@@ -123,7 +116,7 @@ end
 ---Can be used to revert the current sensor back to a previously made sensor
 ---@param sensor_id integer
 function mouse_navigation.set_current_sensor_id(sensor_id)
-    if sensor_id < last_manual_sensor_id or sensor_id > last_sensor_id then
+    if sensor_id < 0 or sensor_id > last_sensor_id then
         error("bad sensor id")
     end
     current_sensor_id = sensor_id
@@ -337,7 +330,6 @@ end
 function mouse_navigation.reset()
     sensor.clear()
     last_sensor_id = 0
-    last_manual_sensor_id = 0
     current_sensor_id = 0
 end
 
