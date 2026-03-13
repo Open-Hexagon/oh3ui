@@ -4,10 +4,15 @@ local control_data = require("ui.control.control_data")
 local stack_manager = require("ui.stack_manager")
 local keyboard_navigation = require("ui.control.keyboard_navigation")
 
+-- on_push: gets called when this layer is pushed
+-- on_pop: gets called when this layer is removed (required if retiring so the layer can be released)
+-- on_reveal: gets called when the layer above this one gets removed
+
 ---@alias layer {
 ---  main: function,
 ---  on_push: function?,
 ---  on_pop: function?,
+---  on_reveal:function?,
 ---}
 
 local schedule_index = 0
@@ -60,6 +65,12 @@ local function pop_layer()
     end
     layer_stack[layer_stack_index] = nil
     layer_stack_index = layer_stack_index - 1
+    if layer_stack_index > 0 then
+        local lower = layer_stack[layer_stack_index]
+        if lower.on_reveal then
+            lower.on_reveal()
+        end
+    end
 end
 
 local function retire_layer()
@@ -86,6 +97,12 @@ local function retire_layer()
 
     layer_stack[layer_stack_index] = nil
     layer_stack_index = layer_stack_index - 1
+    if layer_stack_index > 0 then
+        local lower = layer_stack[layer_stack_index]
+        if lower.on_reveal then
+            lower.on_reveal()
+        end
+    end
 end
 
 ---@type layer?
