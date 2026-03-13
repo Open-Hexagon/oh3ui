@@ -459,7 +459,7 @@ keyboard_navigation.deselect = deselect
 ---@param new_selection integer
 local function jump_to_cell(new_selection)
     if not is_valid_cell_id(new_selection) then
-        error(string.format("can't jump to cell %d", new_selection))
+        error(string.format("can't jump to cell %d", new_selection), 2)
     end
     if new_selection == 0 then
         deselect()
@@ -483,6 +483,10 @@ end
 
 ---Jumps 1 forward in the tab order. Wraps around if the end is reached.
 local function tab_forward()
+    -- don't tab if there are no cells
+    if last_cell_id == 0 then
+        return
+    end
     if selected_cell_id >= last_cell_id then
         jump_to_first()
     else
@@ -496,6 +500,10 @@ keyboard_navigation.tab_forward = tab_forward
 
 ---Jumps 1 backwards in the tab order. Wraps around if the beginning is reached.
 local function tab_backwards()
+    -- don't tab if there are no cells
+    if last_cell_id == 0 then
+        return
+    end
     if selected_cell_id <= 1 then
         jump_to_last()
     else
