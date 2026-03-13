@@ -349,6 +349,16 @@ function place_by_cursor.right_line(color, line_width, mode, inset)
     return v_line_edge(color, line_width, mode, placement.right, -1, inset)
 end
 
+---Draws a vertical line in the center of the cursor. Never reshapes the cursor.
+---@param color number[]?
+---@param line_width number?
+---@param inset number?
+---@return integer
+function place_by_cursor.v_center_line(color, line_width, inset)
+    cursor.place()
+    return v_line_edge(color, line_width, "center", placement.left + (placement.right - placement.left) * 0.5, 1, inset)
+end
+
 local function h_line_edge(color, line_width, mode, base, dir, inset)
     line_width = line_width or 1
     inset = inset or 0
@@ -389,6 +399,16 @@ end
 function place_by_cursor.bottom_line(color, line_width, mode, inset)
     cursor.place()
     return h_line_edge(color, line_width, mode, placement.bottom, -1, inset)
+end
+
+---Draws a horizontal line in the center of the cursor. Never reshapes the cursor.
+---@param color number[]?
+---@param line_width number?
+---@param inset number?
+---@return integer
+function place_by_cursor.h_center_line(color, line_width, inset)
+    cursor.place()
+    return h_line_edge(color, line_width, "center", placement.top + (placement.bottom - placement.top) * 0.5, 1, inset)
 end
 
 return place_by_cursor
