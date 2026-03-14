@@ -266,7 +266,11 @@ do
 
         if typing.is_editing(state) then
             target_cell_id = cell_id
+
+            -- If this is 0, which can happen if sensor_id is 0 but the keyboard was used to activate the text entry,
+            -- then this disables all sensors. Then, the only way to deactivate the text entry is with the keyboard.
             sensor.exclusive = sensor_id
+
             if not mnav.is_hovering(sensor_id) and mnav.clicked then
                 typing.unset_target("click_out")
             end

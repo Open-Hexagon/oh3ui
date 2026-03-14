@@ -12,14 +12,13 @@ local smode = mnav.sensor_mode
 ---Checkbox with a intermediate state that can only be accessed by manually setting the position field.
 ---Will reshape the cursor
 ---@param state table state table
+---@param checkbox_size number
+---@param custom_sensor integer? If given, element will use this sensor and won't make it's own
 ---@return integer position the "position" field of the state table
-return function(state)
-    if not state.initialized then
-        state.position = 1
-        state.initialized = true
-    end
+return function(state, checkbox_size, custom_sensor)
+    state.position = state.position or 1
 
-    local sid = mnav.declare_sensor_id()
+    local sid = custom_sensor or mnav.declare_sensor_id()
 
     if not knav.is_repeat() then
         local kb_action = knav.get_action()
@@ -46,16 +45,18 @@ return function(state)
     end
 
     cursor.auto_reshape = "both"
-    draw_by_cursor.icon("square-fill", econf.checkbox_size, background_color)
+    draw_by_cursor.icon("square-fill", checkbox_size, background_color)
     draw_by_cursor.icon(
         "square",
-        econf.checkbox_size,
+        checkbox_size,
         (mnav.is_hovering() or knav.is_selected()) and theme.widget_outline_highlight or theme.widget_outline
     )
     if state.position > 0 then
-        draw_by_cursor.icon(select(state.position, "stop-fill", "check"), econf.checkbox_size, theme.white)
+        draw_by_cursor.icon(select(state.position, "stop-fill", "check"), checkbox_size, theme.white)
     end
-    mnav.make_sensor(sid, smode.block)
+    if not custom_sensor then
+        mnav.make_sensor(sid, smode.block)
+    end
 
     if knav.is_selected() then
         selection_outline()

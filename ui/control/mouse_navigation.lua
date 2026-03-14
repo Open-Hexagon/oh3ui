@@ -65,7 +65,7 @@ local press_bubble_radius = 4
 local press_bubble_touch_radius = 6
 
 ---The sensor id that will be used to check for hovering.
----The sensor id 0 will never be assigned normally
+---The sensor id 0 will never be assigned normally.
 ---@type integer
 local current_sensor_id = 0
 
@@ -73,7 +73,8 @@ local current_sensor_id = 0
 ---Increments as sensors are made.
 local last_sensor_id = 0
 
----Returns a new sensor id. Can be used to forward declare sensor ids.
+---Returns a new sensor id. Can be used to forward declare sensor ids, or to pad unused sensor ids.
+---Sensors depend on getting the same sensor_id every frame, so even if a sensor isn't used, make sure it's id is still gets declared!
 ---Sets the current_sensor_id to the new id.
 ---@return integer
 function mouse_navigation.declare_sensor_id()
@@ -82,10 +83,12 @@ function mouse_navigation.declare_sensor_id()
     return last_sensor_id
 end
 
----Makes a new sensor element used to detect mouse hovering.
----Returns a new sensor id and sets the current_sensor_id to the new id.
+---Makes a new sensor element used to detect mouse hovering. Declares a new sensor id if one isn't given.
+---Sets the current_sensor_id to the new id.
 ---Behaves like a place_by_cursor draw_queue function.
----Does not expand areas.
+---Always makes a placement, even if it's not actually used. Does not expand areas.
+---If given sensor_id is 0, no sensor gets created, and current_sensor_id is also set to 0.
+---Raises an error if the given sensor_id is undeclared or invalid.
 ---If multiple sensors get the same id, it is undefined behavior.
 ---@param sensor_id? integer forces this sensor to be created with a certain id
 ---@param ... sensor_mode sensor modes
@@ -93,14 +96,15 @@ end
 ---@return integer placement_id sensor placement id
 function mouse_navigation.make_sensor(sensor_id, ...)
     cursor.place(nil, nil, "no")
-    if sensor_id then
-        current_sensor_id = sensor_id
-    else
-        mouse_navigation.declare_sensor_id()
+
+    sensor_id = sensor_id or mouse_navigation.declare_sensor_id()
+    if not (0 <= sensor_id and sensor_id <= last_sensor_id) then
+        error("bad sensor id", 2)
     end
+    current_sensor_id = sensor_id
 
     local placement_id = draw_data.make_placement(placement.left, placement.top, placement.right, placement.bottom)
-    if layers.is_mnav_allowed_on_current_layer() then
+    if layers.is_mnav_allowed_on_current_layer() and current_sensor_id > 0 then
         draw_data.add_draw_operation(
             op_ids.mouse_sensor,
             placement_id,
@@ -113,16 +117,17 @@ function mouse_navigation.make_sensor(sensor_id, ...)
 end
 
 ---Changes the currently recognized sensor to a new id.
----Can be used to revert the current sensor back to a previously made sensor
+---Can be used to revert the current sensor back to a previously made sensor.
+---Set to 0, to disable any implicit mouse interactions.
 ---@param sensor_id integer
 function mouse_navigation.set_current_sensor_id(sensor_id)
-    if sensor_id < 0 or sensor_id > last_sensor_id then
+    if not (0 <= sensor_id and sensor_id <= last_sensor_id) then
         error("bad sensor id")
     end
     current_sensor_id = sensor_id
 end
 
----Gets the current sensor id
+---Gets the current sensor id. Might be 0.
 ---@return integer
 ---@nodiscard
 function mouse_navigation.get_current_sensor_id()
@@ -330,7 +335,6 @@ end
 function mouse_navigation.reset()
     sensor.clear()
     last_sensor_id = 0
-    current_sensor_id = 0
 end
 
 return mouse_navigation
