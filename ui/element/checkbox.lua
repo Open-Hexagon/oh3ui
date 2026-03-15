@@ -49,7 +49,7 @@ return function(state, checkbox_size, custom_sensor)
     draw_by_cursor.icon(
         "square",
         checkbox_size,
-        (mnav.is_hovering() or knav.is_selected()) and theme.widget_outline_highlight or theme.widget_outline
+        (mnav.is_hovering(sid) or knav.is_selected()) and theme.widget_outline_highlight or theme.widget_outline
     )
     if state.position > 0 then
         draw_by_cursor.icon(select(state.position, "stop-fill", "check"), checkbox_size, theme.white)

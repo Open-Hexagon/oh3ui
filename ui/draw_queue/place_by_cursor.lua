@@ -395,6 +395,7 @@ end
 ---@param color number[]?
 ---@param line_width number?
 ---@param mode? "inside"|"outside"|"center"
+---@param inset number?
 ---@return integer
 function place_by_cursor.bottom_line(color, line_width, mode, inset)
     cursor.place()
