@@ -85,6 +85,8 @@ local cursor_stack = stack_data.cursor_stack
 local translate_stack = stack_data.translate_stack
 local area_stack = stack_data.area_stack
 
+local last_screen_width, last_screen_height = 0, 0
+
 ---Reset manual cursor to default values.
 ---By default cursor width and height are set to reflect the size of the screen.
 ---Explicit width and height can be passed in to override this behavior.
@@ -95,16 +97,17 @@ function cursor.reset(desired_width, desired_height)
     cursor.x = 0
     cursor.y = 0
 
-    if desired_width and desired_height then
-        cursor.width, cursor.height = desired_width, desired_height
-    else
-        cursor.width, cursor.height = love.graphics.inverseTransformPoint(love.graphics.getDimensions())
-    end
+    cursor.width, cursor.height = love.graphics.inverseTransformPoint(love.graphics.getDimensions())
+    last_screen_width, last_screen_height = cursor.width, cursor.height
 
     cursor.anchor_x = 0
     cursor.anchor_y = 0
     cursor.auto_reshape = "both"
     cursor.auto_area_expansion = "placement"
+end
+
+function cursor.get_screen_dimensions()
+    return last_screen_width, last_screen_height
 end
 
 --#region snapshotting
@@ -198,6 +201,40 @@ function cursor.combine(peek)
     if not peek then
         stack_data.cursor_index = stack_data.cursor_index - SIZEOF_CURSOR_SNAPSHOT
     end
+end
+
+---Export the cursor to a table
+---@param where table? where to export contents; a new table is created if one isn't given
+function cursor.export(where)
+    if where then
+        where[1] = cursor.auto_area_expansion
+        where[2] = cursor.auto_reshape
+        where[3] = cursor.x
+        where[4] = cursor.y
+        where[5] = cursor.anchor_x
+        where[6] = cursor.anchor_y
+        where[7] = cursor.width
+        where[8] = cursor.height
+    else
+        where = {
+            cursor.auto_area_expansion,
+            cursor.auto_reshape,
+            cursor.x,
+            cursor.y,
+            cursor.anchor_x,
+            cursor.anchor_y,
+            cursor.width,
+            cursor.height,
+        }
+    end
+    return where
+end
+
+---Import a table into the cursor
+---@param what table
+function cursor.import(what)
+    cursor.auto_area_expansion, cursor.auto_reshape, cursor.x, cursor.y, cursor.anchor_x, cursor.anchor_y, cursor.width, cursor.height =
+        unpack(what, 1, 8)
 end
 
 --#endregion
@@ -328,21 +365,40 @@ function cursor.pad(left, top, right, bottom)
     cursor.clip(-left, -top, -right, -bottom)
 end
 
----Sets the cursor width to the width of the screen
-function cursor.full_width()
-    local _
-    cursor.width, _ = love.graphics.inverseTransformPoint(love.graphics.getDimensions())
+---Puts the left edge of the cursor to the left edge of the screen
+function cursor.left_to_screen()
+    local ax, ay = cursor.anchor_x, cursor.anchor_y
+    cursor.change_anchor(0, 0)
+    cursor.width = cursor.width + cursor.x
+    cursor.x = 0
+    cursor.change_anchor(ax, ay)
 end
 
----Sets the cursor height to the height of the screen
-function cursor.full_height()
-    local _
-    _, cursor.height = love.graphics.inverseTransformPoint(love.graphics.getDimensions())
+---Puts the top edge of the cursor to the top edge of the screen
+function cursor.top_to_screen()
+    local ax, ay = cursor.anchor_x, cursor.anchor_y
+    cursor.change_anchor(0, 0)
+    cursor.height = cursor.height + cursor.y
+    cursor.y = 0
+    cursor.change_anchor(ax, ay)
 end
 
----Sets the cursor width and height to that of the screen
-function cursor.full_screen()
-    cursor.width, cursor.height = love.graphics.inverseTransformPoint(love.graphics.getDimensions())
+---Puts the right edge of the cursor to the right edge of the screen
+function cursor.right_to_screen()
+    local ax, ay = cursor.anchor_x, cursor.anchor_y
+    cursor.change_anchor(1, 1)
+    cursor.width = cursor.width + (last_screen_width - cursor.x)
+    cursor.x = last_screen_width
+    cursor.change_anchor(ax, ay)
+end
+
+---Puts the bottom edge of the cursor to the bottom edge of the screen
+function cursor.bottom_to_screen()
+    local ax, ay = cursor.anchor_x, cursor.anchor_y
+    cursor.change_anchor(1, 1)
+    cursor.height = cursor.height + (last_screen_height - cursor.y)
+    cursor.y = last_screen_height
+    cursor.change_anchor(ax, ay)
 end
 
 ---Returns an iterator that returns n linspaced x coordinates derived from the current x-axis span of the cursor.
