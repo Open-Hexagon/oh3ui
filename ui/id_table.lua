@@ -11,6 +11,7 @@
 
     * Other fields
     initialized boolean --- may be used to keep track of first time initialization
+                            set this to false/nil to force reinitialization
 ]]
 
 local meta = {

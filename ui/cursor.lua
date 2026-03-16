@@ -365,6 +365,8 @@ function cursor.pad(left, top, right, bottom)
     cursor.clip(-left, -top, -right, -bottom)
 end
 
+-- ! the below functions do not account for any transformations
+
 ---Puts the left edge of the cursor to the left edge of the screen
 function cursor.left_to_screen()
     local ax, ay = cursor.anchor_x, cursor.anchor_y
@@ -398,6 +400,24 @@ function cursor.bottom_to_screen()
     cursor.change_anchor(1, 1)
     cursor.height = cursor.height + (last_screen_height - cursor.y)
     cursor.y = last_screen_height
+    cursor.change_anchor(ax, ay)
+end
+
+---Equivalent to calling both left_to_screen and right_to_screen in succession
+function cursor.h_fit_screen()
+    local ax, ay = cursor.anchor_x, cursor.anchor_y
+    cursor.change_anchor(0, 0)
+    cursor.width = last_screen_width
+    cursor.x = 0
+    cursor.change_anchor(ax, ay)
+end
+
+---Equivalent to calling both top_to_screen and bottom_to_screen in succession
+function cursor.v_fit_screen()
+    local ax, ay = cursor.anchor_x, cursor.anchor_y
+    cursor.change_anchor(0, 0)
+    cursor.height = last_screen_height
+    cursor.y = 0
     cursor.change_anchor(ax, ay)
 end
 
