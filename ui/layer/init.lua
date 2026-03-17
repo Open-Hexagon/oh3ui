@@ -15,6 +15,8 @@ local keyboard_navigation = require("ui.control.keyboard_navigation")
 ---  on_reveal:function?,
 ---}
 
+local layer_manager = {}
+
 local schedule_index = 0
 local scheduled_tasks = {}
 ---@type layer[]
@@ -33,7 +35,13 @@ local layer_stack_index = 0
 local retired_layers = {}
 local retired_layers_index = 0
 
+---@type layer?
+local pinned_layer
+
 local function push_layer(layer, can_duplicate)
+    if layer == pinned_layer then
+        return -- the pinned layer can't be duplicated
+    end
     if layer_registry[layer] then
         if can_duplicate then
             layer_registry[layer] = layer_registry[layer] + 1
@@ -105,13 +113,16 @@ local function retire_layer()
     end
 end
 
----@type layer?
-local scheduled_pinned_layer
-local should_update = false
----@type layer?
-local pinned_layer
-
-local layer_manager = {}
+local function set_pinned_layer(layer)
+    if layer then
+        if layer_registry[layer] then
+            return -- the pinned layer can't already be in the registry
+        end
+        pinned_layer = layer
+    else
+        pinned_layer = nil
+    end
+end
 
 ---Put a layer on top of the stack
 ---@param layer layer
@@ -142,11 +153,15 @@ function layer_manager.retire()
     scheduled_tasks[schedule_index] = "retire"
 end
 
----Sets a new pinned layer
+---Sets a new pinned layer. This layer is always on top.
+---Interaction is disabled for this layer.
+---on_push, on_pop, and on_reveal functions are not run for this layer.
+---Does not have any effect on any below layers.
 ---@param layer layer?
 function layer_manager.set_pinned_layer(layer)
-    scheduled_pinned_layer = layer
-    should_update = true
+        schedule_index = schedule_index + 1
+    scheduled_tasks[schedule_index] = "set_pinned"
+    scheduled_layers[schedule_index] = layer
 end
 
 layer_manager.is_knav_allowed_on_current_layer = layer_status.is_knav_allowed_on_current_layer
@@ -217,6 +232,8 @@ function layer_manager.prepare_for_next_frame()
             push_layer(scheduled_layers[i], false)
         elseif scheduled_tasks[i] == "pushd" then
             push_layer(scheduled_layers[i], true)
+        elseif scheduled_tasks[i] == "set_pinned" then
+            set_pinned_layer(scheduled_layers[i])
         elseif scheduled_tasks[i] == "pop" then
             pop_layer()
         elseif scheduled_tasks[i] == "retire" then
@@ -226,17 +243,6 @@ function layer_manager.prepare_for_next_frame()
         end
     end
     schedule_index = 0
-
-    if should_update then
-        if pinned_layer and pinned_layer.on_pop then
-            pinned_layer.on_pop()
-        end
-        if scheduled_pinned_layer and scheduled_pinned_layer.on_push then
-            scheduled_pinned_layer.on_push()
-        end
-        pinned_layer = scheduled_pinned_layer
-        should_update = false
-    end
 
     if control_data.get_last_used_control_method() == "keyboard" then
         -- if keyboard navigation was used we need to find the best cell to select on the new top layer
