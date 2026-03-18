@@ -9,10 +9,6 @@ local typing = {}
 
 ---@alias typing_stop_methods "click_out"|"escape"|"tab_up"|"tab_down"
 
----The currently active typing state. This used like a sensor or cell id.
----@type table
-local current_typing_state
-
 ---The last method used to exit the text edit state
 ---@type typing_stop_methods
 local last_interaction_method
@@ -44,18 +40,18 @@ function typing.is_editing_any_text()
 end
 
 ---Returns true if the user is editing the latest created text entry
----@param state table?
+---@param state table
 ---@return boolean
 ---@nodiscard
 function typing.is_editing(state)
-    return target == (state or current_typing_state)
+    return target == state
 end
 
 ---Returns true if user has started editing current or given state
 ---@param state table
 ---@return boolean
 function typing.started_editing(state)
-    return started_editing_state == (state or current_typing_state)
+    return started_editing_state == state
 end
 
 ---Returns the method that was used to stop editing text if text input was exited
@@ -63,7 +59,7 @@ end
 ---@return typing_stop_methods?
 ---@nodiscard
 function typing.stopped_editing(state)
-    if stopped_editing_state == (state or current_typing_state) then
+    if stopped_editing_state == state then
         return last_interaction_method
     end
     return nil
@@ -259,8 +255,6 @@ do
         -- used to offset the entry text in case there's too much text to fit in view
         state._text_entry_text_offset = state._text_entry_text_offset or 0
 
-        current_typing_state = state
-
         sensor_id = sensor_id or mnav.get_current_sensor_id()
         cell_id = cell_id or knav.get_current_cell_id()
 
@@ -284,18 +278,19 @@ do
     end
 
     ---Text entry element. Draws the latest made text entry.
+    ---@param state table
     ---@param size number font size in pixels
     ---@param hint string? dim background text that appears when there's no text in the entry
     ---@param text_color number[]? override text color
     ---@param hint_color number[]? override hint text color
     ---@param font_path string? override font path
-    function typing.draw_text_entry(size, hint, text_color, hint_color, font_path)
+    function typing.draw_text_entry(state, size, hint, text_color, hint_color, font_path)
         local font = text.get_font(size * settings.scale, font_path)
         local text_cursor_height = (font:getBaseline() - font:getDescent()) / settings.scale
 
         cursor.push()
         cursor.auto_reshape = "no"
-        cursor.inset(4)
+        -- cursor.inset(4)
         draw_queue.by_cursor.push_mask()
 
         cursor.change_anchor(0, 0.5)
@@ -303,7 +298,7 @@ do
         cursor.place()
 
         -- draw the hint text only if there is no text in the entry
-        if hint and (not current_typing_state.text or #current_typing_state.text == 0) then
+        if hint and (not state.text or #state.text == 0) then
             local hint_text_object = text.get_text_object(font, hint, math.huge, "left")
             draw_queue_text(
                 hint_text_object,
@@ -313,9 +308,9 @@ do
             )
         end
 
-        local text_object = text.get_text_object(font, current_typing_state.text, math.huge, "left")
+        local text_object = text.get_text_object(font, state.text, math.huge, "left")
 
-        if typing.is_editing() then
+        if typing.is_editing(state) then
             -- keep the target font updated because backspace uses get_cursor_distance
             target_font = font
 
@@ -323,24 +318,22 @@ do
             local cursor_distance = get_cursor_distance(target_font, target.text, target._text_entry_char_position)
 
             -- cursor distance from left edge of placement
-            local cursor_offset = current_typing_state._text_entry_text_offset + cursor_distance
+            local cursor_offset = state._text_entry_text_offset + cursor_distance
 
             -- the furthest amount the cursor can be offset
             local cursor_offset_limit = cursor.width - 1
 
             -- correct state._text_entry_text_offset to make sure cursor is within view
             if cursor_offset < 0 then
-                current_typing_state._text_entry_text_offset = current_typing_state._text_entry_text_offset
-                    - cursor_offset
+                state._text_entry_text_offset = state._text_entry_text_offset - cursor_offset
             elseif cursor_offset > cursor_offset_limit then
-                current_typing_state._text_entry_text_offset = current_typing_state._text_entry_text_offset
-                    - (cursor_offset - cursor_offset_limit)
+                state._text_entry_text_offset = state._text_entry_text_offset - (cursor_offset - cursor_offset_limit)
             end
 
             -- draw the text
             draw_queue_text(
                 text_object,
-                placement.left + current_typing_state._text_entry_text_offset,
+                placement.left + state._text_entry_text_offset,
                 placement.top,
                 text_color or theme.text_color
             )

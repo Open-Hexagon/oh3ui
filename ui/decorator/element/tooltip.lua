@@ -43,7 +43,7 @@ function tooltip.tooltip(edge, str, font_size, align, wrap_limit, manual_activat
             manual_activate
             or method == "mouse" and (mnav.is_hovering(sensor_id) or mnav.get_dragging(sensor_id))
             or method == "keyboard" and knav.is_selected(cell_id)
-            or method == "typing" and typing.is_editing(typing_state)
+            or (method == "typing" and typing_state and typing.is_editing(typing_state))
         )
     then
         return
