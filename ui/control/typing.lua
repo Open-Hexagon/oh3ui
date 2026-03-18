@@ -290,7 +290,6 @@ do
 
         cursor.push()
         cursor.auto_reshape = "no"
-        -- cursor.inset(4)
         draw_queue.by_cursor.push_mask()
 
         cursor.change_anchor(0, 0.5)
