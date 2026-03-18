@@ -1,6 +1,8 @@
 --[[
     ## List of Usable State Table Fields
     Fields that are prefixed with an underscore should be treated as private to the element that's using them.
+    Change them at your own risk as they could change fields/values without warning.
+
     All fields are optional
     
     * Element data representation
@@ -12,6 +14,13 @@
     * Other fields
     initialized boolean --- may be used to keep track of first time initialization
                             set this to false/nil to force reinitialization
+                            (elements that don't require initialization don't use this field)
+
+    * Scrolling fields
+    scroll_dist_x boolean
+    scroll_dist_y boolean
+    scroll_vel_x boolean
+    scroll_vel_y boolean
 ]]
 
 local meta = {

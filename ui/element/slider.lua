@@ -26,7 +26,7 @@ local function get_closest_position(value, min, max, positions)
 end
 
 ---Slider element. This element will reshape the cursor.
----@param state table state table
+---@param state table state table (note: this element's position value starts at 0, unlike most other elements)
 ---@param min number min representable number in state.value
 ---@param max number max representable number in state.value
 ---@param positions integer number of valid slider positions
