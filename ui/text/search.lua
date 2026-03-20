@@ -85,9 +85,9 @@ local update_interval = 1 -- seconds
 ---@param str string
 ---@param text_color number[]
 ---@param highlight_color number[]
----@return boolean
----@return integer
----@return string
+---@return boolean matches True if each character in pattern is found sequentially within str.
+---@return integer score Match score. Higher is better match. Value has no intrinsic meaning. Can only compare scores with same search pattern.
+---@return string colored_text Modified str with embedded colors that highlights matched characters.
 ---@nodiscard
 local function search(pattern, str, text_color, highlight_color)
     -- update cache in case the update interval has passed

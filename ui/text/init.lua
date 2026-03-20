@@ -79,29 +79,15 @@ function text.get_icon_string(icon_name, icon_font_path)
 end
 
 ---Gets a new string with any icon sequences replaced with their real utf-8 representations.
----Icon sequences are formatted as "\x1c&icon-name;" where "icon-name" is the icons name in the icon font's corresponding json file 
+---Icon sequences are formatted as "\x1c&icon-name;" where "icon-name" is the icons name in the icon font's corresponding json file
 ---@param format_str string
 ---@param icon_font_path string? override theme icon font
 ---@return string
+---@return integer
 function text.replace_icon_sequences(format_str, icon_font_path)
-    local buf = buffer.new()
-    local start_pos, end_pos, icon_name, content_text
-    local init_pos
-
-    start_pos, end_pos, content_text = string.find(format_str, "([^\x1c]*)")
-    buf:put(content_text)
-
-    init_pos = end_pos + 1
-    repeat
-        start_pos, end_pos, icon_name, content_text = string.find(format_str, "\x1c&([^;]+);([^\x1c]*)", init_pos)
-        if end_pos then
-            init_pos = end_pos + 1
-            buf:put(text.get_icon_string(icon_name, icon_font_path))
-            buf:put(content_text)
-        end
-    until not start_pos
-
-    return tostring(buf)
+    return format_str:gsub("\x1c&([^;]+);", function(icon_name)
+        return text.get_icon_string(icon_name, icon_font_path)
+    end)
 end
 
 return text
