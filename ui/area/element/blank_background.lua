@@ -18,29 +18,21 @@ function blank_background.start(n)
 end
 
 ---Finish the background. Any padding is treated as a cursor reshape.
----@param pad number if this is the only given pad number, pads all sides with this number
----@param pady number? if this and above are the only given pad numbers, pads left and right sides with pad and top and bottom sides with pady
----@param padr number? see below
----@param padb number? if this and all above are given, pads all sides with respective numbers
+---@param padl number
+---@param padt number
+---@param padr number
+---@param padb number
 ---@return integer res_id reservation id (0 if background was empty)
 ---@return integer pid placement id (0 if background was empty)
 ---@nodiscard
-function blank_background.finish(pad, pady, padr, padb)
+function blank_background.finish(padl, padt, padr, padb)
     stack_manager.pop_record()
     aeb.pop_frame_header("background")
     local res_id = aeb.pop()
 
     if cursor.finish_area() then
         cursor.push()
-        if pad and pady and padr and padb then
-            cursor.pad(pad, pady, padr, padb)
-        elseif pad and pady then
-            cursor.pad(pad, pady, pad, pady)
-        elseif pad then
-            cursor.pad(pad, pad, pad, pad)
-        else
-            error("undefined padding combination")
-        end
+        cursor.pad(padl, padt, padr, padb)
         local pid = blank()
         cursor.do_auto_reshape()
         return res_id, pid

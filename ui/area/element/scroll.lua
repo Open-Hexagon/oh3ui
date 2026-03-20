@@ -119,15 +119,15 @@ local function get_actuator_size(content_size, scroll_size)
 end
 ---Finishes the current scroll region
 ---@param scrollbar_inset number? insets the scrollbars away from the scroll region edges
----@param pad number if this is the only given pad number, pads all sides with this number
----@param pady number? if this and above are the only given pad numbers, pads left and right sides with pad and top and bottom sides with pady
----@param padr number? see below
----@param padb number? if this and all above are given, pads all sides with respective numbers
+---@param padl number
+---@param padt number
+---@param padr number
+---@param padb number
 ---@return boolean at_left
 ---@return boolean at_top
 ---@return boolean at_right
 ---@return boolean at_bottom
-function scroll.finish(scrollbar_inset, pad, pady, padr, padb)
+function scroll.finish(scrollbar_inset, padl, padt, padr, padb)
     scrollbar_inset = scrollbar_inset or 0
 
     local content_width, content_height, content_left, content_top, content_right, content_bottom
@@ -179,15 +179,7 @@ function scroll.finish(scrollbar_inset, pad, pady, padr, padb)
         goto scroll_is_empty
     end
 
-    if pad and pady and padr and padb then
-        cursor.pad(pad, pady, padr, padb)
-    elseif pad and pady then
-        cursor.pad(pad, pady, pad, pady)
-    elseif pad then
-        cursor.pad(pad, pad, pad, pad)
-    else
-        error("undefined padding combination")
-    end
+    cursor.pad(padl, padt, padr, padb)
 
     if settings.overlay_scroll then
         draw_queue.next_as_overlay()

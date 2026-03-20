@@ -17,26 +17,18 @@ end
 
 ---Finish the background. Any padding is treated as a cursor reshape.
 ---@param color table? background color
----@param pad number if this is the only given pad number, pads all sides with this number
----@param pady number? if this and above are the only given pad numbers, pads left and right sides with pad and top and bottom sides with pady
----@param padr number? see below
----@param padb number? if this and all above are given, pads all sides with respective numbers
-function background.finish(color, pad, pady, padr, padb)
+---@param padl number
+---@param padt number
+---@param padr number
+---@param padb number
+function background.finish(color, padl, padt, padr, padb)
     stack_manager.pop_record()
     aeb.pop_frame_header("background")
     local res_id = aeb.pop()
 
     if cursor.finish_area() then
         cursor.push()
-        if pad and pady and padr and padb then
-            cursor.pad(pad, pady, padr, padb)
-        elseif pad and pady then
-            cursor.pad(pad, pady, pad, pady)
-        elseif pad then
-            cursor.pad(pad, pad, pad, pad)
-        else
-            error("undefined padding combination")
-        end
+        cursor.pad(padl, padt, padr, padb)
         draw_queue.next_takes_reservation(res_id)
         rectangle(color)
         cursor.do_auto_reshape()
