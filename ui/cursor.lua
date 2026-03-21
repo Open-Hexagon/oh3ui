@@ -760,6 +760,22 @@ function cursor.get_edges()
     return get_edges(cursor.x, cursor.y, cursor.anchor_x, cursor.anchor_y, cursor.width, cursor.height)
 end
 
+function cursor.get_left_edge()
+    return cursor.x - cursor.anchor_x * cursor.width
+end
+
+function cursor.get_top_edge()
+    return cursor.y - cursor.anchor_y * cursor.height
+end
+
+function cursor.get_right_edge()
+    return cursor.x + (1 - cursor.anchor_x) * cursor.width
+end
+
+function cursor.get_bottom_edge()
+    return cursor.y + (1 - cursor.anchor_y) * cursor.height
+end
+
 ---Places the current cursor down. This will update both the last_placement and projected_placement tables.
 ---Translations will be applied to ONLY the projected_placement table.
 ---Desired width and height are for elements that don't fit the cursor.

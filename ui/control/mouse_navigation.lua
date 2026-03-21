@@ -155,6 +155,11 @@ function mouse_navigation.get_holding(sensor_id)
     return nil
 end
 
+---"Releases" the currently held button without triggering a click
+function mouse_navigation.soft_release()
+    mouse_navigation.holding = nil
+end
+
 ---Gets the mouse button that clicked the current sensor, if any.
 ---@param sensor_id integer?
 ---@return mouse_button?

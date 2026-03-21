@@ -186,6 +186,7 @@ function place_by_cursor.circle_outline(color, line_width, sides, rotation)
 end
 
 ---Creates a label. Will reshape the cursor.
+---Note: alignment only controls alignment in relation to the text itself. Use the cursor anchor to center the text within the cursor.
 ---@param str string label text
 ---@param size number font size in pixels
 ---@param align love.AlignMode alignment mode
