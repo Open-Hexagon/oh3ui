@@ -89,10 +89,7 @@ local last_screen_width, last_screen_height = 0, 0
 
 ---Reset manual cursor to default values.
 ---By default cursor width and height are set to reflect the size of the screen.
----Explicit width and height can be passed in to override this behavior.
----@param desired_width number?
----@param desired_height number?
-function cursor.reset(desired_width, desired_height)
+function cursor.reset()
     -- Position
     cursor.x = 0
     cursor.y = 0
