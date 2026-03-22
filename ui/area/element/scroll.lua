@@ -51,8 +51,6 @@ local mouse_wheel_scroll_vel_decay = econf.mouse_wheel_scroll_vel_decay
     It is the smallest rectangle that surrounds both the scroll region and area region.
 ]]
 
---todo make scroll react to only specific mouse buttons
-
 ---Starts a scroll region
 ---@param state table
 function scroll.start(state)

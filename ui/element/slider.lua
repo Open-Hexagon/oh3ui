@@ -106,7 +106,6 @@ return function(state, min, max, positions, show_positions, custom_sensor, kb_st
     end
 
     state.position = extmath.clamp(state.position, 0, divisions)
-    state.value = extmath.map(state.position, 0, divisions, min, max)
 
     -- background slot
     cursor.height = slot_height
@@ -173,5 +172,7 @@ return function(state, min, max, positions, show_positions, custom_sensor, kb_st
     end
 
     cursor.do_auto_reshape() -- (1)
+
+    state.value = extmath.map(state.position, 0, divisions, min, max)
     return state.value, state.position
 end
