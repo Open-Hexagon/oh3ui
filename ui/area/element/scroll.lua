@@ -139,7 +139,7 @@ function scroll.finish(scrollbar_inset, padl, padt, padr, padb)
     local v_actuator_size, half_v_actuator_size, mouse_limit_top, mouse_limit_bottom
     local at_left, at_top, at_right, at_bottom = false, false, false, false
     local vel_decay_factor
-    local up_state
+    local up_state, hide_scrollbars
     local is_dragging_h_act, is_dragging_v_act, is_dragging_scroll_region
 
     -- deal with stack stuff
@@ -248,10 +248,9 @@ function scroll.finish(scrollbar_inset, padl, padt, padr, padb)
         or is_dragging_h_act
         or is_dragging_v_act
 
-    if not (interacting_with_mouse or view_request.time > 0) then
-        goto skip_all_scrolling
-    end
+    hide_scrollbars = not (interacting_with_mouse or view_request.time > 0)
 
+    -- skip scrolling entirely if there's no need
     if content_width <= scroll_width then
         goto horizontal_scrolling_continue
     end
@@ -265,7 +264,13 @@ function scroll.finish(scrollbar_inset, padl, padt, padr, padb)
     cursor.height = scrollbar_thickness + scrollbar_inset
 
     -- make scroll bar sensor
+    -- this is required even if scrollbars are hidden (can cause a brief visual error if not)
     mnav.make_sensor(h_bar, smode.block)
+
+    -- continue if scrollbars are hidden
+    if hide_scrollbars then
+        goto horizontal_scrolling_continue
+    end
 
     -- set actuator location
     cursor.width = h_actuator_size
@@ -292,6 +297,7 @@ function scroll.finish(scrollbar_inset, padl, padt, padr, padb)
 
     --#endregion HORIZONTAL SCROLLING DRAWING
 
+    -- continue if we're not interacting (this can happen if scrollbars are unhidden by a view request)
     if not interacting_with_mouse then
         goto horizontal_scrolling_continue
     end
@@ -352,6 +358,7 @@ function scroll.finish(scrollbar_inset, padl, padt, padr, padb)
 
     ::horizontal_scrolling_continue::
 
+    -- skip scrolling entirely if there's no need
     if content_height <= scroll_height then
         goto vertical_scrolling_continue
     end
@@ -367,7 +374,13 @@ function scroll.finish(scrollbar_inset, padl, padt, padr, padb)
     cursor.change_anchor(1, 0)
     cursor.width = scrollbar_thickness + scrollbar_inset
 
+    -- this is required even if scrollbars are hidden (can cause a brief visual error if not)
     mnav.make_sensor(v_bar, smode.block)
+
+    -- continue if scrollbars are hidden
+    if hide_scrollbars then
+        goto vertical_scrolling_continue
+    end
 
     -- set actuator location
     cursor.height = v_actuator_size
@@ -393,6 +406,7 @@ function scroll.finish(scrollbar_inset, padl, padt, padr, padb)
 
     --#endregion VERTICAL SCROLLING DRAWING
 
+    -- continue if we're not interacting (this can happen if scrollbars are unhidden by a view request)
     if not interacting_with_mouse then
         goto vertical_scrolling_continue
     end
@@ -453,8 +467,6 @@ function scroll.finish(scrollbar_inset, padl, padt, padr, padb)
 
     ::vertical_scrolling_continue::
 
-    ::skip_all_scrolling::
-
     -- change scroll distances based on velocity
 
     state.scroll_dist_x = state.scroll_dist_x + state.scroll_vel_x * love.timer.getDelta()
@@ -497,8 +509,9 @@ function scroll.finish(scrollbar_inset, padl, padt, padr, padb)
 
     cursor.edit_translation(tid, state.scroll_dist_x, state.scroll_dist_y)
 
-    -- scroll region sensor is made last so it has the highest priority
+    -- scroll region sensors are made last so it has the highest priority
     mnav.make_sensor(scroll_region_wheel_detector, smode.lazy)
+    -- it takes 1 frame
     mnav.make_sensor(scroll_region, smode.draggable)
 
     -- these values are true if the scroll region is at the content limits

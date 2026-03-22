@@ -62,15 +62,15 @@ return function(state, custom_sensor, ...)
         is_inside = (left <= mnav.x and mnav.x < right)
 
         cursor.pop()
-        if is_inside and mnav.get_clicked() == mb.left then
+        if is_inside and mnav.get_clicked(sid) == mb.left then
             state._switch_selection_highlight_speed = math.abs(state.position - i) * selection_highlight_speed
             state.position = i
         end
 
         local button_color
-        if (is_inside and mnav.get_holding() == mb.left) or i == state.position then
+        if (is_inside and mnav.get_holding(sid) == mb.left) or i == state.position then
             button_color = theme.widget_background_highlight
-        elseif is_inside and mnav.is_hovering() then
+        elseif is_inside and mnav.is_hovering(sid) then
             button_color = theme.widget_background_brighter
         else
             button_color = theme.widget_background
@@ -123,7 +123,7 @@ return function(state, custom_sensor, ...)
     cursor.pop() -- (2)
 
     draw_by_cursor.rectangle_outline(
-        (mnav.is_hovering() or knav.is_selected()) and theme.accent_color or theme.widget_outline
+        (mnav.is_hovering(sid) or knav.is_selected()) and theme.accent_color or theme.widget_outline
     )
     if knav.is_selected() then
         selection_outline()
