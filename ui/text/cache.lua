@@ -4,8 +4,6 @@
 
 local ansi = require("ui.text.ansi")
 
-local text_cache = {}
-
 local text_objects = {}
 local text_object_usage = {}
 local text_object_array = {}
@@ -98,7 +96,7 @@ local update_interval = 1 -- seconds
 ---@param align love.AlignMode
 ---@return love.Text
 ---@nodiscard
-function text_cache.get(font, text, wraplimit, align)
+local function get_text_object(font, text, wraplimit, align)
     if type(text) == "table" then
         error("sorry, colored text tables are not accepted")
     end
@@ -149,4 +147,4 @@ function text_cache.get(font, text, wraplimit, align)
     return text_object
 end
 
-return text_cache
+return get_text_object

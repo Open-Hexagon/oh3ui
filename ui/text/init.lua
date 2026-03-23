@@ -3,13 +3,15 @@
 ---What you put in is what you get out.
 
 local json = require("extlibs.json.json")
-local text_cache = require("ui.text.cache")
-local buffer = require("string.buffer")
 local theme = require("ui.theme")
 
 local text = {
     ansi = require("ui.text.ansi"),
+
+    -- TODO These functions all use similar caches for memoization. Maybe generalize later.
     search = require("ui.text.search"),
+    get_wrapped_text = require("ui.text.wrapping"),
+    get_text_object = require("ui.text.cache"),
 }
 
 ---Cache of fonts based on file used and size
@@ -37,8 +39,6 @@ function text.get_font(size, font_path)
     end
     return font
 end
-
-text.get_text_object = text_cache.get
 
 ---A cache of tables, keyed with icon font paths.
 ---Each cached table has icon names as keys and representative strings as values for an icon font.

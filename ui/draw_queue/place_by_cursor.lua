@@ -190,19 +190,20 @@ end
 ---@param str string label text
 ---@param size number font size in pixels
 ---@param align love.AlignMode alignment mode
----@param wrap boolean wrap text
+---@param wrap boolean wrap text using the cursor width
 ---@param color number[]? override text color
 ---@param font_path string? override font
 ---@return integer point_id
 function place_by_cursor.label(str, size, align, wrap, color, font_path)
     cursor.push()
 
-    local cursor_width_before = cursor.width
-    local wrap_limit = wrap and (cursor_width_before * settings.scale) or math.huge
+    -- wrap the text manually at 1x scale to preserve wrapping at different ui scales
+    str = text.get_wrapped_text(text.get_font(size, font_path), str, wrap and cursor.width or math.huge)
+
     local font = text.get_font(size * settings.scale, font_path)
 
-    -- get a new text object
-    local text_object = text.get_text_object(font, str, wrap_limit, align)
+    -- Get a new text object
+    local text_object = text.get_text_object(font, str, math.huge, align)
 
     -- Get text size. It can change even if wrap_text is true. Scaled down this time.
     local true_text_width, true_text_height = text_object:getDimensions()
@@ -210,35 +211,12 @@ function place_by_cursor.label(str, size, align, wrap, color, font_path)
 
     -- A text object with an infinite wrap limit will not get drawn properly when aligned with center or right,
     -- so we replace the text_object with a a version with a finite wrap limit in those cases.
-    if not wrap and align ~= "left" then
+    if align ~= "left" then
         text_object = text.get_text_object(font, str, true_text_width, align)
     end
 
-    local x, y
-    if wrap then
-        ---If wrapping is used, then the the width of the entire text object is actually the wrapping limit.
-        ---The actual text size has nothing to do with it. This is only noticeable in center and right align modes
-        ---where the text object origin isn't at the same location as the upper-left corner of the visible text bounding box.
-
-        cursor.place(text_width, text_height)
-
-        local offset_contribution
-        if align == "left" then
-            offset_contribution = 0
-        elseif align == "center" then
-            offset_contribution = 0.5
-        elseif align == "right" then
-            offset_contribution = 1
-        else
-            error("bad alignment")
-        end
-
-        x = placement.left - (cursor_width_before - text_width) * offset_contribution
-        y = placement.top
-    else
-        cursor.place(text_width, text_height)
-        x, y = placement.left, placement.top
-    end
+    cursor.place(text_width, text_height)
+    local x, y = placement.left, placement.top
 
     local point_id = place_by_value.text(text_object, x, y, color or theme.text_color)
 
