@@ -21,6 +21,10 @@ local draw_queue_draw = require("ui.draw_queue.draw")
 local view_request_evaluate = require("ui.area.view_request").evaluate
 local control_evaluate = require("ui.control.evaluate")
 local tooltip = require("ui.decorator.element.tooltip")
+local memoize_master_sweep = require("extlibs.memoize").master_sweep
+
+local last_sweep = love.timer.getTime()
+local sweep_interval = 5 -- seconds
 
 ---This red grid shows screen space
 local function overlay_screen_grid()
@@ -122,6 +126,12 @@ local function run()
         draw_data.clear()
         events.clear()
         love.graphics.pop()
+
+        local time = love.timer.getTime()
+        if time - last_sweep > sweep_interval then
+            last_sweep = time
+            memoize_master_sweep()
+        end
     end
 end
 

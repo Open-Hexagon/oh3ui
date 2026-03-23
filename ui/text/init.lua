@@ -4,15 +4,18 @@
 
 local json = require("extlibs.json.json")
 local theme = require("ui.theme")
+local memoize = require("extlibs.memoize")
 
 local text = {
     ansi = require("ui.text.ansi"),
-
-    -- TODO These functions all use similar caches for memoization. Maybe generalize later.
     search = require("ui.text.search"),
-    get_wrapped_text = require("ui.text.wrapping"),
     get_text_object = require("ui.text.cache"),
 }
+
+text.get_wrapped_text = memoize(function(font, str, wrap_limit)
+    local _, wrapped_text_table = font:getWrap(str, wrap_limit)
+    return table.concat(wrapped_text_table, "\n")
+end)
 
 ---Cache of fonts based on file used and size
 local font_cache = {}
