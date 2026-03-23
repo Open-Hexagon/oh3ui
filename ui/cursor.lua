@@ -250,88 +250,6 @@ function cursor.change_anchor(anchor_x, anchor_y)
     cursor.anchor_y = anchor_y
 end
 
----Offsets all cursor edges inwards by the same amount.
----@param d number
-function cursor.inset(d)
-    local ax, ay = cursor.anchor_x, cursor.anchor_y
-    cursor.change_anchor(0.5, 0.5)
-    cursor.width = cursor.width - 2 * d
-    cursor.height = cursor.height - 2 * d
-    cursor.change_anchor(ax, ay)
-end
-
----Offsets all cursor edges outwards by the same amount.
----@param d number
-function cursor.outset(d)
-    cursor.inset(-d)
-end
-
----Offsets the top and bottom cursor edges inwards by the same amount.
----@param d number
-function cursor.v_squeeze(d)
-    local ax, ay = cursor.anchor_x, cursor.anchor_y
-    cursor.change_anchor(0.5, 0.5)
-    cursor.height = cursor.height - 2 * d
-    cursor.change_anchor(ax, ay)
-end
-
----Offsets the top and bottom cursor edges outwards by the same amount.
----@param d number
-function cursor.v_stretch(d)
-    cursor.v_squeeze(-d)
-end
-
----Offsets the left and right cursor edges inwards by the same amount.
----@param d number
-function cursor.h_squeeze(d)
-    local ax, ay = cursor.anchor_x, cursor.anchor_y
-    cursor.change_anchor(0.5, 0.5)
-    cursor.width = cursor.width - 2 * d
-    cursor.change_anchor(ax, ay)
-end
-
----Offsets the left and right cursor edges outwards by the same amount.
----@param d number
-function cursor.h_stretch(d)
-    cursor.h_squeeze(-d)
-end
-
----Clips the left side of the cursor by d.
----@param d number
-function cursor.clip_left(d)
-    local ax, ay = cursor.anchor_x, cursor.anchor_y
-    cursor.change_anchor(1, 1)
-    cursor.width = cursor.width - d
-    cursor.change_anchor(ax, ay)
-end
-
----Clips the top side of the cursor by d.
----@param d number
-function cursor.clip_top(d)
-    local ax, ay = cursor.anchor_x, cursor.anchor_y
-    cursor.change_anchor(1, 1)
-    cursor.height = cursor.height - d
-    cursor.change_anchor(ax, ay)
-end
-
----Clips the right side of the cursor by d.
----@param d number
-function cursor.clip_right(d)
-    local ax, ay = cursor.anchor_x, cursor.anchor_y
-    cursor.change_anchor(0, 0)
-    cursor.width = cursor.width - d
-    cursor.change_anchor(ax, ay)
-end
-
----Clips the bottom side of the cursor by d.
----@param d number
-function cursor.clip_bottom(d)
-    local ax, ay = cursor.anchor_x, cursor.anchor_y
-    cursor.change_anchor(0, 0)
-    cursor.height = cursor.height - d
-    cursor.change_anchor(ax, ay)
-end
-
 ---clips edges of the cursor
 ---@param left number
 ---@param top number
@@ -360,6 +278,90 @@ end
 ---@param bottom number
 function cursor.pad(left, top, right, bottom)
     cursor.clip(-left, -top, -right, -bottom)
+end
+
+---Offsets all cursor edges inwards by the same amount.
+---@param d number
+function cursor.inset(d)
+    cursor.clip(d, d, d, d)
+end
+
+---Offsets all cursor edges outwards by the same amount.
+---@param d number
+function cursor.outset(d)
+    cursor.inset(-d)
+end
+
+---Offsets the top and bottom cursor edges inwards by the same amount.
+---@param d number
+function cursor.v_squeeze(d)
+    cursor.clip(0, d, 0, d)
+end
+
+---Offsets the top and bottom cursor edges outwards by the same amount.
+---@param d number
+function cursor.v_stretch(d)
+    cursor.v_squeeze(-d)
+end
+
+---Offsets the left and right cursor edges inwards by the same amount.
+---@param d number
+function cursor.h_squeeze(d)
+    cursor.clip(d, 0, d, 0)
+end
+
+---Offsets the left and right cursor edges outwards by the same amount.
+---@param d number
+function cursor.h_stretch(d)
+    cursor.h_squeeze(-d)
+end
+
+---Clips the left side of the cursor by d.
+---@param d number
+function cursor.clip_left(d)
+    cursor.clip(d, 0, 0, 0)
+end
+
+---Pads the left side of the cursor by d.
+---@param d number
+function cursor.pad_left(d)
+    cursor.clip_left(-d)
+end
+
+---Clips the top side of the cursor by d.
+---@param d number
+function cursor.clip_top(d)
+    cursor.clip(0, d, 0, 0)
+end
+
+---Pads the top side of the cursor by d.
+---@param d number
+function cursor.pad_top(d)
+    cursor.clip_top(-d)
+end
+
+---Clips the right side of the cursor by d.
+---@param d number
+function cursor.clip_right(d)
+    cursor.clip(0, 0, d, 0)
+end
+
+---Pads the right side of the cursor by d.
+---@param d number
+function cursor.pad_right(d)
+    cursor.clip_right(-d)
+end
+
+---Clips the bottom side of the cursor by d.
+---@param d number
+function cursor.clip_bottom(d)
+    cursor.clip(0, 0, 0, d)
+end
+
+---Pads the bottom side of the cursor by d.
+---@param d number
+function cursor.pad_bottom(d)
+    cursor.clip_bottom(-d)
 end
 
 -- ! the below functions do not account for any transformations
