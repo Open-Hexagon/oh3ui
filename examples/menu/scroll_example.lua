@@ -21,7 +21,7 @@ return function()
     draw_by_cursor.rectangle({ 0, 0, 0, 0.8 })
     knav.set_wrapping(wmode.tab, wmode.vertical)
 
-    cursor.auto_reshape = true
+    cursor.auto_reshape = "both"
     cursor.x = 200
     cursor.y = 50
     cursor.width = 200
@@ -114,7 +114,7 @@ return function()
 
         local grid_i = 11
         do
-            cursor.auto_reshape = false
+            cursor.auto_reshape = "both"
             cursor.width = 170
             cursor.height = 20
 

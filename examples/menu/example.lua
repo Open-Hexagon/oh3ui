@@ -58,7 +58,7 @@ return function()
     knav.set_wrapping(wmode.redirect, wmode.vertical)
     knav.set_page_length(2)
 
-    cursor.auto_reshape = true
+    cursor.auto_reshape = "both"
     cursor.x = 60
     cursor.y = 10
     cursor.width = 150
