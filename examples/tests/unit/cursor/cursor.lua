@@ -675,19 +675,19 @@ function T.test_clip_bottom()
     unittest.assert(cursor.anchor_y == 1)
 end
 
-function T.test_full_width()
-    cursor.full_width()
+function T.test_h_fit_screen()
+    -- must reset first for cursor to store screen dimensions
+    cursor.reset()
+    cursor.width = 10
+    cursor.h_fit_screen()
     unittest.assert(cursor.width == screen_width)
 end
 
-function T.test_full_height()
-    cursor.full_height()
-    unittest.assert(cursor.height == screen_height)
-end
-
-function T.test_full_screen()
-    cursor.full_screen()
-    unittest.assert(cursor.width == screen_width)
+function T.test_v_fit_screen()
+    -- must reset first for cursor to store screen dimensions
+    cursor.reset()
+    cursor.height = 10
+    cursor.v_fit_screen()
     unittest.assert(cursor.height == screen_height)
 end
 
