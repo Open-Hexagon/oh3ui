@@ -482,12 +482,12 @@ end
 
 ---Pushes n snapshots to the stack, such that when popping them,
 ---the cursor will move from left to right with padding within the bounding box of the current cursor.
----Cursors take on the shape formed by vertically subdividing the current cursor with padding.
+---Cursors take on the shape formed by horizontally subdividing the current cursor with padding.
 ---@param n integer number of sections to split into
 ---@param padding number? padding between sections
 ---@return integer n number of sections
 ---@return number section_width the width of each resulting section, not including padding
-function cursor.v_subdivide(n, padding)
+function cursor.h_subdivide(n, padding)
     padding = padding or 0
     local section_width = (cursor.width - (n - 1) * padding) / n
     local left_edge = cursor.x - cursor.anchor_x * cursor.width
@@ -534,12 +534,12 @@ end
 
 ---Pushes n snapshots to the stack, such that when popping them,
 ---the cursor will move from top to bottom with padding within the bounding box of the current cursor.
----Cursors take on the shape formed by horizontally subdividing the current cursor with padding.
+---Cursors take on the shape formed by vertically subdividing the current cursor with padding.
 ---@param n integer number of sections to split into
 ---@param padding number? padding between sections
 ---@return integer n number of sections
 ---@return number section_height the height of each resulting section, not including padding
-function cursor.h_subdivide(n, padding)
+function cursor.v_subdivide(n, padding)
     padding = padding or 0
     local section_height = (cursor.height - (n - 1) * padding) / n
     local top_edge = cursor.y - cursor.anchor_y * cursor.height
