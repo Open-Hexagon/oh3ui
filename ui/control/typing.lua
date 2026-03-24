@@ -15,6 +15,7 @@ local last_interaction_method
 
 local started_editing_state
 local stopped_editing_state
+local just_modified = false
 
 local target
 local target_font
@@ -39,12 +40,36 @@ function typing.is_editing_any_text()
     return not not target
 end
 
+---Returns true if the user just modified any text.
+---TODO: This does not detect any manual editing of text such as using typing.truncate().
+---That might become a problem when using a keyboard to trigger the immediate typing shortcuts (such as default or global typing).
+---@return boolean
+function typing.just_modified_any_text()
+    return just_modified
+end
+
 ---Returns true if the user is editing the latest created text entry
 ---@param state table
 ---@return boolean
 ---@nodiscard
 function typing.is_editing(state)
     return target == state
+end
+
+---Returns true if the user is editing the latest created text entry
+---@param state table
+---@return boolean
+---@nodiscard
+function typing.just_modified(state)
+    return typing.is_editing(state) and just_modified
+end
+
+---Returns true if the state has any text
+---@param state table
+---@return boolean
+---@nodiscard
+function typing.has_text(state)
+    return #state.text > 0
 end
 
 ---Returns true if user has started editing current or given state
@@ -124,10 +149,13 @@ end
 function typing.evaluate()
     started_editing_state = nil
     stopped_editing_state = nil
+    just_modified = false
 
     if not target then
         return nil, "escape"
     end
+
+    local old_text = target.text
 
     -- change text and text pos based on events
     for event in events.iterate("^[tk]e") do
@@ -223,6 +251,11 @@ function typing.evaluate()
         end
     end
 
+    -- target might get unset
+    if target and target.text ~= old_text then
+        just_modified = true
+    end
+
     return nil, "escape"
 end
 
@@ -240,7 +273,6 @@ do
     local text = require("ui.text")
     local theme = require("ui.theme")
     local draw_queue = require("ui.draw_queue")
-    local sensor = require("ui.control.sensor")
     local draw_queue_left_line = draw_queue.by_cursor.left_line
     local draw_queue_text = draw_queue.by_value.text
 
@@ -261,11 +293,7 @@ do
         if typing.is_editing(state) then
             target_cell_id = cell_id
 
-            -- If this is 0, which can happen if sensor_id is 0 but the keyboard was used to activate the text entry,
-            -- then this disables all sensors. Then, the only way to deactivate the text entry is with the keyboard.
-            sensor.exclusive = sensor_id
-
-            if not mnav.is_hovering(sensor_id) and mnav.clicked then
+            if not mnav.is_hovering(sensor_id) and mnav.holding then
                 typing.unset_target("click_out")
             end
         else

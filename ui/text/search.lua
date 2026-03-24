@@ -31,26 +31,27 @@ local function get_highlighted_string(str, matched_indices, text_prefix, highlig
     return tostring(result)
 end
 
-local search_inner = memoize(function(pattern, str, text_prefix, highlight_prefix)
-    local matches, score, matched_indices = fuzzy.fuzzy_match(pattern, str)
-    local colored_text = get_highlighted_string(str, matched_indices, text_prefix, highlight_prefix)
-    return matches, score, colored_text
-end)
-
 ---Searches for a pattern in a string
 ---@param pattern string
 ---@param str string
----@param text_color number[]
----@param highlight_color number[]
+---@param text_prefix number[]|string
+---@param highlight_prefix number[]|string
 ---@return boolean matches True if each character in pattern is found sequentially within str.
 ---@return integer score Match score. Higher is better match. Value has no intrinsic meaning. Can only compare scores with same search pattern.
 ---@return string colored_text Modified str with embedded colors that highlights matched characters.
 ---@nodiscard
-local function search(pattern, str, text_color, highlight_color)
-    local text_prefix = ansi.to_sequence(text_color)
-    local highlight_prefix = ansi.to_sequence(highlight_color)
+---@type fun(pattern:string, str:string, text_prefix:number[]|string, highlight_prefix:number[]|string):boolean, integer, string
+local search = memoize(function(pattern, str, text_prefix, highlight_prefix)
+    if type(text_prefix) == "table" then
+        text_prefix = ansi.to_sequence(text_prefix)
+    end
+    if type(highlight_prefix) == "table" then
+        highlight_prefix = ansi.to_sequence(highlight_prefix)
+    end
 
-    return search_inner(pattern, str, text_prefix, highlight_prefix)
-end
+    local matches, score, matched_indices = fuzzy.fuzzy_match(pattern, str)
+    local colored_text = get_highlighted_string(str, matched_indices, text_prefix, highlight_prefix)
+    return matches, score, colored_text
+end)
 
 return search

@@ -48,6 +48,7 @@ local sensor = {
 
     -- If this sensor id is set, all other sensor ids behave as if they are disabled.
     -- Gets cleared at the end of the frame so it must be re-asserted every frame.
+    -- This feature used to solve a bug with typing that was later fixed in a better way but it's still here.
     exclusive = nil,
 }
 
