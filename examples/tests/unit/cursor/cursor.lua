@@ -43,12 +43,14 @@ function T.test_cursor_reset()
     unittest.assert(cursor.anchor_y == 0)
     unittest.assert(cursor.auto_reshape == "both")
 
-    cursor.reset(300, 300)
+    cursor.width = 10
+    cursor.height = 10
+    cursor.reset()
 
     unittest.assert(cursor.x == 0)
     unittest.assert(cursor.y == 0)
-    unittest.assert(cursor.width == 300)
-    unittest.assert(cursor.height == 300)
+    unittest.assert(cursor.width == width)
+    unittest.assert(cursor.height == height)
     unittest.assert(cursor.anchor_x == 0)
     unittest.assert(cursor.anchor_y == 0)
     unittest.assert(cursor.auto_reshape == "both")
