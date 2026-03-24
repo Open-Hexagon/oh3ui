@@ -41,7 +41,7 @@ function T.test_area()
     -- inner areas will update outer areas when finish_area is called
     cursor.finish_area()
 
-    l, t, r, b = cursor.ltrb()
+    l, t, r, b = cursor.get_edges()
     unittest.assert(l == 100)
     unittest.assert(t == 100)
     unittest.assert(r == 210)
@@ -49,7 +49,7 @@ function T.test_area()
 
     cursor.finish_area()
 
-    l, t, r, b = cursor.ltrb()
+    l, t, r, b = cursor.get_edges()
     unittest.assert(l == 0)
     unittest.assert(t == 0)
     unittest.assert(r == 210)
@@ -73,7 +73,7 @@ function T.test_empty_area()
     cursor.y = 200
     cursor.finish_area()
 
-    l, t, r, b = cursor.ltrb()
+    l, t, r, b = cursor.get_edges()
     unittest.assert(l == 200)
     unittest.assert(t == 200)
     unittest.assert(r == 210)
@@ -81,7 +81,7 @@ function T.test_empty_area()
 
     cursor.finish_area()
 
-    l, t, r, b = cursor.ltrb()
+    l, t, r, b = cursor.get_edges()
     unittest.assert(l == 0)
     unittest.assert(t == 0)
     unittest.assert(r == 110)
@@ -112,7 +112,7 @@ function T.test_area_rollback()
     stack_manager.pop_record()
 
     -- cursor remains unaffected
-    l, t, r, b = cursor.ltrb()
+    l, t, r, b = cursor.get_edges()
     unittest.assert(l == 200)
     unittest.assert(t == 200)
     unittest.assert(r == 210)
@@ -121,7 +121,7 @@ function T.test_area_rollback()
     cursor.finish_area()
 
     -- this area doesn't know about the square at (200, 200)
-    l, t, r, b = cursor.ltrb()
+    l, t, r, b = cursor.get_edges()
     unittest.assert(l == 0)
     unittest.assert(t == 0)
     unittest.assert(r == 110)
@@ -145,7 +145,7 @@ function T.test_put_area()
 
     cursor.put_area()
 
-    l, t, r, b = cursor.ltrb()
+    l, t, r, b = cursor.get_edges()
     unittest.assert(l == 0)
     unittest.assert(t == 0)
     unittest.assert(r == 110)
@@ -159,7 +159,7 @@ function T.test_put_empty_area()
 
     cursor.put_area()
 
-    l, t, r, b = cursor.ltrb()
+    l, t, r, b = cursor.get_edges()
     unittest.assert(l == 0)
     unittest.assert(t == 0)
     unittest.assert(r == 10)
@@ -181,7 +181,7 @@ function T.test_no_area_expansion()
 
     cursor.put_area()
 
-    l, t, r, b = cursor.ltrb()
+    l, t, r, b = cursor.get_edges()
     unittest.assert(l == 0)
     unittest.assert(t == 0)
     unittest.assert(r == 10)
@@ -211,14 +211,14 @@ function T.test_no_propogate()
     cursor.y = 300
     cursor.place()
     cursor.finish_area(true)
-    l, t, r, b = cursor.ltrb()
+    l, t, r, b = cursor.get_edges()
     unittest.assert(l == 200)
     unittest.assert(t == 200)
     unittest.assert(r == 310)
     unittest.assert(b == 310)
 
     cursor.finish_area()
-    l, t, r, b = cursor.ltrb()
+    l, t, r, b = cursor.get_edges()
     unittest.assert(l == 0)
     unittest.assert(t == 0)
     unittest.assert(r == 110)

@@ -215,27 +215,13 @@ function T.test_cursor_stack_drop()
     unittest.assert_error(cursor.pop, "we should be at the bottom of the stack")
 end
 
-function T.test_cursor_swizzling()
-    local a, b, c, d = cursor.ltrb()
+function T.test_get_edges()
+    local a, b, c, d = cursor.get_edges()
 
     unittest.assert(a == cursor.x - cursor.anchor_x * cursor.width)
     unittest.assert(b == cursor.y - cursor.anchor_y * cursor.height)
     unittest.assert(c == cursor.x + (1 - cursor.anchor_x) * cursor.width)
     unittest.assert(d == cursor.y + (1 - cursor.anchor_y) * cursor.height)
-
-    a, b, c, d = cursor.rrtb()
-
-    unittest.assert(a == cursor.x + (1 - cursor.anchor_x) * cursor.width)
-    unittest.assert(b == cursor.x + (1 - cursor.anchor_x) * cursor.width)
-    unittest.assert(c == cursor.y - cursor.anchor_y * cursor.height)
-    unittest.assert(d == cursor.y + (1 - cursor.anchor_y) * cursor.height)
-end
-
-function T.test_invalid_swizzling()
-    -- this has to be wrapped or it causes an actual error
-    unittest.assert_error(function()
-        cursor.g()
-    end)
 end
 
 function T.test_do_auto_reshape()
@@ -435,11 +421,11 @@ function T.test_change_anchor()
     cursor.x, cursor.y = 0, 0
     cursor.width, cursor.height = 10, 10
 
-    l, t, r, b = cursor.ltrb()
+    l, t, r, b = cursor.get_edges()
 
     cursor.change_anchor(1)
 
-    l2, t2, r2, b2 = cursor.ltrb()
+    l2, t2, r2, b2 = cursor.get_edges()
 
     unittest.assert(l == l2)
     unittest.assert(t == t2)
@@ -450,7 +436,7 @@ function T.test_change_anchor()
 
     cursor.change_anchor(0.5, 0.7)
 
-    l2, t2, r2, b2 = cursor.ltrb()
+    l2, t2, r2, b2 = cursor.get_edges()
 
     unittest.assert(l == l2)
     unittest.assert(t == t2)
@@ -462,11 +448,11 @@ end
 
 function T.test_inset_outset()
     local l, t, r, b, l2, t2, r2, b2
-    l, t, r, b = cursor.ltrb()
+    l, t, r, b = cursor.get_edges()
 
     cursor.inset(10)
 
-    l2, t2, r2, b2 = cursor.ltrb()
+    l2, t2, r2, b2 = cursor.get_edges()
     unittest.assert(l + 10 == l2)
     unittest.assert(t + 10 == t2)
     unittest.assert(r - 10 == r2)
@@ -474,7 +460,7 @@ function T.test_inset_outset()
 
     cursor.outset(10)
 
-    l2, t2, r2, b2 = cursor.ltrb()
+    l2, t2, r2, b2 = cursor.get_edges()
     unittest.assert(l == l2)
     unittest.assert(t == t2)
     unittest.assert(r == r2)
