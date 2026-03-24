@@ -171,7 +171,7 @@ Rerum ducimus tenetur fugit.
 
     knav.make_cell()
     knav.grid_cell(1, 12)
-    checkbox(id.checkbox)
+    checkbox(id.checkbox, 16)
     cursor.shift_down(10)
 
     cursor.width = 200
