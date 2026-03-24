@@ -69,6 +69,7 @@ end
 ---@return boolean
 ---@nodiscard
 function typing.has_text(state)
+    state.text = state.text or ""
     return #state.text > 0
 end
 
