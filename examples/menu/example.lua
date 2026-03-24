@@ -188,7 +188,7 @@ Rerum ducimus tenetur fugit.
         end
 
         typing.make_text_entry(id.text_entry, text_entry_sensor, text_entry_cell)
-        typing.draw_text_entry(24, "Search")
+        typing.draw_text_entry(id.text_entry, 24, "Search")
         cursor.shift_down(10)
     end
 
@@ -203,7 +203,7 @@ Rerum ducimus tenetur fugit.
         end
 
         typing.make_text_entry(id.text_entry2, text_entry_sensor2, text_entry_cell2, true)
-        typing.draw_text_entry(36, "Search2")
+        typing.draw_text_entry(id.text_entry2, 36, "Search2")
         cursor.shift_down(10)
     end
 
