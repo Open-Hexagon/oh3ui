@@ -57,6 +57,9 @@ cursor.placement = {
 
 local projected_placement = cursor.projected_placement
 local placement = cursor.placement
+local cursor_stack = stack_data.cursor_stack
+local translate_stack = stack_data.translate_stack
+local area_stack = stack_data.area_stack
 
 --#region edge calculations
 
@@ -79,11 +82,11 @@ local function get_edges(x, y, anchor_x, anchor_y, width, height)
     return left, top, right, bottom
 end
 
---#endregion
+local function get_top_translation()
+    return translate_stack[stack_data.translate_index - 1], translate_stack[stack_data.translate_index]
+end
 
-local cursor_stack = stack_data.cursor_stack
-local translate_stack = stack_data.translate_stack
-local area_stack = stack_data.area_stack
+--#endregion
 
 local last_screen_width, last_screen_height = 0, 0
 
@@ -105,6 +108,22 @@ end
 
 function cursor.get_screen_dimensions()
     return last_screen_width, last_screen_height
+end
+
+---Gets where the screen origin is when accounting for translations.
+---Like projected placement, this may not be exact if translations were edited.
+function cursor.get_screen_origin()
+    local dx, dy = get_top_translation()
+    return -dx, -dy
+end
+
+---Gets the screen edges while accounting for translations
+---Like projected placement, this may not be exact if translations were edited.
+function cursor.get_screen_edges()
+    local l, t = cursor.get_screen_origin()
+    local w, h = cursor.get_screen_dimensions()
+    local r, b = l + w, t + h
+    return l, t, r, b
 end
 
 --#region snapshotting
@@ -507,6 +526,7 @@ end
 ---Popping twice will put the cursor on the left, then right panes.
 ---@param left_pane_width number height of the top pane
 ---@param reverse_order boolean? reverse pop order
+---@return number right_pane_width
 function cursor.v_split(left_pane_width, reverse_order)
     local x, ax, w = cursor.x, cursor.anchor_x, cursor.width
     local l = x - w * ax
@@ -523,13 +543,17 @@ function cursor.v_split(left_pane_width, reverse_order)
     cursor_stack[ileft - 1] = left_pane_width
     cursor_stack[iright - 5] = l + left_pane_width + right_pane_width * ax
     cursor_stack[iright - 1] = right_pane_width
+    return right_pane_width
 end
 
 ---Same as v_split but with normalized left pane width
 ---@param left_pane_percentage number percentage of cursor height for the top pane
 ---@param reverse_order boolean? reverse pop order
+---@return number left_pane_width
+---@return number right_pane_width
 function cursor.v_split_norm(left_pane_percentage, reverse_order)
-    cursor.v_split(cursor.width * left_pane_percentage, reverse_order)
+    local left_pane_width = cursor.width * left_pane_percentage
+    return left_pane_width, cursor.v_split(left_pane_width, reverse_order)
 end
 
 ---Pushes n snapshots to the stack, such that when popping them,
@@ -559,6 +583,7 @@ end
 ---Popping twice will put the cursor on the top, then bottom panes.
 ---@param top_pane_height number height of the top pane
 ---@param reverse_order boolean? reverse pop order
+---@return number bottom_pane_height
 function cursor.h_split(top_pane_height, reverse_order)
     local y, ay, h = cursor.y, cursor.anchor_y, cursor.height
     local l = y - h * ay
@@ -575,13 +600,17 @@ function cursor.h_split(top_pane_height, reverse_order)
     cursor_stack[itop] = top_pane_height
     cursor_stack[ibottom - 4] = l + top_pane_height + bottom_pane_height * ay
     cursor_stack[ibottom] = bottom_pane_height
+    return bottom_pane_height
 end
 
 ---Same as h_split but with normalized top pane height
 ---@param top_pane_percentage number percentage of cursor height for the top pane
 ---@param reverse_order boolean? reverse pop order
+---@return number top_pane_height
+---@return number bottom_pane_height
 function cursor.h_split_norm(top_pane_percentage, reverse_order)
-    cursor.h_split(cursor.height * top_pane_percentage, reverse_order)
+    local top_pane_height = cursor.height * top_pane_percentage
+    return top_pane_height, cursor.h_split(top_pane_height, reverse_order)
 end
 
 ---Move the cursor right by its own width
@@ -786,7 +815,7 @@ end
 function cursor.place(desired_width, desired_height, area_expansion_mode)
     area_expansion_mode = area_expansion_mode or cursor.auto_area_expansion
     local width, height = desired_width or cursor.width, desired_height or cursor.height
-    local dx, dy = translate_stack[stack_data.translate_index - 1], translate_stack[stack_data.translate_index]
+    local dx, dy = get_top_translation()
     local left, top, right, bottom = get_edges(cursor.x, cursor.y, cursor.anchor_x, cursor.anchor_y, width, height)
 
     -- update projected_placement

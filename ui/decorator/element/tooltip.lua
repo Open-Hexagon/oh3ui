@@ -1,5 +1,6 @@
 local cursor = require("ui.cursor")
 local placement = cursor.placement
+local projected_placement = cursor.projected_placement
 local theme = require("ui.theme")
 local mnav = require("ui.control.mouse_navigation")
 local knav = require("ui.control.keyboard_navigation")
@@ -79,6 +80,13 @@ function tooltip.tooltip(edge, str, font_size, align, wrap_limit, manual_activat
         cursor.width = wrap_limit
     end
 
+    -- Because translations can be edited, this sometimes causes the tooltip to
+    -- lag behind where it's supposed to be when dodging the screen edges.
+    -- This is almost impossible to get rid of given that the ui does layout in basically 1 pass, so it's staying.
+    local screen_width, screen_height = cursor.get_screen_dimensions()
+    local screen_left, screen_top, screen_right, screen_bottom = cursor.get_screen_edges()
+    local tid = cursor.push_translation(0, 0)
+
     tooltip_text_color[1], tooltip_text_color[2], tooltip_text_color[3], tooltip_text_color[4] =
         theme.alpha_mod_unpack(theme.text_color, alpha)
     draw_queue.next_as_overlay()
@@ -88,6 +96,7 @@ function tooltip.tooltip(edge, str, font_size, align, wrap_limit, manual_activat
 
     cursor.place()
 
+    local tooltip_width, tooltip_height = cursor.width, cursor.height
     local id = draw_queue.make_placement(placement.left, placement.top, placement.right, placement.bottom)
     local shadow_id =
         draw_queue.make_placement(placement.left + 3, placement.top + 3, placement.right + 3, placement.bottom + 3)
@@ -103,6 +112,27 @@ function tooltip.tooltip(edge, str, font_size, align, wrap_limit, manual_activat
     draw_queue.next_as_overlay()
     draw_queue.by_id.rectangle_outline(id, 1, 0, 0, theme.alpha_mod_unpack(theme.tooltip_outline, alpha))
 
+    local x, y = 0, 0
+    -- slide the tooltip left or right if it's cut off by the screen
+    if edge == "bottom" or edge == "top" then
+        if tooltip_width > screen_width or projected_placement.left < screen_left then
+            x = screen_left - projected_placement.left
+        elseif placement.right > screen_right then
+            x = screen_right - placement.right
+        end
+    end
+    -- slide the tooltip up or down if it's cut off by the screen
+    if edge == "left" or edge == "right" then
+        if tooltip_height > screen_height or placement.top < screen_top then
+            y = screen_top - placement.top
+        elseif placement.bottom > screen_bottom then
+            y = screen_bottom - placement.bottom
+        end
+    end
+
+    cursor.edit_translation(tid, x, y)
+
+    cursor.pop_translation()
     cursor.pop()
 end
 
