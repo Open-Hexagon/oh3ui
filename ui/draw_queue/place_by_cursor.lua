@@ -15,19 +15,20 @@ local draw_data = require("ui.draw_queue.draw_data")
 
 local place_by_cursor = {}
 
----Pushes a mask.
+---Pushes a mask. Does not expand areas.
 ---@return integer placement_id
 function place_by_cursor.push_mask()
-    cursor.place()
+    cursor.place(nil, nil, "no")
     return place_by_value.push_mask(placement.left, placement.top, placement.right, placement.bottom)
 end
 
 ---Makes a blank placement using the cursor.
 ---Does not add a draw operation.
+---Does not expand areas.
 ---@return integer placement_id
 ---@nodiscard
 function place_by_cursor.blank()
-    cursor.place()
+    cursor.place(nil, nil, "no")
     return draw_data.make_placement(placement.left, placement.top, placement.right, placement.bottom)
 end
 

@@ -652,7 +652,7 @@ end
 --#region translations
 
 ---Apply a translation to the cursor. Translations stack.
----This translations can be edited later, but if it is, the projected_placement table will be inaccurate.
+---These translations can be edited later, but if it is, the projected_placement table will be inaccurate.
 ---In this case, the first time a translation is applied, it should be a reasonable guess as to where the translation should be.
 ---@param x number
 ---@param y number
