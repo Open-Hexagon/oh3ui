@@ -54,7 +54,7 @@ return function(state, custom_sensor, ...)
     local sel_hl_res = draw_queue.allocate_reservation(1)
 
     -- selection buttons
-    local _, section_width = cursor.v_subdivide(positions)
+    local _, section_width = cursor.h_subdivide(positions)
     local left = projected_placement.left
     local right = left + section_width
     local is_inside

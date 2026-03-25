@@ -1,41 +1,31 @@
-local monkeypatch = require("tests.monkeypatch")
-local text_cache = require("ui.text.cache")
+local text_cache_get = require("ui.text.cache")
 local unittest = require("tests.unittest")
+local memoize = require("extlibs.memoize")
 
 local T = {}
 
-local time = 0
-
-function T.set_up_case()
-    love.timer.getTime = monkeypatch.replace(love.timer.getTime, function()
-        return time
-    end)
-end
-
-function T.tear_down_case()
-    love.timer.getTime = monkeypatch.get_original(love.timer.getTime)
-end
-
 function T.test_text_cache()
     local _
-    local o1 = text_cache.get(love.graphics.getFont(), "Hello", math.huge, "left")
-    local o2 = text_cache.get(love.graphics.getFont(), "Hello", math.huge, "left")
+    local o1 = text_cache_get(love.graphics.getFont(), "Hello", math.huge, "left")
+    local o2 = text_cache_get(love.graphics.getFont(), "Hello", math.huge, "left")
     unittest.assert(o1 == o2, "same data should give same object")
     -- get 10 unique objects
     for i = 1, 10 do
-        _ = text_cache.get(love.graphics.getFont(), "Hello" .. i, math.huge, "left")
+        _ = text_cache_get(love.graphics.getFont(), "Hello" .. i, math.huge, "left")
     end
 
-    -- advance time
-    time = 1000
-    -- this should set the usage of earlier text objects to 0
-    _ = text_cache.get(love.graphics.getFont(), "A", math.huge, "left")
-    -- advance time
-    time = 2000
-    -- this should clear the cache of earlier text objects to 0
-    _ = text_cache.get(love.graphics.getFont(), "A", math.huge, "left")
+    local o3 = text_cache_get(love.graphics.getFont(), "Hello1", math.huge, "left")
 
-    o1 = text_cache.get(love.graphics.getFont(), "Hello", math.huge, "left")
+    -- this should set usage to 0
+    memoize.master_sweep()
+
+    local o4 = text_cache_get(love.graphics.getFont(), "Hello1", math.huge, "left")
+    unittest.assert(o3 == o4, "setting usage to 0 should not clear object")
+
+    -- this should clear objects with 0 usage
+    memoize.master_sweep()
+
+    o1 = text_cache_get(love.graphics.getFont(), "Hello", math.huge, "left")
     unittest.assert(o1 ~= o2, "object should not be the same after cache was updated")
 end
 

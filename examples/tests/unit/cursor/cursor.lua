@@ -17,7 +17,7 @@ function T.set_up()
     cursor.x, cursor.y = 0, 0
     cursor.width, cursor.height = 128, 128
     cursor.anchor_x, cursor.anchor_y = 0, 0
-    cursor.auto_reshape = false
+    cursor.auto_reshape = "no"
 
     placement.left = 0
     placement.top = 0
@@ -41,38 +41,40 @@ function T.test_cursor_reset()
     unittest.assert(cursor.height == height)
     unittest.assert(cursor.anchor_x == 0)
     unittest.assert(cursor.anchor_y == 0)
-    unittest.assert(cursor.auto_reshape == true)
+    unittest.assert(cursor.auto_reshape == "both")
 
-    cursor.reset(300, 300)
+    cursor.width = 10
+    cursor.height = 10
+    cursor.reset()
 
     unittest.assert(cursor.x == 0)
     unittest.assert(cursor.y == 0)
-    unittest.assert(cursor.width == 300)
-    unittest.assert(cursor.height == 300)
+    unittest.assert(cursor.width == width)
+    unittest.assert(cursor.height == height)
     unittest.assert(cursor.anchor_x == 0)
     unittest.assert(cursor.anchor_y == 0)
-    unittest.assert(cursor.auto_reshape == true)
+    unittest.assert(cursor.auto_reshape == "both")
 end
 
 function T.test_cursor_stack_push_pop()
     cursor.x, cursor.y = 30, 70
     cursor.width, cursor.height = 50, 80
     cursor.anchor_x, cursor.anchor_y = 0.5, 0.5
-    cursor.auto_reshape = false
+    cursor.auto_reshape = "no"
 
     cursor.push()
     do
         cursor.x, cursor.y = 90, 325
         cursor.width, cursor.height = 410, 35
         cursor.anchor_x, cursor.anchor_y = 1, 1
-        cursor.auto_reshape = true
+        cursor.auto_reshape = "both"
 
         cursor.push()
         do
             cursor.x, cursor.y = 50, 10
             cursor.width, cursor.height = 640, 20
             cursor.anchor_x, cursor.anchor_y = 1, 0
-            cursor.auto_reshape = false
+            cursor.auto_reshape = "no"
         end
         cursor.pop()
 
@@ -82,7 +84,7 @@ function T.test_cursor_stack_push_pop()
         unittest.assert(cursor.height == 35)
         unittest.assert(cursor.anchor_x == 1)
         unittest.assert(cursor.anchor_y == 1)
-        unittest.assert(cursor.auto_reshape == true)
+        unittest.assert(cursor.auto_reshape == "both")
     end
     cursor.pop()
 
@@ -92,7 +94,7 @@ function T.test_cursor_stack_push_pop()
     unittest.assert(cursor.height == 80)
     unittest.assert(cursor.anchor_x == 0.5)
     unittest.assert(cursor.anchor_y == 0.5)
-    unittest.assert(cursor.auto_reshape == false)
+    unittest.assert(cursor.auto_reshape == "no")
 end
 
 function T.test_cursor_stack_underflow()
@@ -103,7 +105,7 @@ function T.test_cursor_stack_rollback()
     cursor.x, cursor.y = 30, 70
     cursor.width, cursor.height = 50, 80
     cursor.anchor_x, cursor.anchor_y = 0.5, 0.5
-    cursor.auto_reshape = false
+    cursor.auto_reshape = "no"
 
     cursor.push()
     do
@@ -113,14 +115,14 @@ function T.test_cursor_stack_rollback()
         cursor.x, cursor.y = 90, 325
         cursor.width, cursor.height = 410, 35
         cursor.anchor_x, cursor.anchor_y = 1, 1
-        cursor.auto_reshape = true
+        cursor.auto_reshape = "both"
 
         cursor.push()
 
         cursor.x, cursor.y = 50, 10
         cursor.width, cursor.height = 640, 20
         cursor.anchor_x, cursor.anchor_y = 1, 0
-        cursor.auto_reshape = false
+        cursor.auto_reshape = "no"
 
         stack_manager.pop_record()
 
@@ -131,7 +133,7 @@ function T.test_cursor_stack_rollback()
         unittest.assert(cursor.height == 20)
         unittest.assert(cursor.anchor_x == 1)
         unittest.assert(cursor.anchor_y == 0)
-        unittest.assert(cursor.auto_reshape == false)
+        unittest.assert(cursor.auto_reshape == "no")
     end
     cursor.pop()
 
@@ -141,7 +143,7 @@ function T.test_cursor_stack_rollback()
     unittest.assert(cursor.height == 80)
     unittest.assert(cursor.anchor_x == 0.5)
     unittest.assert(cursor.anchor_y == 0.5)
-    unittest.assert(cursor.auto_reshape == false)
+    unittest.assert(cursor.auto_reshape == "no")
 end
 
 function T.test_cursor_stack_peek()
@@ -150,14 +152,14 @@ function T.test_cursor_stack_peek()
     cursor.x, cursor.y = 30, 70
     cursor.width, cursor.height = 50, 80
     cursor.anchor_x, cursor.anchor_y = 0.5, 0.5
-    cursor.auto_reshape = false
+    cursor.auto_reshape = "no"
 
     cursor.push()
 
     cursor.x, cursor.y = 50, 10
     cursor.width, cursor.height = 640, 20
     cursor.anchor_x, cursor.anchor_y = 1, 0
-    cursor.auto_reshape = false
+    cursor.auto_reshape = "no"
 
     cursor.peek()
 
@@ -167,12 +169,12 @@ function T.test_cursor_stack_peek()
     unittest.assert(cursor.height == 80)
     unittest.assert(cursor.anchor_x == 0.5)
     unittest.assert(cursor.anchor_y == 0.5)
-    unittest.assert(cursor.auto_reshape == false)
+    unittest.assert(cursor.auto_reshape == "no")
 
     cursor.x, cursor.y = 50, 10
     cursor.width, cursor.height = 640, 20
     cursor.anchor_x, cursor.anchor_y = 1, 0
-    cursor.auto_reshape = false
+    cursor.auto_reshape = "no"
 
     cursor.pop()
 
@@ -182,7 +184,7 @@ function T.test_cursor_stack_peek()
     unittest.assert(cursor.height == 80)
     unittest.assert(cursor.anchor_x == 0.5)
     unittest.assert(cursor.anchor_y == 0.5)
-    unittest.assert(cursor.auto_reshape == false)
+    unittest.assert(cursor.auto_reshape == "no")
 
     unittest.assert_error(cursor.pop, "we should be at the bottom of the stack")
 end
@@ -193,14 +195,14 @@ function T.test_cursor_stack_drop()
     cursor.x, cursor.y = 30, 70
     cursor.width, cursor.height = 50, 80
     cursor.anchor_x, cursor.anchor_y = 0.5, 0.5
-    cursor.auto_reshape = false
+    cursor.auto_reshape = "no"
 
     cursor.push()
 
     cursor.x, cursor.y = 50, 10
     cursor.width, cursor.height = 640, 20
     cursor.anchor_x, cursor.anchor_y = 1, 0
-    cursor.auto_reshape = false
+    cursor.auto_reshape = "no"
 
     cursor.drop()
 
@@ -210,32 +212,18 @@ function T.test_cursor_stack_drop()
     unittest.assert(cursor.height == 20)
     unittest.assert(cursor.anchor_x == 1)
     unittest.assert(cursor.anchor_y == 0)
-    unittest.assert(cursor.auto_reshape == false)
+    unittest.assert(cursor.auto_reshape == "no")
 
     unittest.assert_error(cursor.pop, "we should be at the bottom of the stack")
 end
 
-function T.test_cursor_swizzling()
-    local a, b, c, d = cursor.ltrb()
+function T.test_get_edges()
+    local a, b, c, d = cursor.get_edges()
 
     unittest.assert(a == cursor.x - cursor.anchor_x * cursor.width)
     unittest.assert(b == cursor.y - cursor.anchor_y * cursor.height)
     unittest.assert(c == cursor.x + (1 - cursor.anchor_x) * cursor.width)
     unittest.assert(d == cursor.y + (1 - cursor.anchor_y) * cursor.height)
-
-    a, b, c, d = cursor.rrtb()
-
-    unittest.assert(a == cursor.x + (1 - cursor.anchor_x) * cursor.width)
-    unittest.assert(b == cursor.x + (1 - cursor.anchor_x) * cursor.width)
-    unittest.assert(c == cursor.y - cursor.anchor_y * cursor.height)
-    unittest.assert(d == cursor.y + (1 - cursor.anchor_y) * cursor.height)
-end
-
-function T.test_invalid_swizzling()
-    -- this has to be wrapped or it causes an actual error
-    unittest.assert_error(function()
-        cursor.g()
-    end)
 end
 
 function T.test_do_auto_reshape()
@@ -243,14 +231,14 @@ function T.test_do_auto_reshape()
         cursor.x, cursor.y = 30, 70
         cursor.width, cursor.height = 50, 80
         cursor.anchor_x, cursor.anchor_y = 0.5, 0.5
-        cursor.auto_reshape = true -- ! do_auto_reshape cares about this value
+        cursor.auto_reshape = "both" -- ! do_auto_reshape cares about this value
 
         cursor.push()
 
         cursor.x, cursor.y = 50, 10
         cursor.width, cursor.height = 640, 20
         cursor.anchor_x, cursor.anchor_y = 1, 0
-        cursor.auto_reshape = false -- ! not this one
+        cursor.auto_reshape = "no" -- ! not this one
 
         cursor.do_auto_reshape()
 
@@ -260,7 +248,7 @@ function T.test_do_auto_reshape()
         unittest.assert(cursor.height == 20)
         unittest.assert(cursor.anchor_x == 0.5)
         unittest.assert(cursor.anchor_y == 0.5)
-        unittest.assert(cursor.auto_reshape == true)
+        unittest.assert(cursor.auto_reshape == "both")
 
         unittest.assert_error(cursor.pop, "we should be at the bottom of the stack")
     end
@@ -269,14 +257,14 @@ function T.test_do_auto_reshape()
         cursor.x, cursor.y = 30, 70
         cursor.width, cursor.height = 50, 80
         cursor.anchor_x, cursor.anchor_y = 0.5, 0.5
-        cursor.auto_reshape = false -- ! do_auto_reshape cares about this value
+        cursor.auto_reshape = "no" -- ! do_auto_reshape cares about this value
 
         cursor.push()
 
         cursor.x, cursor.y = 50, 10
         cursor.width, cursor.height = 640, 20
         cursor.anchor_x, cursor.anchor_y = 1, 0
-        cursor.auto_reshape = true -- ! not this one
+        cursor.auto_reshape = "both" -- ! not this one
 
         cursor.do_auto_reshape()
 
@@ -286,7 +274,7 @@ function T.test_do_auto_reshape()
         unittest.assert(cursor.height == 80)
         unittest.assert(cursor.anchor_x == 0.5)
         unittest.assert(cursor.anchor_y == 0.5)
-        unittest.assert(cursor.auto_reshape == false)
+        unittest.assert(cursor.auto_reshape == "no")
 
         unittest.assert_error(cursor.pop, "we should be at the bottom of the stack")
     end
@@ -435,11 +423,11 @@ function T.test_change_anchor()
     cursor.x, cursor.y = 0, 0
     cursor.width, cursor.height = 10, 10
 
-    l, t, r, b = cursor.ltrb()
+    l, t, r, b = cursor.get_edges()
 
     cursor.change_anchor(1)
 
-    l2, t2, r2, b2 = cursor.ltrb()
+    l2, t2, r2, b2 = cursor.get_edges()
 
     unittest.assert(l == l2)
     unittest.assert(t == t2)
@@ -450,7 +438,7 @@ function T.test_change_anchor()
 
     cursor.change_anchor(0.5, 0.7)
 
-    l2, t2, r2, b2 = cursor.ltrb()
+    l2, t2, r2, b2 = cursor.get_edges()
 
     unittest.assert(l == l2)
     unittest.assert(t == t2)
@@ -462,11 +450,11 @@ end
 
 function T.test_inset_outset()
     local l, t, r, b, l2, t2, r2, b2
-    l, t, r, b = cursor.ltrb()
+    l, t, r, b = cursor.get_edges()
 
     cursor.inset(10)
 
-    l2, t2, r2, b2 = cursor.ltrb()
+    l2, t2, r2, b2 = cursor.get_edges()
     unittest.assert(l + 10 == l2)
     unittest.assert(t + 10 == t2)
     unittest.assert(r - 10 == r2)
@@ -474,7 +462,7 @@ function T.test_inset_outset()
 
     cursor.outset(10)
 
-    l2, t2, r2, b2 = cursor.ltrb()
+    l2, t2, r2, b2 = cursor.get_edges()
     unittest.assert(l == l2)
     unittest.assert(t == t2)
     unittest.assert(r == r2)
@@ -687,19 +675,19 @@ function T.test_clip_bottom()
     unittest.assert(cursor.anchor_y == 1)
 end
 
-function T.test_full_width()
-    cursor.full_width()
+function T.test_h_fit_screen()
+    -- must reset first for cursor to store screen dimensions
+    cursor.reset()
+    cursor.width = 10
+    cursor.h_fit_screen()
     unittest.assert(cursor.width == screen_width)
 end
 
-function T.test_full_height()
-    cursor.full_height()
-    unittest.assert(cursor.height == screen_height)
-end
-
-function T.test_full_screen()
-    cursor.full_screen()
-    unittest.assert(cursor.width == screen_width)
+function T.test_v_fit_screen()
+    -- must reset first for cursor to store screen dimensions
+    cursor.reset()
+    cursor.height = 10
+    cursor.v_fit_screen()
     unittest.assert(cursor.height == screen_height)
 end
 

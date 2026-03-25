@@ -21,7 +21,7 @@ return function()
     draw_by_cursor.rectangle({ 0, 0, 0, 0.8 })
     knav.set_wrapping(wmode.tab, wmode.vertical)
 
-    cursor.auto_reshape = true
+    cursor.auto_reshape = "both"
     cursor.x = 200
     cursor.y = 50
     cursor.width = 200
@@ -60,8 +60,8 @@ return function()
                 end
             end
         end
-        background.finish(10, theme.blue)
-        local at_left, at_top, at_right, at_bottom = scroll.finish(0)
+        background.finish(theme.blue, 10, 10, 10, 10)
+        local at_left, at_top, at_right, at_bottom = scroll.finish(0, 0, 0, 0, 0)
 
         knav.fill_grid(knav.op_cell.tab, 6, 1, 1, 5)
         cursor.push()
@@ -91,8 +91,8 @@ return function()
                 end
             end
         end
-        background.finish(10, theme.blue)
-        scroll.finish(0)
+        background.finish(theme.blue, 10, 10, 10, 10)
+        scroll.finish(0, 0, 0, 0, 0)
 
         cursor.pop()
         cursor.shift_down(10)
@@ -114,7 +114,7 @@ return function()
 
         local grid_i = 11
         do
-            cursor.auto_reshape = false
+            cursor.auto_reshape = "both"
             cursor.width = 170
             cursor.height = 20
 
@@ -197,6 +197,6 @@ return function()
             layers.pop()
         end
     end
-    background.finish(10, theme.red)
-    scroll.finish(0)
+    background.finish(theme.red, 10, 10, 10, 10)
+    scroll.finish(0, 0, 0, 0, 0)
 end
