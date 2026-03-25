@@ -52,7 +52,7 @@ return function(state, custom_sensor)
 
             draw_by_cursor.circle(theme.widget_actuator)
             draw_by_cursor.circle_outline(
-                mnav.is_hovering() and theme.widget_actuator_outline_highlight or theme.widget_actuator_outline
+                mnav.is_hovering(sid) and theme.widget_actuator_outline_highlight or theme.widget_actuator_outline
             )
         end
         cursor.pop()
