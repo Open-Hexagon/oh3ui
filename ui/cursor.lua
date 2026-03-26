@@ -170,7 +170,7 @@ function cursor.drop()
     stack_data.cursor_index = stack_data.cursor_index - SIZEOF_CURSOR_SNAPSHOT
 end
 
----Undos cursor reshaping for elements if cursor.auto_reshape is false. Requires a corresponding `cursor.push()`.
+---Undos cursor reshaping for elements depending on cursor.auto_reshape. Requires a corresponding `cursor.push()`.
 ---Whatever the cursor's size is when this is called is considered the element's bounding box size when this is called.
 ---The cursor's location is always reverted to the popped cursor's snapshot (including anchors)
 function cursor.do_auto_reshape()

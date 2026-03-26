@@ -1,7 +1,9 @@
 local econf = require("ui.element_conf")
 local cursor = require("ui.cursor")
 local theme = require("ui.theme")
+local draw_queue = require("ui.draw_queue")
 local draw_by_cursor = require("ui.draw_queue").by_cursor
+local draw_by_id = require("ui.draw_queue").by_id
 local selection_outline = require("ui.decorator.element.selection_outline").set_placement
 local knav = require("ui.control.keyboard_navigation")
 local kba = knav.actions
@@ -32,6 +34,16 @@ return function(state, checkbox_size, custom_sensor)
     end
 
     cursor.push()
+    cursor.auto_reshape = "both"
+    cursor.place(checkbox_size, checkbox_size)
+    cursor.auto_reshape = "no"
+
+    local pid = draw_queue.make_placement(0, 0, 0, 0)
+    cursor.put_placement(pid)
+
+    if not custom_sensor then
+        mnav.make_sensor(sid, smode.block)
+    end
 
     local background_color
     if state.position == 0 or state.position == 1 then
@@ -44,18 +56,26 @@ return function(state, checkbox_size, custom_sensor)
         background_color = theme.accent_color
     end
 
-    cursor.auto_reshape = "both"
-    draw_by_cursor.icon("square-fill", checkbox_size, background_color)
-    draw_by_cursor.icon(
-        "square",
-        checkbox_size,
-        (mnav.is_hovering(sid) or knav.is_selected()) and theme.widget_outline_highlight or theme.widget_outline
+    -- TODO using icons for the outer square actually sucks because of freetype character pixel rounding.
+    -- Replace with regular squares
+
+    draw_by_id.rectangle(pid, "fill", 2, 2, 1, unpack(background_color))
+    draw_by_id.rectangle_outline(
+        pid,
+        1,
+        2,
+        2,
+        unpack((mnav.is_hovering(sid) or knav.is_selected()) and theme.widget_outline_highlight or theme.widget_outline)
     )
-    if state.position > 0 then
-        draw_by_cursor.icon(select(state.position, "stop-fill", "check"), checkbox_size, theme.white)
-    end
-    if not custom_sensor then
-        mnav.make_sensor(sid, smode.block)
+
+    if state.position == 2 then
+        cursor.change_anchor(0.5)
+        draw_by_cursor.icon("check", math.floor(checkbox_size * 1.2), theme.white)
+    elseif state.position == 1 then
+        cursor.push()
+        cursor.inset(5)
+        draw_by_cursor.rectangle(theme.white, "fill", 1, 0, 0)
+        cursor.pop()
     end
 
     if knav.is_selected() then
