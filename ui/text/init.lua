@@ -33,7 +33,7 @@ function text.get_font(size, font_path)
     font_cache[font_path] = font_cache[font_path] or {}
     local font = font_cache[font_path][size]
     if not font then
-        if not love.filesystem.getInfo(font_path) then
+        if not love.filesystem.exists(font_path) then
             error(string.format("Could not find font `%s`", font_path))
         end
         font = love.graphics.newFont(font_path, size)
@@ -61,7 +61,7 @@ function text.get_icon_string(icon_name, icon_font_path)
     if not icon_table then
         -- get the corresponding json file path
         local json_file = string.gsub(icon_font_path, "(.*)%..+", "%1.json")
-        if not love.filesystem.getInfo(json_file) then
+        if not love.filesystem.exists(json_file) then
             error(string.format("Could not find json file for icon font %s", icon_font_path), 2)
         end
 
